@@ -1,0 +1,151 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useAuthStore } from '@/store/auth';
+import { Mail, Lock, User, AlertCircle } from 'lucide-react';
+
+export default function RegisterPage() {
+  const router = useRouter();
+  const { register, isLoading, error, clearError } = useAuthStore();
+
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [validationError, setValidationError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    clearError();
+    setValidationError('');
+
+    if (password !== confirmPassword) {
+      setValidationError('Las contrasenas no coinciden');
+      return;
+    }
+
+    if (password.length < 6) {
+      setValidationError('La contrasena debe tener al menos 6 caracteres');
+      return;
+    }
+
+    try {
+      await register(email, password, name || undefined);
+      router.push('/');
+    } catch {
+      // Error is handled in store
+    }
+  };
+
+  const displayError = validationError || error;
+
+  return (
+    <div className="min-h-[80vh] flex items-center justify-center px-4">
+      <div className="card p-8 w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Crear Cuenta</h1>
+          <p className="text-gray-500 mt-2">
+            Registrate para empezar a comprar
+          </p>
+        </div>
+
+        {displayError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <p className="text-red-600 text-sm">{displayError}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              Nombre (opcional)
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="input pl-10"
+                placeholder="Tu nombre"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              Email
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input pl-10"
+                placeholder="tu@email.com"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              Contrasena
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input pl-10"
+                placeholder="Min. 6 caracteres"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              Confirmar Contrasena
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="input pl-10"
+                placeholder="Repite tu contrasena"
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="btn btn-primary w-full py-3 disabled:opacity-50"
+          >
+            {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
+          </button>
+        </form>
+
+        <p className="text-center text-gray-500 mt-6">
+          Ya tienes cuenta?{' '}
+          <Link href="/auth/login" className="text-primary-600 hover:underline font-medium">
+            Inicia sesion
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}

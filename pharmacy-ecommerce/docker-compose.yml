@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pharmacy-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pharmacy
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: pharmacy-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes
+
+  auth-service:
+    build:
+      context: ./apps/auth-service
+      dockerfile: Dockerfile
+    container_name: pharmacy-auth
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/pharmacy
+      - JWT_SECRET=${JWT_SECRET}
+      - RUST_LOG=info
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  product-service:
+    build:
+      context: ./apps/product-service
+      dockerfile: Dockerfile
+    container_name: pharmacy-products
+    ports:
+      - "3002:3002"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/pharmacy
+      - JWT_SECRET=${JWT_SECRET}
+      - RUST_LOG=info
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  order-service:
+    build:
+      context: ./apps/order-service
+      dockerfile: Dockerfile
+    container_name: pharmacy-orders
+    ports:
+      - "3003:3003"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/pharmacy
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - MERCADOPAGO_ACCESS_TOKEN=${MERCADOPAGO_ACCESS_TOKEN}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - RUST_LOG=info
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: pharmacy-web
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_AUTH_SERVICE_URL=http://localhost:3001
+      - NEXT_PUBLIC_PRODUCT_SERVICE_URL=http://localhost:3002
+      - NEXT_PUBLIC_ORDER_SERVICE_URL=http://localhost:3003
+      - NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY=${MERCADOPAGO_PUBLIC_KEY}
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
+
+volumes:
+  postgres_data:
+  redis_data:
