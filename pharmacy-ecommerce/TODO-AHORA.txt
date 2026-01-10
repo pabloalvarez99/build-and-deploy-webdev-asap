@@ -1,0 +1,65 @@
+================================================================================
+  TU FARMACIA - LO QUE DEBES HACER AHORA (30 minutos)
+================================================================================
+
+Todo esta listo para deployment. Solo necesitas seguir estos pasos:
+
+PASO 1: RAILWAY DASHBOARD (15 min)
+-----------------------------------
+1. Abre: https://railway.app/project/f9fb341e-dfa9-4e46-aefa-b4fd9115c86d
+
+2. Configura order-service (servicio existente):
+   - Click en "build-and-deploy-webdev-asap"
+   - Settings → Root Directory: apps/order-service
+   - Variables → Agregar las del archivo FIX-RAILWAY-DASHBOARD.md
+
+3. Crea product-service:
+   - New → GitHub Repo → tu repo
+   - Root Directory: apps/product-service
+   - Variables → las del archivo FIX-RAILWAY-DASHBOARD.md
+
+4. Crea auth-service (opcional):
+   - New → GitHub Repo → tu repo
+   - Root Directory: apps/auth-service
+   - Variables → las del archivo FIX-RAILWAY-DASHBOARD.md
+
+PASO 2: MIGRACIONES (2 min)
+----------------------------
+1. Railway → PostgreSQL → Connect → Query
+2. Ejecuta: database/migrations/001_initial.sql
+3. Ejecuta: database/migrations/002_guest_checkout.sql
+
+PASO 3: VERCEL (10 min)
+------------------------
+1. cd apps\web
+2. vercel login
+3. vercel
+4. Agrega variables en Vercel dashboard (ver DEPLOY-FRONTEND.md)
+5. vercel --prod
+
+PASO 4: ACTUALIZAR URLs (3 min)
+--------------------------------
+1. Railway → order-service → Variables → WEBHOOK_URL (con tu URL)
+2. Railway → order-service → Variables → FRONTEND_URL (con tu URL Vercel)
+
+================================================================================
+
+ARCHIVOS QUE NECESITAS:
+- FIX-RAILWAY-DASHBOARD.md (paso a paso para Railway)
+- DEPLOY-FRONTEND.md (paso a paso para Vercel)
+- CHECKLIST-FINAL.md (checklist completo)
+
+VARIABLES QUE YA TIENES:
+✓ DATABASE_URL
+✓ REDIS_URL
+✓ JWT_SECRET
+
+VARIABLES QUE NECESITAS:
+✗ MERCADOPAGO_ACCESS_TOKEN
+✗ MERCADOPAGO_PUBLIC_KEY
+
+================================================================================
+
+SIGUIENTE PASO: Abre FIX-RAILWAY-DASHBOARD.md y sigue las instrucciones.
+
+================================================================================

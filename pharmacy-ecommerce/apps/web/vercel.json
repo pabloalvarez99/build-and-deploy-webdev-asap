@@ -1,0 +1,12 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "outputDirectory": ".next",
+  "env": {
+    "NEXT_PUBLIC_PRODUCT_SERVICE_URL": "https://empathetic-wisdom-production-7d2f.up.railway.app",
+    "NEXT_PUBLIC_ORDER_SERVICE_URL": "https://build-and-deploy-webdev-asap-production.up.railway.app",
+    "NEXT_PUBLIC_AUTH_SERVICE_URL": "https://efficient-patience-production.up.railway.app"
+  }
+}

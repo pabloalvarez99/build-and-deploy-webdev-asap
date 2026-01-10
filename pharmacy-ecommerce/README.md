@@ -1,6 +1,16 @@
-# FarmaShop - E-commerce de Farmacia
+# Tu Farmacia - E-commerce de Farmacia
 
-E-commerce completo de farmacia con arquitectura de microservicios.
+E-commerce completo de farmacia con arquitectura de microservicios y guest checkout.
+
+## 🚀 ¿Listo para Desplegar?
+
+**Todo está preparado para deployment en producción (30 minutos):**
+
+👉 **Abre:** [README-PRIMERO.md](README-PRIMERO.md) para empezar
+
+O ve directo a:
+- **[DEPLOY-EN-30-MIN.md](DEPLOY-EN-30-MIN.md)** - Guía ejecutiva de 1 página
+- **[INDEX-DEPLOYMENT.md](INDEX-DEPLOYMENT.md)** - Índice completo de archivos
 
 ## Stack Tecnologico
 
