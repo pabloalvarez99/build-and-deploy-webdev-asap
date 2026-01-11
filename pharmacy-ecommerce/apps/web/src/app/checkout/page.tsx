@@ -15,6 +15,7 @@ export default function CheckoutPage() {
   const [email, setEmail] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
   const [notes, setNotes] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'mercadopago' | 'stripe'>('mercadopago');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
 
@@ -57,6 +58,7 @@ export default function CheckoutPage() {
         shipping_address: shippingAddress || undefined,
         notes: notes || undefined,
         session_id: getSessionId(),
+        payment_method: paymentMethod,
       });
 
       clearCartLocal();
@@ -186,11 +188,41 @@ export default function CheckoutPage() {
                 Metodo de pago
               </h2>
             </div>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-blue-800 font-medium">MercadoPago</p>
-              <p className="text-blue-600 text-sm mt-1">
-                Seras redirigido a MercadoPago para completar el pago de forma segura.
-              </p>
+            <div className="space-y-3">
+              <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                style={{ borderColor: paymentMethod === 'mercadopago' ? '#3b82f6' : '#e5e7eb' }}>
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="mercadopago"
+                  checked={paymentMethod === 'mercadopago'}
+                  onChange={(e) => setPaymentMethod(e.target.value as 'mercadopago' | 'stripe')}
+                  className="mr-3 w-4 h-4 text-primary-600"
+                />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">MercadoPago</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Seras redirigido a MercadoPago para completar el pago de forma segura.
+                  </p>
+                </div>
+              </label>
+              <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                style={{ borderColor: paymentMethod === 'stripe' ? '#3b82f6' : '#e5e7eb' }}>
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="stripe"
+                  checked={paymentMethod === 'stripe'}
+                  onChange={(e) => setPaymentMethod(e.target.value as 'mercadopago' | 'stripe')}
+                  className="mr-3 w-4 h-4 text-primary-600"
+                />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Stripe</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Seras redirigido a Stripe para completar el pago con tarjeta de credito o debito.
+                  </p>
+                </div>
+              </label>
             </div>
           </div>
         </div>
@@ -248,7 +280,7 @@ export default function CheckoutPage() {
                   Procesando...
                 </>
               ) : (
-                'Pagar con MercadoPago'
+                paymentMethod === 'stripe' ? 'Pagar con Stripe' : 'Pagar con MercadoPago'
               )}
             </button>
 
