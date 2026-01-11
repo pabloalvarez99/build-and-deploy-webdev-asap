@@ -21,16 +21,17 @@ impl StripeClient {
         session: &StripeCheckoutSessionCreate,
     ) -> Result<StripeCheckoutSessionResponse, String> {
         // Build form-urlencoded body manually for Stripe API
-        let mut form_params = vec![
-            ("mode", "payment".to_string()),
-            ("payment_method_types[0]", "card".to_string()),
-            ("success_url", session.success_url.clone()),
-            ("cancel_url", session.cancel_url.clone()),
-            ("client_reference_id", session.client_reference_id.clone()),
+        // Use Vec<(String, String)> since we need dynamic keys for line_items
+        let mut form_params: Vec<(String, String)> = vec![
+            ("mode".to_string(), "payment".to_string()),
+            ("payment_method_types[0]".to_string(), "card".to_string()),
+            ("success_url".to_string(), session.success_url.clone()),
+            ("cancel_url".to_string(), session.cancel_url.clone()),
+            ("client_reference_id".to_string(), session.client_reference_id.clone()),
         ];
 
         if let Some(ref email) = session.customer_email {
-            form_params.push(("customer_email", email.clone()));
+            form_params.push(("customer_email".to_string(), email.clone()));
         }
 
         // Add line items (Stripe uses indexed form fields for arrays)
@@ -108,8 +109,8 @@ impl StripeClient {
     pub async fn construct_webhook_event(
         &self,
         payload: &[u8],
-        signature: &str,
-        webhook_secret: &str,
+        _signature: &str,
+        _webhook_secret: &str,
     ) -> Result<StripeWebhookEvent, String> {
         // For webhook signature verification, we'll use stripe-rs or implement manually
         // For now, we'll parse the JSON directly (in production, verify signature!)

@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::{
     models::MercadoPagoWebhook,
-    services::{MercadoPagoClient, StripeClient},
+    services::MercadoPagoClient,
     AppState,
 };
 
@@ -138,7 +138,7 @@ pub async fn mercadopago_webhook(
 
 pub async fn stripe_webhook(
     State(state): State<AppState>,
-    headers: axum::http::HeaderMap,
+    _headers: axum::http::HeaderMap,
     body: Bytes,
 ) -> Result<StatusCode, (StatusCode, String)> {
     tracing::info!("Received Stripe webhook");
