@@ -183,3 +183,37 @@ ORDER BY created_at DESC;
 **Estado**: ✅ LISTO PARA RECIBIR PAGOS REALES
 
 **Fecha de configuración**: 11 de enero de 2026
+
+---
+
+## ⚠️ PROBLEMA ACTUAL (2026-01-11)
+
+### Síntoma
+Botón "Pagar" deshabilitado al intentar pagar con cuenta personal de MercadoPago.
+
+### Causa Identificada
+- **Calidad de integración MercadoPago**: 39/100
+- **Mínimo requerido**: 73/100
+- **Campos faltantes**: items.description, payer.email, statement_descriptor
+
+### Acciones Tomadas
+- ✅ Agregados campos requeridos (commit `7028c618`)
+  - items.id, description, category_id
+  - payer.email
+  - statement_descriptor: "Tu Farmacia"
+- ✅ Deployado a Railway correctamente
+- ✅ Order service online y funcionando
+- ❌ Botón sigue deshabilitado (esperando re-evaluación de MercadoPago)
+
+### Próximos Pasos
+1. **Esperar 24 horas** para re-evaluación de MercadoPago (hasta 2026-01-12 ~15:00)
+2. **Verificar puntaje** en: https://www.mercadopago.com.cl/developers/panel/app/4790563553663084/integration-quality
+3. Si puntaje sigue bajo, **agregar campos adicionales**:
+   - payer.first_name
+   - payer.last_name
+   - Requerir nombre/apellido en formulario de checkout
+
+### Ver Más
+Detalles completos en: `.claude/PROBLEMA-MERCADOPAGO.md`
+
+---
