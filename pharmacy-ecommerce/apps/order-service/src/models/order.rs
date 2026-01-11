@@ -51,6 +51,8 @@ pub struct GuestCheckoutItem {
 #[derive(Debug, Deserialize)]
 pub struct GuestCheckoutRequest {
     pub items: Vec<GuestCheckoutItem>,
+    pub name: String,
+    pub surname: String,
     pub email: String,
     pub shipping_address: Option<String>,
     pub notes: Option<String>,

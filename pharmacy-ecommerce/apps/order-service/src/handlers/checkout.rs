@@ -457,8 +457,8 @@ pub async fn guest_checkout(
         )),
         payer: Some(MercadoPagoPayer {
             email: payload.email.clone(),
-            name: None,
-            surname: None,
+            name: Some(payload.name.clone()),
+            surname: Some(payload.surname.clone()),
         }),
         statement_descriptor: Some("Tu Farmacia".to_string()),
     };
