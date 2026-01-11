@@ -10,6 +10,8 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { cart, fetchCartLocal, clearCartLocal, getSessionId } = useCartStore();
 
+  const [name, setName] = useState('');
+  const [surname, setSurname] = useState('');
   const [email, setEmail] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
   const [notes, setNotes] = useState('');
@@ -22,6 +24,16 @@ export default function CheckoutPage() {
 
   const handleCheckout = async () => {
     if (!cart || cart.items.length === 0) return;
+
+    if (!name || name.trim().length === 0) {
+      setError('Por favor ingresa tu nombre');
+      return;
+    }
+
+    if (!surname || surname.trim().length === 0) {
+      setError('Por favor ingresa tu apellido');
+      return;
+    }
 
     if (!email || !email.includes('@')) {
       setError('Por favor ingresa un email valido');
@@ -39,6 +51,8 @@ export default function CheckoutPage() {
 
       const response = await orderApi.guestCheckout({
         items,
+        name: name.trim(),
+        surname: surname.trim(),
         email,
         shipping_address: shippingAddress || undefined,
         notes: notes || undefined,
@@ -73,6 +87,44 @@ export default function CheckoutPage() {
 
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
+          {/* Name and Surname */}
+          <div className="card p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Mail className="w-5 h-5 text-primary-600" />
+              <h2 className="text-lg font-semibold text-gray-900">
+                Informacion personal *
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nombre *
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Juan"
+                  className="input"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Apellido *
+                </label>
+                <input
+                  type="text"
+                  value={surname}
+                  onChange={(e) => setSurname(e.target.value)}
+                  placeholder="Perez"
+                  className="input"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Email */}
           <div className="card p-6">
             <div className="flex items-center gap-3 mb-4">
@@ -187,7 +239,7 @@ export default function CheckoutPage() {
 
             <button
               onClick={handleCheckout}
-              disabled={isProcessing || !email}
+              disabled={isProcessing || !email || !name || !surname}
               className="btn btn-primary w-full py-3 text-lg disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isProcessing ? (

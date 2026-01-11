@@ -150,6 +150,8 @@ export const orderApi = {
 
   guestCheckout: (data: {
     items: { product_id: string; quantity: number }[];
+    name: string;
+    surname: string;
     email: string;
     shipping_address?: string;
     notes?: string;
