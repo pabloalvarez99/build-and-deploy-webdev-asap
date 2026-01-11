@@ -1,6 +1,7 @@
-const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'http://localhost:3001';
-const PRODUCT_URL = process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:3002';
-const ORDER_URL = process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || 'http://localhost:3003';
+// API Gateway URLs - rewrites handled by next.config.js
+const AUTH_URL = '/backend/auth';
+const PRODUCT_URL = '/backend/products';
+const ORDER_URL = '/backend/orders';
 
 type RequestOptions = {
   method?: string;
@@ -40,19 +41,19 @@ async function request<T>(url: string, options: RequestOptions = {}): Promise<T>
 // Auth API
 export const authApi = {
   register: (data: { email: string; password: string; name?: string }) =>
-    request<{ token: string; user: User }>(`${AUTH_URL}/api/auth/register`, {
+    request<{ token: string; user: User }>(`${AUTH_URL}/auth/register`, {
       method: 'POST',
       body: data,
     }),
 
   login: (data: { email: string; password: string }) =>
-    request<{ token: string; user: User }>(`${AUTH_URL}/api/auth/login`, {
+    request<{ token: string; user: User }>(`${AUTH_URL}/auth/login`, {
       method: 'POST',
       body: data,
     }),
 
   me: (token: string) =>
-    request<User>(`${AUTH_URL}/api/auth/me`, { token }),
+    request<User>(`${AUTH_URL}/auth/me`, { token }),
 };
 
 // Product API
@@ -66,40 +67,40 @@ export const productApi = {
     if (params?.active_only !== undefined) searchParams.set('active_only', String(params.active_only));
 
     const query = searchParams.toString();
-    return request<PaginatedProducts>(`${PRODUCT_URL}/api/products${query ? `?${query}` : ''}`);
+    return request<PaginatedProducts>(`${PRODUCT_URL}/products${query ? `?${query}` : ''}`);
   },
 
   get: (slug: string) =>
-    request<ProductWithCategory>(`${PRODUCT_URL}/api/products/${slug}`),
+    request<ProductWithCategory>(`${PRODUCT_URL}/products/${slug}`),
 
   getById: (id: string) =>
-    request<ProductWithCategory>(`${PRODUCT_URL}/api/products/id/${id}`),
+    request<ProductWithCategory>(`${PRODUCT_URL}/products/id/${id}`),
 
   create: (token: string, data: CreateProductData) =>
-    request<Product>(`${PRODUCT_URL}/api/admin/products`, {
+    request<Product>(`${PRODUCT_URL}/admin/products`, {
       method: 'POST',
       body: data,
       token,
     }),
 
   update: (token: string, id: string, data: Partial<CreateProductData>) =>
-    request<Product>(`${PRODUCT_URL}/api/admin/products/${id}`, {
+    request<Product>(`${PRODUCT_URL}/admin/products/${id}`, {
       method: 'PUT',
       body: data,
       token,
     }),
 
   delete: (token: string, id: string) =>
-    request<void>(`${PRODUCT_URL}/api/admin/products/${id}`, {
+    request<void>(`${PRODUCT_URL}/admin/products/${id}`, {
       method: 'DELETE',
       token,
     }),
 
   listCategories: () =>
-    request<Category[]>(`${PRODUCT_URL}/api/categories`),
+    request<Category[]>(`${PRODUCT_URL}/categories`),
 
   createCategory: (token: string, data: { name: string; slug: string; description?: string }) =>
-    request<Category>(`${PRODUCT_URL}/api/admin/categories`, {
+    request<Category>(`${PRODUCT_URL}/admin/categories`, {
       method: 'POST',
       body: data,
       token,
@@ -109,30 +110,30 @@ export const productApi = {
 // Cart API
 export const cartApi = {
   get: (token: string) =>
-    request<CartResponse>(`${ORDER_URL}/api/cart`, { token }),
+    request<CartResponse>(`${ORDER_URL}/cart`, { token }),
 
   add: (token: string, productId: string, quantity?: number) =>
-    request<CartResponse>(`${ORDER_URL}/api/cart/add`, {
+    request<CartResponse>(`${ORDER_URL}/cart/add`, {
       method: 'POST',
       body: { product_id: productId, quantity },
       token,
     }),
 
   update: (token: string, productId: string, quantity: number) =>
-    request<CartResponse>(`${ORDER_URL}/api/cart/update`, {
+    request<CartResponse>(`${ORDER_URL}/cart/update`, {
       method: 'PUT',
       body: { product_id: productId, quantity },
       token,
     }),
 
   remove: (token: string, productId: string) =>
-    request<CartResponse>(`${ORDER_URL}/api/cart/remove/${productId}`, {
+    request<CartResponse>(`${ORDER_URL}/cart/remove/${productId}`, {
       method: 'DELETE',
       token,
     }),
 
   clear: (token: string) =>
-    request<void>(`${ORDER_URL}/api/cart/clear`, {
+    request<void>(`${ORDER_URL}/cart/clear`, {
       method: 'DELETE',
       token,
     }),
@@ -141,7 +142,7 @@ export const cartApi = {
 // Order API
 export const orderApi = {
   checkout: (token: string, data: { shipping_address?: string; notes?: string }) =>
-    request<CheckoutResponse>(`${ORDER_URL}/api/checkout`, {
+    request<CheckoutResponse>(`${ORDER_URL}/checkout`, {
       method: 'POST',
       body: data,
       token,
@@ -154,7 +155,7 @@ export const orderApi = {
     notes?: string;
     session_id: string;
   }) =>
-    request<CheckoutResponse>(`${ORDER_URL}/api/guest-checkout`, {
+    request<CheckoutResponse>(`${ORDER_URL}/guest-checkout`, {
       method: 'POST',
       body: data,
     }),
@@ -166,14 +167,14 @@ export const orderApi = {
     if (params?.status) searchParams.set('status', params.status);
 
     const query = searchParams.toString();
-    return request<PaginatedOrders>(`${ORDER_URL}/api/orders${query ? `?${query}` : ''}`, { token });
+    return request<PaginatedOrders>(`${ORDER_URL}/orders${query ? `?${query}` : ''}`, { token });
   },
 
   get: (token: string, id: string) =>
-    request<OrderWithItems>(`${ORDER_URL}/api/orders/${id}`, { token }),
+    request<OrderWithItems>(`${ORDER_URL}/orders/${id}`, { token }),
 
   updateStatus: (token: string, id: string, status: string) =>
-    request<Order>(`${ORDER_URL}/api/orders/${id}/status`, {
+    request<Order>(`${ORDER_URL}/orders/${id}/status`, {
       method: 'PUT',
       body: { status },
       token,
