@@ -90,11 +90,29 @@ pub struct MercadoPagoPreference {
     pub external_reference: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub notification_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payer: Option<MercadoPagoPayer>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub statement_descriptor: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct MercadoPagoPayer {
+    pub email: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub surname: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct MercadoPagoItem {
+    pub id: String,
     pub title: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub category_id: Option<String>,
     pub quantity: i32,
     pub unit_price: i64,
     pub currency_id: String,

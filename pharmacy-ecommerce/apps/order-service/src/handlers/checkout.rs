@@ -6,8 +6,8 @@ use uuid::Uuid;
 use crate::{
     models::{
         Cart, CheckoutRequest, CheckoutResponse, Claims, GuestCheckoutRequest,
-        MercadoPagoBackUrls, MercadoPagoItem, MercadoPagoPaymentCreate, MercadoPagoPreference,
-        PayerInfo, ProcessPaymentRequest, ProcessPaymentResponse,
+        MercadoPagoBackUrls, MercadoPagoItem, MercadoPagoPayer, MercadoPagoPaymentCreate,
+        MercadoPagoPreference, PayerInfo, ProcessPaymentRequest, ProcessPaymentResponse,
     },
     services::MercadoPagoClient,
     AppState,
@@ -45,8 +45,8 @@ pub async fn checkout(
     let mut order_items: Vec<(Uuid, String, i32, Decimal)> = vec![];
 
     for cart_item in &cart.items {
-        let product = sqlx::query_as::<_, (Uuid, String, Decimal, i32)>(
-            "SELECT id, name, price, stock FROM products WHERE id = $1 AND active = true"
+        let product = sqlx::query_as::<_, (Uuid, String, Decimal, i32, Option<String>, Option<Uuid>)>(
+            "SELECT id, name, price, stock, description, category_id FROM products WHERE id = $1 AND active = true"
         )
         .bind(cart_item.product_id)
         .fetch_optional(&state.db)
@@ -54,7 +54,7 @@ pub async fn checkout(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
         .ok_or((StatusCode::NOT_FOUND, format!("Product {} not found", cart_item.product_id)))?;
 
-        let (product_id, name, price, stock) = product;
+        let (product_id, name, price, stock, description, category_id) = product;
 
         if stock < cart_item.quantity {
             return Err((
@@ -71,7 +71,10 @@ pub async fn checkout(
         let price_int = price_f64.ceil() as i64;
 
         mp_items.push(MercadoPagoItem {
+            id: product_id.to_string(),
             title: name.clone(),
+            description,
+            category_id: category_id.map(|id| id.to_string()),
             quantity: cart_item.quantity,
             unit_price: price_int,
             currency_id: "CLP".to_string(),
@@ -134,6 +137,12 @@ pub async fn checkout(
         auto_return,
         external_reference: order_id.to_string(),
         notification_url: Some(format!("{}/api/webhook/mercadopago", state.config.webhook_url)),
+        payer: Some(MercadoPagoPayer {
+            email: claims.email.clone(),
+            name: None,
+            surname: None,
+        }),
+        statement_descriptor: Some("Tu Farmacia".to_string()),
     };
 
     let mp_response = mp_client
@@ -340,8 +349,8 @@ pub async fn guest_checkout(
     let mut order_items: Vec<(Uuid, String, i32, Decimal)> = vec![];
 
     for item in &payload.items {
-        let product = sqlx::query_as::<_, (Uuid, String, Decimal, i32)>(
-            "SELECT id, name, price, stock FROM products WHERE id = $1 AND active = true",
+        let product = sqlx::query_as::<_, (Uuid, String, Decimal, i32, Option<String>, Option<Uuid>)>(
+            "SELECT id, name, price, stock, description, category_id FROM products WHERE id = $1 AND active = true",
         )
         .bind(item.product_id)
         .fetch_optional(&state.db)
@@ -352,7 +361,7 @@ pub async fn guest_checkout(
             format!("Product {} not found", item.product_id),
         ))?;
 
-        let (product_id, name, price, stock) = product;
+        let (product_id, name, price, stock, description, category_id) = product;
 
         if stock < item.quantity {
             return Err((
@@ -368,7 +377,10 @@ pub async fn guest_checkout(
         let price_int = price_f64.ceil() as i64;
 
         mp_items.push(MercadoPagoItem {
+            id: product_id.to_string(),
             title: name.clone(),
+            description,
+            category_id: category_id.map(|id| id.to_string()),
             quantity: item.quantity,
             unit_price: price_int,
             currency_id: "CLP".to_string(),
@@ -443,6 +455,12 @@ pub async fn guest_checkout(
             "{}/api/webhook/mercadopago",
             state.config.webhook_url
         )),
+        payer: Some(MercadoPagoPayer {
+            email: payload.email.clone(),
+            name: None,
+            surname: None,
+        }),
+        statement_descriptor: Some("Tu Farmacia".to_string()),
     };
 
     let mp_response = mp_client
