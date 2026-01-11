@@ -101,9 +101,9 @@ pub struct MercadoPagoPreference {
 #[derive(Debug, Serialize)]
 pub struct MercadoPagoPayer {
     pub email: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "first_name", skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "last_name", skip_serializing_if = "Option::is_none")]
     pub surname: Option<String>,
 }
 
