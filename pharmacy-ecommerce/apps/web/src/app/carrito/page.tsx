@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
 import { ShoppingBag, ArrowRight, Trash2, Plus, Minus } from 'lucide-react';
+import { formatPrice } from '@/lib/format';
 
 export default function CartPage() {
   const { cart, fetchCartLocal, updateQuantityLocal, removeFromCartLocal, isLoading } = useCartStore();
@@ -11,8 +12,6 @@ export default function CartPage() {
   useEffect(() => {
     fetchCartLocal();
   }, [fetchCartLocal]);
-
-  const total = cart ? parseFloat(cart.total) : 0;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -55,7 +54,7 @@ export default function CartPage() {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-medium text-gray-900">{item.product_name}</h3>
-                    <p className="text-primary-600 font-semibold">${parseFloat(item.price).toFixed(0)}</p>
+                    <p className="text-primary-600 font-semibold">{formatPrice(item.price)}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -73,7 +72,7 @@ export default function CartPage() {
                     </button>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">${parseFloat(item.subtotal).toFixed(0)}</p>
+                    <p className="font-semibold">{formatPrice(item.subtotal)}</p>
                     <button
                       onClick={() => removeFromCartLocal(item.product_id)}
                       className="text-red-500 hover:text-red-700 mt-1"
@@ -95,7 +94,7 @@ export default function CartPage() {
               <div className="space-y-3 border-b border-gray-100 pb-4 mb-4">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal ({cart.item_count} items)</span>
-                  <span>${total.toFixed(0)}</span>
+                  <span>{formatPrice(cart.total)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Envio</span>
@@ -105,7 +104,7 @@ export default function CartPage() {
 
               <div className="flex justify-between text-lg font-semibold text-gray-900 mb-6">
                 <span>Total</span>
-                <span>${total.toFixed(0)} CLP</span>
+                <span>{formatPrice(cart.total)}</span>
               </div>
 
               <Link

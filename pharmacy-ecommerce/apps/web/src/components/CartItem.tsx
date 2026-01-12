@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/auth';
 import { useCartStore } from '@/store/cart';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { formatPrice } from '@/lib/format';
 
 interface CartItemProps {
   item: CartItemType;
@@ -47,9 +48,6 @@ export function CartItem({ item }: CartItemProps) {
     }
   };
 
-  const price = parseFloat(item.price);
-  const subtotal = parseFloat(item.subtotal);
-
   return (
     <div className="flex items-center gap-4 py-4 border-b border-gray-100">
       <div className="w-20 h-20 relative bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
@@ -74,7 +72,7 @@ export function CartItem({ item }: CartItemProps) {
         >
           {item.product_name}
         </Link>
-        <p className="text-sm text-gray-500">${price.toFixed(2)} c/u</p>
+        <p className="text-sm text-gray-500">{formatPrice(item.price)} c/u</p>
       </div>
 
       <div className="flex items-center space-x-2">
@@ -95,8 +93,8 @@ export function CartItem({ item }: CartItemProps) {
         </button>
       </div>
 
-      <div className="text-right w-24">
-        <p className="font-semibold text-gray-900">${subtotal.toFixed(2)}</p>
+      <div className="text-right w-28">
+        <p className="font-semibold text-gray-900">{formatPrice(item.subtotal)}</p>
       </div>
 
       <button

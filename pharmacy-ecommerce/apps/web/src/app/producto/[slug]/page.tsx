@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/auth';
 import { useCartStore } from '@/store/cart';
 import { ShoppingCart, ArrowLeft, Minus, Plus } from 'lucide-react';
 import Link from 'next/link';
+import { formatPrice } from '@/lib/format';
 
 export default function ProductPage() {
   const params = useParams();
@@ -86,8 +87,6 @@ export default function ProductPage() {
     );
   }
 
-  const price = parseFloat(product.price);
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <Link
@@ -133,7 +132,7 @@ export default function ProductPage() {
           <h1 className="text-3xl font-bold text-gray-900 mt-2">{product.name}</h1>
 
           <p className="text-4xl font-bold text-primary-600 mt-4">
-            ${price.toFixed(2)}
+            {formatPrice(product.price)}
           </p>
 
           {product.description && (

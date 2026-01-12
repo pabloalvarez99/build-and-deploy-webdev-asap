@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cart';
 import { orderApi } from '@/lib/api';
 import { MapPin, FileText, CreditCard, Mail, Loader2 } from 'lucide-react';
+import { formatPrice } from '@/lib/format';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -80,8 +81,6 @@ export default function CheckoutPage() {
       </div>
     );
   }
-
-  const total = parseFloat(cart.total);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -241,7 +240,7 @@ export default function CheckoutPage() {
                     {item.product_name} x{item.quantity}
                   </span>
                   <span className="text-gray-900">
-                    ${parseFloat(item.subtotal).toFixed(0)}
+                    {formatPrice(item.subtotal)}
                   </span>
                 </div>
               ))}
@@ -250,7 +249,7 @@ export default function CheckoutPage() {
             <div className="space-y-3 border-b border-gray-100 pb-4 mb-4">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal</span>
-                <span>${total.toFixed(0)}</span>
+                <span>{formatPrice(cart.total)}</span>
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Envio</span>
@@ -260,7 +259,7 @@ export default function CheckoutPage() {
 
             <div className="flex justify-between text-xl font-bold text-gray-900 mb-6">
               <span>Total</span>
-              <span>${total.toFixed(0)} CLP</span>
+              <span>{formatPrice(cart.total)}</span>
             </div>
 
             {error && (

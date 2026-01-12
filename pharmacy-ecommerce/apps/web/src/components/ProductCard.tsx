@@ -5,6 +5,7 @@ import { ProductWithCategory } from '@/lib/api';
 import { useCartStore } from '@/store/cart';
 import { ShoppingCart } from 'lucide-react';
 import { useState } from 'react';
+import { formatPrice } from '@/lib/format';
 
 interface ProductCardProps {
   product: ProductWithCategory;
@@ -25,8 +26,6 @@ export function ProductCard({ product }: ProductCardProps) {
       setIsAdding(false);
     }
   };
-
-  const price = parseFloat(product.price);
 
   return (
     <Link href={`/producto/${product.slug}`} className="group">
@@ -54,7 +53,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
           <div className="mt-3 flex items-center justify-between">
             <span className="text-xl font-bold text-primary-600">
-              ${price.toFixed(0)}
+              {formatPrice(product.price)}
             </span>
             <button
               onClick={handleAddToCart}

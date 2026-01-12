@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { productApi, PaginatedProducts, Category } from '@/lib/api';
 import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react';
+import { formatPrice } from '@/lib/format';
 
 export default function AdminProductsPage() {
   const router = useRouter();
@@ -311,7 +312,7 @@ export default function AdminProductsPage() {
                       <div className="text-sm text-gray-500">{product.slug}</div>
                     </td>
                     <td className="px-6 py-4 text-gray-900">
-                      ${parseFloat(product.price).toFixed(2)}
+                      {formatPrice(product.price)}
                     </td>
                     <td className="px-6 py-4">
                       <span className={product.stock <= 10 ? 'text-red-600 font-medium' : 'text-gray-900'}>
