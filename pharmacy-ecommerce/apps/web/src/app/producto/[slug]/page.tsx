@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { productApi, ProductWithCategory } from '@/lib/api';
-import { useAuthStore } from '@/store/auth';
 import { useCartStore } from '@/store/cart';
 import { ShoppingCart, ArrowLeft, Minus, Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -15,8 +14,7 @@ export default function ProductPage() {
   const router = useRouter();
   const slug = params.slug as string;
 
-  const { token } = useAuthStore();
-  const { addToCart } = useCartStore();
+  const { addToCartLocal } = useCartStore();
 
   const [product, setProduct] = useState<ProductWithCategory | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,16 +37,11 @@ export default function ProductPage() {
   };
 
   const handleAddToCart = async () => {
-    if (!token) {
-      router.push('/auth/login');
-      return;
-    }
-
     if (!product) return;
 
     setIsAdding(true);
     try {
-      await addToCart(token, product.id, quantity);
+      await addToCartLocal(product.id, quantity);
       router.push('/carrito');
     } catch (error) {
       console.error('Error adding to cart:', error);
