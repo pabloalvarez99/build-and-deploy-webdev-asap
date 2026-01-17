@@ -63,7 +63,7 @@ export function Navbar() {
                 className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-emerald-600 transition-colors mt-0.5"
               >
                 <MapPin className="w-3 h-3" />
-                <span>Jose Santiago Aldunate 1535, La Serena</span>
+                <span>Jose Santiago Aldunate 1535, Coquimbo</span>
               </a>
             </div>
           </Link>
