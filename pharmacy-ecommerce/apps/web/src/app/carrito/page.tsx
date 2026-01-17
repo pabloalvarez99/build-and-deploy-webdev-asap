@@ -15,32 +15,32 @@ export default function CartPage() {
   }, [fetchCartLocal]);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-slate-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">Mi Carrito</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mb-8">Mi Carrito</h1>
 
         {isLoading ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="animate-pulse bg-white p-4 rounded-lg flex items-center gap-4">
-                <div className="w-16 h-16 bg-gray-200 rounded-lg" />
+                <div className="w-16 h-16 bg-slate-200 rounded-lg" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-5 bg-gray-200 rounded w-1/2" />
-                  <div className="h-4 bg-gray-200 rounded w-1/4" />
+                  <div className="h-5 bg-slate-200 rounded w-1/2" />
+                  <div className="h-4 bg-slate-200 rounded w-1/4" />
                 </div>
-                <div className="h-8 bg-gray-200 rounded w-24" />
+                <div className="h-8 bg-slate-200 rounded w-24" />
               </div>
             ))}
           </div>
         ) : !cart || cart.items.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 text-center py-16 px-4">
-            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <ShoppingBag className="w-8 h-8 text-gray-400" />
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 text-center py-16 px-4">
+            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ShoppingBag className="w-8 h-8 text-slate-400" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">
               Tu carrito está vacío
             </h2>
-            <p className="text-gray-500 mb-8 max-w-sm mx-auto">
+            <p className="text-slate-500 mb-8 max-w-sm mx-auto">
               ¡Explora nuestro catálogo y encuentra todo lo que necesitas para tu salud y bienestar!
             </p>
             <Link 
@@ -54,12 +54,12 @@ export default function CartPage() {
         ) : (
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div className="divide-y divide-gray-100">
+              <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                <div className="divide-y divide-slate-100">
                   {cart.items.map((item) => (
                     <div key={item.product_id} className="p-4 sm:p-6 flex gap-4 sm:gap-6">
                       {/* Product Image/Icon */}
-                      <div className="w-20 h-20 bg-gray-50 rounded-lg flex-shrink-0 flex items-center justify-center border border-gray-100">
+                      <div className="w-20 h-20 bg-slate-50 rounded-lg flex-shrink-0 flex items-center justify-center border border-slate-100">
                         {item.product_image ? (
                           <div className="relative w-full h-full">
                             <Image
@@ -70,7 +70,7 @@ export default function CartPage() {
                             />
                           </div>
                         ) : (
-                          <Package className="w-8 h-8 text-gray-300" />
+                          <Package className="w-8 h-8 text-slate-300" />
                         )}
                       </div>
 
@@ -79,25 +79,25 @@ export default function CartPage() {
                         <div>
                           <Link 
                             href={`/producto/${item.product_slug}`}
-                            className="text-base font-medium text-gray-900 hover:text-emerald-600 transition-colors line-clamp-2 mb-1"
+                            className="text-base font-medium text-slate-900 hover:text-emerald-600 transition-colors line-clamp-2 mb-1"
                           >
                             {item.product_name}
                           </Link>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-slate-500">
                             {formatPrice(parseFloat(item.price))} c/u
                           </p>
                         </div>
 
                         <div className="flex items-center justify-between mt-4">
-                          <div className="flex items-center border border-gray-200 rounded-lg bg-white">
+                          <div className="flex items-center border border-slate-200 rounded-lg bg-white">
                             <button
                               onClick={() => updateQuantityLocal(item.product_id, item.quantity - 1)}
-                              className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-l-lg transition-colors disabled:opacity-50"
+                              className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-l-lg transition-colors disabled:opacity-50"
                               disabled={item.quantity <= 1}
                             >
                               <Minus className="w-4 h-4" />
                             </button>
-                            <span className="w-10 text-center text-sm font-medium text-gray-900">
+                            <span className="w-10 text-center text-sm font-medium text-slate-900">
                               {item.quantity}
                             </span>
                             <button
