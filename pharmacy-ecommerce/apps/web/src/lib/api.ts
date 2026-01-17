@@ -296,6 +296,9 @@ export interface OrderItem {
 
 export interface OrderWithItems extends Order {
   items: OrderItem[];
+  guest_name?: string | null;
+  guest_surname?: string | null;
+  guest_email?: string | null;
 }
 
 export interface PaginatedOrders {

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { productApi, PaginatedProducts, Category } from '@/lib/api';
-import { Plus, Edit, Trash2, ArrowLeft, Search, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Edit, Trash2, ArrowLeft, Search, Download, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 export default function AdminProductsPage() {
@@ -18,11 +18,16 @@ export default function AdminProductsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
+  
+  // Selection for bulk actions
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState('');
+  const [stockFilter, setStockFilter] = useState('');
 
   // Form state
   const [formData, setFormData] = useState({
@@ -46,10 +51,19 @@ export default function AdminProductsPage() {
   }, [token, user, router]);
 
   useEffect(() => {
+    // Check URL params for filters
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlStock = urlParams.get('stock');
+    const urlSearch = urlParams.get('search');
+    if (urlStock === 'low') setStockFilter('low');
+    if (urlSearch) setSearchTerm(urlSearch);
+  }, []);
+
+  useEffect(() => {
     if (token) {
       loadProducts();
     }
-  }, [token, currentPage, searchTerm, selectedCategory, sortBy]);
+  }, [token, currentPage, searchTerm, selectedCategory, sortBy, stockFilter]);
 
   const loadCategories = async () => {
     try {
@@ -198,7 +212,87 @@ export default function AdminProductsPage() {
     setSearchTerm('');
     setSelectedCategory('');
     setSortBy('');
+    setStockFilter('');
     setCurrentPage(1);
+    // Clear URL params
+    window.history.replaceState({}, '', '/admin/productos');
+  };
+
+  // Selection helpers
+  const toggleSelectProduct = (id: string) => {
+    const newSelection = new Set(selectedProducts);
+    if (newSelection.has(id)) {
+      newSelection.delete(id);
+    } else {
+      newSelection.add(id);
+    }
+    setSelectedProducts(newSelection);
+  };
+
+  const selectAllOnPage = () => {
+    if (!products) return;
+    const allIds = products.products.map(p => p.id);
+    const allSelected = allIds.every(id => selectedProducts.has(id));
+    
+    if (allSelected) {
+      // Deselect all
+      const newSelection = new Set(selectedProducts);
+      allIds.forEach(id => newSelection.delete(id));
+      setSelectedProducts(newSelection);
+    } else {
+      // Select all
+      const newSelection = new Set(selectedProducts);
+      allIds.forEach(id => newSelection.add(id));
+      setSelectedProducts(newSelection);
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedProducts(new Set());
+  };
+
+  // Bulk actions
+  const handleBulkActivate = async (activate: boolean) => {
+    if (!token || selectedProducts.size === 0) return;
+    
+    const action = activate ? 'activar' : 'desactivar';
+    if (!confirm(`¿Deseas ${action} ${selectedProducts.size} productos?`)) return;
+
+    setBulkActionLoading(true);
+    try {
+      const promises = Array.from(selectedProducts).map(id =>
+        productApi.update(token, id, { active: activate })
+      );
+      await Promise.all(promises);
+      clearSelection();
+      loadProducts();
+    } catch (error) {
+      console.error('Error en acción masiva:', error);
+      alert('Error al realizar la acción');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!token || selectedProducts.size === 0) return;
+    
+    if (!confirm(`¿Deseas ELIMINAR ${selectedProducts.size} productos? Esta acción no se puede deshacer.`)) return;
+
+    setBulkActionLoading(true);
+    try {
+      const promises = Array.from(selectedProducts).map(id =>
+        productApi.delete(token, id)
+      );
+      await Promise.all(promises);
+      clearSelection();
+      loadProducts();
+    } catch (error) {
+      console.error('Error eliminando productos:', error);
+      alert('Error al eliminar productos');
+    } finally {
+      setBulkActionLoading(false);
+    }
   };
 
   if (!user || user.role !== 'admin') {
@@ -275,6 +369,20 @@ export default function AdminProductsPage() {
           </select>
 
           <select
+            value={stockFilter}
+            onChange={(e) => {
+              setStockFilter(e.target.value);
+              setSortBy(e.target.value === 'low' ? 'stock_asc' : sortBy);
+              setCurrentPage(1);
+            }}
+            className={`input py-2 px-3 min-w-[140px] ${stockFilter === 'low' ? 'border-orange-400 bg-orange-50' : ''}`}
+          >
+            <option value="">Todo el stock</option>
+            <option value="low">⚠️ Stock bajo</option>
+            <option value="out">🔴 Agotados</option>
+          </select>
+
+          <select
             value={sortBy}
             onChange={(e) => {
               setSortBy(e.target.value);
@@ -290,7 +398,7 @@ export default function AdminProductsPage() {
             <option value="stock_desc">Mayor stock</option>
           </select>
 
-          {(searchTerm || selectedCategory || sortBy) && (
+          {(searchTerm || selectedCategory || sortBy || stockFilter) && (
             <button
               onClick={clearFilters}
               className="text-sm text-gray-500 hover:text-gray-700"
@@ -300,6 +408,49 @@ export default function AdminProductsPage() {
           )}
         </div>
       </div>
+
+      {/* Bulk Actions Bar */}
+      {selectedProducts.size > 0 && (
+        <div className="card p-4 mb-4 bg-emerald-50 border border-emerald-200 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="font-medium text-emerald-800">
+              {selectedProducts.size} producto{selectedProducts.size > 1 ? 's' : ''} seleccionado{selectedProducts.size > 1 ? 's' : ''}
+            </span>
+            <button
+              onClick={clearSelection}
+              className="text-sm text-emerald-600 hover:text-emerald-800 underline"
+            >
+              Limpiar selección
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleBulkActivate(true)}
+              disabled={bulkActionLoading}
+              className="btn btn-secondary flex items-center gap-2 text-sm py-2"
+            >
+              <Power className="w-4 h-4" />
+              Activar
+            </button>
+            <button
+              onClick={() => handleBulkActivate(false)}
+              disabled={bulkActionLoading}
+              className="btn btn-secondary flex items-center gap-2 text-sm py-2"
+            >
+              <PowerOff className="w-4 h-4" />
+              Desactivar
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              disabled={bulkActionLoading}
+              className="btn bg-red-600 text-white hover:bg-red-700 flex items-center gap-2 text-sm py-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Eliminar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Results count */}
       {products && (
@@ -476,6 +627,19 @@ export default function AdminProductsPage() {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
+                    <th className="px-3 py-3 text-center w-10">
+                      <button
+                        onClick={selectAllOnPage}
+                        className="p-1 hover:bg-gray-200 rounded"
+                        title="Seleccionar todos"
+                      >
+                        {products?.products.every(p => selectedProducts.has(p.id)) ? (
+                          <CheckSquare className="w-5 h-5 text-emerald-600" />
+                        ) : (
+                          <Square className="w-5 h-5 text-gray-400" />
+                        )}
+                      </button>
+                    </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Laboratorio</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Precio</th>
@@ -486,11 +650,42 @@ export default function AdminProductsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {products.products.map((product) => (
-                    <tr key={product.id} className="hover:bg-gray-50">
+                  {products.products
+                    .filter(p => {
+                      if (stockFilter === 'low') return p.stock > 0 && p.stock <= 10;
+                      if (stockFilter === 'out') return p.stock === 0;
+                      return true;
+                    })
+                    .map((product) => (
+                    <tr 
+                      key={product.id} 
+                      className={`hover:bg-gray-50 ${selectedProducts.has(product.id) ? 'bg-emerald-50' : ''} ${product.stock === 0 ? 'bg-red-50/50' : product.stock <= 10 ? 'bg-orange-50/50' : ''}`}
+                    >
+                      <td className="px-3 py-3 text-center">
+                        <button
+                          onClick={() => toggleSelectProduct(product.id)}
+                          className="p-1 hover:bg-gray-200 rounded"
+                        >
+                          {selectedProducts.has(product.id) ? (
+                            <CheckSquare className="w-5 h-5 text-emerald-600" />
+                          ) : (
+                            <Square className="w-5 h-5 text-gray-400" />
+                          )}
+                        </button>
+                      </td>
                       <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900 truncate max-w-[200px]">{product.name}</div>
-                        <div className="text-xs text-gray-500 truncate max-w-[200px]">{product.slug}</div>
+                        <div className="flex items-center gap-2">
+                          {product.stock === 0 && (
+                            <span className="flex-shrink-0 w-2 h-2 rounded-full bg-red-500" title="Agotado" />
+                          )}
+                          {product.stock > 0 && product.stock <= 10 && (
+                            <AlertTriangle className="flex-shrink-0 w-4 h-4 text-orange-500" title="Stock bajo" />
+                          )}
+                          <div>
+                            <div className="font-medium text-gray-900 truncate max-w-[200px]">{product.name}</div>
+                            <div className="text-xs text-gray-500 truncate max-w-[200px]">{product.slug}</div>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-500 truncate max-w-[150px]">
                         {product.laboratory || '-'}
@@ -499,9 +694,9 @@ export default function AdminProductsPage() {
                         {formatPrice(product.price)}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <span className={`font-medium ${
-                          product.stock === 0 ? 'text-red-600' :
-                          product.stock <= 10 ? 'text-orange-600' : 'text-gray-900'
+                        <span className={`inline-flex items-center justify-center min-w-[40px] px-2 py-0.5 rounded-full text-sm font-bold ${
+                          product.stock === 0 ? 'bg-red-100 text-red-700' :
+                          product.stock <= 10 ? 'bg-orange-100 text-orange-700' : 'text-gray-900'
                         }`}>
                           {product.stock}
                         </span>

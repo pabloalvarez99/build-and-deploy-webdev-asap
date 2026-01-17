@@ -5,7 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { orderApi, OrderWithItems } from '@/lib/api';
-import { ArrowLeft, Package, MapPin, FileText, User } from 'lucide-react';
+import { ArrowLeft, Package, MapPin, FileText, User, Mail, Phone, Printer, Copy, Check } from 'lucide-react';
+import { formatPrice } from '@/lib/format';
 
 const statusOptions = [
   { value: 'pending', label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800' },
@@ -138,26 +139,21 @@ export default function AdminOrderDetailPage() {
               <Package className="w-5 h-5 text-primary-600" />
               <h2 className="text-lg font-semibold text-gray-900">Productos</h2>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {order.items.map((item) => {
                 const price = parseFloat(item.price_at_purchase);
                 const subtotal = price * item.quantity;
 
                 return (
                   <div key={item.id} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0">
-                    <div>
+                    <div className="flex-1">
                       <p className="font-medium text-gray-900">{item.product_name}</p>
                       <p className="text-sm text-gray-500">
-                        ${price.toFixed(2)} x {item.quantity}
+                        {formatPrice(price)} × {item.quantity}
                       </p>
-                      {item.product_id && (
-                        <p className="text-xs text-gray-400 mt-1">
-                          ID: {item.product_id.slice(0, 8)}
-                        </p>
-                      )}
                     </div>
                     <p className="font-semibold text-gray-900">
-                      ${subtotal.toFixed(2)}
+                      {formatPrice(subtotal)}
                     </p>
                   </div>
                 );
@@ -168,12 +164,40 @@ export default function AdminOrderDetailPage() {
           {/* Customer Info */}
           <div className="card p-6">
             <div className="flex items-center gap-3 mb-4">
-              <User className="w-5 h-5 text-primary-600" />
+              <User className="w-5 h-5 text-emerald-600" />
               <h2 className="text-lg font-semibold text-gray-900">Cliente</h2>
+              {!order.user_id && (order.guest_name || order.guest_email) && (
+                <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                  Invitado
+                </span>
+              )}
             </div>
-            <p className="text-gray-600">
-              {order.user_id ? `ID: ${order.user_id.slice(0, 8)}...` : 'Usuario eliminado'}
-            </p>
+            <div className="space-y-3">
+              {(order.guest_name || order.guest_surname) && (
+                <div className="flex items-center gap-3">
+                  <User className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-900 font-medium">
+                    {order.guest_name} {order.guest_surname}
+                  </span>
+                </div>
+              )}
+              {order.guest_email && (
+                <div className="flex items-center gap-3">
+                  <Mail className="w-4 h-4 text-gray-400" />
+                  <a href={`mailto:${order.guest_email}`} className="text-emerald-600 hover:underline">
+                    {order.guest_email}
+                  </a>
+                </div>
+              )}
+              {order.user_id && (
+                <p className="text-gray-500 text-sm">
+                  ID Usuario: <span className="font-mono">{order.user_id.slice(0, 8)}...</span>
+                </p>
+              )}
+              {!order.user_id && !order.guest_name && !order.guest_email && (
+                <p className="text-gray-500 italic">Sin información de cliente</p>
+              )}
+            </div>
           </div>
 
           {/* Shipping Address */}
@@ -204,32 +228,70 @@ export default function AdminOrderDetailPage() {
         {/* Summary */}
         <div className="lg:col-span-1">
           <div className="card p-6 sticky top-24">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Resumen</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Resumen</h2>
+              <button
+                onClick={() => window.print()}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+                title="Imprimir orden"
+              >
+                <Printer className="w-5 h-5" />
+              </button>
+            </div>
 
             <div className="space-y-3 border-b border-gray-100 pb-4 mb-4">
               <div className="flex justify-between text-gray-600">
-                <span>Subtotal</span>
-                <span>${total.toFixed(2)}</span>
+                <span>Subtotal ({order.items.length} productos)</span>
+                <span>{formatPrice(total)}</span>
               </div>
               <div className="flex justify-between text-gray-600">
-                <span>Envio</span>
+                <span>Envío</span>
                 <span className="text-green-600">Gratis</span>
               </div>
             </div>
 
             <div className="flex justify-between text-xl font-bold text-gray-900 mb-6">
               <span>Total</span>
-              <span>${total.toFixed(2)}</span>
+              <span className="text-emerald-600">{formatPrice(total)}</span>
             </div>
 
+            {/* Payment Info */}
             {order.mercadopago_preference_id && (
-              <div className="text-xs text-gray-500 space-y-1">
-                <p>Preference ID: {order.mercadopago_preference_id}</p>
+              <div className="bg-gray-50 rounded-lg p-3 text-xs space-y-2">
+                <p className="font-medium text-gray-700 mb-2">Info de Pago</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500">Preference ID:</span>
+                  <span className="font-mono text-gray-700">{order.mercadopago_preference_id.slice(0, 12)}...</span>
+                </div>
                 {order.mercadopago_payment_id && (
-                  <p>Payment ID: {order.mercadopago_payment_id}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-500">Payment ID:</span>
+                    <span className="font-mono text-gray-700">{order.mercadopago_payment_id}</span>
+                  </div>
                 )}
               </div>
             )}
+
+            {/* Quick Actions */}
+            <div className="mt-6 pt-4 border-t border-gray-100 space-y-2">
+              <p className="text-xs font-medium text-gray-500 uppercase mb-3">Acciones rápidas</p>
+              <div className="grid grid-cols-2 gap-2">
+                {statusOptions.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => handleStatusChange(opt.value)}
+                    disabled={order.status === opt.value}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                      order.status === opt.value 
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                        : `${opt.color} hover:opacity-80`
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
