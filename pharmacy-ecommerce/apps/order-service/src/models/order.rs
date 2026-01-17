@@ -136,6 +136,7 @@ pub struct MercadoPagoBackUrls {
 pub struct MercadoPagoPreferenceResponse {
     pub id: String,
     pub init_point: String,
+    pub sandbox_init_point: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

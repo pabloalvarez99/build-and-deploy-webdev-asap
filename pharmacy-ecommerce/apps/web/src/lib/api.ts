@@ -247,6 +247,8 @@ export interface CreateProductData {
   stock: number;
   category_id?: string;
   image_url?: string;
+  laboratory?: string;
+  active?: boolean;
 }
 
 export interface CartItem {

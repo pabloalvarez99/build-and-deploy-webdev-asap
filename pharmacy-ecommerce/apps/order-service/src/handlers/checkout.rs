@@ -150,6 +150,24 @@ pub async fn checkout(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
 
+    let is_test_token = state.config.mercadopago_access_token.starts_with("TEST-");
+    let init_point = if is_test_token {
+        mp_response
+            .sandbox_init_point
+            .clone()
+            .unwrap_or_else(|| mp_response.init_point.clone())
+    } else {
+        mp_response.init_point.clone()
+    };
+
+    tracing::info!(
+        preference_id = %mp_response.id,
+        is_test_token,
+        init_point = %mp_response.init_point,
+        sandbox_init_point = ?mp_response.sandbox_init_point,
+        "MercadoPago preference created"
+    );
+
     // Update order with MercadoPago preference ID
     sqlx::query(
         "UPDATE orders SET mercadopago_preference_id = $1 WHERE id = $2"
@@ -168,7 +186,7 @@ pub async fn checkout(
 
     Ok(Json(CheckoutResponse {
         order_id,
-        init_point: mp_response.init_point,
+        init_point,
         preference_id: mp_response.id,
     }))
 }
@@ -468,6 +486,24 @@ pub async fn guest_checkout(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
 
+    let is_test_token = state.config.mercadopago_access_token.starts_with("TEST-");
+    let init_point = if is_test_token {
+        mp_response
+            .sandbox_init_point
+            .clone()
+            .unwrap_or_else(|| mp_response.init_point.clone())
+    } else {
+        mp_response.init_point.clone()
+    };
+
+    tracing::info!(
+        preference_id = %mp_response.id,
+        is_test_token,
+        init_point = %mp_response.init_point,
+        sandbox_init_point = ?mp_response.sandbox_init_point,
+        "MercadoPago preference created (guest)"
+    );
+
     // Update order with MercadoPago preference ID
     sqlx::query("UPDATE orders SET mercadopago_preference_id = $1 WHERE id = $2")
         .bind(&mp_response.id)
@@ -478,7 +514,7 @@ pub async fn guest_checkout(
 
     Ok(Json(CheckoutResponse {
         order_id,
-        init_point: mp_response.init_point,
+        init_point,
         preference_id: mp_response.id,
     }))
 }

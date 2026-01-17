@@ -340,8 +340,8 @@ pub async fn create_product(
 
     let product = sqlx::query_as::<_, Product>(
         r#"
-        INSERT INTO products (name, slug, description, price, stock, category_id, image_url)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO products (name, slug, description, price, stock, category_id, image_url, laboratory, active)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING *
         "#
     )
@@ -352,6 +352,8 @@ pub async fn create_product(
     .bind(&payload.stock)
     .bind(&payload.category_id)
     .bind(&payload.image_url)
+    .bind(&payload.laboratory)
+    .bind(&payload.active)
     .fetch_one(&state.db)
     .await
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
@@ -402,8 +404,10 @@ pub async fn update_product(
             stock = COALESCE($5, stock),
             category_id = COALESCE($6, category_id),
             image_url = COALESCE($7, image_url),
-            active = COALESCE($8, active)
-        WHERE id = $9
+            active = COALESCE($8, active),
+            laboratory = COALESCE($9, laboratory),
+            updated_at = NOW()
+        WHERE id = $10
         RETURNING *
         "#
     )
@@ -415,6 +419,7 @@ pub async fn update_product(
     .bind(&payload.category_id)
     .bind(&payload.image_url)
     .bind(&payload.active)
+    .bind(&payload.laboratory)
     .bind(id)
     .fetch_one(&state.db)
     .await

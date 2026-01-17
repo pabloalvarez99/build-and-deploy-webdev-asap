@@ -37,11 +37,19 @@ pub struct CreateProductRequest {
     #[validate(length(min = 2, message = "Slug must be at least 2 characters"))]
     pub slug: String,
     pub description: Option<String>,
+    #[validate(range(min = 0.0, message = "Price must be non-negative"))]
     pub price: Decimal,
     #[validate(range(min = 0, message = "Stock must be non-negative"))]
     pub stock: i32,
     pub category_id: Option<Uuid>,
     pub image_url: Option<String>,
+    pub laboratory: Option<String>,
+    #[serde(default = "default_active")]
+    pub active: bool,
+}
+
+fn default_active() -> bool {
+    true
 }
 
 #[derive(Debug, Deserialize)]
@@ -54,6 +62,7 @@ pub struct UpdateProductRequest {
     pub category_id: Option<Uuid>,
     pub image_url: Option<String>,
     pub active: Option<bool>,
+    pub laboratory: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

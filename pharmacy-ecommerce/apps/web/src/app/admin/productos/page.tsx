@@ -33,6 +33,8 @@ export default function AdminProductsPage() {
     stock: '',
     category_id: '',
     image_url: '',
+    laboratory: '',
+    active: true,
   });
 
   useEffect(() => {
@@ -99,6 +101,8 @@ export default function AdminProductsPage() {
         stock: parseInt(formData.stock),
         category_id: formData.category_id || undefined,
         image_url: formData.image_url || undefined,
+        laboratory: formData.laboratory || undefined,
+        active: formData.active,
       };
 
       if (editingProduct) {
@@ -126,6 +130,8 @@ export default function AdminProductsPage() {
       stock: String(product.stock),
       category_id: product.category_id || '',
       image_url: product.image_url || '',
+      laboratory: product.laboratory || '',
+      active: product.active ?? true,
     });
     setEditingProduct(product.id);
     setShowForm(true);
@@ -152,6 +158,8 @@ export default function AdminProductsPage() {
       stock: '',
       category_id: '',
       image_url: '',
+      laboratory: '',
+      active: true,
     });
   };
 
@@ -395,6 +403,40 @@ export default function AdminProductsPage() {
                   className="input"
                   placeholder="https://..."
                 />
+                {formData.image_url && (
+                  <div className="mt-2">
+                    <img 
+                      src={formData.image_url} 
+                      alt="Preview" 
+                      className="h-20 w-20 object-cover rounded border"
+                      onError={(e) => (e.currentTarget.style.display = 'none')}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Laboratorio</label>
+                <input
+                  type="text"
+                  value={formData.laboratory}
+                  onChange={(e) => setFormData({ ...formData, laboratory: e.target.value })}
+                  className="input"
+                  placeholder="Ej: SAVAL, RECALCINE..."
+                />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="active"
+                  checked={formData.active}
+                  onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                  className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                />
+                <label htmlFor="active" className="text-sm font-medium text-gray-700">
+                  Producto activo (visible en tienda)
+                </label>
               </div>
 
               <div className="flex gap-3 pt-4">
