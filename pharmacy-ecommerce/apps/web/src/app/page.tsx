@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { ProductCard } from '@/components/ProductCard';
-import { productApi, PaginatedProducts, Category } from '@/lib/api';
-import { Search, Filter, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { productApi, PaginatedProducts, Category, Product } from '@/lib/api';
+import { Search, ChevronLeft, ChevronRight, ShoppingCart, Package } from 'lucide-react';
+import Link from 'next/link';
+import { useCartStore } from '@/store/cart';
+import { formatPrice } from '@/lib/format';
 
 export default function Home() {
   const [products, setProducts] = useState<PaginatedProducts | null>(null);
@@ -11,9 +13,11 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
-  const [sortBy, setSortBy] = useState<string>('');
+  const [sortBy, setSortBy] = useState<string>('name');
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
+  const { addToCartLocal } = useCartStore();
 
   useEffect(() => {
     loadCategories();
@@ -21,7 +25,7 @@ export default function Home() {
 
   useEffect(() => {
     loadProducts();
-  }, [selectedCategory, currentPage, sortBy, searchTerm]);
+  }, [selectedCategory, currentPage, sortBy, searchTerm, itemsPerPage]);
 
   // Debounced search
   useEffect(() => {
@@ -37,7 +41,6 @@ export default function Home() {
   const loadCategories = async () => {
     try {
       const data = await productApi.listCategories();
-      // Sort categories by name
       data.sort((a, b) => a.name.localeCompare(b.name));
       setCategories(data);
     } catch (error) {
@@ -52,7 +55,7 @@ export default function Home() {
         category: selectedCategory || undefined,
         search: searchTerm || undefined,
         page: currentPage,
-        limit: 12,
+        limit: itemsPerPage,
         sort_by: sortBy || undefined,
       });
       setProducts(data);
@@ -63,23 +66,10 @@ export default function Home() {
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSearchTerm(searchInput);
-    setCurrentPage(1);
+  const handleAddToCart = async (product: Product) => {
+    await addToCartLocal(product.id);
   };
 
-  const clearFilters = () => {
-    setSelectedCategory('');
-    setSearchInput('');
-    setSearchTerm('');
-    setSortBy('');
-    setCurrentPage(1);
-  };
-
-  const hasActiveFilters = selectedCategory || searchTerm || sortBy;
-
-  // Generate page numbers for pagination
   const getPageNumbers = useCallback(() => {
     if (!products) return [];
     const totalPages = products.total_pages;
@@ -100,72 +90,60 @@ export default function Home() {
     return pages;
   }, [products, currentPage]);
 
-  // Calculate showing range
-  const showingStart = products ? (currentPage - 1) * 12 + 1 : 0;
-  const showingEnd = products ? Math.min(currentPage * 12, products.total) : 0;
+  const showingStart = products ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const showingEnd = products ? Math.min(currentPage * itemsPerPage, products.total) : 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-8 mb-8 text-white">
-        <h1 className="text-3xl md:text-4xl font-bold mb-4">
-          Bienvenido a Tu Farmacia
-        </h1>
-        <p className="text-primary-100 text-lg mb-6">
-          Medicamentos, salud y belleza con despacho a todo Chile.
-        </p>
-        <form onSubmit={handleSearch} className="flex gap-2 max-w-xl">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar productos..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="input pl-10 text-gray-900"
-            />
-          </div>
-          <button type="submit" className="btn bg-white text-primary-600 hover:bg-primary-50">
-            Buscar
-          </button>
-        </form>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <Link href="/" className="flex items-center gap-2">
+              <Package className="w-8 h-8 text-emerald-600" />
+              <span className="text-xl font-semibold text-gray-900">Tu Farmacia</span>
+            </Link>
+            
+            {/* Search */}
+            <div className="flex-1 max-w-xl">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar productos..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
+            </div>
 
-      {/* Filters Bar */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2 text-gray-600">
-            <Filter className="w-5 h-5" />
-            <span className="font-medium">Filtros:</span>
+            <Link href="/carrito" className="p-2 hover:bg-gray-100 rounded-lg">
+              <ShoppingCart className="w-6 h-6 text-gray-600" />
+            </Link>
           </div>
+        </div>
+      </header>
 
-          {/* Category Dropdown */}
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        {/* Filters Row */}
+        <div className="flex flex-wrap items-center gap-3 mb-6">
           <select
             value={selectedCategory}
-            onChange={(e) => {
-              setSelectedCategory(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="input py-2 px-3 min-w-[200px]"
+            onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
+            className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-emerald-500"
           >
-            <option value="">Todas las categorias</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.slug}>
-                {category.name}
-              </option>
+            <option value="">Todos los laboratorios</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.slug}>{cat.name}</option>
             ))}
           </select>
 
-          {/* Sort Dropdown */}
           <select
             value={sortBy}
-            onChange={(e) => {
-              setSortBy(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="input py-2 px-3 min-w-[180px]"
+            onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
+            className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-emerald-500"
           >
-            <option value="">Mas recientes</option>
             <option value="name">Nombre A-Z</option>
             <option value="name_desc">Nombre Z-A</option>
             <option value="price_asc">Precio: menor a mayor</option>
@@ -173,141 +151,143 @@ export default function Home() {
             <option value="stock_desc">Mayor stock</option>
           </select>
 
-          {/* Clear Filters */}
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
-            >
-              <X className="w-4 h-4" />
-              Limpiar filtros
-            </button>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+            className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-emerald-500"
+          >
+            <option value={25}>25 por página</option>
+            <option value={50}>50 por página</option>
+            <option value={100}>100 por página</option>
+          </select>
+
+          {products && (
+            <span className="text-sm text-gray-500 ml-auto">
+              {showingStart.toLocaleString()}-{showingEnd.toLocaleString()} de {products.total.toLocaleString()} productos
+            </span>
           )}
         </div>
 
-        {/* Active Filters Display */}
-        {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-100">
-            <span className="text-sm text-gray-500">Filtros activos:</span>
-            {searchTerm && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm">
-                Busqueda: "{searchTerm}"
-                <button onClick={() => { setSearchInput(''); setSearchTerm(''); }}>
-                  <X className="w-3 h-3" />
+        {/* Products Table */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">Producto</th>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3 hidden md:table-cell">Laboratorio</th>
+                <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">Precio</th>
+                <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3 hidden sm:table-cell">Stock</th>
+                <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3 w-24"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {isLoading ? (
+                [...Array(10)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-48"></div></td>
+                    <td className="px-4 py-3 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
+                    <td className="px-4 py-3 text-right"><div className="h-4 bg-gray-200 rounded w-20 ml-auto"></div></td>
+                    <td className="px-4 py-3 hidden sm:table-cell"><div className="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
+                    <td className="px-4 py-3"><div className="h-8 bg-gray-200 rounded w-16 ml-auto"></div></td>
+                  </tr>
+                ))
+              ) : products && products.products.length > 0 ? (
+                products.products.map((product) => (
+                  <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <Link href={`/producto/${product.slug}`} className="group">
+                        <span className="text-sm font-medium text-gray-900 group-hover:text-emerald-600 transition-colors">
+                          {product.name}
+                        </span>
+                        <span className="block text-xs text-gray-400 md:hidden mt-0.5">
+                          {product.laboratory || product.category_name}
+                        </span>
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      <span className="text-sm text-gray-500">
+                        {product.laboratory || product.category_name || '-'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="text-sm font-semibold text-gray-900">
+                        {formatPrice(product.price)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center hidden sm:table-cell">
+                      {product.stock > 0 ? (
+                        <span className={`text-sm ${product.stock < 5 ? 'text-amber-600' : 'text-gray-600'}`}>
+                          {product.stock}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-red-500 font-medium">Agotado</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {product.stock > 0 ? (
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors"
+                        >
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Agregar</span>
+                        </button>
+                      ) : (
+                        <span className="text-xs text-gray-400">-</span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-4 py-12 text-center text-gray-500">
+                    No se encontraron productos
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {products && products.total_pages > 1 && (
+          <div className="flex justify-center items-center gap-1 mt-6">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg border border-gray-300 bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {getPageNumbers().map((page, idx) => (
+              typeof page === 'number' ? (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentPage(page)}
+                  className={`min-w-[36px] h-9 text-sm rounded-lg font-medium transition-colors ${
+                    currentPage === page
+                      ? 'bg-emerald-600 text-white'
+                      : 'border border-gray-300 bg-white hover:bg-gray-50'
+                  }`}
+                >
+                  {page}
                 </button>
-              </span>
-            )}
-            {selectedCategory && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm">
-                {categories.find(c => c.slug === selectedCategory)?.name}
-                <button onClick={() => setSelectedCategory('')}>
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {sortBy && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                Ordenado por: {
-                  sortBy === 'name' ? 'Nombre A-Z' :
-                  sortBy === 'name_desc' ? 'Nombre Z-A' :
-                  sortBy === 'price_asc' ? 'Precio menor' :
-                  sortBy === 'price_desc' ? 'Precio mayor' :
-                  sortBy === 'stock_desc' ? 'Mayor stock' : sortBy
-                }
-                <button onClick={() => setSortBy('')}>
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
+              ) : (
+                <span key={idx} className="px-2 text-gray-400">...</span>
+              )
+            ))}
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(products.total_pages, p + 1))}
+              disabled={currentPage === products.total_pages}
+              className="p-2 rounded-lg border border-gray-300 bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         )}
-      </div>
-
-      {/* Results Count */}
-      {products && (
-        <div className="flex justify-between items-center mb-4">
-          <p className="text-gray-600">
-            Mostrando <span className="font-medium">{showingStart}-{showingEnd}</span> de{' '}
-            <span className="font-medium">{products.total.toLocaleString('es-CL')}</span> productos
-          </p>
-        </div>
-      )}
-
-      {/* Products Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[...Array(12)].map((_, i) => (
-            <div key={i} className="card animate-pulse">
-              <div className="aspect-square bg-gray-200" />
-              <div className="p-4 space-y-3">
-                <div className="h-4 bg-gray-200 rounded w-1/3" />
-                <div className="h-5 bg-gray-200 rounded w-3/4" />
-                <div className="h-4 bg-gray-200 rounded w-full" />
-                <div className="flex justify-between items-center">
-                  <div className="h-6 bg-gray-200 rounded w-20" />
-                  <div className="h-10 bg-gray-200 rounded w-24" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : products && products.products.length > 0 ? (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-
-          {/* Improved Pagination */}
-          {products.total_pages > 1 && (
-            <div className="flex justify-center items-center gap-1 mt-8">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-
-              {getPageNumbers().map((page, idx) => (
-                typeof page === 'number' ? (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentPage(page)}
-                    className={`min-w-[40px] h-10 rounded-lg font-medium transition-colors ${
-                      currentPage === page
-                        ? 'bg-primary-600 text-white'
-                        : 'border border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ) : (
-                  <span key={idx} className="px-2 text-gray-400">...</span>
-                )
-              ))}
-
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(products.total_pages, p + 1))}
-                disabled={currentPage === products.total_pages}
-                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          )}
-        </>
-      ) : (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg mb-4">No se encontraron productos</p>
-          {hasActiveFilters && (
-            <button onClick={clearFilters} className="btn btn-secondary">
-              Limpiar filtros
-            </button>
-          )}
-        </div>
-      )}
+      </main>
     </div>
   );
 }
