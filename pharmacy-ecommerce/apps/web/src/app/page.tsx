@@ -97,43 +97,67 @@ export default function Home() {
   const showingEnd = products ? Math.min(currentPage * itemsPerPage, products.total) : 0;
 
   return (
-    <div className="min-h-screen bg-background text-slate-200 selection:bg-primary-500/20">
-      <div className="fixed inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] pointer-events-none opacity-20" />
-      
-      {/* Background Gradient similar to reference */}
-      <div className="fixed inset-0 bg-gradient-to-tr from-primary-900/10 via-background to-background pointer-events-none z-[-1]" />
-      
-      {/* Hero Section */}
-      <div className="relative pt-12 pb-8 sm:pt-16 sm:pb-12 border-b border-white/5 bg-background/50 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-500/10 border border-primary-500/20 text-primary-400 text-xs font-medium mb-6">
-            <Sparkles className="w-3 h-3" />
-            <span>La revolución en salud</span>
-          </div>
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white mb-6">
-            Tu Farmacia <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-primary-600">Digital</span>
-          </h1>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-8">
-            Encuentra todos tus medicamentos y productos de bienestar con la rapidez y confianza que mereces.
-          </p>
-          
-          {/* Main Search Bar */}
-          <div className="max-w-2xl mx-auto relative group">
-            <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-slate-500 group-focus-within:text-primary-400 transition-colors" />
+    <div className="min-h-screen bg-slate-50">
+      {/* Modern Glass Navbar */}
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 gap-6">
+            {/* Logo Area */}
+            <div className="flex-shrink-0 flex items-center gap-2 cursor-pointer group" onClick={() => {setSelectedCategory(''); setSearchInput('');}}>
+              <div className="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 group-hover:scale-105 transition-transform">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600">
+                Tu Farmacia
+              </span>
             </div>
-            <input
-              type="text"
-              placeholder="Buscar medicamentos, productos, laboratorios..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="block w-full pl-12 pr-4 py-4 bg-surface/50 border border-white/10 rounded-2xl text-base text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-surface transition-all duration-200 shadow-xl shadow-black/20"
-            />
+            
+            {/* Search Bar - Capsule Style */}
+            <div className="flex-1 max-w-2xl mx-auto hidden sm:block">
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Buscar medicamentos, productos..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="block w-full pl-11 pr-4 py-2.5 bg-slate-100/50 border-0 rounded-full text-sm text-slate-900 placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all duration-200"
+                />
+              </div>
+            </div>
+
+            {/* Cart Button */}
+            <Link href="/carrito" className="relative p-2.5 rounded-full hover:bg-slate-100 transition-colors group">
+              <ShoppingCart className="w-5 h-5 text-slate-600 group-hover:text-emerald-600 transition-colors" />
+              {cart && cart.item_count > 0 && (
+                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-sm border border-white">
+                  {cart.item_count}
+                </span>
+              )}
+            </Link>
           </div>
+        </div>
+      </nav>
+
+      {/* Mobile Search (visible only on mobile) */}
+      <div className="sm:hidden px-4 py-3 bg-white border-b border-slate-200">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-slate-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Buscar..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="block w-full pl-10 pr-4 py-2 bg-slate-100 border-0 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/20"
+          />
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* Controls Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
@@ -142,21 +166,21 @@ export default function Home() {
               <select
                 value={selectedCategory}
                 onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
-                className="appearance-none w-full pl-4 pr-10 py-2.5 bg-surface border border-white/10 rounded-xl text-sm font-medium text-slate-300 hover:border-primary-500/50 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all cursor-pointer"
+                className="appearance-none w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-emerald-500/50 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
               >
                 <option value="">Todos los laboratorios</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.slug}>{cat.name}</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             </div>
 
             <div className="relative min-w-[160px]">
               <select
                 value={sortBy}
                 onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
-                className="appearance-none w-full pl-4 pr-10 py-2.5 bg-surface border border-white/10 rounded-xl text-sm font-medium text-slate-300 hover:border-primary-500/50 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all cursor-pointer"
+                className="appearance-none w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-emerald-500/50 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
               >
                 <option value="name">Nombre A-Z</option>
                 <option value="name_desc">Nombre Z-A</option>
@@ -164,153 +188,81 @@ export default function Home() {
                 <option value="price_desc">Precio: mayor a menor</option>
                 <option value="stock_desc">Mayor stock</option>
               </select>
-              <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
+              <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
             </div>
             
             <div className="relative min-w-[120px]">
                <select
                 value={itemsPerPage}
                 onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                className="appearance-none w-full pl-4 pr-8 py-2.5 bg-surface border border-white/10 rounded-xl text-sm font-medium text-slate-300 hover:border-primary-500/50 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all cursor-pointer"
+                className="appearance-none w-full pl-4 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-emerald-500/50 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
               >
                 <option value={25}>25 items</option>
                 <option value={50}>50 items</option>
                 <option value={100}>100 items</option>
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             </div>
           </div>
 
           {products && (
-             <div className="text-xs font-medium text-slate-400 bg-surface/50 px-3 py-1.5 rounded-full border border-white/5 whitespace-nowrap">
+             <div className="text-xs font-medium text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm whitespace-nowrap">
                {products.total.toLocaleString()} productos encontrados
              </div>
           )}
         </div>
 
-        {/* Minimalist Data Table (Desktop) & Card Grid (Mobile) */}
-        <div className="bg-surface/40 backdrop-blur-md rounded-2xl border border-white/5 overflow-hidden shadow-2xl shadow-black/20">
-          
-          {/* Mobile Card View */}
-          <div className="block sm:hidden">
-            {isLoading ? (
-              <div className="divide-y divide-white/5">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="p-4 flex gap-4 animate-pulse">
-                    <div className="w-16 h-16 bg-white/5 rounded-lg shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-white/5 rounded w-3/4" />
-                      <div className="h-3 bg-white/5 rounded w-1/2" />
-                      <div className="h-4 bg-white/5 rounded w-1/4 mt-2" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : products && products.products.length > 0 ? (
-              <div className="divide-y divide-white/5">
-                {products.products.map((product) => (
-                  <div key={product.id} className="p-4 flex gap-4 hover:bg-white/[0.02] active:bg-white/[0.05] transition-colors">
-                    {/* Placeholder for Product Image */}
-                    <div className="w-20 h-20 bg-white/5 rounded-lg shrink-0 flex items-center justify-center text-slate-500 text-xs border border-white/5">
-                      img
-                    </div>
-                    
-                    <div className="flex-1 min-w-0 flex flex-col justify-between">
-                      <Link href={`/producto/${product.slug}`} className="block">
-                        <h3 className="text-sm font-semibold text-slate-200 line-clamp-2 leading-tight mb-1">
-                          {product.name}
-                        </h3>
-                        <p className="text-xs text-slate-500 truncate">
-                          {product.laboratory || product.category_name || 'General'}
-                        </p>
-                      </Link>
-                      
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-base font-bold text-white">
-                          {formatPrice(product.price)}
-                        </span>
-                        
-                        {product.stock > 0 ? (
-                          <button
-                            onClick={() => handleAddToCart(product)}
-                            disabled={addingId === product.id}
-                            className={`
-                              px-3 py-1.5 text-xs font-semibold rounded-lg transition-all
-                              ${addingId === product.id 
-                                ? 'bg-primary-600/80 text-white' 
-                                : 'bg-white/10 text-primary-400 hover:bg-white/20'
-                              }
-                            `}
-                          >
-                            {addingId === product.id ? 'Listo' : 'Agregar'}
-                          </button>
-                        ) : (
-                          <span className="text-xs font-medium text-red-400 bg-red-500/10 px-2 py-1 rounded">
-                            Agotado
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="py-12 text-center">
-                <p className="text-slate-500 text-sm">No se encontraron productos.</p>
-              </div>
-            )}
-          </div>
-
-          {/* Desktop Table View */}
-          <div className="hidden sm:block overflow-x-auto">
+        {/* Minimalist Data Table */}
+        <div className="bg-white rounded-2xl shadow-[0_2px_12px_-4px_rgba(6,81,237,0.1)] border border-slate-100 overflow-hidden">
+          <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/5 bg-white/[0.02]">
-                  <th className="text-left py-4 pl-6 pr-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Producto</th>
-                  <th className="text-left py-4 px-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">Laboratorio</th>
-                  <th className="text-right py-4 px-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Precio</th>
-                  <th className="text-center py-4 px-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Estado</th>
+                <tr className="border-b border-slate-100 bg-slate-50/50">
+                  <th className="text-left py-4 pl-6 pr-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Producto</th>
+                  <th className="text-left py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Laboratorio</th>
+                  <th className="text-right py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Precio</th>
+                  <th className="text-center py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:table-cell">Estado</th>
                   <th className="text-right py-4 pl-4 pr-6 w-28"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-slate-50">
                 {isLoading ? (
                   [...Array(10)].map((_, i) => (
                     <tr key={i} className="animate-pulse">
-                      <td className="py-4 pl-6"><div className="h-4 bg-white/5 rounded w-48" /></td>
-                      <td className="hidden md:table-cell px-4"><div className="h-4 bg-white/5 rounded w-24" /></td>
-                      <td className="px-4"><div className="h-4 bg-white/5 rounded w-16 ml-auto" /></td>
-                      <td className="hidden sm:table-cell px-4"><div className="h-4 bg-white/5 rounded w-12 mx-auto" /></td>
-                      <td className="pr-6"><div className="h-8 bg-white/5 rounded-lg w-full" /></td>
+                      <td className="py-4 pl-6"><div className="h-4 bg-slate-100 rounded w-48" /></td>
+                      <td className="hidden md:table-cell px-4"><div className="h-4 bg-slate-100 rounded w-24" /></td>
+                      <td className="px-4"><div className="h-4 bg-slate-100 rounded w-16 ml-auto" /></td>
+                      <td className="hidden sm:table-cell px-4"><div className="h-4 bg-slate-100 rounded w-12 mx-auto" /></td>
+                      <td className="pr-6"><div className="h-8 bg-slate-100 rounded-lg w-full" /></td>
                     </tr>
                   ))
                 ) : products && products.products.length > 0 ? (
                   products.products.map((product) => (
-                    <tr key={product.id} className="group hover:bg-white/[0.02] transition-colors duration-150">
+                    <tr key={product.id} className="group hover:bg-slate-50/80 transition-colors duration-150">
                       <td className="py-3.5 pl-6 pr-4">
                         <Link href={`/producto/${product.slug}`} className="block">
-                          <span className="text-sm font-semibold text-slate-200 group-hover:text-primary-400 transition-colors">
+                          <span className="text-sm font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors">
                             {product.name}
                           </span>
-                          <span className="md:hidden block text-xs text-slate-500 mt-0.5">
+                          <span className="md:hidden block text-xs text-slate-400 mt-0.5">
                             {product.laboratory || product.category_name}
                           </span>
                         </Link>
                       </td>
                       <td className="py-3.5 px-4 hidden md:table-cell">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-white/5 text-slate-400 border border-white/5">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
                           {product.laboratory || product.category_name || 'General'}
                         </span>
                       </td>
                       <td className="py-3.5 px-4 text-right">
-                        <span className="text-sm font-bold text-white tracking-tight">
+                        <span className="text-sm font-bold text-slate-800 tracking-tight">
                           {formatPrice(product.price)}
                         </span>
                       </td>
                       <td className="py-3.5 px-4 text-center hidden sm:table-cell">
                         <div className="flex items-center justify-center gap-1.5">
-                           <div className={`w-1.5 h-1.5 rounded-full ${product.stock > 5 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : product.stock > 0 ? 'bg-amber-500' : 'bg-red-500'}`} />
-                           <span className={`text-xs font-medium ${product.stock > 0 ? 'text-slate-400' : 'text-red-400'}`}>
+                           <div className={`w-1.5 h-1.5 rounded-full ${product.stock > 5 ? 'bg-emerald-500' : product.stock > 0 ? 'bg-amber-500' : 'bg-red-500'}`} />
+                           <span className={`text-xs font-medium ${product.stock > 0 ? 'text-slate-600' : 'text-red-500'}`}>
                              {product.stock > 0 ? `${product.stock} un.` : 'Agotado'}
                            </span>
                         </div>
@@ -323,8 +275,8 @@ export default function Home() {
                             className={`
                               inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200
                               ${addingId === product.id 
-                                ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/20 scale-95' 
-                                : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white hover:border-white/20'
+                                ? 'bg-emerald-600 text-white shadow-inner scale-95' 
+                                : 'bg-white border border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-600 hover:shadow-sm'
                               }
                             `}
                           >
@@ -337,7 +289,7 @@ export default function Home() {
                 ) : (
                   <tr>
                     <td colSpan={5} className="py-16 text-center">
-                      <div className="flex flex-col items-center justify-center text-slate-500">
+                      <div className="flex flex-col items-center justify-center text-slate-400">
                         <Search className="w-8 h-8 mb-3 opacity-50" />
                         <p className="text-sm">No se encontraron productos que coincidan.</p>
                       </div>
@@ -350,15 +302,15 @@ export default function Home() {
           
           {/* Pagination Footer */}
           {products && products.total_pages > 1 && (
-            <div className="border-t border-white/5 bg-white/[0.01] px-6 py-4 flex items-center justify-between">
-              <span className="text-xs text-slate-500 hidden sm:inline-block">
+            <div className="border-t border-slate-100 bg-slate-50/30 px-6 py-4 flex items-center justify-between">
+              <span className="text-xs text-slate-400 hidden sm:inline-block">
                  Pagina {currentPage} de {products.total_pages}
               </span>
               <div className="flex items-center gap-1.5 mx-auto sm:mx-0">
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="p-1.5 rounded-lg text-slate-500 hover:bg-white/5 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                  className="p-1.5 rounded-lg text-slate-500 hover:bg-white hover:shadow-sm disabled:opacity-30 disabled:hover:shadow-none transition-all"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -371,14 +323,14 @@ export default function Home() {
                         onClick={() => setCurrentPage(page)}
                         className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${
                           currentPage === page
-                            ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/20'
-                            : 'text-slate-500 hover:bg-white/5 hover:text-white'
+                            ? 'bg-white text-emerald-600 shadow-sm border border-slate-200'
+                            : 'text-slate-500 hover:bg-white/50'
                         }`}
                       >
                         {page}
                       </button>
                     ) : (
-                      <span key={idx} className="text-slate-600 text-xs">...</span>
+                      <span key={idx} className="text-slate-300 text-xs">...</span>
                     )
                   ))}
                 </div>
@@ -386,7 +338,7 @@ export default function Home() {
                 <button
                   onClick={() => setCurrentPage((p) => Math.min(products.total_pages, p + 1))}
                   disabled={currentPage === products.total_pages}
-                  className="p-1.5 rounded-lg text-slate-500 hover:bg-white/5 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                  className="p-1.5 rounded-lg text-slate-500 hover:bg-white hover:shadow-sm disabled:opacity-30 disabled:hover:shadow-none transition-all"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
