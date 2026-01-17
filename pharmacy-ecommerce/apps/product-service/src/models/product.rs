@@ -16,6 +16,8 @@ pub struct Product {
     pub category_id: Option<Uuid>,
     pub image_url: Option<String>,
     pub active: bool,
+    pub external_id: Option<String>,
+    pub laboratory: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -57,10 +59,12 @@ pub struct UpdateProductRequest {
 #[derive(Debug, Deserialize)]
 pub struct ProductQuery {
     pub category: Option<String>,
+    pub laboratory: Option<String>,
     pub search: Option<String>,
     pub page: Option<u32>,
     pub limit: Option<u32>,
     pub active_only: Option<bool>,
+    pub sort_by: Option<String>,
 }
 
 #[derive(Debug, Serialize)]

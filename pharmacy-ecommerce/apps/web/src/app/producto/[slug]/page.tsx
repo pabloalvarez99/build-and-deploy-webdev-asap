@@ -5,9 +5,10 @@ import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { productApi, ProductWithCategory } from '@/lib/api';
 import { useCartStore } from '@/store/cart';
-import { ShoppingCart, ArrowLeft, Minus, Plus } from 'lucide-react';
+import { ShoppingCart, Minus, Plus, Home, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { formatPrice } from '@/lib/format';
+import { ProductCard } from '@/components/ProductCard';
 
 export default function ProductPage() {
   const params = useParams();
@@ -17,6 +18,7 @@ export default function ProductPage() {
   const { addToCartLocal } = useCartStore();
 
   const [product, setProduct] = useState<ProductWithCategory | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<ProductWithCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
@@ -29,6 +31,16 @@ export default function ProductPage() {
     try {
       const data = await productApi.get(slug);
       setProduct(data);
+
+      // Load related products from same category
+      if (data.category_slug) {
+        const related = await productApi.list({
+          category: data.category_slug,
+          limit: 5,
+        });
+        // Filter out current product
+        setRelatedProducts(related.products.filter(p => p.id !== data.id).slice(0, 4));
+      }
     } catch (error) {
       console.error('Error loading product:', error);
     } finally {
@@ -54,14 +66,16 @@ export default function ProductPage() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-32 mb-8" />
+          <div className="h-6 bg-gray-200 rounded w-64 mb-8" />
           <div className="grid md:grid-cols-2 gap-8">
             <div className="aspect-square bg-gray-200 rounded-xl" />
             <div className="space-y-4">
+              <div className="h-4 bg-gray-200 rounded w-24" />
               <div className="h-8 bg-gray-200 rounded w-3/4" />
-              <div className="h-6 bg-gray-200 rounded w-1/4" />
+              <div className="h-4 bg-gray-200 rounded w-32" />
+              <div className="h-10 bg-gray-200 rounded w-1/3" />
               <div className="h-24 bg-gray-200 rounded" />
-              <div className="h-12 bg-gray-200 rounded w-1/2" />
+              <div className="h-12 bg-gray-200 rounded" />
             </div>
           </div>
         </div>
@@ -82,13 +96,28 @@ export default function ProductPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <Link
-        href="/"
-        className="inline-flex items-center text-gray-600 hover:text-primary-600 mb-8"
-      >
-        <ArrowLeft className="w-5 h-5 mr-2" />
-        Volver al catalogo
-      </Link>
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8">
+        <Link href="/" className="hover:text-primary-600 flex items-center gap-1">
+          <Home className="w-4 h-4" />
+          Inicio
+        </Link>
+        <ChevronRight className="w-4 h-4" />
+        {product.category_name && (
+          <>
+            <Link
+              href={`/?category=${product.category_slug}`}
+              className="hover:text-primary-600"
+            >
+              {product.category_name}
+            </Link>
+            <ChevronRight className="w-4 h-4" />
+          </>
+        )}
+        <span className="text-gray-900 font-medium truncate max-w-[200px]">
+          {product.name}
+        </span>
+      </nav>
 
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
         <div className="aspect-square relative bg-gray-100 rounded-xl overflow-hidden">
@@ -101,8 +130,8 @@ export default function ProductPage() {
               priority
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
-              Sin imagen
+            <div className="w-full h-full flex items-center justify-center text-gray-400 p-8 text-center">
+              {product.name}
             </div>
           )}
           {product.stock <= 0 && (
@@ -123,6 +152,12 @@ export default function ProductPage() {
           )}
 
           <h1 className="text-3xl font-bold text-gray-900 mt-2">{product.name}</h1>
+
+          {product.laboratory && (
+            <p className="text-gray-500 mt-1">
+              Laboratorio: <span className="font-medium">{product.laboratory}</span>
+            </p>
+          )}
 
           <p className="text-4xl font-bold text-primary-600 mt-4">
             {formatPrice(product.price)}
@@ -166,6 +201,12 @@ export default function ProductPage() {
                 <p className="text-sm text-gray-500 text-center">
                   {product.stock} unidades disponibles
                 </p>
+
+                {product.stock <= 10 && (
+                  <p className="text-sm text-orange-600 text-center font-medium">
+                    ¡Ultimas unidades!
+                  </p>
+                )}
               </>
             ) : (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
@@ -178,6 +219,18 @@ export default function ProductPage() {
           </div>
         </div>
       </div>
+
+      {/* Related Products */}
+      {relatedProducts.length > 0 && (
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Productos relacionados</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {relatedProducts.map((relatedProduct) => (
+              <ProductCard key={relatedProduct.id} product={relatedProduct} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

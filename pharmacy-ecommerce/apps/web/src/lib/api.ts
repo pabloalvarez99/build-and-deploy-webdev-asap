@@ -58,13 +58,23 @@ export const authApi = {
 
 // Product API
 export const productApi = {
-  list: (params?: { category?: string; search?: string; page?: number; limit?: number; active_only?: boolean }) => {
+  list: (params?: {
+    category?: string;
+    laboratory?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+    active_only?: boolean;
+    sort_by?: string;
+  }) => {
     const searchParams = new URLSearchParams();
     if (params?.category) searchParams.set('category', params.category);
+    if (params?.laboratory) searchParams.set('laboratory', params.laboratory);
     if (params?.search) searchParams.set('search', params.search);
     if (params?.page) searchParams.set('page', String(params.page));
     if (params?.limit) searchParams.set('limit', String(params.limit));
     if (params?.active_only !== undefined) searchParams.set('active_only', String(params.active_only));
+    if (params?.sort_by) searchParams.set('sort_by', params.sort_by);
 
     const query = searchParams.toString();
     return request<PaginatedProducts>(`${PRODUCT_URL}/products${query ? `?${query}` : ''}`);
@@ -212,6 +222,8 @@ export interface Product {
   category_id: string | null;
   image_url: string | null;
   active: boolean;
+  external_id: string | null;
+  laboratory: string | null;
   created_at: string;
 }
 

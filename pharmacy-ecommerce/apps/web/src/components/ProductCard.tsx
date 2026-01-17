@@ -47,6 +47,11 @@ export function ProductCard({ product }: ProductCardProps) {
               {product.category_name}
             </span>
           )}
+          {product.laboratory && (
+            <span className="text-xs text-gray-500 block mt-0.5">
+              {product.laboratory}
+            </span>
+          )}
           <h3 className="font-semibold text-gray-900 mt-1 group-hover:text-primary-600 transition-colors line-clamp-2">
             {product.name}
           </h3>

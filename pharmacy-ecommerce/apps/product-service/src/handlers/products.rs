@@ -39,10 +39,16 @@ pub async fn list_products(
     if let Some(ref search) = query.search {
         params.push(format!("%{}%", search));
         conditions.push(format!(
-            "(p.name ILIKE ${} OR p.description ILIKE ${})",
+            "(p.name ILIKE ${} OR p.description ILIKE ${} OR p.laboratory ILIKE ${})",
+            params.len(),
             params.len(),
             params.len()
         ));
+    }
+
+    if let Some(ref laboratory) = query.laboratory {
+        params.push(laboratory.clone());
+        conditions.push(format!("p.laboratory = ${}", params.len()));
     }
 
     let where_clause = if conditions.is_empty() {
@@ -86,6 +92,17 @@ pub async fn list_products(
     }
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
+    // Determine sort order
+    let order_clause = match query.sort_by.as_deref() {
+        Some("name") | Some("name_asc") => "p.name ASC",
+        Some("name_desc") => "p.name DESC",
+        Some("price_asc") => "p.price ASC",
+        Some("price_desc") => "p.price DESC",
+        Some("stock") | Some("stock_desc") => "p.stock DESC",
+        Some("stock_asc") => "p.stock ASC",
+        _ => "p.created_at DESC",
+    };
+
     // Get products
     let products_query = format!(
         r#"
@@ -96,10 +113,10 @@ pub async fn list_products(
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         {}
-        ORDER BY p.created_at DESC
+        ORDER BY {}
         LIMIT {} OFFSET {}
         "#,
-        where_clause, limit, offset
+        where_clause, order_clause, limit, offset
     );
 
     #[derive(sqlx::FromRow)]
@@ -113,6 +130,8 @@ pub async fn list_products(
         category_id: Option<Uuid>,
         image_url: Option<String>,
         active: bool,
+        external_id: Option<String>,
+        laboratory: Option<String>,
         created_at: chrono::DateTime<chrono::Utc>,
         updated_at: chrono::DateTime<chrono::Utc>,
         category_name: Option<String>,
@@ -155,6 +174,8 @@ pub async fn list_products(
                 category_id: row.category_id,
                 image_url: row.image_url,
                 active: row.active,
+                external_id: row.external_id,
+                laboratory: row.laboratory,
                 created_at: row.created_at,
                 updated_at: row.updated_at,
             },
@@ -189,6 +210,8 @@ pub async fn get_product(
         category_id: Option<Uuid>,
         image_url: Option<String>,
         active: bool,
+        external_id: Option<String>,
+        laboratory: Option<String>,
         created_at: chrono::DateTime<chrono::Utc>,
         updated_at: chrono::DateTime<chrono::Utc>,
         category_name: Option<String>,
@@ -223,6 +246,8 @@ pub async fn get_product(
             category_id: row.category_id,
             image_url: row.image_url,
             active: row.active,
+            external_id: row.external_id,
+            laboratory: row.laboratory,
             created_at: row.created_at,
             updated_at: row.updated_at,
         },
@@ -246,6 +271,8 @@ pub async fn get_product_by_id(
         category_id: Option<Uuid>,
         image_url: Option<String>,
         active: bool,
+        external_id: Option<String>,
+        laboratory: Option<String>,
         created_at: chrono::DateTime<chrono::Utc>,
         updated_at: chrono::DateTime<chrono::Utc>,
         category_name: Option<String>,
@@ -280,6 +307,8 @@ pub async fn get_product_by_id(
             category_id: row.category_id,
             image_url: row.image_url,
             active: row.active,
+            external_id: row.external_id,
+            laboratory: row.laboratory,
             created_at: row.created_at,
             updated_at: row.updated_at,
         },
