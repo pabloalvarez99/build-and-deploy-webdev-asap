@@ -5,10 +5,9 @@ import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { productApi, ProductWithCategory } from '@/lib/api';
 import { useCartStore } from '@/store/cart';
-import { ShoppingCart, Minus, Plus, Home, ChevronRight } from 'lucide-react';
+import { ShoppingCart, Minus, Plus, Home, ChevronRight, Package, Truck, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { formatPrice } from '@/lib/format';
-import { ProductCard } from '@/components/ProductCard';
 
 export default function ProductPage() {
   const params = useParams();
@@ -18,7 +17,6 @@ export default function ProductPage() {
   const { addToCartLocal } = useCartStore();
 
   const [product, setProduct] = useState<ProductWithCategory | null>(null);
-  const [relatedProducts, setRelatedProducts] = useState<ProductWithCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
@@ -31,16 +29,6 @@ export default function ProductPage() {
     try {
       const data = await productApi.get(slug);
       setProduct(data);
-
-      // Load related products from same category
-      if (data.category_slug) {
-        const related = await productApi.list({
-          category: data.category_slug,
-          limit: 5,
-        });
-        // Filter out current product
-        setRelatedProducts(related.products.filter(p => p.id !== data.id).slice(0, 4));
-      }
     } catch (error) {
       console.error('Error loading product:', error);
     } finally {
@@ -85,152 +73,140 @@ export default function ProductPage() {
 
   if (!product) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Producto no encontrado</h1>
-        <Link href="/" className="btn btn-primary">
-          Volver al catalogo
+        <p className="text-gray-500 mb-8">El producto que buscas no existe o ha sido eliminado.</p>
+        <Link href="/" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700">
+          Volver al catálogo
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8">
-        <Link href="/" className="hover:text-primary-600 flex items-center gap-1">
-          <Home className="w-4 h-4" />
-          Inicio
-        </Link>
-        <ChevronRight className="w-4 h-4" />
-        {product.category_name && (
-          <>
-            <Link
-              href={`/?category=${product.category_slug}`}
-              className="hover:text-primary-600"
-            >
-              {product.category_name}
-            </Link>
-            <ChevronRight className="w-4 h-4" />
-          </>
-        )}
-        <span className="text-gray-900 font-medium truncate max-w-[200px]">
-          {product.name}
-        </span>
-      </nav>
-
-      <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-        <div className="aspect-square relative bg-gray-100 rounded-xl overflow-hidden">
-          {product.image_url ? (
-            <Image
-              src={product.image_url}
-              alt={product.name}
-              fill
-              className="object-cover"
-              priority
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400 p-8 text-center">
-              {product.name}
-            </div>
-          )}
-          {product.stock <= 0 && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <span className="text-white text-2xl font-semibold">Agotado</span>
-            </div>
-          )}
-        </div>
-
-        <div>
+    <div className="bg-white min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8 overflow-hidden">
+          <Link href="/" className="hover:text-emerald-600 flex items-center gap-1 transition-colors">
+            <Home className="w-4 h-4" />
+            Inicio
+          </Link>
+          <ChevronRight className="w-4 h-4 flex-shrink-0" />
           {product.category_name && (
-            <Link
-              href={`/?category=${product.category_slug}`}
-              className="text-sm text-primary-600 font-medium uppercase tracking-wide hover:underline"
-            >
-              {product.category_name}
-            </Link>
+            <>
+              <span className="hover:text-emerald-600 transition-colors cursor-pointer">
+                {product.category_name}
+              </span>
+              <ChevronRight className="w-4 h-4 flex-shrink-0" />
+            </>
           )}
+          <span className="text-gray-900 font-medium truncate">
+            {product.name}
+          </span>
+        </nav>
 
-          <h1 className="text-3xl font-bold text-gray-900 mt-2">{product.name}</h1>
+        <div className="grid md:grid-cols-2 gap-8 lg:gap-16 items-start">
+          {/* Product Image */}
+          <div className="aspect-square relative bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden flex items-center justify-center">
+            {product.image_url ? (
+              <Image
+                src={product.image_url}
+                alt={product.name}
+                fill
+                className="object-contain p-8"
+                priority
+              />
+            ) : (
+              <Package className="w-32 h-32 text-gray-200" />
+            )}
+            {product.stock <= 0 && (
+              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+                <span className="bg-red-100 text-red-800 px-6 py-2 rounded-full font-semibold text-lg border border-red-200">
+                  Agotado
+                </span>
+              </div>
+            )}
+          </div>
 
-          {product.laboratory && (
-            <p className="text-gray-500 mt-1">
-              Laboratorio: <span className="font-medium">{product.laboratory}</span>
-            </p>
-          )}
+          {/* Product Info */}
+          <div className="flex flex-col">
+            <div className="mb-6">
+              {product.laboratory && (
+                <span className="text-emerald-600 font-semibold tracking-wide text-sm uppercase mb-2 block">
+                  {product.laboratory}
+                </span>
+              )}
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4">
+                {product.name}
+              </h1>
+              <div className="flex items-baseline gap-4">
+                <span className="text-3xl font-bold text-gray-900">
+                  {formatPrice(parseFloat(product.price))}
+                </span>
+              </div>
+            </div>
 
-          <p className="text-4xl font-bold text-primary-600 mt-4">
-            {formatPrice(product.price)}
-          </p>
+            <div className="prose prose-sm text-gray-600 mb-8">
+              <p>{product.description || "Sin descripción disponible."}</p>
+            </div>
 
-          {product.description && (
-            <p className="text-gray-600 mt-6 leading-relaxed">{product.description}</p>
-          )}
+            <div className="border-t border-b border-gray-100 py-6 mb-8 space-y-4">
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                <div className="p-2 bg-emerald-50 rounded-full text-emerald-600">
+                  <Truck className="w-5 h-5" />
+                </div>
+                <span>Envío disponible a todo Chile</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                <div className="p-2 bg-blue-50 rounded-full text-blue-600">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <span>Compra segura y garantía de calidad</span>
+              </div>
+            </div>
 
-          <div className="mt-8 space-y-4">
             {product.stock > 0 ? (
-              <>
-                <div className="flex items-center space-x-4">
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
                   <span className="text-gray-700 font-medium">Cantidad:</span>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center border border-gray-300 rounded-lg">
                     <button
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                      className="p-3 hover:bg-gray-50 transition-colors"
                     >
-                      <Minus className="w-5 h-5" />
+                      <Minus className="w-4 h-4 text-gray-600" />
                     </button>
-                    <span className="w-12 text-center font-semibold text-lg">{quantity}</span>
+                    <span className="w-12 text-center font-medium text-gray-900">{quantity}</span>
                     <button
                       onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
-                      className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                      className="p-3 hover:bg-gray-50 transition-colors"
                     >
-                      <Plus className="w-5 h-5" />
+                      <Plus className="w-4 h-4 text-gray-600" />
                     </button>
                   </div>
+                  <span className="text-sm text-gray-500">
+                    {product.stock} disponibles
+                  </span>
                 </div>
 
                 <button
                   onClick={handleAddToCart}
                   disabled={isAdding}
-                  className="btn btn-primary w-full flex items-center justify-center space-x-2 py-3 text-lg disabled:opacity-50"
+                  className="w-full bg-emerald-600 text-white py-4 px-8 rounded-xl font-semibold text-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  <ShoppingCart className="w-5 h-5" />
-                  <span>{isAdding ? 'Agregando...' : 'Agregar al carrito'}</span>
+                  <ShoppingCart className="w-6 h-6" />
+                  {isAdding ? 'Agregando...' : 'Agregar al carrito'}
                 </button>
-
-                <p className="text-sm text-gray-500 text-center">
-                  {product.stock} unidades disponibles
-                </p>
-
-                {product.stock <= 10 && (
-                  <p className="text-sm text-orange-600 text-center font-medium">
-                    ¡Ultimas unidades!
-                  </p>
-                )}
-              </>
-            ) : (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-                <p className="text-red-600 font-medium">Producto agotado</p>
-                <p className="text-red-500 text-sm mt-1">
-                  Este producto no esta disponible actualmente
-                </p>
               </div>
+            ) : (
+              <button disabled className="w-full bg-gray-100 text-gray-400 py-4 px-8 rounded-xl font-semibold text-lg cursor-not-allowed">
+                No disponible
+              </button>
             )}
           </div>
         </div>
       </div>
-
-      {/* Related Products */}
-      {relatedProducts.length > 0 && (
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Productos relacionados</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {relatedProducts.map((relatedProduct) => (
-              <ProductCard key={relatedProduct.id} product={relatedProduct} />
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
