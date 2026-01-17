@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { productApi, PaginatedProducts, Category, Product } from '@/lib/api';
-import { Search, ChevronLeft, ChevronRight, ShoppingCart, Package } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, ShoppingCart, Filter, Sparkles, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
 import { formatPrice } from '@/lib/format';
@@ -17,7 +17,8 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
-  const { addToCartLocal } = useCartStore();
+  const { addToCartLocal, cart } = useCartStore();
+  const [addingId, setAddingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadCategories();
@@ -67,7 +68,9 @@ export default function Home() {
   };
 
   const handleAddToCart = async (product: Product) => {
+    setAddingId(product.id);
     await addToCartLocal(product.id);
+    setTimeout(() => setAddingId(null), 500);
   };
 
   const getPageNumbers = useCallback(() => {
@@ -94,199 +97,255 @@ export default function Home() {
   const showingEnd = products ? Math.min(currentPage * itemsPerPage, products.total) : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <Link href="/" className="flex items-center gap-2">
-              <Package className="w-8 h-8 text-emerald-600" />
-              <span className="text-xl font-semibold text-gray-900">Tu Farmacia</span>
-            </Link>
+    <div className="min-h-screen bg-[#F8FAFC]">
+      {/* Modern Glass Navbar */}
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 gap-6">
+            {/* Logo Area */}
+            <div className="flex-shrink-0 flex items-center gap-2 cursor-pointer group" onClick={() => {setSelectedCategory(''); setSearchInput('');}}>
+              <div className="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 group-hover:scale-105 transition-transform">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600">
+                Tu Farmacia
+              </span>
+            </div>
             
-            {/* Search */}
-            <div className="flex-1 max-w-xl">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            {/* Search Bar - Capsule Style */}
+            <div className="flex-1 max-w-2xl mx-auto hidden sm:block">
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                </div>
                 <input
                   type="text"
-                  placeholder="Buscar productos..."
+                  placeholder="Buscar medicamentos, productos..."
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="block w-full pl-11 pr-4 py-2.5 bg-slate-100/50 border-0 rounded-full text-sm text-slate-900 placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all duration-200"
                 />
               </div>
             </div>
 
-            <Link href="/carrito" className="p-2 hover:bg-gray-100 rounded-lg">
-              <ShoppingCart className="w-6 h-6 text-gray-600" />
+            {/* Cart Button */}
+            <Link href="/carrito" className="relative p-2.5 rounded-full hover:bg-slate-100 transition-colors group">
+              <ShoppingCart className="w-5 h-5 text-slate-600 group-hover:text-emerald-600 transition-colors" />
+              {cart && cart.item_count > 0 && (
+                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-sm border border-white">
+                  {cart.item_count}
+                </span>
+              )}
             </Link>
           </div>
         </div>
-      </header>
+      </nav>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        {/* Filters Row */}
-        <div className="flex flex-wrap items-center gap-3 mb-6">
-          <select
-            value={selectedCategory}
-            onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
-            className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-emerald-500"
-          >
-            <option value="">Todos los laboratorios</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.slug}>{cat.name}</option>
-            ))}
-          </select>
+      {/* Mobile Search (visible only on mobile) */}
+      <div className="sm:hidden px-4 py-3 bg-white border-b border-slate-200">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-slate-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Buscar..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="block w-full pl-10 pr-4 py-2 bg-slate-100 border-0 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/20"
+          />
+        </div>
+      </div>
 
-          <select
-            value={sortBy}
-            onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
-            className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-emerald-500"
-          >
-            <option value="name">Nombre A-Z</option>
-            <option value="name_desc">Nombre Z-A</option>
-            <option value="price_asc">Precio: menor a mayor</option>
-            <option value="price_desc">Precio: mayor a menor</option>
-            <option value="stock_desc">Mayor stock</option>
-          </select>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Controls Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
+            <div className="relative min-w-[200px]">
+              <select
+                value={selectedCategory}
+                onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
+                className="appearance-none w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-emerald-500/50 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
+              >
+                <option value="">Todos los laboratorios</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.slug}>{cat.name}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            </div>
 
-          <select
-            value={itemsPerPage}
-            onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-            className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-emerald-500"
-          >
-            <option value={25}>25 por página</option>
-            <option value={50}>50 por página</option>
-            <option value={100}>100 por página</option>
-          </select>
+            <div className="relative min-w-[160px]">
+              <select
+                value={sortBy}
+                onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
+                className="appearance-none w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-emerald-500/50 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
+              >
+                <option value="name">Nombre A-Z</option>
+                <option value="name_desc">Nombre Z-A</option>
+                <option value="price_asc">Precio: menor a mayor</option>
+                <option value="price_desc">Precio: mayor a menor</option>
+                <option value="stock_desc">Mayor stock</option>
+              </select>
+              <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+            </div>
+            
+            <div className="relative min-w-[120px]">
+               <select
+                value={itemsPerPage}
+                onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                className="appearance-none w-full pl-4 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-emerald-500/50 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
+              >
+                <option value={25}>25 items</option>
+                <option value={50}>50 items</option>
+                <option value={100}>100 items</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            </div>
+          </div>
 
           {products && (
-            <span className="text-sm text-gray-500 ml-auto">
-              {showingStart.toLocaleString()}-{showingEnd.toLocaleString()} de {products.total.toLocaleString()} productos
-            </span>
+             <div className="text-xs font-medium text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm whitespace-nowrap">
+               {products.total.toLocaleString()} productos encontrados
+             </div>
           )}
         </div>
 
-        {/* Products Table */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">Producto</th>
-                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3 hidden md:table-cell">Laboratorio</th>
-                <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">Precio</th>
-                <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3 hidden sm:table-cell">Stock</th>
-                <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3 w-24"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {isLoading ? (
-                [...Array(10)].map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-48"></div></td>
-                    <td className="px-4 py-3 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
-                    <td className="px-4 py-3 text-right"><div className="h-4 bg-gray-200 rounded w-20 ml-auto"></div></td>
-                    <td className="px-4 py-3 hidden sm:table-cell"><div className="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
-                    <td className="px-4 py-3"><div className="h-8 bg-gray-200 rounded w-16 ml-auto"></div></td>
-                  </tr>
-                ))
-              ) : products && products.products.length > 0 ? (
-                products.products.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <Link href={`/producto/${product.slug}`} className="group">
-                        <span className="text-sm font-medium text-gray-900 group-hover:text-emerald-600 transition-colors">
-                          {product.name}
-                        </span>
-                        <span className="block text-xs text-gray-400 md:hidden mt-0.5">
-                          {product.laboratory || product.category_name}
-                        </span>
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 hidden md:table-cell">
-                      <span className="text-sm text-gray-500">
-                        {product.laboratory || product.category_name || '-'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <span className="text-sm font-semibold text-gray-900">
-                        {formatPrice(product.price)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center hidden sm:table-cell">
-                      {product.stock > 0 ? (
-                        <span className={`text-sm ${product.stock < 5 ? 'text-amber-600' : 'text-gray-600'}`}>
-                          {product.stock}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-red-500 font-medium">Agotado</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {product.stock > 0 ? (
-                        <button
-                          onClick={() => handleAddToCart(product)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors"
-                        >
-                          <ShoppingCart className="w-3.5 h-3.5" />
-                          <span className="hidden sm:inline">Agregar</span>
-                        </button>
-                      ) : (
-                        <span className="text-xs text-gray-400">-</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-gray-500">
-                    No se encontraron productos
-                  </td>
+        {/* Minimalist Data Table */}
+        <div className="bg-white rounded-2xl shadow-[0_2px_12px_-4px_rgba(6,81,237,0.1)] border border-slate-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50/50">
+                  <th className="text-left py-4 pl-6 pr-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Producto</th>
+                  <th className="text-left py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Laboratorio</th>
+                  <th className="text-right py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Precio</th>
+                  <th className="text-center py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:table-cell">Estado</th>
+                  <th className="text-right py-4 pl-4 pr-6 w-28"></th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {products && products.total_pages > 1 && (
-          <div className="flex justify-center items-center gap-1 mt-6">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="p-2 rounded-lg border border-gray-300 bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            {getPageNumbers().map((page, idx) => (
-              typeof page === 'number' ? (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentPage(page)}
-                  className={`min-w-[36px] h-9 text-sm rounded-lg font-medium transition-colors ${
-                    currentPage === page
-                      ? 'bg-emerald-600 text-white'
-                      : 'border border-gray-300 bg-white hover:bg-gray-50'
-                  }`}
-                >
-                  {page}
-                </button>
-              ) : (
-                <span key={idx} className="px-2 text-gray-400">...</span>
-              )
-            ))}
-
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(products.total_pages, p + 1))}
-              disabled={currentPage === products.total_pages}
-              className="p-2 rounded-lg border border-gray-300 bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {isLoading ? (
+                  [...Array(10)].map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="py-4 pl-6"><div className="h-4 bg-slate-100 rounded w-48" /></td>
+                      <td className="hidden md:table-cell px-4"><div className="h-4 bg-slate-100 rounded w-24" /></td>
+                      <td className="px-4"><div className="h-4 bg-slate-100 rounded w-16 ml-auto" /></td>
+                      <td className="hidden sm:table-cell px-4"><div className="h-4 bg-slate-100 rounded w-12 mx-auto" /></td>
+                      <td className="pr-6"><div className="h-8 bg-slate-100 rounded-lg w-full" /></td>
+                    </tr>
+                  ))
+                ) : products && products.products.length > 0 ? (
+                  products.products.map((product) => (
+                    <tr key={product.id} className="group hover:bg-slate-50/80 transition-colors duration-150">
+                      <td className="py-3.5 pl-6 pr-4">
+                        <Link href={`/producto/${product.slug}`} className="block">
+                          <span className="text-sm font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors">
+                            {product.name}
+                          </span>
+                          <span className="md:hidden block text-xs text-slate-400 mt-0.5">
+                            {product.laboratory || product.category_name}
+                          </span>
+                        </Link>
+                      </td>
+                      <td className="py-3.5 px-4 hidden md:table-cell">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
+                          {product.laboratory || product.category_name || 'General'}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <span className="text-sm font-bold text-slate-800 tracking-tight">
+                          {formatPrice(product.price)}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-center hidden sm:table-cell">
+                        <div className="flex items-center justify-center gap-1.5">
+                           <div className={`w-1.5 h-1.5 rounded-full ${product.stock > 5 ? 'bg-emerald-500' : product.stock > 0 ? 'bg-amber-500' : 'bg-red-500'}`} />
+                           <span className={`text-xs font-medium ${product.stock > 0 ? 'text-slate-600' : 'text-red-500'}`}>
+                             {product.stock > 0 ? `${product.stock} un.` : 'Agotado'}
+                           </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 pr-6 text-right">
+                        {product.stock > 0 && (
+                          <button
+                            onClick={() => handleAddToCart(product)}
+                            disabled={addingId === product.id}
+                            className={`
+                              inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200
+                              ${addingId === product.id 
+                                ? 'bg-emerald-600 text-white shadow-inner scale-95' 
+                                : 'bg-white border border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-600 hover:shadow-sm'
+                              }
+                            `}
+                          >
+                            {addingId === product.id ? 'Agregado' : 'Agregar'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="py-16 text-center">
+                      <div className="flex flex-col items-center justify-center text-slate-400">
+                        <Search className="w-8 h-8 mb-3 opacity-50" />
+                        <p className="text-sm">No se encontraron productos que coincidan.</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
+          
+          {/* Pagination Footer */}
+          {products && products.total_pages > 1 && (
+            <div className="border-t border-slate-100 bg-slate-50/30 px-6 py-4 flex items-center justify-between">
+              <span className="text-xs text-slate-400 hidden sm:inline-block">
+                 Pagina {currentPage} de {products.total_pages}
+              </span>
+              <div className="flex items-center gap-1.5 mx-auto sm:mx-0">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-1.5 rounded-lg text-slate-500 hover:bg-white hover:shadow-sm disabled:opacity-30 disabled:hover:shadow-none transition-all"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                
+                <div className="flex items-center gap-1 px-2">
+                   {getPageNumbers().map((page, idx) => (
+                    typeof page === 'number' ? (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${
+                          currentPage === page
+                            ? 'bg-white text-emerald-600 shadow-sm border border-slate-200'
+                            : 'text-slate-500 hover:bg-white/50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ) : (
+                      <span key={idx} className="text-slate-300 text-xs">...</span>
+                    )
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(products.total_pages, p + 1))}
+                  disabled={currentPage === products.total_pages}
+                  className="p-1.5 rounded-lg text-slate-500 hover:bg-white hover:shadow-sm disabled:opacity-30 disabled:hover:shadow-none transition-all"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
