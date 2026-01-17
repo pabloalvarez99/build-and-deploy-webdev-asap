@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cart';
 import { orderApi } from '@/lib/api';
-import { MapPin, FileText, CreditCard, Mail, Loader2 } from 'lucide-react';
+import { MapPin, FileText, Mail, Loader2, ShieldCheck } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 export default function CheckoutPage() {
@@ -16,7 +16,6 @@ export default function CheckoutPage() {
   const [email, setEmail] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
   const [notes, setNotes] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'mercadopago' | 'stripe'>('mercadopago');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
 
@@ -59,7 +58,6 @@ export default function CheckoutPage() {
         shipping_address: shippingAddress || undefined,
         notes: notes || undefined,
         session_id: getSessionId(),
-        payment_method: paymentMethod,
       });
 
       clearCartLocal();
@@ -91,7 +89,7 @@ export default function CheckoutPage() {
           {/* Name and Surname */}
           <div className="card p-6">
             <div className="flex items-center gap-3 mb-4">
-              <Mail className="w-5 h-5 text-primary-600" />
+              <Mail className="w-5 h-5 text-emerald-600" />
               <h2 className="text-lg font-semibold text-gray-900">
                 Informacion personal *
               </h2>
@@ -129,7 +127,7 @@ export default function CheckoutPage() {
           {/* Email */}
           <div className="card p-6">
             <div className="flex items-center gap-3 mb-4">
-              <Mail className="w-5 h-5 text-primary-600" />
+              <Mail className="w-5 h-5 text-emerald-600" />
               <h2 className="text-lg font-semibold text-gray-900">
                 Email de contacto *
               </h2>
@@ -150,7 +148,7 @@ export default function CheckoutPage() {
           {/* Shipping Address */}
           <div className="card p-6">
             <div className="flex items-center gap-3 mb-4">
-              <MapPin className="w-5 h-5 text-primary-600" />
+              <MapPin className="w-5 h-5 text-emerald-600" />
               <h2 className="text-lg font-semibold text-gray-900">
                 Direccion de envio
               </h2>
@@ -166,7 +164,7 @@ export default function CheckoutPage() {
           {/* Notes */}
           <div className="card p-6">
             <div className="flex items-center gap-3 mb-4">
-              <FileText className="w-5 h-5 text-primary-600" />
+              <FileText className="w-5 h-5 text-emerald-600" />
               <h2 className="text-lg font-semibold text-gray-900">
                 Notas adicionales
               </h2>
@@ -177,52 +175,6 @@ export default function CheckoutPage() {
               placeholder="Instrucciones especiales, horarios de entrega, etc."
               className="input min-h-[80px]"
             />
-          </div>
-
-          {/* Payment Method */}
-          <div className="card p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <CreditCard className="w-5 h-5 text-primary-600" />
-              <h2 className="text-lg font-semibold text-gray-900">
-                Metodo de pago
-              </h2>
-            </div>
-            <div className="space-y-3">
-              <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                style={{ borderColor: paymentMethod === 'mercadopago' ? '#3b82f6' : '#e5e7eb' }}>
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="mercadopago"
-                  checked={paymentMethod === 'mercadopago'}
-                  onChange={(e) => setPaymentMethod(e.target.value as 'mercadopago' | 'stripe')}
-                  className="mr-3 w-4 h-4 text-primary-600"
-                />
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">MercadoPago</p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Seras redirigido a MercadoPago para completar el pago de forma segura.
-                  </p>
-                </div>
-              </label>
-              <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                style={{ borderColor: paymentMethod === 'stripe' ? '#3b82f6' : '#e5e7eb' }}>
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="stripe"
-                  checked={paymentMethod === 'stripe'}
-                  onChange={(e) => setPaymentMethod(e.target.value as 'mercadopago' | 'stripe')}
-                  className="mr-3 w-4 h-4 text-primary-600"
-                />
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">Stripe</p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Seras redirigido a Stripe para completar el pago con tarjeta de credito o debito.
-                  </p>
-                </div>
-              </label>
-            </div>
           </div>
         </div>
 
@@ -271,7 +223,7 @@ export default function CheckoutPage() {
             <button
               onClick={handleCheckout}
               disabled={isProcessing || !email || !name || !surname}
-              className="btn btn-primary w-full py-3 text-lg disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-3 px-4 bg-[#009ee3] hover:bg-[#0080c3] text-white font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
             >
               {isProcessing ? (
                 <>
@@ -279,13 +231,14 @@ export default function CheckoutPage() {
                   Procesando...
                 </>
               ) : (
-                paymentMethod === 'stripe' ? 'Pagar con Stripe' : 'Pagar con MercadoPago'
+                'Pagar con MercadoPago'
               )}
             </button>
 
-            <p className="text-xs text-gray-500 text-center mt-4">
-              Al continuar, aceptas nuestros terminos y condiciones
-            </p>
+            <div className="flex items-center justify-center gap-2 mt-4 text-gray-500">
+              <ShieldCheck className="w-4 h-4" />
+              <span className="text-xs">Pago seguro con MercadoPago</span>
+            </div>
           </div>
         </div>
       </div>

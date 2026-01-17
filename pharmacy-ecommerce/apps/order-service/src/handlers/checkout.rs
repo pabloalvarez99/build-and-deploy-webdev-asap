@@ -8,9 +8,8 @@ use crate::{
         Cart, CheckoutRequest, CheckoutResponse, Claims, GuestCheckoutRequest,
         MercadoPagoBackUrls, MercadoPagoItem, MercadoPagoPayer, MercadoPagoPaymentCreate,
         MercadoPagoPreference, PayerInfo, ProcessPaymentRequest, ProcessPaymentResponse,
-        StripeCheckoutSessionCreate, StripeLineItem,
     },
-    services::{MercadoPagoClient, StripeClient},
+    services::MercadoPagoClient,
     AppState,
 };
 
@@ -335,7 +334,7 @@ pub async fn process_payment(
     }))
 }
 
-/// Guest checkout - no authentication required
+/// Guest checkout - no authentication required (MercadoPago only)
 pub async fn guest_checkout(
     State(state): State<AppState>,
     Json(payload): Json<GuestCheckoutRequest>,
@@ -390,14 +389,11 @@ pub async fn guest_checkout(
         order_items.push((product_id, name, item.quantity, price));
     }
 
-    // Determine payment method (default to mercadopago)
-    let payment_method = payload.payment_method.as_deref().unwrap_or("mercadopago");
-    
     // Create order in database (user_id = NULL for guest)
     let order_id = sqlx::query_scalar::<_, Uuid>(
         r#"
         INSERT INTO orders (user_id, status, total, shipping_address, notes, guest_email, guest_session_id, payment_provider)
-        VALUES (NULL, 'pending', $1, $2, $3, $4, $5, $6)
+        VALUES (NULL, 'pending', $1, $2, $3, $4, $5, 'mercadopago')
         RETURNING id
         "#,
     )
@@ -406,7 +402,6 @@ pub async fn guest_checkout(
     .bind(&payload.notes)
     .bind(&payload.email)
     .bind(&payload.session_id)
-    .bind(payment_method)
     .fetch_one(&state.db)
     .await
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
@@ -429,118 +424,61 @@ pub async fn guest_checkout(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     }
 
-    // Create payment session based on payment method
-    if payment_method == "stripe" {
-        // Stripe checkout
-        if state.config.stripe_secret_key.is_empty() {
-            return Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Stripe is not configured".to_string(),
-            ));
-        }
+    // Create MercadoPago preference
+    let mp_client = MercadoPagoClient::new(state.config.mercadopago_access_token.clone());
 
-        let stripe_client = StripeClient::new(state.config.stripe_secret_key.clone());
+    let auto_return = if state.config.frontend_url.contains("localhost") {
+        None
+    } else {
+        Some("approved".to_string())
+    };
 
-        // Convert items to Stripe line items
-        let mut stripe_items = vec![];
-        for item in &mp_items {
-            stripe_items.push(StripeLineItem {
-                name: item.title.clone(),
-                amount: item.unit_price, // Already in cents (CLP)
-                quantity: item.quantity,
-                currency: "clp".to_string(),
-            });
-        }
-
-        let stripe_session = StripeCheckoutSessionCreate {
-            line_items: stripe_items,
-            success_url: format!(
+    let preference = MercadoPagoPreference {
+        items: mp_items,
+        back_urls: MercadoPagoBackUrls {
+            success: format!(
                 "{}/checkout/success?order_id={}",
                 state.config.frontend_url, order_id
             ),
-            cancel_url: format!(
+            failure: format!(
                 "{}/checkout/failure?order_id={}",
                 state.config.frontend_url, order_id
             ),
-            customer_email: Some(payload.email.clone()),
-            client_reference_id: order_id.to_string(),
-        };
+            pending: format!(
+                "{}/checkout/pending?order_id={}",
+                state.config.frontend_url, order_id
+            ),
+        },
+        auto_return,
+        external_reference: order_id.to_string(),
+        notification_url: Some(format!(
+            "{}/api/webhook/mercadopago",
+            state.config.webhook_url
+        )),
+        payer: Some(MercadoPagoPayer {
+            email: payload.email.clone(),
+            name: Some(payload.name.clone()),
+            surname: Some(payload.surname.clone()),
+        }),
+        statement_descriptor: Some("Tu Farmacia".to_string()),
+    };
 
-        let stripe_response = stripe_client
-            .create_checkout_session(&stripe_session)
-            .await
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
+    let mp_response = mp_client
+        .create_preference(&preference)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
 
-        // Update order with Stripe session ID
-        sqlx::query("UPDATE orders SET stripe_checkout_session_id = $1 WHERE id = $2")
-            .bind(&stripe_response.id)
-            .bind(order_id)
-            .execute(&state.db)
-            .await
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    // Update order with MercadoPago preference ID
+    sqlx::query("UPDATE orders SET mercadopago_preference_id = $1 WHERE id = $2")
+        .bind(&mp_response.id)
+        .bind(order_id)
+        .execute(&state.db)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-        Ok(Json(CheckoutResponse {
-            order_id,
-            init_point: stripe_response.url,
-            preference_id: stripe_response.id,
-        }))
-    } else {
-        // MercadoPago checkout (default)
-        let mp_client = MercadoPagoClient::new(state.config.mercadopago_access_token.clone());
-
-        let auto_return = if state.config.frontend_url.contains("localhost") {
-            None
-        } else {
-            Some("approved".to_string())
-        };
-
-        let preference = MercadoPagoPreference {
-            items: mp_items,
-            back_urls: MercadoPagoBackUrls {
-                success: format!(
-                    "{}/checkout/success?order_id={}",
-                    state.config.frontend_url, order_id
-                ),
-                failure: format!(
-                    "{}/checkout/failure?order_id={}",
-                    state.config.frontend_url, order_id
-                ),
-                pending: format!(
-                    "{}/checkout/pending?order_id={}",
-                    state.config.frontend_url, order_id
-                ),
-            },
-            auto_return,
-            external_reference: order_id.to_string(),
-            notification_url: Some(format!(
-                "{}/api/webhook/mercadopago",
-                state.config.webhook_url
-            )),
-            payer: Some(MercadoPagoPayer {
-                email: payload.email.clone(),
-                name: Some(payload.name.clone()),
-                surname: Some(payload.surname.clone()),
-            }),
-            statement_descriptor: Some("Tu Farmacia".to_string()),
-        };
-
-        let mp_response = mp_client
-            .create_preference(&preference)
-            .await
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
-
-        // Update order with MercadoPago preference ID
-        sqlx::query("UPDATE orders SET mercadopago_preference_id = $1 WHERE id = $2")
-            .bind(&mp_response.id)
-            .bind(order_id)
-            .execute(&state.db)
-            .await
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-        Ok(Json(CheckoutResponse {
-            order_id,
-            init_point: mp_response.init_point,
-            preference_id: mp_response.id,
-        }))
-    }
+    Ok(Json(CheckoutResponse {
+        order_id,
+        init_point: mp_response.init_point,
+        preference_id: mp_response.id,
+    }))
 }

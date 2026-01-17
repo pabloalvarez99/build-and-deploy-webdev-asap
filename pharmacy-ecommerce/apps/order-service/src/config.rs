@@ -7,8 +7,6 @@ pub struct Config {
     pub jwt_secret: String,
     pub server_port: u16,
     pub mercadopago_access_token: String,
-    pub stripe_secret_key: String,
-    pub stripe_webhook_secret: String,
     pub frontend_url: String,
     pub webhook_url: String,
 }
@@ -30,10 +28,6 @@ impl Config {
                 .expect("PORT must be a valid number"),
             mercadopago_access_token: env::var("MERCADOPAGO_ACCESS_TOKEN")
                 .expect("MERCADOPAGO_ACCESS_TOKEN must be set"),
-            stripe_secret_key: env::var("STRIPE_SECRET_KEY")
-                .unwrap_or_else(|_| "".to_string()),
-            stripe_webhook_secret: env::var("STRIPE_WEBHOOK_SECRET")
-                .unwrap_or_else(|_| "".to_string()),
             frontend_url: env::var("FRONTEND_URL")
                 .unwrap_or_else(|_| "http://localhost:3000".to_string()),
             webhook_url: env::var("WEBHOOK_URL")

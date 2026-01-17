@@ -60,7 +60,8 @@ pub struct GuestCheckoutRequest {
     pub shipping_address: Option<String>,
     pub notes: Option<String>,
     pub session_id: String,
-    pub payment_method: Option<String>, // "mercadopago" or "stripe"
+    #[serde(default)]
+    pub payment_method: Option<String>, // ignored, always MercadoPago
 }
 
 #[derive(Debug, Serialize)]
@@ -202,65 +203,4 @@ pub struct MercadoPagoPaymentCreate {
     pub issuer_id: Option<String>,
     pub payer: PayerInfo,
     pub external_reference: String,
-}
-
-// Stripe types - helper struct for building checkout session
-pub struct StripeCheckoutSessionCreate {
-    pub line_items: Vec<StripeLineItem>,
-    pub success_url: String,
-    pub cancel_url: String,
-    pub customer_email: Option<String>,
-    pub client_reference_id: String,
-}
-
-pub struct StripeLineItem {
-    pub name: String,
-    pub amount: i64, // Amount in cents
-    pub quantity: i32,
-    pub currency: String, // "clp" or "usd"
-}
-
-// Note: Stripe API uses form-urlencoded, so we'll build it manually
-// This struct is for reference/documentation
-#[derive(Debug, Deserialize)]
-pub struct StripeCheckoutSessionResponse {
-    pub id: String,
-    pub url: String,
-    pub payment_intent: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct StripeCheckoutSession {
-    pub id: String,
-    pub payment_status: String,
-    pub client_reference_id: Option<String>,
-    pub payment_intent: Option<StripePaymentIntent>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct StripePaymentIntent {
-    pub id: String,
-    pub status: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct StripeWebhookEvent {
-    #[serde(rename = "type")]
-    pub event_type: String,
-    pub data: StripeWebhookData,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct StripeWebhookData {
-    pub object: StripeWebhookObject,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct StripeWebhookObject {
-    pub id: String,
-    #[serde(rename = "object")]
-    pub object_type: String,
-    pub client_reference_id: Option<String>,
-    pub payment_status: Option<String>,
-    pub payment_intent: Option<StripePaymentIntent>,
 }

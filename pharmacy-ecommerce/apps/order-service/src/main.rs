@@ -109,8 +109,7 @@ async fn main() {
     // Public routes (no auth)
     let public_routes = Router::new()
         .route("/api/guest-checkout", post(handlers::guest_checkout))
-        .route("/api/webhook/mercadopago", post(handlers::mercadopago_webhook))
-        .route("/api/webhook/stripe", post(handlers::stripe_webhook));
+        .route("/api/webhook/mercadopago", post(handlers::mercadopago_webhook));
 
     // Health check
     let health_route = Router::new()

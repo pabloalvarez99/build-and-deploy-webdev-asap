@@ -166,7 +166,6 @@ export const orderApi = {
     shipping_address?: string;
     notes?: string;
     session_id: string;
-    payment_method?: string; // "mercadopago" | "stripe"
   }) =>
     request<CheckoutResponse>(`${ORDER_URL}/guest-checkout`, {
       method: 'POST',
