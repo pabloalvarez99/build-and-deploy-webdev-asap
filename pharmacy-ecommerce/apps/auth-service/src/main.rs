@@ -3,13 +3,15 @@ mod handlers;
 mod middleware;
 mod models;
 
+use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use axum::{
     middleware as axum_middleware,
     routing::{get, post},
     Router,
 };
+use rand::rngs::OsRng;
 use sqlx::postgres::PgPoolOptions;
-use std::net::SocketAddr;
+use std::{env, net::SocketAddr};
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -42,6 +44,10 @@ async fn main() {
         .expect("Failed to create database pool");
 
     tracing::info!("Connected to database");
+
+    if let Err(err) = seed_default_admin(&db).await {
+        tracing::warn!("Admin seed skipped: {}", err);
+    }
 
     let state = AppState {
         db,
@@ -84,4 +90,53 @@ async fn main() {
 
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
+}
+
+async fn seed_default_admin(db: &sqlx::PgPool) -> Result<(), String> {
+    let seed_enabled = env::var("SEED_ADMIN")
+        .unwrap_or_else(|_| "true".to_string())
+        .to_lowercase()
+        == "true";
+
+    if !seed_enabled {
+        return Ok(());
+    }
+
+    let email = env::var("ADMIN_EMAIL").unwrap_or_else(|_| "admin@pharmacy.com".to_string());
+    let password = env::var("ADMIN_PASSWORD").unwrap_or_else(|_| "admin123".to_string());
+    let name = env::var("ADMIN_NAME").unwrap_or_else(|_| "Admin".to_string());
+
+    let exists = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)"
+    )
+    .bind(&email)
+    .fetch_one(db)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    if exists {
+        return Ok(());
+    }
+
+    let salt = SaltString::generate(&mut OsRng);
+    let password_hash = Argon2::default()
+        .hash_password(password.as_bytes(), &salt)
+        .map_err(|e| e.to_string())?
+        .to_string();
+
+    sqlx::query(
+        r#"
+        INSERT INTO users (email, password_hash, name, role)
+        VALUES ($1, $2, $3, 'admin')
+        "#
+    )
+    .bind(&email)
+    .bind(&password_hash)
+    .bind(&name)
+    .execute(db)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    tracing::info!("Default admin user created: {}", email);
+    Ok(())
 }
