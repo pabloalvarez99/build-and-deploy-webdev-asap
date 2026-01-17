@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { productApi, PaginatedProducts, Category, Product } from '@/lib/api';
-import { Search, ChevronLeft, ChevronRight, ShoppingCart, Filter, Sparkles, ChevronDown } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, ShoppingCart, Filter, Sparkles, ChevronDown, LogIn, MapPin, Package } from 'lucide-react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
+import { useAuthStore } from '@/store/auth';
 import { formatPrice } from '@/lib/format';
 
 export default function Home() {
@@ -18,7 +19,10 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
   const { addToCartLocal, cart } = useCartStore();
+  const { user } = useAuthStore();
   const [addingId, setAddingId] = useState<string | null>(null);
+  
+  const mapsUrl = "https://www.google.com/maps/place/Tu+Farmacia/@-29.9574998,-71.3444193,17z";
 
   useEffect(() => {
     loadCategories();
@@ -99,21 +103,33 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Modern Glass Navbar */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
+      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 gap-6">
-            {/* Logo Area */}
-            <div className="flex-shrink-0 flex items-center gap-2 cursor-pointer group" onClick={() => {setSelectedCategory(''); setSearchInput('');}}>
-              <div className="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 group-hover:scale-105 transition-transform">
-                <Sparkles className="w-5 h-5" />
+          <div className="flex items-center justify-between h-20 gap-4">
+            {/* Logo Area + Dirección */}
+            <div className="flex-shrink-0 flex items-center gap-3 cursor-pointer group" onClick={() => {setSelectedCategory(''); setSearchInput('');}}>
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 group-hover:scale-105 transition-transform">
+                <Package className="w-6 h-6" />
               </div>
-              <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600">
-                Tu Farmacia
-              </span>
+              <div className="flex flex-col">
+                <span className="text-xl font-bold text-slate-900 leading-tight">
+                  Tu Farmacia
+                </span>
+                <a 
+                  href={mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="hidden sm:flex items-center gap-1 text-[11px] text-slate-500 hover:text-emerald-600 transition-colors"
+                >
+                  <MapPin className="w-3 h-3" />
+                  <span>Jose Santiago Aldunate 1535, Coquimbo</span>
+                </a>
+              </div>
             </div>
             
             {/* Search Bar - Capsule Style */}
-            <div className="flex-1 max-w-2xl mx-auto hidden sm:block">
+            <div className="flex-1 max-w-xl mx-auto hidden md:block">
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Search className="h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
@@ -123,20 +139,47 @@ export default function Home() {
                   placeholder="Buscar medicamentos, productos..."
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  className="block w-full pl-11 pr-4 py-2.5 bg-slate-100/50 border-0 rounded-full text-sm text-slate-900 placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all duration-200"
+                  className="block w-full pl-11 pr-4 py-2.5 bg-slate-100/50 border border-slate-200 rounded-full text-sm text-slate-900 placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white focus:border-emerald-300 transition-all duration-200"
                 />
               </div>
             </div>
 
-            {/* Cart Button */}
-            <Link href="/carrito" className="relative p-2.5 rounded-full hover:bg-slate-100 transition-colors group">
-              <ShoppingCart className="w-5 h-5 text-slate-600 group-hover:text-emerald-600 transition-colors" />
-              {cart && cart.item_count > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-sm border border-white">
-                  {cart.item_count}
-                </span>
+            {/* Actions */}
+            <div className="flex items-center gap-3">
+              {/* Login Button */}
+              {!user && (
+                <Link 
+                  href="/auth/login" 
+                  className="flex items-center gap-2 bg-emerald-600 text-white text-sm font-semibold py-2.5 px-5 rounded-xl hover:bg-emerald-700 transition-all shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/30 active:scale-95"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span className="hidden sm:inline">Iniciar Sesión</span>
+                  <span className="sm:hidden">Entrar</span>
+                </Link>
               )}
-            </Link>
+              
+              {user && (
+                <Link 
+                  href="/admin/productos" 
+                  className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-emerald-600 py-2 px-3 rounded-lg hover:bg-slate-100 transition-colors"
+                >
+                  <span className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
+                    {user.name ? user.name[0].toUpperCase() : 'U'}
+                  </span>
+                  <span className="hidden sm:inline">{user.name?.split(' ')[0]}</span>
+                </Link>
+              )}
+
+              {/* Cart Button */}
+              <Link href="/carrito" className="relative p-3 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-600 transition-colors group border border-slate-200 hover:border-emerald-300">
+                <ShoppingCart className="w-5 h-5 text-slate-600 group-hover:text-emerald-600 transition-colors" />
+                {cart && cart.item_count > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-md border-2 border-white">
+                    {cart.item_count}
+                  </span>
+                )}
+              </Link>
+            </div>
           </div>
         </div>
       </nav>
