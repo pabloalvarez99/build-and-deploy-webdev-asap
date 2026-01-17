@@ -37,7 +37,6 @@ pub struct CreateProductRequest {
     #[validate(length(min = 2, message = "Slug must be at least 2 characters"))]
     pub slug: String,
     pub description: Option<String>,
-    #[validate(range(min = 0.0, message = "Price must be non-negative"))]
     pub price: Decimal,
     #[validate(range(min = 0, message = "Stock must be non-negative"))]
     pub stock: i32,

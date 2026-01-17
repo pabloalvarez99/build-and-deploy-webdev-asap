@@ -188,9 +188,81 @@ export default function Home() {
           )}
         </div>
 
-        {/* Minimalist Data Table */}
+        {/* Minimalist Data Table (Desktop) & Card Grid (Mobile) */}
         <div className="bg-surface/40 backdrop-blur-md rounded-2xl border border-white/5 overflow-hidden shadow-2xl shadow-black/20">
-          <div className="overflow-x-auto">
+          
+          {/* Mobile Card View */}
+          <div className="block sm:hidden">
+            {isLoading ? (
+              <div className="divide-y divide-white/5">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="p-4 flex gap-4 animate-pulse">
+                    <div className="w-16 h-16 bg-white/5 rounded-lg shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-white/5 rounded w-3/4" />
+                      <div className="h-3 bg-white/5 rounded w-1/2" />
+                      <div className="h-4 bg-white/5 rounded w-1/4 mt-2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : products && products.products.length > 0 ? (
+              <div className="divide-y divide-white/5">
+                {products.products.map((product) => (
+                  <div key={product.id} className="p-4 flex gap-4 hover:bg-white/[0.02] active:bg-white/[0.05] transition-colors">
+                    {/* Placeholder for Product Image */}
+                    <div className="w-20 h-20 bg-white/5 rounded-lg shrink-0 flex items-center justify-center text-slate-500 text-xs border border-white/5">
+                      img
+                    </div>
+                    
+                    <div className="flex-1 min-w-0 flex flex-col justify-between">
+                      <Link href={`/producto/${product.slug}`} className="block">
+                        <h3 className="text-sm font-semibold text-slate-200 line-clamp-2 leading-tight mb-1">
+                          {product.name}
+                        </h3>
+                        <p className="text-xs text-slate-500 truncate">
+                          {product.laboratory || product.category_name || 'General'}
+                        </p>
+                      </Link>
+                      
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-base font-bold text-white">
+                          {formatPrice(product.price)}
+                        </span>
+                        
+                        {product.stock > 0 ? (
+                          <button
+                            onClick={() => handleAddToCart(product)}
+                            disabled={addingId === product.id}
+                            className={`
+                              px-3 py-1.5 text-xs font-semibold rounded-lg transition-all
+                              ${addingId === product.id 
+                                ? 'bg-primary-600/80 text-white' 
+                                : 'bg-white/10 text-primary-400 hover:bg-white/20'
+                              }
+                            `}
+                          >
+                            {addingId === product.id ? 'Listo' : 'Agregar'}
+                          </button>
+                        ) : (
+                          <span className="text-xs font-medium text-red-400 bg-red-500/10 px-2 py-1 rounded">
+                            Agotado
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-12 text-center">
+                <p className="text-slate-500 text-sm">No se encontraron productos.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/5 bg-white/[0.02]">
