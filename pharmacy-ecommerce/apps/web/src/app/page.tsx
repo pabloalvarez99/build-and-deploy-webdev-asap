@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { productApi, PaginatedProducts, Category, Product } from '@/lib/api';
-import { Search, ChevronLeft, ChevronRight, ShoppingCart, Filter, Sparkles, ChevronDown, LogIn, MapPin, Package } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, ShoppingCart, Filter, ChevronDown, LogIn, MapPin, Package, LayoutGrid, List, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
@@ -21,7 +21,8 @@ export default function Home() {
   const { addToCartLocal, cart } = useCartStore();
   const { user } = useAuthStore();
   const [addingId, setAddingId] = useState<string | null>(null);
-  
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+
   const mapsUrl = "https://www.google.com/maps/place/Tu+Farmacia/@-29.9574998,-71.3444193,17z";
 
   useEffect(() => {
@@ -248,165 +249,283 @@ export default function Home() {
             </div>
           </div>
 
-          {products && (
-             <div className="text-xs font-medium text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm whitespace-nowrap">
-               {products.total.toLocaleString()} productos encontrados
-             </div>
-          )}
+          {/* View Toggle + Count */}
+          <div className="flex items-center gap-3">
+            {/* View Mode Toggle */}
+            <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-lg transition-all ${
+                  viewMode === 'list'
+                    ? 'bg-emerald-500 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                }`}
+                title="Vista lista"
+              >
+                <List className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-lg transition-all ${
+                  viewMode === 'grid'
+                    ? 'bg-emerald-500 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                }`}
+                title="Vista galería"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+            </div>
+
+            {products && (
+              <div className="text-xs font-medium text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm whitespace-nowrap">
+                {products.total.toLocaleString()} productos
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Minimalist Data Table */}
-        <div className="bg-white rounded-2xl shadow-[0_2px_12px_-4px_rgba(6,81,237,0.1)] border border-slate-100 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/50">
-                  <th className="text-left py-4 pl-6 pr-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Producto</th>
-                  <th className="text-left py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Laboratorio</th>
-                  <th className="text-right py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Precio</th>
-                  <th className="text-center py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:table-cell">Estado</th>
-                  <th className="text-right py-4 pl-4 pr-6 w-28"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {isLoading ? (
-                  [...Array(10)].map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td className="py-4 pl-6"><div className="h-4 bg-slate-100 rounded w-48" /></td>
-                      <td className="hidden md:table-cell px-4"><div className="h-4 bg-slate-100 rounded w-24" /></td>
-                      <td className="px-4"><div className="h-4 bg-slate-100 rounded w-16 ml-auto" /></td>
-                      <td className="hidden sm:table-cell px-4"><div className="h-4 bg-slate-100 rounded w-12 mx-auto" /></td>
-                      <td className="pr-6"><div className="h-8 bg-slate-100 rounded-lg w-full" /></td>
-                    </tr>
-                  ))
-                ) : products && products.products.length > 0 ? (
-                  products.products.map((product) => (
-                    <tr key={product.id} className="group hover:bg-slate-50/80 transition-colors duration-150">
-                      <td className="py-3.5 pl-6 pr-4">
-                        <Link href={`/producto/${product.slug}`} className="flex items-center gap-3">
-                          <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
-                            {product.image_url ? (
-                              <img
-                                src={product.image_url}
-                                alt={product.name}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = 'none';
-                                  (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                                }}
-                              />
-                            ) : null}
-                            <div className={`w-full h-full flex items-center justify-center text-slate-400 ${product.image_url ? 'hidden' : ''}`}>
-                              <Package className="w-5 h-5" />
+        {/* Products View */}
+        {viewMode === 'list' ? (
+          /* List View - Table */
+          <div className="bg-white rounded-2xl shadow-[0_2px_12px_-4px_rgba(6,81,237,0.1)] border border-slate-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50/50">
+                    <th className="text-left py-4 pl-6 pr-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Producto</th>
+                    <th className="text-left py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Laboratorio</th>
+                    <th className="text-right py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Precio</th>
+                    <th className="text-center py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:table-cell">Estado</th>
+                    <th className="text-right py-4 pl-4 pr-6 w-28"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {isLoading ? (
+                    [...Array(10)].map((_, i) => (
+                      <tr key={i} className="animate-pulse">
+                        <td className="py-4 pl-6"><div className="h-4 bg-slate-100 rounded w-48" /></td>
+                        <td className="hidden md:table-cell px-4"><div className="h-4 bg-slate-100 rounded w-24" /></td>
+                        <td className="px-4"><div className="h-4 bg-slate-100 rounded w-16 ml-auto" /></td>
+                        <td className="hidden sm:table-cell px-4"><div className="h-4 bg-slate-100 rounded w-12 mx-auto" /></td>
+                        <td className="pr-6"><div className="h-8 bg-slate-100 rounded-lg w-full" /></td>
+                      </tr>
+                    ))
+                  ) : products && products.products.length > 0 ? (
+                    products.products.map((product) => (
+                      <tr key={product.id} className="group hover:bg-slate-50/80 transition-colors duration-150">
+                        <td className="py-3.5 pl-6 pr-4">
+                          <Link href={`/producto/${product.slug}`} className="flex items-center gap-3">
+                            <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
+                              {product.image_url ? (
+                                <img
+                                  src={product.image_url}
+                                  alt={product.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                  }}
+                                />
+                              ) : null}
+                              <div className={`w-full h-full flex items-center justify-center text-slate-400 ${product.image_url ? 'hidden' : ''}`}>
+                                <Package className="w-5 h-5" />
+                              </div>
                             </div>
-                          </div>
-                          <div className="min-w-0">
-                            <span className="text-sm font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors line-clamp-2">
-                              {product.name}
+                            <div className="min-w-0">
+                              <span className="text-sm font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors line-clamp-2">
+                                {product.name}
+                              </span>
+                              <span className="md:hidden block text-xs text-slate-400 mt-0.5">
+                                {product.laboratory || product.category_name}
+                              </span>
+                            </div>
+                          </Link>
+                        </td>
+                        <td className="py-3.5 px-4 hidden md:table-cell">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
+                            {product.laboratory || product.category_name || 'General'}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <span className="text-sm font-bold text-slate-800 tracking-tight">
+                            {formatPrice(product.price)}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-center hidden sm:table-cell">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <div className={`w-1.5 h-1.5 rounded-full ${product.stock > 5 ? 'bg-emerald-500' : product.stock > 0 ? 'bg-amber-500' : 'bg-red-500'}`} />
+                            <span className={`text-xs font-medium ${product.stock > 0 ? 'text-slate-600' : 'text-red-500'}`}>
+                              {product.stock > 0 ? `${product.stock} un.` : 'Agotado'}
                             </span>
-                            <span className="md:hidden block text-xs text-slate-400 mt-0.5">
-                              {product.laboratory || product.category_name}
-                            </span>
                           </div>
-                        </Link>
-                      </td>
-                      <td className="py-3.5 px-4 hidden md:table-cell">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
-                          {product.laboratory || product.category_name || 'General'}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <span className="text-sm font-bold text-slate-800 tracking-tight">
-                          {formatPrice(product.price)}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-center hidden sm:table-cell">
-                        <div className="flex items-center justify-center gap-1.5">
-                           <div className={`w-1.5 h-1.5 rounded-full ${product.stock > 5 ? 'bg-emerald-500' : product.stock > 0 ? 'bg-amber-500' : 'bg-red-500'}`} />
-                           <span className={`text-xs font-medium ${product.stock > 0 ? 'text-slate-600' : 'text-red-500'}`}>
-                             {product.stock > 0 ? `${product.stock} un.` : 'Agotado'}
-                           </span>
+                        </td>
+                        <td className="py-3 px-4 pr-6 text-right">
+                          {product.stock > 0 && (
+                            <button
+                              onClick={() => handleAddToCart(product)}
+                              disabled={addingId === product.id}
+                              className={`
+                                inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200
+                                ${addingId === product.id
+                                  ? 'bg-emerald-600 text-white shadow-inner scale-95'
+                                  : 'bg-white border border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-600 hover:shadow-sm'
+                                }
+                              `}
+                            >
+                              {addingId === product.id ? 'Agregado' : 'Agregar'}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="py-16 text-center">
+                        <div className="flex flex-col items-center justify-center text-slate-400">
+                          <Search className="w-8 h-8 mb-3 opacity-50" />
+                          <p className="text-sm">No se encontraron productos que coincidan.</p>
                         </div>
                       </td>
-                      <td className="py-3 px-4 pr-6 text-right">
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          /* Grid View - Gallery */
+          <div>
+            {isLoading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {[...Array(10)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-xl border border-slate-100 p-3 animate-pulse">
+                    <div className="aspect-square bg-slate-100 rounded-lg mb-3" />
+                    <div className="h-4 bg-slate-100 rounded w-3/4 mb-2" />
+                    <div className="h-3 bg-slate-100 rounded w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : products && products.products.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {products.products.map((product) => (
+                  <div
+                    key={product.id}
+                    className="group bg-white rounded-xl border border-slate-100 hover:border-emerald-200 hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col"
+                  >
+                    <Link href={`/producto/${product.slug}`} className="block">
+                      <div className="aspect-square bg-slate-50 relative overflow-hidden">
+                        {product.image_url ? (
+                          <img
+                            src={product.image_url}
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                              (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        <div className={`absolute inset-0 flex items-center justify-center text-slate-300 ${product.image_url ? 'hidden' : ''}`}>
+                          <Package className="w-12 h-12" />
+                        </div>
+                        {/* Stock Badge */}
+                        <div className="absolute top-2 right-2">
+                          {product.stock === 0 ? (
+                            <span className="px-2 py-1 text-[10px] font-bold bg-red-500 text-white rounded-full">Agotado</span>
+                          ) : product.stock <= 5 ? (
+                            <span className="px-2 py-1 text-[10px] font-bold bg-amber-500 text-white rounded-full">{product.stock} un.</span>
+                          ) : null}
+                        </div>
+                      </div>
+                    </Link>
+                    <div className="p-3 flex flex-col flex-1">
+                      <Link href={`/producto/${product.slug}`}>
+                        <h3 className="text-xs font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors line-clamp-2 mb-1">
+                          {product.name}
+                        </h3>
+                      </Link>
+                      <span className="text-[10px] text-slate-400 mb-2 line-clamp-1">
+                        {product.laboratory || product.category_name || 'General'}
+                      </span>
+                      <div className="mt-auto flex items-center justify-between gap-2">
+                        <span className="text-sm font-bold text-slate-800">
+                          {formatPrice(product.price)}
+                        </span>
                         {product.stock > 0 && (
                           <button
                             onClick={() => handleAddToCart(product)}
                             disabled={addingId === product.id}
-                            className={`
-                              inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200
-                              ${addingId === product.id 
-                                ? 'bg-emerald-600 text-white shadow-inner scale-95' 
-                                : 'bg-white border border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-600 hover:shadow-sm'
-                              }
-                            `}
+                            className={`p-2 rounded-lg transition-all ${
+                              addingId === product.id
+                                ? 'bg-emerald-500 text-white scale-95'
+                                : 'bg-slate-100 text-slate-600 hover:bg-emerald-500 hover:text-white'
+                            }`}
                           >
-                            {addingId === product.id ? 'Agregado' : 'Agregar'}
+                            <Plus className="w-4 h-4" />
                           </button>
                         )}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="py-16 text-center">
-                      <div className="flex flex-col items-center justify-center text-slate-400">
-                        <Search className="w-8 h-8 mb-3 opacity-50" />
-                        <p className="text-sm">No se encontraron productos que coincidan.</p>
                       </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          
-          {/* Pagination Footer */}
-          {products && products.total_pages > 1 && (
-            <div className="border-t border-slate-100 bg-slate-50/30 px-6 py-4 flex items-center justify-between">
-              <span className="text-xs text-slate-400 hidden sm:inline-block">
-                 Pagina {currentPage} de {products.total_pages}
-              </span>
-              <div className="flex items-center gap-1.5 mx-auto sm:mx-0">
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="p-1.5 rounded-lg text-slate-500 hover:bg-white hover:shadow-sm disabled:opacity-30 disabled:hover:shadow-none transition-all"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                
-                <div className="flex items-center gap-1 px-2">
-                   {getPageNumbers().map((page, idx) => (
-                    typeof page === 'number' ? (
-                      <button
-                        key={idx}
-                        onClick={() => setCurrentPage(page)}
-                        className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${
-                          currentPage === page
-                            ? 'bg-white text-emerald-600 shadow-sm border border-slate-200'
-                            : 'text-slate-500 hover:bg-white/50'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ) : (
-                      <span key={idx} className="text-slate-300 text-xs">...</span>
-                    )
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => setCurrentPage((p) => Math.min(products.total_pages, p + 1))}
-                  disabled={currentPage === products.total_pages}
-                  className="p-1.5 rounded-lg text-slate-500 hover:bg-white hover:shadow-sm disabled:opacity-30 disabled:hover:shadow-none transition-all"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
+                    </div>
+                  </div>
+                ))}
               </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-slate-100 py-16 text-center">
+                <div className="flex flex-col items-center justify-center text-slate-400">
+                  <Search className="w-8 h-8 mb-3 opacity-50" />
+                  <p className="text-sm">No se encontraron productos que coincidan.</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Pagination Footer */}
+        {products && products.total_pages > 1 && (
+          <div className="mt-6 bg-white rounded-xl border border-slate-100 px-6 py-4 flex items-center justify-between">
+            <span className="text-xs text-slate-400 hidden sm:inline-block">
+              Página {currentPage} de {products.total_pages}
+            </span>
+            <div className="flex items-center gap-1.5 mx-auto sm:mx-0">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:shadow-sm disabled:opacity-30 disabled:hover:shadow-none transition-all"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-1 px-2">
+                {getPageNumbers().map((page, idx) => (
+                  typeof page === 'number' ? (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${
+                        currentPage === page
+                          ? 'bg-emerald-500 text-white shadow-sm'
+                          : 'text-slate-500 hover:bg-slate-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ) : (
+                    <span key={idx} className="text-slate-300 text-xs">...</span>
+                  )
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(products.total_pages, p + 1))}
+                disabled={currentPage === products.total_pages}
+                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:shadow-sm disabled:opacity-30 disabled:hover:shadow-none transition-all"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </main>
     </div>
   );
