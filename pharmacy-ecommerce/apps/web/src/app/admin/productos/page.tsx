@@ -693,7 +693,9 @@ export default function AdminProductsPage() {
                                 <span className="flex-shrink-0 w-2 h-2 rounded-full bg-red-500" title="Agotado" />
                               )}
                               {product.stock > 0 && product.stock <= 10 && (
-                                <AlertTriangle className="flex-shrink-0 w-4 h-4 text-orange-500" title="Stock bajo" />
+                                <span title="Stock bajo">
+                                  <AlertTriangle className="flex-shrink-0 w-4 h-4 text-orange-500" />
+                                </span>
                               )}
                               <span className="font-medium text-gray-900 truncate max-w-[200px]">{product.name}</span>
                             </div>
