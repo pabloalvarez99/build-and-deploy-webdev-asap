@@ -283,13 +283,31 @@ export default function Home() {
                   products.products.map((product) => (
                     <tr key={product.id} className="group hover:bg-slate-50/80 transition-colors duration-150">
                       <td className="py-3.5 pl-6 pr-4">
-                        <Link href={`/producto/${product.slug}`} className="block">
-                          <span className="text-sm font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors">
-                            {product.name}
-                          </span>
-                          <span className="md:hidden block text-xs text-slate-400 mt-0.5">
-                            {product.laboratory || product.category_name}
-                          </span>
+                        <Link href={`/producto/${product.slug}`} className="flex items-center gap-3">
+                          <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
+                            {product.image_url ? (
+                              <img
+                                src={product.image_url}
+                                alt={product.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                  (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                }}
+                              />
+                            ) : null}
+                            <div className={`w-full h-full flex items-center justify-center text-slate-400 ${product.image_url ? 'hidden' : ''}`}>
+                              <Package className="w-5 h-5" />
+                            </div>
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-sm font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors line-clamp-2">
+                              {product.name}
+                            </span>
+                            <span className="md:hidden block text-xs text-slate-400 mt-0.5">
+                              {product.laboratory || product.category_name}
+                            </span>
+                          </div>
                         </Link>
                       </td>
                       <td className="py-3.5 px-4 hidden md:table-cell">
