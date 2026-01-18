@@ -117,6 +117,24 @@ export const productApi = {
       body: data,
       token,
     }),
+
+  updateCategory: (token: string, id: string, data: { name?: string; slug?: string; description?: string; active?: boolean }) =>
+    request<Category>(`${PRODUCT_URL}/admin/categories/${id}`, {
+      method: 'PUT',
+      body: data,
+      token,
+    }),
+
+  deleteCategory: (token: string, id: string) =>
+    request<void>(`${PRODUCT_URL}/admin/categories/${id}`, {
+      method: 'DELETE',
+      token,
+    }),
+
+  getCategoryProductCount: (token: string, categoryId: string) =>
+    request<{ count: number }>(`${PRODUCT_URL}/admin/categories/${categoryId}/products/count`, {
+      token,
+    }).catch(() => ({ count: 0 })),
 };
 
 // Cart API

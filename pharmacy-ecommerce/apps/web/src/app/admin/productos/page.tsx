@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { productApi, PaginatedProducts, Category } from '@/lib/api';
-import { Plus, Edit, Trash2, ArrowLeft, Search, Download, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Download, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 export default function AdminProductsPage() {
@@ -51,12 +50,21 @@ export default function AdminProductsPage() {
   }, [token, user, router]);
 
   useEffect(() => {
-    // Check URL params for filters
+    // Check URL params for filters and actions
     const urlParams = new URLSearchParams(window.location.search);
     const urlStock = urlParams.get('stock');
     const urlSearch = urlParams.get('search');
+    const urlAction = urlParams.get('action');
     if (urlStock === 'low') setStockFilter('low');
+    if (urlStock === 'out') setStockFilter('out');
     if (urlSearch) setSearchTerm(urlSearch);
+    if (urlAction === 'new') {
+      resetForm();
+      setEditingProduct(null);
+      setShowForm(true);
+      // Clear action param from URL
+      window.history.replaceState({}, '', '/admin/productos');
+    }
   }, []);
 
   useEffect(() => {
@@ -148,6 +156,23 @@ export default function AdminProductsPage() {
       active: product.active ?? true,
     });
     setEditingProduct(product.id);
+    setShowForm(true);
+  };
+
+  const handleDuplicate = (product: any) => {
+    const newSlug = generateSlug(product.name + ' copia');
+    setFormData({
+      name: product.name + ' (copia)',
+      slug: newSlug,
+      description: product.description || '',
+      price: product.price,
+      stock: String(product.stock),
+      category_id: product.category_id || '',
+      image_url: product.image_url || '',
+      laboratory: product.laboratory || '',
+      active: false, // Start as inactive
+    });
+    setEditingProduct(null); // This is a new product
     setShowForm(true);
   };
 
@@ -303,17 +328,14 @@ export default function AdminProductsPage() {
   const showingEnd = products ? Math.min(currentPage * 20, products.total) : 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <Link
-        href="/admin"
-        className="inline-flex items-center text-gray-600 hover:text-primary-600 mb-6"
-      >
-        <ArrowLeft className="w-5 h-5 mr-2" />
-        Volver al panel
-      </Link>
-
+    <div className="max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Productos</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Productos</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">
+            Gestiona el catalogo de productos
+          </p>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={exportToCSV}
@@ -728,6 +750,13 @@ export default function AdminProductsPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <button
+                          onClick={() => handleDuplicate(product)}
+                          className="p-2 text-gray-600 hover:text-blue-600"
+                          title="Duplicar"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
                         <button
                           onClick={() => handleEdit(product)}
                           className="p-2 text-gray-600 hover:text-primary-600"
