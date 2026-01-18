@@ -66,6 +66,7 @@ export const productApi = {
     limit?: number;
     active_only?: boolean;
     sort_by?: string;
+    in_stock?: boolean;
   }) => {
     const searchParams = new URLSearchParams();
     if (params?.category) searchParams.set('category', params.category);
@@ -75,6 +76,7 @@ export const productApi = {
     if (params?.limit) searchParams.set('limit', String(params.limit));
     if (params?.active_only !== undefined) searchParams.set('active_only', String(params.active_only));
     if (params?.sort_by) searchParams.set('sort_by', params.sort_by);
+    if (params?.in_stock) searchParams.set('in_stock', 'true');
 
     const query = searchParams.toString();
     return request<PaginatedProducts>(`${PRODUCT_URL}/products${query ? `?${query}` : ''}`);

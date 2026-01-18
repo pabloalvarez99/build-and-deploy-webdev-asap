@@ -1,12 +1,34 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { productApi, PaginatedProducts, Category, Product } from '@/lib/api';
-import { Search, ChevronLeft, ChevronRight, ShoppingCart, Filter, ChevronDown, LogIn, MapPin, Package, LayoutGrid, List, Plus } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, ShoppingCart, Filter, ChevronDown, LogIn, MapPin, Package, LayoutGrid, List, Plus, Check, X, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
 import { formatPrice } from '@/lib/format';
+
+// Toast notification component
+function Toast({ message, onClose }: { message: string; onClose: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 2500);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
+      <div className="flex items-center gap-2 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl">
+        <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+          <Check className="w-3 h-3" />
+        </div>
+        <span className="text-sm font-medium">{message}</span>
+        <button onClick={onClose} className="ml-2 text-slate-400 hover:text-white">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const [products, setProducts] = useState<PaginatedProducts | null>(null);
@@ -22,8 +44,47 @@ export default function Home() {
   const { user } = useAuthStore();
   const [addingId, setAddingId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [onlyAvailable, setOnlyAvailable] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
 
   const mapsUrl = "https://www.google.com/maps/place/Tu+Farmacia/@-29.9574998,-71.3444193,17z";
+
+  // Load view preference from localStorage
+  useEffect(() => {
+    const savedView = localStorage.getItem('pharmacy-view-mode');
+    if (savedView === 'grid' || savedView === 'list') {
+      setViewMode(savedView);
+    }
+  }, []);
+
+  // Save view preference to localStorage
+  useEffect(() => {
+    localStorage.setItem('pharmacy-view-mode', viewMode);
+  }, [viewMode]);
+
+  // Scroll listener for scroll-to-top button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Keyboard shortcut for search (Ctrl+K or /)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey && e.key === 'k') || (e.key === '/' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName))) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     loadCategories();
@@ -31,7 +92,7 @@ export default function Home() {
 
   useEffect(() => {
     loadProducts();
-  }, [selectedCategory, currentPage, sortBy, searchTerm, itemsPerPage]);
+  }, [selectedCategory, currentPage, sortBy, searchTerm, itemsPerPage, onlyAvailable]);
 
   // Debounced search
   useEffect(() => {
@@ -43,6 +104,11 @@ export default function Home() {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchInput]);
+
+  // Scroll to top when page changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
 
   const loadCategories = async () => {
     try {
@@ -63,6 +129,7 @@ export default function Home() {
         page: currentPage,
         limit: itemsPerPage,
         sort_by: sortBy || undefined,
+        in_stock: onlyAvailable || undefined,
       });
       setProducts(data);
     } catch (error) {
@@ -75,7 +142,12 @@ export default function Home() {
   const handleAddToCart = async (product: Product) => {
     setAddingId(product.id);
     await addToCartLocal(product.id);
+    setToast(`${product.name.substring(0, 30)}${product.name.length > 30 ? '...' : ''} agregado al carrito`);
     setTimeout(() => setAddingId(null), 500);
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const getPageNumbers = useCallback(() => {
@@ -98,25 +170,37 @@ export default function Home() {
     return pages;
   }, [products, currentPage]);
 
-  const showingStart = products ? (currentPage - 1) * itemsPerPage + 1 : 0;
-  const showingEnd = products ? Math.min(currentPage * itemsPerPage, products.total) : 0;
+  const filteredProducts = products?.products || [];
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Toast Notification */}
+      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
+
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 p-3 bg-emerald-500 text-white rounded-full shadow-lg hover:bg-emerald-600 transition-all hover:scale-110 animate-in fade-in slide-in-from-bottom-4"
+        >
+          <ChevronUp className="w-5 h-5" />
+        </button>
+      )}
+
       {/* Modern Glass Navbar */}
       <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20 gap-4">
+          <div className="flex items-center justify-between h-16 sm:h-20 gap-4">
             {/* Logo Area + Dirección */}
-            <div className="flex-shrink-0 flex items-center gap-3 cursor-pointer group" onClick={() => {setSelectedCategory(''); setSearchInput('');}}>
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 group-hover:scale-105 transition-transform">
-                <Package className="w-6 h-6" />
+            <div className="flex-shrink-0 flex items-center gap-3 cursor-pointer group" onClick={() => {setSelectedCategory(''); setSearchInput(''); setOnlyAvailable(false);}}>
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 group-hover:scale-105 transition-transform">
+                <Package className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xl font-bold text-slate-900 leading-tight">
+                <span className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
                   Tu Farmacia
                 </span>
-                <a 
+                <a
                   href={mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -128,7 +212,7 @@ export default function Home() {
                 </a>
               </div>
             </div>
-            
+
             {/* Search Bar - Capsule Style */}
             <div className="flex-1 max-w-xl mx-auto hidden md:block">
               <div className="relative group">
@@ -136,33 +220,41 @@ export default function Home() {
                   <Search className="h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
                 </div>
                 <input
+                  ref={searchInputRef}
                   type="text"
-                  placeholder="Buscar medicamentos, productos..."
+                  placeholder="Buscar medicamentos... (Ctrl+K)"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   className="block w-full pl-11 pr-4 py-2.5 bg-slate-100/50 border border-slate-200 rounded-full text-sm text-slate-900 placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white focus:border-emerald-300 transition-all duration-200"
                 />
+                {searchInput && (
+                  <button
+                    onClick={() => setSearchInput('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Login Button */}
               {!user && (
-                <Link 
-                  href="/auth/login" 
-                  className="flex items-center gap-2 bg-emerald-600 text-white text-sm font-semibold py-2.5 px-5 rounded-xl hover:bg-emerald-700 transition-all shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/30 active:scale-95"
+                <Link
+                  href="/auth/login"
+                  className="flex items-center gap-2 bg-emerald-600 text-white text-sm font-semibold py-2 sm:py-2.5 px-3 sm:px-5 rounded-xl hover:bg-emerald-700 transition-all shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/30 active:scale-95"
                 >
                   <LogIn className="w-4 h-4" />
                   <span className="hidden sm:inline">Iniciar Sesión</span>
-                  <span className="sm:hidden">Entrar</span>
                 </Link>
               )}
-              
+
               {user && (
-                <Link 
-                  href="/admin/productos" 
-                  className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-emerald-600 py-2 px-3 rounded-lg hover:bg-slate-100 transition-colors"
+                <Link
+                  href="/admin/productos"
+                  className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-emerald-600 py-2 px-2 sm:px-3 rounded-lg hover:bg-slate-100 transition-colors"
                 >
                   <span className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
                     {user.name ? user.name[0].toUpperCase() : 'U'}
@@ -172,10 +264,10 @@ export default function Home() {
               )}
 
               {/* Cart Button */}
-              <Link href="/carrito" className="relative p-3 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-600 transition-colors group border border-slate-200 hover:border-emerald-300">
+              <Link href="/carrito" className="relative p-2.5 sm:p-3 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-600 transition-colors group border border-slate-200 hover:border-emerald-300">
                 <ShoppingCart className="w-5 h-5 text-slate-600 group-hover:text-emerald-600 transition-colors" />
                 {cart && cart.item_count > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-md border-2 border-white">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-md border-2 border-white animate-in zoom-in">
                     {cart.item_count}
                   </span>
                 )}
@@ -186,7 +278,7 @@ export default function Home() {
       </nav>
 
       {/* Mobile Search (visible only on mobile) */}
-      <div className="sm:hidden px-4 py-3 bg-white border-b border-slate-200">
+      <div className="md:hidden px-4 py-3 bg-white border-b border-slate-200">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-4 w-4 text-slate-400" />
@@ -196,21 +288,29 @@ export default function Home() {
             placeholder="Buscar..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="block w-full pl-10 pr-4 py-2 bg-slate-100 border-0 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/20"
+            className="block w-full pl-10 pr-10 py-2.5 bg-slate-100 border-0 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20"
           />
+          {searchInput && (
+            <button
+              onClick={() => setSearchInput('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
+      <main ref={mainRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
         {/* Controls Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
-            <div className="relative min-w-[200px]">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="relative min-w-[160px] sm:min-w-[200px]">
               <select
                 value={selectedCategory}
                 onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
-                className="appearance-none w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-emerald-500/50 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
+                className="appearance-none w-full pl-3 sm:pl-4 pr-8 sm:pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-emerald-500/50 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
               >
                 <option value="">Todos los laboratorios</option>
                 {categories.map((cat) => (
@@ -220,37 +320,51 @@ export default function Home() {
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             </div>
 
-            <div className="relative min-w-[160px]">
+            <div className="relative min-w-[140px] sm:min-w-[160px]">
               <select
                 value={sortBy}
                 onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
-                className="appearance-none w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-emerald-500/50 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
+                className="appearance-none w-full pl-3 sm:pl-4 pr-8 sm:pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-emerald-500/50 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
               >
                 <option value="name">Nombre A-Z</option>
                 <option value="name_desc">Nombre Z-A</option>
-                <option value="price_asc">Precio: menor a mayor</option>
-                <option value="price_desc">Precio: mayor a menor</option>
+                <option value="price_asc">Menor precio</option>
+                <option value="price_desc">Mayor precio</option>
                 <option value="stock_desc">Mayor stock</option>
               </select>
               <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
             </div>
-            
-            <div className="relative min-w-[120px]">
-               <select
+
+            <div className="relative min-w-[100px] sm:min-w-[120px]">
+              <select
                 value={itemsPerPage}
                 onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                className="appearance-none w-full pl-4 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-emerald-500/50 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
+                className="appearance-none w-full pl-3 sm:pl-4 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-emerald-500/50 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
               >
-                <option value={25}>25 items</option>
-                <option value={50}>50 items</option>
-                <option value={100}>100 items</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             </div>
+
+            {/* Only Available Toggle */}
+            <button
+              onClick={() => { setOnlyAvailable(!onlyAvailable); setCurrentPage(1); }}
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                onlyAvailable
+                  ? 'bg-emerald-500 text-white shadow-sm'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:border-emerald-500/50'
+              }`}
+            >
+              <div className={`w-2 h-2 rounded-full ${onlyAvailable ? 'bg-white' : 'bg-emerald-500'}`} />
+              <span className="hidden sm:inline">Disponibles</span>
+              <span className="sm:hidden">Disp.</span>
+            </button>
           </div>
 
           {/* View Toggle + Count */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between sm:justify-end gap-3">
             {/* View Mode Toggle */}
             <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
               <button
@@ -293,34 +407,40 @@ export default function Home() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/50">
-                    <th className="text-left py-4 pl-6 pr-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Producto</th>
-                    <th className="text-left py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Laboratorio</th>
-                    <th className="text-right py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Precio</th>
-                    <th className="text-center py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:table-cell">Estado</th>
-                    <th className="text-right py-4 pl-4 pr-6 w-28"></th>
+                    <th className="text-left py-3 sm:py-4 pl-4 sm:pl-6 pr-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Producto</th>
+                    <th className="text-left py-3 sm:py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Laboratorio</th>
+                    <th className="text-right py-3 sm:py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Precio</th>
+                    <th className="text-center py-3 sm:py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:table-cell">Estado</th>
+                    <th className="text-right py-3 sm:py-4 pl-4 pr-4 sm:pr-6 w-24 sm:w-28"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {isLoading ? (
                     [...Array(10)].map((_, i) => (
                       <tr key={i} className="animate-pulse">
-                        <td className="py-4 pl-6"><div className="h-4 bg-slate-100 rounded w-48" /></td>
+                        <td className="py-4 pl-4 sm:pl-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-100 rounded-lg" />
+                            <div className="h-4 bg-slate-100 rounded w-32 sm:w-48" />
+                          </div>
+                        </td>
                         <td className="hidden md:table-cell px-4"><div className="h-4 bg-slate-100 rounded w-24" /></td>
                         <td className="px-4"><div className="h-4 bg-slate-100 rounded w-16 ml-auto" /></td>
                         <td className="hidden sm:table-cell px-4"><div className="h-4 bg-slate-100 rounded w-12 mx-auto" /></td>
-                        <td className="pr-6"><div className="h-8 bg-slate-100 rounded-lg w-full" /></td>
+                        <td className="pr-4 sm:pr-6"><div className="h-8 bg-slate-100 rounded-lg w-full" /></td>
                       </tr>
                     ))
-                  ) : products && products.products.length > 0 ? (
-                    products.products.map((product) => (
+                  ) : filteredProducts.length > 0 ? (
+                    filteredProducts.map((product) => (
                       <tr key={product.id} className="group hover:bg-slate-50/80 transition-colors duration-150">
-                        <td className="py-3.5 pl-6 pr-4">
+                        <td className="py-3 sm:py-3.5 pl-4 sm:pl-6 pr-4">
                           <Link href={`/producto/${product.slug}`} className="flex items-center gap-3">
-                            <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
                               {product.image_url ? (
                                 <img
                                   src={product.image_url}
                                   alt={product.name}
+                                  loading="lazy"
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).style.display = 'none';
@@ -329,14 +449,14 @@ export default function Home() {
                                 />
                               ) : null}
                               <div className={`w-full h-full flex items-center justify-center text-slate-400 ${product.image_url ? 'hidden' : ''}`}>
-                                <Package className="w-5 h-5" />
+                                <Package className="w-4 h-4 sm:w-5 sm:h-5" />
                               </div>
                             </div>
                             <div className="min-w-0">
-                              <span className="text-sm font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors line-clamp-2">
+                              <span className="text-xs sm:text-sm font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors line-clamp-2">
                                 {product.name}
                               </span>
-                              <span className="md:hidden block text-xs text-slate-400 mt-0.5">
+                              <span className="md:hidden block text-[10px] sm:text-xs text-slate-400 mt-0.5">
                                 {product.laboratory || product.category_name}
                               </span>
                             </div>
@@ -348,7 +468,7 @@ export default function Home() {
                           </span>
                         </td>
                         <td className="py-3.5 px-4 text-right">
-                          <span className="text-sm font-bold text-slate-800 tracking-tight">
+                          <span className="text-xs sm:text-sm font-bold text-slate-800 tracking-tight">
                             {formatPrice(product.price)}
                           </span>
                         </td>
@@ -360,21 +480,23 @@ export default function Home() {
                             </span>
                           </div>
                         </td>
-                        <td className="py-3 px-4 pr-6 text-right">
-                          {product.stock > 0 && (
+                        <td className="py-3 px-2 sm:px-4 pr-4 sm:pr-6 text-right">
+                          {product.stock > 0 ? (
                             <button
                               onClick={() => handleAddToCart(product)}
                               disabled={addingId === product.id}
                               className={`
-                                inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200
+                                inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200
                                 ${addingId === product.id
                                   ? 'bg-emerald-600 text-white shadow-inner scale-95'
-                                  : 'bg-white border border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-600 hover:shadow-sm'
+                                  : 'bg-white border border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-600 hover:shadow-sm active:scale-95'
                                 }
                               `}
                             >
-                              {addingId === product.id ? 'Agregado' : 'Agregar'}
+                              {addingId === product.id ? <Check className="w-4 h-4" /> : 'Agregar'}
                             </button>
+                          ) : (
+                            <span className="text-xs text-red-400 font-medium sm:hidden">Agotado</span>
                           )}
                         </td>
                       </tr>
@@ -385,6 +507,14 @@ export default function Home() {
                         <div className="flex flex-col items-center justify-center text-slate-400">
                           <Search className="w-8 h-8 mb-3 opacity-50" />
                           <p className="text-sm">No se encontraron productos que coincidan.</p>
+                          {onlyAvailable && (
+                            <button
+                              onClick={() => setOnlyAvailable(false)}
+                              className="mt-3 text-emerald-600 text-sm font-medium hover:underline"
+                            >
+                              Mostrar todos los productos
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -397,18 +527,18 @@ export default function Home() {
           /* Grid View - Gallery */
           <div>
             {isLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
                 {[...Array(10)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-xl border border-slate-100 p-3 animate-pulse">
-                    <div className="aspect-square bg-slate-100 rounded-lg mb-3" />
-                    <div className="h-4 bg-slate-100 rounded w-3/4 mb-2" />
+                  <div key={i} className="bg-white rounded-xl border border-slate-100 p-2 sm:p-3 animate-pulse">
+                    <div className="aspect-square bg-slate-100 rounded-lg mb-2 sm:mb-3" />
+                    <div className="h-3 sm:h-4 bg-slate-100 rounded w-3/4 mb-2" />
                     <div className="h-3 bg-slate-100 rounded w-1/2" />
                   </div>
                 ))}
               </div>
-            ) : products && products.products.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {products.products.map((product) => (
+            ) : filteredProducts.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                {filteredProducts.map((product) => (
                   <div
                     key={product.id}
                     className="group bg-white rounded-xl border border-slate-100 hover:border-emerald-200 hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col"
@@ -419,6 +549,7 @@ export default function Home() {
                           <img
                             src={product.image_url}
                             alt={product.name}
+                            loading="lazy"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.display = 'none';
@@ -427,42 +558,42 @@ export default function Home() {
                           />
                         ) : null}
                         <div className={`absolute inset-0 flex items-center justify-center text-slate-300 ${product.image_url ? 'hidden' : ''}`}>
-                          <Package className="w-12 h-12" />
+                          <Package className="w-10 h-10 sm:w-12 sm:h-12" />
                         </div>
                         {/* Stock Badge */}
                         <div className="absolute top-2 right-2">
                           {product.stock === 0 ? (
-                            <span className="px-2 py-1 text-[10px] font-bold bg-red-500 text-white rounded-full">Agotado</span>
+                            <span className="px-2 py-1 text-[9px] sm:text-[10px] font-bold bg-red-500 text-white rounded-full">Agotado</span>
                           ) : product.stock <= 5 ? (
-                            <span className="px-2 py-1 text-[10px] font-bold bg-amber-500 text-white rounded-full">{product.stock} un.</span>
+                            <span className="px-2 py-1 text-[9px] sm:text-[10px] font-bold bg-amber-500 text-white rounded-full">{product.stock} un.</span>
                           ) : null}
                         </div>
                       </div>
                     </Link>
-                    <div className="p-3 flex flex-col flex-1">
+                    <div className="p-2 sm:p-3 flex flex-col flex-1">
                       <Link href={`/producto/${product.slug}`}>
-                        <h3 className="text-xs font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors line-clamp-2 mb-1">
+                        <h3 className="text-[11px] sm:text-xs font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors line-clamp-2 mb-1">
                           {product.name}
                         </h3>
                       </Link>
-                      <span className="text-[10px] text-slate-400 mb-2 line-clamp-1">
+                      <span className="text-[9px] sm:text-[10px] text-slate-400 mb-2 line-clamp-1">
                         {product.laboratory || product.category_name || 'General'}
                       </span>
-                      <div className="mt-auto flex items-center justify-between gap-2">
-                        <span className="text-sm font-bold text-slate-800">
+                      <div className="mt-auto flex items-center justify-between gap-1 sm:gap-2">
+                        <span className="text-xs sm:text-sm font-bold text-slate-800">
                           {formatPrice(product.price)}
                         </span>
                         {product.stock > 0 && (
                           <button
                             onClick={() => handleAddToCart(product)}
                             disabled={addingId === product.id}
-                            className={`p-2 rounded-lg transition-all ${
+                            className={`p-1.5 sm:p-2 rounded-lg transition-all ${
                               addingId === product.id
                                 ? 'bg-emerald-500 text-white scale-95'
-                                : 'bg-slate-100 text-slate-600 hover:bg-emerald-500 hover:text-white'
+                                : 'bg-slate-100 text-slate-600 hover:bg-emerald-500 hover:text-white active:scale-95'
                             }`}
                           >
-                            <Plus className="w-4 h-4" />
+                            {addingId === product.id ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                           </button>
                         )}
                       </div>
@@ -475,6 +606,14 @@ export default function Home() {
                 <div className="flex flex-col items-center justify-center text-slate-400">
                   <Search className="w-8 h-8 mb-3 opacity-50" />
                   <p className="text-sm">No se encontraron productos que coincidan.</p>
+                  {onlyAvailable && (
+                    <button
+                      onClick={() => setOnlyAvailable(false)}
+                      className="mt-3 text-emerald-600 text-sm font-medium hover:underline"
+                    >
+                      Mostrar todos los productos
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -483,26 +622,26 @@ export default function Home() {
 
         {/* Pagination Footer */}
         {products && products.total_pages > 1 && (
-          <div className="mt-6 bg-white rounded-xl border border-slate-100 px-6 py-4 flex items-center justify-between">
+          <div className="mt-6 bg-white rounded-xl border border-slate-100 px-4 sm:px-6 py-4 flex items-center justify-between">
             <span className="text-xs text-slate-400 hidden sm:inline-block">
               Página {currentPage} de {products.total_pages}
             </span>
-            <div className="flex items-center gap-1.5 mx-auto sm:mx-0">
+            <div className="flex items-center gap-1 sm:gap-1.5 mx-auto sm:mx-0">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:shadow-sm disabled:opacity-30 disabled:hover:shadow-none transition-all"
+                className="p-1.5 sm:p-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:shadow-sm disabled:opacity-30 disabled:hover:shadow-none transition-all"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
 
-              <div className="flex items-center gap-1 px-2">
+              <div className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2">
                 {getPageNumbers().map((page, idx) => (
                   typeof page === 'number' ? (
                     <button
                       key={idx}
                       onClick={() => setCurrentPage(page)}
-                      className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-xs font-semibold transition-all ${
                         currentPage === page
                           ? 'bg-emerald-500 text-white shadow-sm'
                           : 'text-slate-500 hover:bg-slate-50'
@@ -511,7 +650,7 @@ export default function Home() {
                       {page}
                     </button>
                   ) : (
-                    <span key={idx} className="text-slate-300 text-xs">...</span>
+                    <span key={idx} className="text-slate-300 text-xs px-1">...</span>
                   )
                 ))}
               </div>
@@ -519,14 +658,35 @@ export default function Home() {
               <button
                 onClick={() => setCurrentPage((p) => Math.min(products.total_pages, p + 1))}
                 disabled={currentPage === products.total_pages}
-                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:shadow-sm disabled:opacity-30 disabled:hover:shadow-none transition-all"
+                className="p-1.5 sm:p-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:shadow-sm disabled:opacity-30 disabled:hover:shadow-none transition-all"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
           </div>
         )}
       </main>
+
+      {/* Mobile Bottom Cart Bar */}
+      {cart && cart.item_count > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 sm:hidden bg-white border-t border-slate-200 p-3 z-40 animate-in slide-in-from-bottom">
+          <Link
+            href="/carrito"
+            className="flex items-center justify-between bg-emerald-600 text-white rounded-xl px-4 py-3 shadow-lg"
+          >
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <ShoppingCart className="w-5 h-5" />
+                <span className="absolute -top-2 -right-2 w-4 h-4 bg-white text-emerald-600 text-[10px] font-bold flex items-center justify-center rounded-full">
+                  {cart.item_count}
+                </span>
+              </div>
+              <span className="font-semibold">Ver carrito</span>
+            </div>
+            <span className="font-bold">{formatPrice(cart.total)}</span>
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
