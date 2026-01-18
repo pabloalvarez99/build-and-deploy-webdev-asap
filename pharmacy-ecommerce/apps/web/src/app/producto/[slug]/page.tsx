@@ -121,8 +121,8 @@ export default function ProductPage() {
               <Package className="w-32 h-32 text-gray-200" />
             )}
             {product.stock <= 0 && (
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
-                <span className="bg-red-100 text-red-800 px-6 py-2 rounded-full font-semibold text-lg border border-red-200">
+              <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center">
+                <span className="text-red-600 font-bold border-4 border-red-600 px-8 py-4 rounded-xl text-2xl -rotate-12 uppercase tracking-widest shadow-lg bg-white/90">
                   Agotado
                 </span>
               </div>
@@ -185,8 +185,8 @@ export default function ProductPage() {
                       <Plus className="w-4 h-4 text-gray-600" />
                     </button>
                   </div>
-                  <span className="text-sm text-gray-500">
-                    {product.stock} disponibles
+                  <span className={`text-sm font-medium ${product.stock <= 10 ? 'text-orange-600' : 'text-gray-500'}`}>
+                    {product.stock <= 10 ? `¡Solo quedan ${product.stock}!` : `${product.stock} disponibles`}
                   </span>
                 </div>
 
