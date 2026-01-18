@@ -674,16 +674,30 @@ export default function AdminProductsPage() {
                         </button>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          {product.stock === 0 && (
-                            <span className="flex-shrink-0 w-2 h-2 rounded-full bg-red-500" title="Agotado" />
+                        <div className="flex items-center gap-3">
+                          {product.image_url ? (
+                            <img 
+                              src={product.image_url} 
+                              alt="" 
+                              className="w-10 h-10 object-contain rounded bg-white border border-gray-100"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center shrink-0">
+                              <span className="text-[10px] text-gray-400">Sin img</span>
+                            </div>
                           )}
-                          {product.stock > 0 && product.stock <= 10 && (
-                            <AlertTriangle className="flex-shrink-0 w-4 h-4 text-orange-500" title="Stock bajo" />
-                          )}
-                          <div>
-                            <div className="font-medium text-gray-900 truncate max-w-[200px]">{product.name}</div>
-                            <div className="text-xs text-gray-500 truncate max-w-[200px]">{product.slug}</div>
+                          <div className="flex flex-col min-w-0">
+                            <div className="flex items-center gap-2">
+                              {product.stock === 0 && (
+                                <span className="flex-shrink-0 w-2 h-2 rounded-full bg-red-500" title="Agotado" />
+                              )}
+                              {product.stock > 0 && product.stock <= 10 && (
+                                <AlertTriangle className="flex-shrink-0 w-4 h-4 text-orange-500" title="Stock bajo" />
+                              )}
+                              <span className="font-medium text-gray-900 truncate max-w-[200px]">{product.name}</span>
+                            </div>
+                            <span className="text-xs text-gray-500 truncate max-w-[200px]">{product.slug}</span>
                           </div>
                         </div>
                       </td>

@@ -29,19 +29,30 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Link href={`/producto/${product.slug}`} className="group">
-      <div className="card overflow-hidden hover:shadow-md transition-shadow">
-        <div className="aspect-square relative bg-gray-100">
-          <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm p-4 text-center">
-            {product.name}
-          </div>
+      <div className="card overflow-hidden hover:shadow-md transition-shadow h-full flex flex-col">
+        <div className="aspect-square relative bg-white p-4">
+          {product.image_url ? (
+            <img 
+              src={product.image_url} 
+              alt={product.name}
+              className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400 text-sm p-4 text-center">
+              <span className="opacity-50">Sin imagen</span>
+            </div>
+          )}
           {product.stock <= 0 && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <span className="text-white font-semibold">Agotado</span>
+            <div className="absolute inset-0 bg-white/80 flex items-center justify-center backdrop-blur-sm">
+              <span className="text-red-600 font-bold border-2 border-red-600 px-4 py-2 rounded-lg -rotate-12">
+                AGOTADO
+              </span>
             </div>
           )}
         </div>
 
-        <div className="p-4">
+        <div className="p-4 flex-1 flex flex-col">
           {product.category_name && (
             <span className="text-xs text-primary-600 font-medium uppercase tracking-wide">
               {product.category_name}
