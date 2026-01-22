@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { productApi, PaginatedProducts, Category } from '@/lib/api';
-import { Plus, Edit, Trash2, Search, Download, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Download, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 export default function AdminProductsPage() {
@@ -13,11 +13,13 @@ export default function AdminProductsPage() {
 
   const [products, setProducts] = useState<PaginatedProducts | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [laboratories, setLaboratories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
-  
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
   // Selection for bulk actions
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
@@ -25,8 +27,11 @@ export default function AdminProductsPage() {
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedLaboratory, setSelectedLaboratory] = useState('');
+  const [selectedPrescription, setSelectedPrescription] = useState('');
   const [sortBy, setSortBy] = useState('');
   const [stockFilter, setStockFilter] = useState('');
+  const [labSearchTerm, setLabSearchTerm] = useState('');
 
   // Form state
   const [formData, setFormData] = useState({
@@ -38,6 +43,10 @@ export default function AdminProductsPage() {
     category_id: '',
     image_url: '',
     laboratory: '',
+    therapeutic_action: '',
+    active_ingredient: '',
+    prescription_type: 'direct' as 'direct' | 'prescription' | 'retained',
+    presentation: '',
     active: true,
   });
 
@@ -47,6 +56,7 @@ export default function AdminProductsPage() {
       return;
     }
     loadCategories();
+    loadLaboratories();
   }, [token, user, router]);
 
   useEffect(() => {
@@ -71,7 +81,7 @@ export default function AdminProductsPage() {
     if (token) {
       loadProducts();
     }
-  }, [token, currentPage, searchTerm, selectedCategory, sortBy, stockFilter]);
+  }, [token, currentPage, searchTerm, selectedCategory, selectedLaboratory, selectedPrescription, sortBy, stockFilter]);
 
   const loadCategories = async () => {
     try {
@@ -80,6 +90,15 @@ export default function AdminProductsPage() {
       setCategories(data);
     } catch (error) {
       console.error('Error loading categories:', error);
+    }
+  };
+
+  const loadLaboratories = async () => {
+    try {
+      const data = await productApi.getLaboratories();
+      setLaboratories(data.laboratories || []);
+    } catch (error) {
+      console.error('Error loading laboratories:', error);
     }
   };
 
@@ -94,6 +113,8 @@ export default function AdminProductsPage() {
         active_only: false,
         search: searchTerm || undefined,
         category: selectedCategory || undefined,
+        laboratory: selectedLaboratory || undefined,
+        prescription_type: selectedPrescription || undefined,
         sort_by: sortBy || undefined,
       });
       setProducts(data);
@@ -124,6 +145,10 @@ export default function AdminProductsPage() {
         category_id: formData.category_id || undefined,
         image_url: formData.image_url || undefined,
         laboratory: formData.laboratory || undefined,
+        therapeutic_action: formData.therapeutic_action || undefined,
+        active_ingredient: formData.active_ingredient || undefined,
+        prescription_type: formData.prescription_type,
+        presentation: formData.presentation || undefined,
         active: formData.active,
       };
 
@@ -137,6 +162,7 @@ export default function AdminProductsPage() {
       setEditingProduct(null);
       resetForm();
       loadProducts();
+      loadLaboratories(); // Refresh labs list if a new one was added
     } catch (error) {
       console.error('Error saving product:', error);
       alert('Error al guardar el producto');
@@ -153,6 +179,10 @@ export default function AdminProductsPage() {
       category_id: product.category_id || '',
       image_url: product.image_url || '',
       laboratory: product.laboratory || '',
+      therapeutic_action: product.therapeutic_action || '',
+      active_ingredient: product.active_ingredient || '',
+      prescription_type: product.prescription_type || 'direct',
+      presentation: product.presentation || '',
       active: product.active ?? true,
     });
     setEditingProduct(product.id);
@@ -170,6 +200,10 @@ export default function AdminProductsPage() {
       category_id: product.category_id || '',
       image_url: product.image_url || '',
       laboratory: product.laboratory || '',
+      therapeutic_action: product.therapeutic_action || '',
+      active_ingredient: product.active_ingredient || '',
+      prescription_type: product.prescription_type || 'direct',
+      presentation: product.presentation || '',
       active: false, // Start as inactive
     });
     setEditingProduct(null); // This is a new product
@@ -198,6 +232,10 @@ export default function AdminProductsPage() {
       category_id: '',
       image_url: '',
       laboratory: '',
+      therapeutic_action: '',
+      active_ingredient: '',
+      prescription_type: 'direct',
+      presentation: '',
       active: true,
     });
   };
@@ -214,19 +252,28 @@ export default function AdminProductsPage() {
   const exportToCSV = () => {
     if (!products) return;
 
-    const headers = ['Nombre', 'Slug', 'Precio', 'Stock', 'Categoria', 'Laboratorio', 'Estado'];
+    const headers = ['Nombre', 'Slug', 'Precio', 'Stock', 'Categoria', 'Laboratorio', 'Accion Terapeutica', 'Principio Activo', 'Tipo Venta', 'Presentacion', 'Estado'];
+    const prescriptionLabels: Record<string, string> = {
+      direct: 'Venta Directa',
+      prescription: 'Receta Medica',
+      retained: 'Receta Retenida'
+    };
     const rows = products.products.map(p => [
-      p.name,
+      `"${p.name.replace(/"/g, '""')}"`,
       p.slug,
       p.price,
       p.stock,
       p.category_name || '',
       p.laboratory || '',
+      (p as any).therapeutic_action || '',
+      (p as any).active_ingredient || '',
+      prescriptionLabels[(p as any).prescription_type] || 'Venta Directa',
+      (p as any).presentation || '',
       p.active ? 'Activo' : 'Inactivo'
     ]);
 
     const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM for Excel
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `productos_${new Date().toISOString().split('T')[0]}.csv`;
@@ -236,12 +283,23 @@ export default function AdminProductsPage() {
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedCategory('');
+    setSelectedLaboratory('');
+    setSelectedPrescription('');
     setSortBy('');
     setStockFilter('');
+    setLabSearchTerm('');
     setCurrentPage(1);
     // Clear URL params
     window.history.replaceState({}, '', '/admin/productos');
   };
+
+  // Count active filters
+  const activeFilterCount = [selectedCategory, selectedLaboratory, selectedPrescription, stockFilter].filter(Boolean).length;
+
+  // Filter laboratories by search term
+  const filteredLaboratories = laboratories.filter(lab =>
+    lab.toLowerCase().includes(labSearchTerm.toLowerCase())
+  );
 
   // Selection helpers
   const toggleSelectProduct = (id: string) => {
@@ -400,8 +458,8 @@ export default function AdminProductsPage() {
             className={`input py-2 px-3 min-w-[140px] ${stockFilter === 'low' ? 'border-orange-400 bg-orange-50' : ''}`}
           >
             <option value="">Todo el stock</option>
-            <option value="low">⚠️ Stock bajo</option>
-            <option value="out">🔴 Agotados</option>
+            <option value="low">Stock bajo</option>
+            <option value="out">Agotados</option>
           </select>
 
           <select
@@ -420,15 +478,108 @@ export default function AdminProductsPage() {
             <option value="stock_desc">Mayor stock</option>
           </select>
 
-          {(searchTerm || selectedCategory || sortBy || stockFilter) && (
+          <button
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            className={`btn ${showAdvancedFilters ? 'btn-primary' : 'btn-secondary'} flex items-center gap-2`}
+          >
+            <Filter className="w-4 h-4" />
+            Filtros
+            {activeFilterCount > 0 && (
+              <span className="bg-white text-emerald-600 rounded-full w-5 h-5 text-xs flex items-center justify-center font-bold">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+
+          {(searchTerm || selectedCategory || selectedLaboratory || selectedPrescription || sortBy || stockFilter) && (
             <button
               onClick={clearFilters}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
-              Limpiar filtros
+              Limpiar todo
             </button>
           )}
         </div>
+
+        {/* Advanced Filters Panel */}
+        {showAdvancedFilters && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Laboratory Filter with Search */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Laboratorio</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Buscar laboratorio..."
+                    value={labSearchTerm}
+                    onChange={(e) => setLabSearchTerm(e.target.value)}
+                    className="input py-2 px-3 w-full text-sm mb-2"
+                  />
+                  <select
+                    value={selectedLaboratory}
+                    onChange={(e) => {
+                      setSelectedLaboratory(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="input py-2 px-3 w-full"
+                    size={5}
+                  >
+                    <option value="">Todos los laboratorios</option>
+                    {filteredLaboratories.map((lab) => (
+                      <option key={lab} value={lab}>
+                        {lab}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {selectedLaboratory && (
+                  <div className="mt-2 flex items-center gap-2 text-sm">
+                    <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded flex items-center gap-1">
+                      {selectedLaboratory}
+                      <button onClick={() => setSelectedLaboratory('')} className="hover:text-emerald-600">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Prescription Type Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Venta</label>
+                <select
+                  value={selectedPrescription}
+                  onChange={(e) => {
+                    setSelectedPrescription(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="input py-2 px-3 w-full"
+                >
+                  <option value="">Todos los tipos</option>
+                  <option value="direct">Venta Directa</option>
+                  <option value="prescription">Receta Medica</option>
+                  <option value="retained">Receta Retenida</option>
+                </select>
+                <div className="mt-2 text-xs text-gray-500">
+                  <p><span className="font-medium">Directa:</span> Sin receta</p>
+                  <p><span className="font-medium">Medica:</span> Requiere receta</p>
+                  <p><span className="font-medium">Retenida:</span> Controlados</p>
+                </div>
+              </div>
+
+              {/* Quick Stats */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Resumen</label>
+                <div className="bg-gray-50 rounded-lg p-3 text-sm space-y-1">
+                  <p><span className="font-medium">{products?.total.toLocaleString('es-CL') || 0}</span> productos encontrados</p>
+                  <p><span className="font-medium">{laboratories.length}</span> laboratorios</p>
+                  <p><span className="font-medium">{categories.length}</span> categorias</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bulk Actions Bar */}
@@ -596,7 +747,61 @@ export default function AdminProductsPage() {
                   onChange={(e) => setFormData({ ...formData, laboratory: e.target.value })}
                   className="input"
                   placeholder="Ej: SAVAL, RECALCINE..."
+                  list="laboratories-list"
                 />
+                <datalist id="laboratories-list">
+                  {laboratories.map((lab) => (
+                    <option key={lab} value={lab} />
+                  ))}
+                </datalist>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Accion Terapeutica</label>
+                  <input
+                    type="text"
+                    value={formData.therapeutic_action}
+                    onChange={(e) => setFormData({ ...formData, therapeutic_action: e.target.value })}
+                    className="input"
+                    placeholder="Ej: ANALGESICO, HIPOTENSOR..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Principio Activo</label>
+                  <input
+                    type="text"
+                    value={formData.active_ingredient}
+                    onChange={(e) => setFormData({ ...formData, active_ingredient: e.target.value })}
+                    className="input"
+                    placeholder="Ej: PARACETAMOL, IBUPROFENO..."
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Venta</label>
+                  <select
+                    value={formData.prescription_type}
+                    onChange={(e) => setFormData({ ...formData, prescription_type: e.target.value as 'direct' | 'prescription' | 'retained' })}
+                    className="input"
+                  >
+                    <option value="direct">Venta Directa</option>
+                    <option value="prescription">Receta Medica</option>
+                    <option value="retained">Receta Retenida</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Presentacion</label>
+                  <input
+                    type="text"
+                    value={formData.presentation}
+                    onChange={(e) => setFormData({ ...formData, presentation: e.target.value })}
+                    className="input"
+                    placeholder="Ej: COMPRIMIDO, JARABE..."
+                  />
+                </div>
               </div>
 
               <div className="flex items-center gap-3">
@@ -698,9 +903,9 @@ export default function AdminProductsPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           {product.image_url ? (
-                            <img 
-                              src={product.image_url} 
-                              alt="" 
+                            <img
+                              src={product.image_url}
+                              alt=""
                               className="w-10 h-10 object-contain rounded bg-white border border-gray-100"
                               loading="lazy"
                             />
@@ -720,8 +925,25 @@ export default function AdminProductsPage() {
                                 </span>
                               )}
                               <span className="font-medium text-gray-900 truncate max-w-[200px]">{product.name}</span>
+                              {(product as any).prescription_type === 'prescription' && (
+                                <span className="flex-shrink-0 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded" title="Receta Medica">
+                                  RX
+                                </span>
+                              )}
+                              {(product as any).prescription_type === 'retained' && (
+                                <span className="flex-shrink-0 px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-medium rounded" title="Receta Retenida">
+                                  RR
+                                </span>
+                              )}
                             </div>
-                            <span className="text-xs text-gray-500 truncate max-w-[200px]">{product.slug}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500 truncate max-w-[150px]">{product.slug}</span>
+                              {(product as any).therapeutic_action && (
+                                <span className="text-xs text-emerald-600 truncate max-w-[100px]" title={(product as any).therapeutic_action}>
+                                  {(product as any).therapeutic_action}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>

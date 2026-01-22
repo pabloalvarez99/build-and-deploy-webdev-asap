@@ -18,6 +18,10 @@ pub struct Product {
     pub active: bool,
     pub external_id: Option<String>,
     pub laboratory: Option<String>,
+    pub therapeutic_action: Option<String>,
+    pub active_ingredient: Option<String>,
+    pub prescription_type: Option<String>,
+    pub presentation: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -43,8 +47,17 @@ pub struct CreateProductRequest {
     pub category_id: Option<Uuid>,
     pub image_url: Option<String>,
     pub laboratory: Option<String>,
+    pub therapeutic_action: Option<String>,
+    pub active_ingredient: Option<String>,
+    #[serde(default = "default_prescription")]
+    pub prescription_type: String,
+    pub presentation: Option<String>,
     #[serde(default = "default_active")]
     pub active: bool,
+}
+
+fn default_prescription() -> String {
+    "direct".to_string()
 }
 
 fn default_active() -> bool {
@@ -62,17 +75,26 @@ pub struct UpdateProductRequest {
     pub image_url: Option<String>,
     pub active: Option<bool>,
     pub laboratory: Option<String>,
+    pub therapeutic_action: Option<String>,
+    pub active_ingredient: Option<String>,
+    pub prescription_type: Option<String>,
+    pub presentation: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ProductQuery {
     pub category: Option<String>,
     pub laboratory: Option<String>,
+    pub therapeutic_action: Option<String>,
+    pub prescription_type: Option<String>,
+    pub active_ingredient: Option<String>,
     pub search: Option<String>,
     pub page: Option<u32>,
     pub limit: Option<u32>,
     pub active_only: Option<bool>,
     pub sort_by: Option<String>,
+    pub min_price: Option<Decimal>,
+    pub max_price: Option<Decimal>,
 }
 
 #[derive(Debug, Serialize)]

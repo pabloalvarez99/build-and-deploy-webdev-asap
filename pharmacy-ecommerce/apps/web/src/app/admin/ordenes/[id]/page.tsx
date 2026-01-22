@@ -5,11 +5,12 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { orderApi, OrderWithItems } from '@/lib/api';
-import { ArrowLeft, Package, MapPin, FileText, User, Mail, Printer, Check, Clock, Truck, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Package, MapPin, FileText, User, Mail, Printer, Check, Clock, Truck, CheckCircle, XCircle, Store, Phone, Calendar } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 const statusOptions = [
   { value: 'pending', label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  { value: 'reserved', label: 'Reservado', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
   { value: 'paid', label: 'Pagado', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
   { value: 'processing', label: 'Procesando', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
   { value: 'shipped', label: 'Enviado', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
@@ -18,9 +19,11 @@ const statusOptions = [
 ];
 
 const statusFlow = ['pending', 'paid', 'processing', 'shipped', 'delivered'];
+const reservationFlow = ['reserved', 'paid', 'delivered'];
 
 const statusIcons: Record<string, React.ReactNode> = {
   pending: <Clock className="w-5 h-5" />,
+  reserved: <Store className="w-5 h-5" />,
   paid: <Check className="w-5 h-5" />,
   processing: <Package className="w-5 h-5" />,
   shipped: <Truck className="w-5 h-5" />,
@@ -28,18 +31,23 @@ const statusIcons: Record<string, React.ReactNode> = {
   cancelled: <XCircle className="w-5 h-5" />,
 };
 
-function OrderTimeline({ currentStatus }: { currentStatus: string }) {
+function OrderTimeline({ currentStatus, isReservation }: { currentStatus: string; isReservation: boolean }) {
   const isCancelled = currentStatus === 'cancelled';
-  const currentIndex = statusFlow.indexOf(currentStatus);
+  const flow = isReservation ? reservationFlow : statusFlow;
+  const currentIndex = flow.indexOf(currentStatus);
 
   return (
     <div className="card p-6 mb-6">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Estado del Pedido</h2>
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+        {isReservation ? 'Estado de la Reserva' : 'Estado del Pedido'}
+      </h2>
 
       {isCancelled ? (
         <div className="flex items-center justify-center gap-3 py-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
           <XCircle className="w-6 h-6 text-red-500" />
-          <span className="text-lg font-medium text-red-700 dark:text-red-400">Orden Cancelada</span>
+          <span className="text-lg font-medium text-red-700 dark:text-red-400">
+            {isReservation ? 'Reserva Cancelada' : 'Orden Cancelada'}
+          </span>
         </div>
       ) : (
         <div className="relative">
@@ -47,13 +55,13 @@ function OrderTimeline({ currentStatus }: { currentStatus: string }) {
           <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200 dark:bg-slate-700 rounded">
             <div
               className="absolute h-full bg-emerald-500 rounded transition-all duration-500"
-              style={{ width: `${(currentIndex / (statusFlow.length - 1)) * 100}%` }}
+              style={{ width: `${(currentIndex / (flow.length - 1)) * 100}%` }}
             />
           </div>
 
           {/* Status points */}
           <div className="relative flex justify-between">
-            {statusFlow.map((status, index) => {
+            {flow.map((status, index) => {
               const isCompleted = index <= currentIndex;
               const isCurrent = index === currentIndex;
               const statusInfo = statusOptions.find((s) => s.value === status);
@@ -193,7 +201,51 @@ export default function AdminOrderDetailPage() {
       </div>
 
       {/* Status Timeline */}
-      <OrderTimeline currentStatus={order.status} />
+      <OrderTimeline currentStatus={order.status} isReservation={order.payment_provider === 'store'} />
+
+      {/* Store Pickup Info */}
+      {order.payment_provider === 'store' && (order.pickup_code || order.reservation_expires_at) && (
+        <div className="card p-6 mb-6 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800">
+          <div className="flex items-center gap-3 mb-4">
+            <Store className="w-5 h-5 text-orange-600" />
+            <h2 className="text-lg font-semibold text-orange-800 dark:text-orange-300">
+              Informacion de Retiro en Tienda
+            </h2>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {order.pickup_code && (
+              <div className="bg-white dark:bg-slate-800 rounded-lg p-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">Codigo de Retiro</p>
+                <p className="text-3xl font-mono font-bold text-orange-600 dark:text-orange-400 tracking-widest">
+                  {order.pickup_code}
+                </p>
+              </div>
+            )}
+            {order.reservation_expires_at && (
+              <div className="bg-white dark:bg-slate-800 rounded-lg p-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">Valido Hasta</p>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-orange-500" />
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {new Date(order.reservation_expires_at).toLocaleDateString('es-CL', {
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'long',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+                {new Date(order.reservation_expires_at) < new Date() && order.status === 'reserved' && (
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-2 font-medium">
+                    Reserva expirada
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -250,6 +302,14 @@ export default function AdminOrderDetailPage() {
                   <Mail className="w-4 h-4 text-gray-400" />
                   <a href={`mailto:${order.guest_email}`} className="text-emerald-600 dark:text-emerald-400 hover:underline">
                     {order.guest_email}
+                  </a>
+                </div>
+              )}
+              {order.customer_phone && (
+                <div className="flex items-center gap-3">
+                  <Phone className="w-4 h-4 text-gray-400" />
+                  <a href={`tel:${order.customer_phone}`} className="text-emerald-600 dark:text-emerald-400 hover:underline">
+                    {order.customer_phone}
                   </a>
                 </div>
               )}

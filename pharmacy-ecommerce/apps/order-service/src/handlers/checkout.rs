@@ -3,11 +3,15 @@ use redis::AsyncCommands;
 use rust_decimal::Decimal;
 use uuid::Uuid;
 
+use chrono::{Duration, Utc};
+use rand::Rng;
+
 use crate::{
     models::{
         Cart, CheckoutRequest, CheckoutResponse, Claims, GuestCheckoutRequest,
         MercadoPagoBackUrls, MercadoPagoItem, MercadoPagoPayer, MercadoPagoPaymentCreate,
         MercadoPagoPreference, PayerInfo, ProcessPaymentRequest, ProcessPaymentResponse,
+        StorePickupRequest, StorePickupResponse,
     },
     services::MercadoPagoClient,
     AppState,
@@ -516,5 +520,116 @@ pub async fn guest_checkout(
         order_id,
         init_point,
         preference_id: mp_response.id,
+    }))
+}
+
+/// Store pickup checkout - Reserve products and pay in store
+/// Creates a reservation that expires in 48 hours
+pub async fn store_pickup_checkout(
+    State(state): State<AppState>,
+    Json(payload): Json<StorePickupRequest>,
+) -> Result<Json<StorePickupResponse>, (StatusCode, String)> {
+    if payload.items.is_empty() {
+        return Err((StatusCode::BAD_REQUEST, "Cart is empty".to_string()));
+    }
+
+    // Calculate total and validate stock
+    let mut total = Decimal::ZERO;
+    let mut order_items: Vec<(Uuid, String, i32, Decimal)> = vec![];
+
+    for item in &payload.items {
+        let product = sqlx::query_as::<_, (Uuid, String, Decimal, i32)>(
+            "SELECT id, name, price, stock FROM products WHERE id = $1 AND active = true",
+        )
+        .bind(item.product_id)
+        .fetch_optional(&state.db)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .ok_or((
+            StatusCode::NOT_FOUND,
+            format!("Product {} not found", item.product_id),
+        ))?;
+
+        let (product_id, name, price, stock) = product;
+
+        if stock < item.quantity {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                format!("Insufficient stock for {}", name),
+            ));
+        }
+
+        let subtotal = price * Decimal::from(item.quantity);
+        total += subtotal;
+
+        order_items.push((product_id, name, item.quantity, price));
+    }
+
+    // Generate 6-digit pickup code
+    let pickup_code: String = {
+        let mut rng = rand::thread_rng();
+        format!("{:06}", rng.gen_range(100000..999999))
+    };
+
+    // Reservation expires in 48 hours
+    let expires_at = Utc::now() + Duration::hours(48);
+
+    // Create order with 'reserved' status
+    let order_id = sqlx::query_scalar::<_, Uuid>(
+        r#"
+        INSERT INTO orders (
+            user_id, status, total, shipping_address, notes,
+            guest_email, guest_session_id, payment_provider,
+            pickup_code, reservation_expires_at, customer_phone,
+            guest_name, guest_surname
+        )
+        VALUES (NULL, 'reserved', $1, NULL, $2, $3, $4, 'store', $5, $6, $7, $8, $9)
+        RETURNING id
+        "#,
+    )
+    .bind(total)
+    .bind(&payload.notes)
+    .bind(&payload.email)
+    .bind(&payload.session_id)
+    .bind(&pickup_code)
+    .bind(expires_at)
+    .bind(&payload.phone)
+    .bind(&payload.name)
+    .bind(&payload.surname)
+    .fetch_one(&state.db)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // Create order items
+    for (product_id, product_name, quantity, price) in &order_items {
+        sqlx::query(
+            r#"
+            INSERT INTO order_items (order_id, product_id, product_name, quantity, price_at_purchase)
+            VALUES ($1, $2, $3, $4, $5)
+            "#,
+        )
+        .bind(order_id)
+        .bind(product_id)
+        .bind(product_name)
+        .bind(quantity)
+        .bind(price)
+        .execute(&state.db)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    }
+
+    tracing::info!(
+        order_id = %order_id,
+        pickup_code = %pickup_code,
+        expires_at = %expires_at,
+        total = %total,
+        "Store pickup reservation created"
+    );
+
+    Ok(Json(StorePickupResponse {
+        order_id,
+        pickup_code,
+        expires_at,
+        total,
     }))
 }

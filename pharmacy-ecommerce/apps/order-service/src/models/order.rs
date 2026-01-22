@@ -19,6 +19,15 @@ pub struct Order {
     pub notes: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    // Guest checkout fields
+    pub guest_email: Option<String>,
+    pub guest_session_id: Option<String>,
+    pub guest_name: Option<String>,
+    pub guest_surname: Option<String>,
+    // Store pickup fields
+    pub pickup_code: Option<String>,
+    pub reservation_expires_at: Option<DateTime<Utc>>,
+    pub customer_phone: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -204,4 +213,24 @@ pub struct MercadoPagoPaymentCreate {
     pub issuer_id: Option<String>,
     pub payer: PayerInfo,
     pub external_reference: String,
+}
+
+// Store Pickup (Reservar y Pagar en Tienda) types
+#[derive(Debug, Deserialize)]
+pub struct StorePickupRequest {
+    pub items: Vec<GuestCheckoutItem>,
+    pub name: String,
+    pub surname: String,
+    pub email: String,
+    pub phone: String,
+    pub notes: Option<String>,
+    pub session_id: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct StorePickupResponse {
+    pub order_id: Uuid,
+    pub pickup_code: String,
+    pub expires_at: DateTime<Utc>,
+    pub total: Decimal,
 }

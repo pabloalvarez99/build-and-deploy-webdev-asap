@@ -61,26 +61,48 @@ export const productApi = {
   list: (params?: {
     category?: string;
     laboratory?: string;
+    therapeutic_action?: string;
+    prescription_type?: string;
+    active_ingredient?: string;
     search?: string;
     page?: number;
     limit?: number;
     active_only?: boolean;
     sort_by?: string;
     in_stock?: boolean;
+    min_price?: number;
+    max_price?: number;
   }) => {
     const searchParams = new URLSearchParams();
     if (params?.category) searchParams.set('category', params.category);
     if (params?.laboratory) searchParams.set('laboratory', params.laboratory);
+    if (params?.therapeutic_action) searchParams.set('therapeutic_action', params.therapeutic_action);
+    if (params?.prescription_type) searchParams.set('prescription_type', params.prescription_type);
+    if (params?.active_ingredient) searchParams.set('active_ingredient', params.active_ingredient);
     if (params?.search) searchParams.set('search', params.search);
     if (params?.page) searchParams.set('page', String(params.page));
     if (params?.limit) searchParams.set('limit', String(params.limit));
     if (params?.active_only !== undefined) searchParams.set('active_only', String(params.active_only));
     if (params?.sort_by) searchParams.set('sort_by', params.sort_by);
     if (params?.in_stock) searchParams.set('in_stock', 'true');
+    if (params?.min_price) searchParams.set('min_price', String(params.min_price));
+    if (params?.max_price) searchParams.set('max_price', String(params.max_price));
 
     const query = searchParams.toString();
     return request<PaginatedProducts>(`${PRODUCT_URL}/products${query ? `?${query}` : ''}`);
   },
+
+  // Get unique laboratories for filtering
+  getLaboratories: () =>
+    request<{ laboratories: string[] }>(`${PRODUCT_URL}/filters/laboratories`).catch(() => ({ laboratories: [] })),
+
+  // Get unique therapeutic actions for filtering
+  getTherapeuticActions: () =>
+    request<{ therapeutic_actions: string[] }>(`${PRODUCT_URL}/filters/therapeutic-actions`).catch(() => ({ therapeutic_actions: [] })),
+
+  // Get unique active ingredients for filtering
+  getActiveIngredients: () =>
+    request<{ active_ingredients: string[] }>(`${PRODUCT_URL}/filters/active-ingredients`).catch(() => ({ active_ingredients: [] })),
 
   get: (slug: string) =>
     request<ProductWithCategory>(`${PRODUCT_URL}/products/${slug}`),
@@ -192,6 +214,20 @@ export const orderApi = {
       body: data,
     }),
 
+  storePickup: (data: {
+    items: { product_id: string; quantity: number }[];
+    name: string;
+    surname: string;
+    email: string;
+    phone: string;
+    notes?: string;
+    session_id: string;
+  }) =>
+    request<StorePickupResponse>(`${ORDER_URL}/store-pickup`, {
+      method: 'POST',
+      body: data,
+    }),
+
   list: (token: string, params?: { page?: number; limit?: number; status?: string }) => {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set('page', String(params.page));
@@ -243,12 +279,20 @@ export interface Product {
   active: boolean;
   external_id: string | null;
   laboratory: string | null;
+  therapeutic_action: string | null;
+  active_ingredient: string | null;
+  prescription_type: 'direct' | 'prescription' | 'retained' | null;
+  presentation: string | null;
   created_at: string;
 }
 
 export interface ProductWithCategory extends Product {
   category_name: string | null;
   category_slug: string | null;
+  therapeutic_action: string | null;
+  active_ingredient: string | null;
+  prescription_type: 'direct' | 'prescription' | 'retained' | null;
+  presentation: string | null;
 }
 
 export interface PaginatedProducts {
@@ -268,6 +312,10 @@ export interface CreateProductData {
   category_id?: string;
   image_url?: string;
   laboratory?: string;
+  therapeutic_action?: string;
+  active_ingredient?: string;
+  prescription_type?: 'direct' | 'prescription' | 'retained';
+  presentation?: string;
   active?: boolean;
 }
 
@@ -293,6 +341,13 @@ export interface CheckoutResponse {
   preference_id: string;
 }
 
+export interface StorePickupResponse {
+  order_id: string;
+  pickup_code: string;
+  expires_at: string;
+  total: string;
+}
+
 export interface Order {
   id: string;
   user_id: string | null;
@@ -303,6 +358,10 @@ export interface Order {
   shipping_address: string | null;
   notes: string | null;
   created_at: string;
+  payment_provider: string | null;
+  pickup_code: string | null;
+  reservation_expires_at: string | null;
+  customer_phone: string | null;
 }
 
 export interface OrderItem {
@@ -319,6 +378,7 @@ export interface OrderWithItems extends Order {
   guest_name?: string | null;
   guest_surname?: string | null;
   guest_email?: string | null;
+  guest_session_id?: string | null;
 }
 
 export interface PaginatedOrders {
