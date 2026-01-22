@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
 Script para importar productos desde Excel a PostgreSQL
-Actualizado para incluir external_id, laboratory, y productos con stock=0
+Actualizado para el nuevo formato de Excel 2026-01-19_LISTA_DE_PRECIOS.xlsx
+Columnas: ID, PRODUCTO, LABORATORIO, DEPARTAMENTO, ACCIÓN TERAPÉUTICA, PRINCIPIO ACTIVO,
+          UNIDADES PRESENTACIÓN, PRESENTACIÓN, RECETA MÉDICA, CONTROL LEGAL, ES BIOEQUIVALENTE,
+          REGISTRO SANITARIO, TITULAR REGISTRO, STOCK, PRECIO, PRECIO POR UNIDAD
 """
 
 import pandas as pd
@@ -41,33 +44,59 @@ def clean_text(text):
     text = unicodedata.normalize('NFKC', text)
     return text
 
+def build_description(row):
+    """Build a rich description from product details"""
+    parts = []
+
+    if row.get('accion_terapeutica') and not pd.isna(row['accion_terapeutica']):
+        parts.append(f"Acción terapéutica: {clean_text(row['accion_terapeutica'])}")
+
+    if row.get('principio_activo') and not pd.isna(row['principio_activo']):
+        parts.append(f"Principio activo: {clean_text(row['principio_activo'])}")
+
+    if row.get('presentacion') and not pd.isna(row['presentacion']):
+        parts.append(f"Presentación: {clean_text(row['presentacion'])}")
+
+    if row.get('receta') and not pd.isna(row['receta']):
+        receta = clean_text(row['receta'])
+        if receta:
+            parts.append(f"Requiere: {receta}")
+
+    return ". ".join(parts) if parts else f"Producto farmacéutico: {clean_text(row.get('producto', ''))}"
+
 def main():
     # Determine script directory to find Excel file
     script_dir = os.path.dirname(os.path.abspath(__file__))
     parent_dir = os.path.dirname(script_dir)
-    excel_path = os.path.join(parent_dir, '2026-01-08 REPORTE STOCK.xlsx')
+    excel_path = os.path.join(parent_dir, '2026-01-19_LISTA_DE_PRECIOS.xlsx')
 
     # Read Excel
     print(f"Leyendo Excel desde: {excel_path}")
     df = pd.read_excel(excel_path, header=None)
 
-    # Skip header rows (first 2 rows are headers)
-    df = df.iloc[2:]
-    df.columns = ['id', 'producto', 'linea', 'stock', 'cpp', 'valorizado']
+    # Skip header row (first row is header)
+    df = df.iloc[1:]
+    df.columns = [
+        'id', 'producto', 'laboratorio', 'departamento', 'accion_terapeutica',
+        'principio_activo', 'unidades_presentacion', 'presentacion', 'receta',
+        'control_legal', 'es_bioequivalente', 'registro_sanitario',
+        'titular_registro', 'stock', 'precio', 'precio_por_unidad'
+    ]
 
     # Clean data
     df = df.dropna(subset=['producto'])  # Remove rows without product name
     df['stock'] = pd.to_numeric(df['stock'], errors='coerce').fillna(0).astype(int)
-    df['cpp'] = pd.to_numeric(df['cpp'], errors='coerce').fillna(0)
+    df['precio'] = pd.to_numeric(df['precio'], errors='coerce').fillna(0)
 
     # Clean text fields
     df['producto'] = df['producto'].apply(clean_text)
-    df['linea'] = df['linea'].apply(clean_text)
+    df['laboratorio'] = df['laboratorio'].apply(clean_text)
+    df['departamento'] = df['departamento'].apply(clean_text)
     df['id'] = df['id'].apply(lambda x: str(x).strip() if not pd.isna(x) else '')
 
     # Filter only products with invalid price (price = 0 or negative)
     # Include products with stock = 0 (they will show as "Agotado")
-    df = df[df['cpp'] > 0]
+    df = df[df['precio'] > 0]
 
     print(f"Productos validos para importar: {len(df)}")
     print(f"  - Con stock > 0: {len(df[df['stock'] > 0])}")
@@ -78,9 +107,9 @@ def main():
     conn = psycopg2.connect(DB_URL)
     cur = conn.cursor()
 
-    # Get existing categories or create new ones
-    print("Procesando categorias (laboratorios)...")
-    categories = df['linea'].dropna().unique()
+    # Get existing categories or create new ones based on DEPARTAMENTO
+    print("Procesando categorias (departamentos)...")
+    categories = df['departamento'].dropna().unique()
     category_map = {}
 
     for cat_name in categories:
@@ -146,13 +175,16 @@ def main():
                 counter += 1
 
             stock = int(row['stock']) if not pd.isna(row['stock']) else 0
-            price = float(row['cpp']) if not pd.isna(row['cpp']) else 0
+            price = float(row['precio']) if not pd.isna(row['precio']) else 0
             external_id = str(row['id']).strip() if not pd.isna(row['id']) else None
-            laboratory = str(row['linea']).strip() if not pd.isna(row['linea']) else None
+            laboratory = str(row['laboratorio']).strip() if not pd.isna(row['laboratorio']) else None
 
-            # Get category
-            cat_name = str(row['linea']).strip() if not pd.isna(row['linea']) else None
+            # Get category from DEPARTAMENTO
+            cat_name = str(row['departamento']).strip() if not pd.isna(row['departamento']) else None
             category_id = category_map.get(cat_name) if cat_name else None
+
+            # Build rich description
+            description = build_description(row)
 
             # Insert product with new fields
             cur.execute("""
@@ -161,7 +193,7 @@ def main():
             """, (
                 name,
                 slug,
-                f"Producto farmaceutico: {name}",
+                description,
                 price,
                 stock,
                 category_id,

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { ProductWithCategory } from '@/lib/api';
 import { useCartStore } from '@/store/cart';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Pill } from 'lucide-react';
 import { useState } from 'react';
 import { formatPrice } from '@/lib/format';
 
@@ -11,9 +11,27 @@ interface ProductCardProps {
   product: ProductWithCategory;
 }
 
+function ProductPlaceholder({ category }: { category?: string }) {
+  const getCategoryColor = (cat?: string) => {
+    if (!cat) return 'text-primary-400';
+    const lower = cat.toLowerCase();
+    if (lower.includes('homeopatia') || lower.includes('natural')) return 'text-green-400';
+    if (lower.includes('derma') || lower.includes('cosmet')) return 'text-pink-400';
+    if (lower.includes('perfum')) return 'text-purple-400';
+    return 'text-primary-400';
+  };
+
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-gray-50">
+      <Pill className={`w-16 h-16 ${getCategoryColor(category)} opacity-40`} />
+    </div>
+  );
+}
+
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCartLocal } = useCartStore();
   const [isAdding, setIsAdding] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -27,21 +45,26 @@ export function ProductCard({ product }: ProductCardProps) {
     }
   };
 
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
+  const showPlaceholder = !product.image_url || imageError;
+
   return (
     <Link href={`/producto/${product.slug}`} className="group">
       <div className="card overflow-hidden hover:shadow-md transition-shadow h-full flex flex-col">
         <div className="aspect-square relative bg-white p-4">
-          {product.image_url ? (
-            <img 
-              src={product.image_url} 
+          {showPlaceholder ? (
+            <ProductPlaceholder category={product.category_name} />
+          ) : (
+            <img
+              src={product.image_url}
               alt={product.name}
               className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
               loading="lazy"
+              onError={handleImageError}
             />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400 text-sm p-4 text-center">
-              <span className="opacity-50">Sin imagen</span>
-            </div>
           )}
           {product.stock <= 0 && (
             <div className="absolute inset-0 bg-white/80 flex items-center justify-center backdrop-blur-sm">
