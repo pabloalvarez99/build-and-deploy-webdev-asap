@@ -59,7 +59,7 @@ export function ProductCard({ product }: ProductCardProps) {
             <ProductPlaceholder category={product.category_name ?? undefined} />
           ) : (
             <img
-              src={product.image_url}
+              src={product.image_url ?? undefined}
               alt={product.name}
               className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
               loading="lazy"
