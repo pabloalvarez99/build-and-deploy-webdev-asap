@@ -22,8 +22,11 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "C:\\Users\\pablo\\Documents\\build-and-deploy-webdev-asap\\pharmacy-ecommerce"
+        "C:\\Users\\Pablo\\Documents\\GitHub\\build-and-deploy-webdev-asap\\pharmacy-ecommerce"
       ]
+    },
+    "vercel": {
+      "url": "https://mcp.vercel.com"
     }
   }
 }
