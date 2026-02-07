@@ -1,6 +1,3 @@
 {
-  "buildCommand": null,
-  "outputDirectory": null,
-  "framework": "nextjs",
-  "rootDirectory": "pharmacy-ecommerce/apps/web"
+  "framework": "nextjs"
 }
