@@ -1,8 +1,5 @@
 {
   "mcpServers": {
-    "mercadopago": {
-      "url": "https://mcp.mercadopago.cl/mcp"
-    },
     "mercadolibre-mcp": {
       "command": "npx",
       "args": ["-y", "mercadolibre-mcp"],
@@ -21,25 +18,26 @@
     },
     "postgres": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-postgres"],
-      "env": {
-        "POSTGRES_CONNECTION_STRING": "postgresql://postgres:RLfkDsoXZmYIjkeoavlWkNXaCGFovWXT@maglev.proxy.rlwy.net:24761/railway"
-      }
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://postgres:RLfkDsoXZmYIjkeoavlWkNXaCGFovWXT@maglev.proxy.rlwy.net:24761/railway"
+      ]
     },
     "filesystem": {
       "command": "npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "C:\\Users\\pablo\\Documents\\build-and-deploy-webdev-asap\\pharmacy-ecommerce"
+        "C:\\Users\\Pablo\\Documents\\GitHub\\build-and-deploy-webdev-asap\\pharmacy-ecommerce"
       ]
     },
-    "brave-search": {
+    "vercel": {
+      "url": "https://mcp.vercel.com"
+    },
+    "railway": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
-      "env": {
-        "BRAVE_API_KEY": "TU_BRAVE_API_KEY_AQUI"
-      }
+      "args": ["-y", "@railway/mcp-server"]
     }
   }
 }

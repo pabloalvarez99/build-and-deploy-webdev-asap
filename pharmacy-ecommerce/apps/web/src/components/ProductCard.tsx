@@ -56,10 +56,10 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="card overflow-hidden hover:shadow-md transition-shadow h-full flex flex-col">
         <div className="aspect-square relative bg-white p-4">
           {showPlaceholder ? (
-            <ProductPlaceholder category={product.category_name} />
+            <ProductPlaceholder category={product.category_name ?? undefined} />
           ) : (
             <img
-              src={product.image_url}
+              src={product.image_url ?? undefined}
               alt={product.name}
               className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
               loading="lazy"

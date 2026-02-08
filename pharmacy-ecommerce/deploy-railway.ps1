@@ -2,10 +2,11 @@
 # Run this after: railway login && railway link
 
 param(
-    [string]$Service = "all"
+    [string]$Service = "all",
+    [switch]$Force
 )
 
-$ROOT = "C:\Users\pablo\OneDrive\Documents\build and deploy webdev asap\pharmacy-ecommerce"
+$ROOT = "c:\Users\Pablo\Documents\GitHub\build-and-deploy-webdev-asap\pharmacy-ecommerce"
 
 function Deploy-OrderService {
     Write-Host "Deploying order-service..." -ForegroundColor Green
@@ -31,17 +32,17 @@ function Deploy-ProductService {
     Write-Host "Deploying product-service..." -ForegroundColor Green
     Set-Location "$ROOT\apps\product-service"
 
-    Write-Host "Setting environment variables..." -ForegroundColor Yellow
-    Write-Host "You need to set these variables manually:"
-    Write-Host "  DATABASE_URL (from Postgres)"
-    Write-Host "  JWT_SECRET"
-    Write-Host "  PORT=3002"
-    Write-Host ""
-
-    $confirm = Read-Host "Have you set all variables? (y/n)"
-    if ($confirm -eq "y") {
-        railway up
+    if (-not $Force) {
+        Write-Host "Setting environment variables..." -ForegroundColor Yellow
+        Write-Host "You need to set these variables manually:"
+        Write-Host "  DATABASE_URL (from Postgres)"
+        Write-Host "  JWT_SECRET"
+        Write-Host "  PORT=3002"
+        Write-Host ""
+        $confirm = Read-Host "Have you set all variables? (y/n)"
+        if ($confirm -ne "y") { return }
     }
+    railway up
 }
 
 function Deploy-AuthService {
@@ -71,8 +72,8 @@ switch ($Service) {
         Deploy-AuthService
     }
     default {
-        Write-Host "Usage: .\deploy-railway.ps1 [-Service <order|product|auth|all>]"
-        Write-Host "Example: .\deploy-railway.ps1 -Service order"
+        Write-Host "Usage: .\deploy-railway.ps1 [-Service <order|product|auth|all>] [-Force]"
+        Write-Host "Example: .\deploy-railway.ps1 -Service product -Force"
     }
 }
 
