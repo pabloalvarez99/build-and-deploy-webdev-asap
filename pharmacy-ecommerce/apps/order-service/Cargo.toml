@@ -22,4 +22,3 @@ thiserror = "1"
 dotenvy = "0.15"
 home = "=0.5.9"
 reqwest = { version = "0.11", features = ["json"] }
-rand = "0.8"

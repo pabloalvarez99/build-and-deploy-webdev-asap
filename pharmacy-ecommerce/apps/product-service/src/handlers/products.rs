@@ -51,21 +51,6 @@ pub async fn list_products(
         conditions.push(format!("p.laboratory = ${}", params.len()));
     }
 
-    if let Some(ref prescription_type) = query.prescription_type {
-        params.push(prescription_type.clone());
-        conditions.push(format!("p.prescription_type = ${}", params.len()));
-    }
-
-    if let Some(ref therapeutic_action) = query.therapeutic_action {
-        params.push(therapeutic_action.clone());
-        conditions.push(format!("p.therapeutic_action = ${}", params.len()));
-    }
-
-    if let Some(ref active_ingredient) = query.active_ingredient {
-        params.push(format!("%{}%", active_ingredient));
-        conditions.push(format!("p.active_ingredient ILIKE ${}", params.len()));
-    }
-
     let where_clause = if conditions.is_empty() {
         "".to_string()
     } else {
@@ -147,10 +132,6 @@ pub async fn list_products(
         active: bool,
         external_id: Option<String>,
         laboratory: Option<String>,
-        therapeutic_action: Option<String>,
-        active_ingredient: Option<String>,
-        prescription_type: Option<String>,
-        presentation: Option<String>,
         created_at: chrono::DateTime<chrono::Utc>,
         updated_at: chrono::DateTime<chrono::Utc>,
         category_name: Option<String>,
@@ -195,10 +176,6 @@ pub async fn list_products(
                 active: row.active,
                 external_id: row.external_id,
                 laboratory: row.laboratory,
-                therapeutic_action: row.therapeutic_action,
-                active_ingredient: row.active_ingredient,
-                prescription_type: row.prescription_type,
-                presentation: row.presentation,
                 created_at: row.created_at,
                 updated_at: row.updated_at,
             },
@@ -235,10 +212,6 @@ pub async fn get_product(
         active: bool,
         external_id: Option<String>,
         laboratory: Option<String>,
-        therapeutic_action: Option<String>,
-        active_ingredient: Option<String>,
-        prescription_type: Option<String>,
-        presentation: Option<String>,
         created_at: chrono::DateTime<chrono::Utc>,
         updated_at: chrono::DateTime<chrono::Utc>,
         category_name: Option<String>,
@@ -275,10 +248,6 @@ pub async fn get_product(
             active: row.active,
             external_id: row.external_id,
             laboratory: row.laboratory,
-            therapeutic_action: row.therapeutic_action,
-            active_ingredient: row.active_ingredient,
-            prescription_type: row.prescription_type,
-            presentation: row.presentation,
             created_at: row.created_at,
             updated_at: row.updated_at,
         },
@@ -304,10 +273,6 @@ pub async fn get_product_by_id(
         active: bool,
         external_id: Option<String>,
         laboratory: Option<String>,
-        therapeutic_action: Option<String>,
-        active_ingredient: Option<String>,
-        prescription_type: Option<String>,
-        presentation: Option<String>,
         created_at: chrono::DateTime<chrono::Utc>,
         updated_at: chrono::DateTime<chrono::Utc>,
         category_name: Option<String>,
@@ -344,10 +309,6 @@ pub async fn get_product_by_id(
             active: row.active,
             external_id: row.external_id,
             laboratory: row.laboratory,
-            therapeutic_action: row.therapeutic_action,
-            active_ingredient: row.active_ingredient,
-            prescription_type: row.prescription_type,
-            presentation: row.presentation,
             created_at: row.created_at,
             updated_at: row.updated_at,
         },
@@ -379,8 +340,8 @@ pub async fn create_product(
 
     let product = sqlx::query_as::<_, Product>(
         r#"
-        INSERT INTO products (name, slug, description, price, stock, category_id, image_url, laboratory, therapeutic_action, active_ingredient, prescription_type, presentation, active)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        INSERT INTO products (name, slug, description, price, stock, category_id, image_url, laboratory, active)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING *
         "#
     )
@@ -392,10 +353,6 @@ pub async fn create_product(
     .bind(&payload.category_id)
     .bind(&payload.image_url)
     .bind(&payload.laboratory)
-    .bind(&payload.therapeutic_action)
-    .bind(&payload.active_ingredient)
-    .bind(&payload.prescription_type)
-    .bind(&payload.presentation)
     .bind(&payload.active)
     .fetch_one(&state.db)
     .await
@@ -449,12 +406,8 @@ pub async fn update_product(
             image_url = COALESCE($7, image_url),
             active = COALESCE($8, active),
             laboratory = COALESCE($9, laboratory),
-            therapeutic_action = COALESCE($10, therapeutic_action),
-            active_ingredient = COALESCE($11, active_ingredient),
-            prescription_type = COALESCE($12, prescription_type),
-            presentation = COALESCE($13, presentation),
             updated_at = NOW()
-        WHERE id = $14
+        WHERE id = $10
         RETURNING *
         "#
     )
@@ -467,10 +420,6 @@ pub async fn update_product(
     .bind(&payload.image_url)
     .bind(&payload.active)
     .bind(&payload.laboratory)
-    .bind(&payload.therapeutic_action)
-    .bind(&payload.active_ingredient)
-    .bind(&payload.prescription_type)
-    .bind(&payload.presentation)
     .bind(id)
     .fetch_one(&state.db)
     .await
@@ -494,59 +443,4 @@ pub async fn delete_product(
     }
 
     Ok(StatusCode::NO_CONTENT)
-}
-
-// Filter endpoints
-#[derive(serde::Serialize)]
-pub struct LaboratoriesResponse {
-    pub laboratories: Vec<String>,
-}
-
-pub async fn get_laboratories(
-    State(state): State<AppState>,
-) -> Result<Json<LaboratoriesResponse>, (StatusCode, String)> {
-    let labs: Vec<String> = sqlx::query_scalar(
-        "SELECT DISTINCT laboratory FROM products WHERE laboratory IS NOT NULL AND laboratory != '' ORDER BY laboratory"
-    )
-    .fetch_all(&state.db)
-    .await
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-    Ok(Json(LaboratoriesResponse { laboratories: labs }))
-}
-
-#[derive(serde::Serialize)]
-pub struct TherapeuticActionsResponse {
-    pub therapeutic_actions: Vec<String>,
-}
-
-pub async fn get_therapeutic_actions(
-    State(state): State<AppState>,
-) -> Result<Json<TherapeuticActionsResponse>, (StatusCode, String)> {
-    let actions: Vec<String> = sqlx::query_scalar(
-        "SELECT DISTINCT therapeutic_action FROM products WHERE therapeutic_action IS NOT NULL AND therapeutic_action != '' ORDER BY therapeutic_action"
-    )
-    .fetch_all(&state.db)
-    .await
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-    Ok(Json(TherapeuticActionsResponse { therapeutic_actions: actions }))
-}
-
-#[derive(serde::Serialize)]
-pub struct ActiveIngredientsResponse {
-    pub active_ingredients: Vec<String>,
-}
-
-pub async fn get_active_ingredients(
-    State(state): State<AppState>,
-) -> Result<Json<ActiveIngredientsResponse>, (StatusCode, String)> {
-    let ingredients: Vec<String> = sqlx::query_scalar(
-        "SELECT DISTINCT active_ingredient FROM products WHERE active_ingredient IS NOT NULL AND active_ingredient != '' ORDER BY active_ingredient"
-    )
-    .fetch_all(&state.db)
-    .await
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-    Ok(Json(ActiveIngredientsResponse { active_ingredients: ingredients }))
 }

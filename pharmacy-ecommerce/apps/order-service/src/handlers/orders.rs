@@ -150,7 +150,7 @@ pub async fn update_order_status(
     Path(order_id): Path<Uuid>,
     Json(payload): Json<UpdateStatusRequest>,
 ) -> Result<Json<Order>, (StatusCode, String)> {
-    let valid_statuses = ["pending", "reserved", "paid", "processing", "shipped", "delivered", "cancelled"];
+    let valid_statuses = ["pending", "paid", "processing", "shipped", "delivered", "cancelled"];
 
     if !valid_statuses.contains(&payload.status.as_str()) {
         return Err((StatusCode::BAD_REQUEST, "Invalid status".to_string()));

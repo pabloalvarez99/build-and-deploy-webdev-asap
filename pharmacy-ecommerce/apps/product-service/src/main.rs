@@ -60,11 +60,7 @@ async fn main() {
         .route("/api/products/id/:id", get(handlers::get_product_by_id))
         .route("/api/products/:slug", get(handlers::get_product))
         .route("/api/categories", get(handlers::list_categories))
-        .route("/api/categories/:slug", get(handlers::get_category))
-        // Filter endpoints
-        .route("/api/filters/laboratories", get(handlers::get_laboratories))
-        .route("/api/filters/therapeutic-actions", get(handlers::get_therapeutic_actions))
-        .route("/api/filters/active-ingredients", get(handlers::get_active_ingredients));
+        .route("/api/categories/:slug", get(handlers::get_category));
 
     // Admin routes (protected)
     let admin_routes = Router::new()
