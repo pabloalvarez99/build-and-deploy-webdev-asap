@@ -18,26 +18,24 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.R
 
 export default function MyOrdersPage() {
   const router = useRouter();
-  const { user, token } = useAuthStore();
+  const { user } = useAuthStore();
 
   const [orders, setOrders] = useState<PaginatedOrders | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    if (!token) {
+    if (!user) {
       router.push('/auth/login');
       return;
     }
     loadOrders();
-  }, [token, router, currentPage]);
+  }, [user, router, currentPage]);
 
   const loadOrders = async () => {
-    if (!token) return;
-
     setIsLoading(true);
     try {
-      const data = await orderApi.list(token, { page: currentPage, limit: 10 });
+      const data = await orderApi.list({ page: currentPage, limit: 10 });
       setOrders(data);
     } catch (error) {
       console.error('Error loading orders:', error);
@@ -46,7 +44,7 @@ export default function MyOrdersPage() {
     }
   };
 
-  if (!user || !token) {
+  if (!user) {
     return null;
   }
 

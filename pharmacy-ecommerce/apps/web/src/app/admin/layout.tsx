@@ -13,7 +13,7 @@ import { ShortcutsHelp } from '@/components/admin/ShortcutsHelp';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { user, token } = useAuthStore();
+  const { user } = useAuthStore();
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isShortcutsHelpOpen, setIsShortcutsHelpOpen] = useState(false);
   const [pendingOrders, setPendingOrders] = useState(0);
@@ -53,23 +53,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Auth check
   useEffect(() => {
-    if (!token) {
+    if (!user) {
       router.push('/auth/login');
       return;
     }
-    if (user && user.role !== 'admin') {
+    if (user.role !== 'admin') {
       router.push('/');
     }
-  }, [token, user, router]);
+  }, [user, router]);
 
   // Load stats for badges
   useEffect(() => {
-    if (!token || !user || user.role !== 'admin') return;
+    if (!user || user.role !== 'admin') return;
 
     const loadStats = async () => {
       try {
         // Pending orders count
-        const orders = await orderApi.list(token, { status: 'pending', limit: 1 });
+        const orders = await orderApi.list({ status: 'pending', limit: 1 });
         setPendingOrders(orders.total);
 
         // Critical stock count
@@ -85,7 +85,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     // Refresh every minute
     const interval = setInterval(loadStats, 60000);
     return () => clearInterval(interval);
-  }, [token, user]);
+  }, [user]);
 
   // Don't render until auth is confirmed
   if (!user || user.role !== 'admin') {

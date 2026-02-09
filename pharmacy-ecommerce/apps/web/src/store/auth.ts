@@ -1,85 +1,136 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { User, authApi } from '@/lib/api';
+import { User } from '@/lib/api';
+import { createClient } from '@/lib/supabase/client';
 
 interface AuthState {
   user: User | null;
-  token: string | null;
   isLoading: boolean;
   error: string | null;
+  initialized: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name?: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   clearError: () => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      user: null,
-      token: null,
-      isLoading: false,
-      error: null,
+export const useAuthStore = create<AuthState>()((set) => ({
+  user: null,
+  isLoading: false,
+  error: null,
+  initialized: false,
 
-      login: async (email: string, password: string) => {
-        set({ isLoading: true, error: null });
-        try {
-          const response = await authApi.login({ email, password });
-          set({
-            user: response.user,
-            token: response.token,
-            isLoading: false,
-          });
-        } catch (error) {
-          set({
-            error: error instanceof Error ? error.message : 'Login failed',
-            isLoading: false,
-          });
-          throw error;
-        }
-      },
+  login: async (email: string, password: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      register: async (email: string, password: string, name?: string) => {
-        set({ isLoading: true, error: null });
-        try {
-          const response = await authApi.register({ email, password, name });
-          set({
-            user: response.user,
-            token: response.token,
-            isLoading: false,
-          });
-        } catch (error) {
-          set({
-            error: error instanceof Error ? error.message : 'Registration failed',
-            isLoading: false,
-          });
-          throw error;
-        }
-      },
+      if (error) throw new Error(error.message);
 
-      logout: () => {
-        set({ user: null, token: null, error: null });
-      },
+      // Fetch profile for role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('name, role')
+        .eq('id', data.user.id)
+        .single();
 
-      checkAuth: async () => {
-        const { token } = get();
-        if (!token) return;
-
-        set({ isLoading: true });
-        try {
-          const user = await authApi.me(token);
-          set({ user, isLoading: false });
-        } catch {
-          set({ user: null, token: null, isLoading: false });
-        }
-      },
-
-      clearError: () => set({ error: null }),
-    }),
-    {
-      name: 'auth-storage',
-      partialize: (state) => ({ token: state.token }),
+      set({
+        user: {
+          id: data.user.id,
+          email: data.user.email!,
+          name: profile?.name || data.user.user_metadata?.name || null,
+          role: profile?.role || 'user',
+          created_at: data.user.created_at,
+        },
+        isLoading: false,
+      });
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Error al iniciar sesión',
+        isLoading: false,
+      });
+      throw error;
     }
-  )
-);
+  },
+
+  register: async (email: string, password: string, name?: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name },
+        },
+      });
+
+      if (error) throw new Error(error.message);
+      if (!data.user) throw new Error('Registration failed');
+
+      // Profile is auto-created by the trigger
+      set({
+        user: {
+          id: data.user.id,
+          email: data.user.email!,
+          name: name || null,
+          role: 'user',
+          created_at: data.user.created_at,
+        },
+        isLoading: false,
+      });
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Error al registrarse',
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  logout: async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    set({ user: null, error: null });
+  },
+
+  checkAuth: async () => {
+    set({ isLoading: true });
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        set({ user: null, isLoading: false, initialized: true });
+        return;
+      }
+
+      // Fetch profile for role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('name, role')
+        .eq('id', user.id)
+        .single();
+
+      set({
+        user: {
+          id: user.id,
+          email: user.email!,
+          name: profile?.name || user.user_metadata?.name || null,
+          role: profile?.role || 'user',
+          created_at: user.created_at,
+        },
+        isLoading: false,
+        initialized: true,
+      });
+    } catch {
+      set({ user: null, isLoading: false, initialized: true });
+    }
+  },
+
+  clearError: () => set({ error: null }),
+}));

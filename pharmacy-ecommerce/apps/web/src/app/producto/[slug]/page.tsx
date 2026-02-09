@@ -14,7 +14,7 @@ export default function ProductPage() {
   const router = useRouter();
   const slug = params.slug as string;
 
-  const { addToCartLocal } = useCartStore();
+  const { addToCart } = useCartStore();
 
   const [product, setProduct] = useState<ProductWithCategory | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,7 +41,7 @@ export default function ProductPage() {
 
     setIsAdding(true);
     try {
-      await addToCartLocal(product.id, quantity);
+      await addToCart(product.id, quantity);
       router.push('/carrito');
     } catch (error) {
       console.error('Error adding to cart:', error);

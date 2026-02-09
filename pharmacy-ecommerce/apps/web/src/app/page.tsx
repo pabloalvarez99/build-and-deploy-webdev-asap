@@ -40,7 +40,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
-  const { addToCartLocal, cart } = useCartStore();
+  const { addToCart, cart } = useCartStore();
   const { user } = useAuthStore();
   const [addingId, setAddingId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -141,7 +141,7 @@ export default function Home() {
 
   const handleAddToCart = async (product: Product) => {
     setAddingId(product.id);
-    await addToCartLocal(product.id);
+    await addToCart(product.id);
     setToast(`${product.name.substring(0, 30)}${product.name.length > 30 ? '...' : ''} agregado al carrito`);
     setTimeout(() => setAddingId(null), 500);
   };

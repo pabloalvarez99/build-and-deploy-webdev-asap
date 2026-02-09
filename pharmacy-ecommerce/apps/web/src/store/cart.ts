@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { CartResponse, cartApi, productApi } from '@/lib/api';
+import { CartResponse, productApi } from '@/lib/api';
 
 interface LocalCartItem {
   product_id: string;
@@ -10,19 +10,12 @@ interface CartState {
   cart: CartResponse | null;
   isLoading: boolean;
   error: string | null;
-  // Local cart functions (no auth required)
-  fetchCartLocal: () => Promise<void>;
-  addToCartLocal: (productId: string, quantity?: number) => Promise<void>;
-  updateQuantityLocal: (productId: string, quantity: number) => Promise<void>;
-  removeFromCartLocal: (productId: string) => Promise<void>;
-  clearCartLocal: () => void;
+  fetchCart: () => Promise<void>;
+  addToCart: (productId: string, quantity?: number) => Promise<void>;
+  updateQuantity: (productId: string, quantity: number) => Promise<void>;
+  removeFromCart: (productId: string) => Promise<void>;
+  clearCart: () => void;
   getSessionId: () => string;
-  // Legacy functions (with auth)
-  fetchCart: (token: string) => Promise<void>;
-  addToCart: (token: string, productId: string, quantity?: number) => Promise<void>;
-  updateQuantity: (token: string, productId: string, quantity: number) => Promise<void>;
-  removeFromCart: (token: string, productId: string) => Promise<void>;
-  clearCart: (token: string) => Promise<void>;
   resetCart: () => void;
 }
 
@@ -61,7 +54,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   getSessionId: () => getOrCreateSessionId(),
 
-  fetchCartLocal: async () => {
+  fetchCart: async () => {
     set({ isLoading: true, error: null });
     try {
       const localItems = getLocalCart();
@@ -70,7 +63,6 @@ export const useCartStore = create<CartState>((set, get) => ({
         return;
       }
 
-      // Fetch product details for each item
       const items = await Promise.all(
         localItems.map(async (item) => {
           try {
@@ -102,12 +94,12 @@ export const useCartStore = create<CartState>((set, get) => ({
         },
         isLoading: false,
       });
-    } catch (error) {
+    } catch {
       set({ error: 'Error al cargar el carrito', isLoading: false });
     }
   },
 
-  addToCartLocal: async (productId: string, quantity = 1) => {
+  addToCart: async (productId: string, quantity = 1) => {
     const localItems = getLocalCart();
     const existingIndex = localItems.findIndex((item) => item.product_id === productId);
 
@@ -118,10 +110,10 @@ export const useCartStore = create<CartState>((set, get) => ({
     }
 
     saveLocalCart(localItems);
-    await get().fetchCartLocal();
+    await get().fetchCart();
   },
 
-  updateQuantityLocal: async (productId: string, quantity: number) => {
+  updateQuantity: async (productId: string, quantity: number) => {
     const localItems = getLocalCart();
     const index = localItems.findIndex((item) => item.product_id === productId);
 
@@ -134,73 +126,18 @@ export const useCartStore = create<CartState>((set, get) => ({
       saveLocalCart(localItems);
     }
 
-    await get().fetchCartLocal();
+    await get().fetchCart();
   },
 
-  removeFromCartLocal: async (productId: string) => {
+  removeFromCart: async (productId: string) => {
     const localItems = getLocalCart().filter((item) => item.product_id !== productId);
     saveLocalCart(localItems);
-    await get().fetchCartLocal();
+    await get().fetchCart();
   },
 
-  clearCartLocal: () => {
+  clearCart: () => {
     saveLocalCart([]);
     set({ cart: { items: [], total: '0', item_count: 0 } });
-  },
-
-  // Legacy functions for authenticated users
-  fetchCart: async (token: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      const cart = await cartApi.get(token);
-      set({ cart, isLoading: false });
-    } catch (error) {
-      set({ error: 'Failed to fetch cart', isLoading: false });
-    }
-  },
-
-  addToCart: async (token: string, productId: string, quantity?: number) => {
-    set({ isLoading: true, error: null });
-    try {
-      const cart = await cartApi.add(token, productId, quantity);
-      set({ cart, isLoading: false });
-    } catch (error) {
-      set({ error: 'Failed to add to cart', isLoading: false });
-      throw error;
-    }
-  },
-
-  updateQuantity: async (token: string, productId: string, quantity: number) => {
-    set({ isLoading: true, error: null });
-    try {
-      const cart = await cartApi.update(token, productId, quantity);
-      set({ cart, isLoading: false });
-    } catch (error) {
-      set({ error: 'Failed to update cart', isLoading: false });
-      throw error;
-    }
-  },
-
-  removeFromCart: async (token: string, productId: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      const cart = await cartApi.remove(token, productId);
-      set({ cart, isLoading: false });
-    } catch (error) {
-      set({ error: 'Failed to remove from cart', isLoading: false });
-      throw error;
-    }
-  },
-
-  clearCart: async (token: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      await cartApi.clear(token);
-      set({ cart: { items: [], total: '0', item_count: 0 }, isLoading: false });
-    } catch (error) {
-      set({ error: 'Failed to clear cart', isLoading: false });
-      throw error;
-    }
   },
 
   resetCart: () => {

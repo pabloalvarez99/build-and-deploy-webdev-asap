@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { CartItem as CartItemType } from '@/lib/api';
-import { useAuthStore } from '@/store/auth';
 import { useCartStore } from '@/store/cart';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -14,19 +13,18 @@ interface CartItemProps {
 }
 
 export function CartItem({ item }: CartItemProps) {
-  const { token } = useAuthStore();
   const { updateQuantity, removeFromCart } = useCartStore();
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleUpdateQuantity = async (newQuantity: number) => {
-    if (!token || newQuantity < 0 || isUpdating) return;
+    if (newQuantity < 0 || isUpdating) return;
 
     setIsUpdating(true);
     try {
       if (newQuantity === 0) {
-        await removeFromCart(token, item.product_id);
+        await removeFromCart(item.product_id);
       } else {
-        await updateQuantity(token, item.product_id, newQuantity);
+        await updateQuantity(item.product_id, newQuantity);
       }
     } catch (error) {
       console.error('Error updating quantity:', error);
@@ -36,11 +34,11 @@ export function CartItem({ item }: CartItemProps) {
   };
 
   const handleRemove = async () => {
-    if (!token || isUpdating) return;
+    if (isUpdating) return;
 
     setIsUpdating(true);
     try {
-      await removeFromCart(token, item.product_id);
+      await removeFromCart(item.product_id);
     } catch (error) {
       console.error('Error removing item:', error);
     } finally {

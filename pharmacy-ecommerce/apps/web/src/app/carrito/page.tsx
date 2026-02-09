@@ -8,11 +8,11 @@ import { formatPrice } from '@/lib/format';
 import Image from 'next/image';
 
 export default function CartPage() {
-  const { cart, fetchCartLocal, updateQuantityLocal, removeFromCartLocal, isLoading } = useCartStore();
+  const { cart, fetchCart, updateQuantity, removeFromCart, isLoading } = useCartStore();
 
   useEffect(() => {
-    fetchCartLocal();
-  }, [fetchCartLocal]);
+    fetchCart();
+  }, [fetchCart]);
 
   return (
     <div className="min-h-screen bg-slate-50 py-8">
@@ -91,7 +91,7 @@ export default function CartPage() {
                         <div className="flex items-center justify-between mt-4">
                           <div className="flex items-center border border-slate-200 rounded-lg bg-white">
                             <button
-                              onClick={() => updateQuantityLocal(item.product_id, item.quantity - 1)}
+                              onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
                               className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-l-lg transition-colors disabled:opacity-50"
                               disabled={item.quantity <= 1}
                             >
@@ -101,7 +101,7 @@ export default function CartPage() {
                               {item.quantity}
                             </span>
                             <button
-                              onClick={() => updateQuantityLocal(item.product_id, item.quantity + 1)}
+                              onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
                               className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-r-lg transition-colors"
                             >
                               <Plus className="w-4 h-4" />
@@ -113,7 +113,7 @@ export default function CartPage() {
                               {formatPrice(parseFloat(item.subtotal))}
                             </span>
                             <button
-                              onClick={() => removeFromCartLocal(item.product_id)}
+                              onClick={() => removeFromCart(item.product_id)}
                               className="text-gray-400 hover:text-red-500 transition-colors p-1"
                               title="Eliminar producto"
                             >

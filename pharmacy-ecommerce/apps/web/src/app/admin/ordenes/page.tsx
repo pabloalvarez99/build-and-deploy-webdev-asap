@@ -31,7 +31,7 @@ const statusOptions = [
 export default function AdminOrdersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, token } = useAuthStore();
+  const { user } = useAuthStore();
 
   const [orders, setOrders] = useState<PaginatedOrders | null>(null);
   const [allOrders, setAllOrders] = useState<Order[]>([]);
@@ -56,25 +56,23 @@ export default function AdminOrdersPage() {
   }, [searchParams]);
 
   useEffect(() => {
-    if (!token || (user && user.role !== 'admin')) {
+    if (!user || user.role !== 'admin') {
       router.push('/');
       return;
     }
-  }, [token, user, router]);
+  }, [user, router]);
 
   useEffect(() => {
-    if (token && user?.role === 'admin') {
+    if (user?.role === 'admin') {
       loadOrders();
     }
-  }, [token, user, currentPage]);
+  }, [user, currentPage]);
 
   const loadOrders = async () => {
-    if (!token) return;
-
     setIsLoading(true);
     try {
       // Load all orders for filtering (in production, this would be server-side)
-      const allData = await orderApi.list(token, { limit: 1000 });
+      const allData = await orderApi.list({ limit: 1000 });
       setAllOrders(allData.orders);
 
       // Apply filters client-side for now
@@ -148,10 +146,8 @@ export default function AdminOrdersPage() {
   }, [filterStatus, dateFrom, dateTo, minAmount, maxAmount, searchQuery, currentPage, allOrders]);
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
-    if (!token) return;
-
     try {
-      await orderApi.updateStatus(token, orderId, newStatus);
+      await orderApi.updateStatus(orderId, newStatus);
       loadOrders();
     } catch (error) {
       console.error('Error updating status:', error);
@@ -182,8 +178,6 @@ export default function AdminOrdersPage() {
   };
 
   const exportToCSV = async () => {
-    if (!token) return;
-
     try {
       // Get filtered orders with details
       const filtered = applyFilters(allOrders);
