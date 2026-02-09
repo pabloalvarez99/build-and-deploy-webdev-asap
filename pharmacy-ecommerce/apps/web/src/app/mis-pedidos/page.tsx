@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { orderApi, PaginatedOrders } from '@/lib/api';
-import { Package, ChevronRight, Clock, CheckCircle, XCircle, Truck } from 'lucide-react';
+import { Package, ChevronRight, Clock, CheckCircle, XCircle, Truck, Store } from 'lucide-react';
+import { formatPrice } from '@/lib/format';
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   pending: { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800', icon: <Clock className="w-4 h-4" /> },
+  reserved: { label: 'Reservado', color: 'bg-amber-100 text-amber-800', icon: <Store className="w-4 h-4" /> },
   paid: { label: 'Pagado', color: 'bg-green-100 text-green-800', icon: <CheckCircle className="w-4 h-4" /> },
   processing: { label: 'Procesando', color: 'bg-blue-100 text-blue-800', icon: <Package className="w-4 h-4" /> },
   shipped: { label: 'Enviado', color: 'bg-purple-100 text-purple-800', icon: <Truck className="w-4 h-4" /> },
@@ -85,7 +87,7 @@ export default function MyOrdersPage() {
             {orders.orders.map((order) => {
               const status = statusConfig[order.status] || statusConfig.pending;
               const total = parseFloat(order.total);
-              const date = new Date(order.created_at).toLocaleDateString('es-AR', {
+              const date = new Date(order.created_at).toLocaleDateString('es-CL', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -100,7 +102,7 @@ export default function MyOrdersPage() {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm text-gray-500">Pedido #{order.id.slice(0, 8)}</p>
-                      <p className="font-semibold text-gray-900 mt-1">${total.toFixed(2)}</p>
+                      <p className="font-semibold text-gray-900 mt-1">{formatPrice(total)}</p>
                       <p className="text-sm text-gray-500 mt-1">{date}</p>
                     </div>
                     <div className="flex items-center gap-4">

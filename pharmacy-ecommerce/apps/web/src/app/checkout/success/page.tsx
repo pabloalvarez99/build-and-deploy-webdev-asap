@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, ShieldCheck } from 'lucide-react';
 import { Suspense } from 'react';
 
 function CheckoutSuccessContent() {
@@ -16,7 +16,7 @@ function CheckoutSuccessContent() {
       </div>
 
       <h1 className="text-3xl font-bold text-gray-900 mb-4">
-        Pago exitoso!
+        Pago exitoso
       </h1>
 
       <p className="text-gray-600 mb-2">
@@ -24,17 +24,27 @@ function CheckoutSuccessContent() {
       </p>
 
       {orderId && (
-        <p className="text-gray-500 mb-8">
-          Numero de orden: <span className="font-mono font-medium">{orderId}</span>
+        <p className="text-gray-500 mb-4">
+          Numero de orden: <span className="font-mono font-medium text-gray-700">{orderId.slice(0, 8)}</span>
         </p>
       )}
 
-      <div className="space-y-4">
-        <Link href="/mis-pedidos" className="btn btn-primary block">
-          Ver mis pedidos
-        </Link>
-        <Link href="/" className="btn btn-secondary block">
+      <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-8">
+        <div className="flex items-center justify-center gap-2 text-green-700">
+          <ShieldCheck className="w-5 h-5" />
+          <span className="text-sm font-medium">Tu pago fue confirmado por MercadoPago</span>
+        </div>
+        <p className="text-xs text-green-600 mt-1">
+          Recibiras la confirmacion en tu email
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <Link href="/" className="block w-full bg-emerald-600 text-white py-3 px-4 rounded-lg hover:bg-emerald-700 transition-colors font-medium text-center">
           Seguir comprando
+        </Link>
+        <Link href="/mis-pedidos" className="block w-full bg-white text-gray-700 py-3 px-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors font-medium text-center">
+          Ver mis pedidos
         </Link>
       </div>
     </div>

@@ -5,10 +5,12 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { orderApi, OrderWithItems } from '@/lib/api';
-import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck, MapPin } from 'lucide-react';
+import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck, MapPin, Store } from 'lucide-react';
+import { formatPrice } from '@/lib/format';
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   pending: { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800', icon: <Clock className="w-5 h-5" /> },
+  reserved: { label: 'Reservado', color: 'bg-amber-100 text-amber-800', icon: <Store className="w-5 h-5" /> },
   paid: { label: 'Pagado', color: 'bg-green-100 text-green-800', icon: <CheckCircle className="w-5 h-5" /> },
   processing: { label: 'Procesando', color: 'bg-blue-100 text-blue-800', icon: <Package className="w-5 h-5" /> },
   shipped: { label: 'Enviado', color: 'bg-purple-100 text-purple-800', icon: <Truck className="w-5 h-5" /> },
@@ -73,7 +75,7 @@ export default function OrderDetailPage() {
 
   const status = statusConfig[order.status] || statusConfig.pending;
   const total = parseFloat(order.total);
-  const date = new Date(order.created_at).toLocaleDateString('es-AR', {
+  const date = new Date(order.created_at).toLocaleDateString('es-CL', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -119,11 +121,11 @@ export default function OrderDetailPage() {
                     <div>
                       <p className="font-medium text-gray-900">{item.product_name}</p>
                       <p className="text-sm text-gray-500">
-                        ${price.toFixed(2)} x {item.quantity}
+                        {formatPrice(price)} x {item.quantity}
                       </p>
                     </div>
                     <p className="font-semibold text-gray-900">
-                      ${subtotal.toFixed(2)}
+                      {formatPrice(subtotal)}
                     </p>
                   </div>
                 );
@@ -165,7 +167,7 @@ export default function OrderDetailPage() {
             <div className="space-y-3 border-b border-gray-100 pb-4 mb-4">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{formatPrice(total)}</span>
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Envio</span>
@@ -175,7 +177,7 @@ export default function OrderDetailPage() {
 
             <div className="flex justify-between text-xl font-bold text-gray-900">
               <span>Total</span>
-              <span>${total.toFixed(2)}</span>
+              <span>{formatPrice(total)}</span>
             </div>
 
             {order.mercadopago_payment_id && (

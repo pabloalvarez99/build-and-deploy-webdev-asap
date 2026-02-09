@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Clock } from 'lucide-react';
+import { Clock, Mail } from 'lucide-react';
 import { Suspense } from 'react';
 
 function CheckoutPendingContent() {
@@ -16,25 +16,35 @@ function CheckoutPendingContent() {
       </div>
 
       <h1 className="text-3xl font-bold text-gray-900 mb-4">
-        Pago pendiente
+        Pago en proceso
       </h1>
 
       <p className="text-gray-600 mb-2">
-        Tu pago esta siendo procesado. Te notificaremos cuando se confirme.
+        Tu pago esta siendo procesado. Esto puede tardar unos minutos.
       </p>
 
       {orderId && (
-        <p className="text-gray-500 mb-8">
-          Numero de orden: <span className="font-mono font-medium">{orderId}</span>
+        <p className="text-gray-500 mb-4">
+          Numero de orden: <span className="font-mono font-medium text-gray-700">{orderId.slice(0, 8)}</span>
         </p>
       )}
 
-      <div className="space-y-4">
-        <Link href="/mis-pedidos" className="btn btn-primary block">
-          Ver mis pedidos
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8">
+        <div className="flex items-center justify-center gap-2 text-blue-700 mb-1">
+          <Mail className="w-5 h-5" />
+          <span className="text-sm font-medium">Te notificaremos por email</span>
+        </div>
+        <p className="text-xs text-blue-600">
+          Cuando el pago sea confirmado, recibiras un email de MercadoPago con el comprobante
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <Link href="/" className="block w-full bg-emerald-600 text-white py-3 px-4 rounded-lg hover:bg-emerald-700 transition-colors font-medium text-center">
+          Seguir comprando
         </Link>
-        <Link href="/" className="btn btn-secondary block">
-          Volver al inicio
+        <Link href="/mis-pedidos" className="block w-full bg-white text-gray-700 py-3 px-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors font-medium text-center">
+          Ver mis pedidos
         </Link>
       </div>
     </div>

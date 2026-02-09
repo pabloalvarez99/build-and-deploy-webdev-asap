@@ -5,11 +5,12 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { orderApi, OrderWithItems } from '@/lib/api';
-import { ArrowLeft, Package, MapPin, FileText, User, Mail, Printer, Check, Clock, Truck, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Package, MapPin, FileText, User, Mail, Printer, Check, Clock, Truck, CheckCircle, XCircle, Store } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 const statusOptions = [
   { value: 'pending', label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  { value: 'reserved', label: 'Reservado', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' },
   { value: 'paid', label: 'Pagado', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
   { value: 'processing', label: 'Procesando', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
   { value: 'shipped', label: 'Enviado', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
@@ -18,9 +19,11 @@ const statusOptions = [
 ];
 
 const statusFlow = ['pending', 'paid', 'processing', 'shipped', 'delivered'];
+const reservedFlow = ['reserved', 'paid', 'processing', 'shipped', 'delivered'];
 
 const statusIcons: Record<string, React.ReactNode> = {
   pending: <Clock className="w-5 h-5" />,
+  reserved: <Store className="w-5 h-5" />,
   paid: <Check className="w-5 h-5" />,
   processing: <Package className="w-5 h-5" />,
   shipped: <Truck className="w-5 h-5" />,
@@ -30,7 +33,8 @@ const statusIcons: Record<string, React.ReactNode> = {
 
 function OrderTimeline({ currentStatus }: { currentStatus: string }) {
   const isCancelled = currentStatus === 'cancelled';
-  const currentIndex = statusFlow.indexOf(currentStatus);
+  const flow = currentStatus === 'reserved' ? reservedFlow : statusFlow;
+  const currentIndex = flow.indexOf(currentStatus);
 
   return (
     <div className="card p-6 mb-6">
@@ -47,13 +51,13 @@ function OrderTimeline({ currentStatus }: { currentStatus: string }) {
           <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200 dark:bg-slate-700 rounded">
             <div
               className="absolute h-full bg-emerald-500 rounded transition-all duration-500"
-              style={{ width: `${(currentIndex / (statusFlow.length - 1)) * 100}%` }}
+              style={{ width: `${(currentIndex / (flow.length - 1)) * 100}%` }}
             />
           </div>
 
           {/* Status points */}
           <div className="relative flex justify-between">
-            {statusFlow.map((status, index) => {
+            {flow.map((status, index) => {
               const isCompleted = index <= currentIndex;
               const isCurrent = index === currentIndex;
               const statusInfo = statusOptions.find((s) => s.value === status);

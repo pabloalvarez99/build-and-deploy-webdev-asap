@@ -45,31 +45,28 @@ El homepage ya fue reescrito con:
 - Agregado `.scrollbar-hide` utility para pills horizontales
 - Agregados `@keyframes slideUp` y `fadeIn` para animación del drawer mobile
 
-#### PENDIENTE - Página de producto (`src/app/producto/[slug]/page.tsx`):
-Necesita rediseño para reemplazar el párrafo de descripción raw con:
+#### COMPLETADO - Página de producto (`src/app/producto/[slug]/page.tsx`):
+Rediseñada con:
 
 1. **Badges row** (entre nombre y precio):
-   - Tipo receta: verde (Venta Directa), amarillo (Receta Médica), rojo (Receta Retenida) - usar `product.prescription_type`
-   - Bioequivalente: badge azul - detectar con regex `/Bioequivalente:\s*S[ií]/i` en `product.description`
+   - Tipo receta: verde (Venta Directa), amarillo (Receta Médica), rojo (Receta Retenida)
+   - Bioequivalente: badge azul (detección regex en description)
    - Categoría: badge slate clickeable → navega a `/?category=<slug>`
 
 2. **Tabla de información estructurada** (entre precio y envío/seguridad):
-   - Filas condicionales (solo si valor existe):
-     - Principio Activo → `product.active_ingredient`
-     - Presentación → `product.presentation`
-     - Acción Terapéutica → `product.therapeutic_action`
-   - NO repetir laboratorio (ya está arriba)
-   - NO mostrar: registro sanitario, control legal, precio unitario
+   - Filas condicionales: Principio Activo, Presentación, Acción Terapéutica
+   - NO repite laboratorio (ya arriba), NO muestra registro sanitario/control legal
 
-3. **Eliminar** el bloque `<div className="prose prose-sm">` que muestra `product.description` como texto raw (línea ~150 del archivo actual)
+3. **Eliminado** el bloque `prose prose-sm` que mostraba description como texto raw
 
-#### PENDIENTE - Build, test y deploy:
-1. Correr `npx next build` en `pharmacy-ecommerce/apps/web/` para verificar sin errores
-2. Si hay errores de TypeScript, arreglarlos
-3. `git add` los archivos modificados y nuevos
-4. `git commit` y `git push origin main` para auto-deploy en Vercel
-5. Verificar en https://tu-farmacia.vercel.app que filtros funcionan
-6. Actualizar esta bitácora con resultado
+#### COMPLETADO - Build verificado:
+- `next build` exitoso sin errores de TypeScript ni compilación
+- 24 páginas generadas correctamente
+
+#### PENDIENTE - Deploy:
+1. `git add` los archivos modificados y nuevos
+2. `git commit` y `git push origin main` para auto-deploy en Vercel
+3. Verificar en https://tu-farmacia.vercel.app que filtros y página de producto funcionan
 
 ### Archivos modificados (sin commitear):
 ```
@@ -84,8 +81,8 @@ NUEVOS:
   pharmacy-ecommerce/apps/web/src/components/filters/CategoryPills.tsx
   pharmacy-ecommerce/apps/web/src/components/filters/ActiveFilters.tsx
 
-PENDIENTE DE MODIFICAR:
-  pharmacy-ecommerce/apps/web/src/app/producto/[slug]/page.tsx  # badges + tabla info
+MODIFICADO:
+  pharmacy-ecommerce/apps/web/src/app/producto/[slug]/page.tsx  # badges + tabla info (COMPLETADO)
 ```
 
 ### API ya disponible (NO necesita cambios):

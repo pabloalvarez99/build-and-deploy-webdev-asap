@@ -140,6 +140,39 @@ export default function ProductPage() {
               <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4">
                 {product.name}
               </h1>
+
+              {/* Badges */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {product.prescription_type === 'direct' && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                    Venta Directa
+                  </span>
+                )}
+                {product.prescription_type === 'prescription' && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                    Receta Médica
+                  </span>
+                )}
+                {product.prescription_type === 'retained' && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                    Receta Retenida
+                  </span>
+                )}
+                {product.description && /Bioequivalente:\s*S[ií]/i.test(product.description) && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                    Bioequivalente
+                  </span>
+                )}
+                {product.category_name && product.category_slug && (
+                  <Link
+                    href={`/?category=${product.category_slug}`}
+                    className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                  >
+                    {product.category_name}
+                  </Link>
+                )}
+              </div>
+
               <div className="flex items-baseline gap-4">
                 <span className="text-3xl font-bold text-gray-900">
                   {formatPrice(parseFloat(product.price))}
@@ -147,9 +180,33 @@ export default function ProductPage() {
               </div>
             </div>
 
-            <div className="prose prose-sm text-gray-600 mb-8">
-              <p>{product.description || "Sin descripción disponible."}</p>
-            </div>
+            {/* Información del producto */}
+            {(product.active_ingredient || product.presentation || product.therapeutic_action) && (
+              <div className="mb-6 rounded-lg border border-gray-200 overflow-hidden">
+                <table className="w-full text-sm">
+                  <tbody className="divide-y divide-gray-100">
+                    {product.active_ingredient && (
+                      <tr>
+                        <td className="px-4 py-2.5 font-medium text-gray-500 bg-gray-50 w-40">Principio Activo</td>
+                        <td className="px-4 py-2.5 text-gray-900">{product.active_ingredient}</td>
+                      </tr>
+                    )}
+                    {product.presentation && (
+                      <tr>
+                        <td className="px-4 py-2.5 font-medium text-gray-500 bg-gray-50 w-40">Presentación</td>
+                        <td className="px-4 py-2.5 text-gray-900">{product.presentation}</td>
+                      </tr>
+                    )}
+                    {product.therapeutic_action && (
+                      <tr>
+                        <td className="px-4 py-2.5 font-medium text-gray-500 bg-gray-50 w-40">Acción Terapéutica</td>
+                        <td className="px-4 py-2.5 text-gray-900">{product.therapeutic_action}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             <div className="border-t border-b border-gray-100 py-6 mb-8 space-y-4">
               <div className="flex items-center gap-3 text-sm text-gray-600">
