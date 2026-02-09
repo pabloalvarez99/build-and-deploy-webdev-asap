@@ -34,9 +34,7 @@ export async function POST(request: NextRequest) {
 
       mpItems.push({
         id: product.id,
-        title: product.name,
-        description: product.description,
-        category_id: product.category_id,
+        title: product.name.substring(0, 256),
         quantity: item.quantity,
         unit_price: Math.ceil(price),
         currency_id: 'CLP',
