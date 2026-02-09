@@ -18,7 +18,7 @@ interface Notification {
 }
 
 export function NotificationBell() {
-  const { token } = useAuthStore();
+  const { user } = useAuthStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [lastCheck, setLastCheck] = useState<Date>(new Date());
@@ -37,14 +37,14 @@ export function NotificationBell() {
 
   // Poll for notifications
   useEffect(() => {
-    if (!token) return;
+    if (!user) return;
 
     const checkNotifications = async () => {
       try {
         const newNotifications: Notification[] = [];
 
         // Check for pending orders
-        const pendingOrders = await orderApi.list(token, { status: 'pending', limit: 5 });
+        const pendingOrders = await orderApi.list({ status: 'pending', limit: 5 });
         if (pendingOrders.total > 0) {
           pendingOrders.orders.forEach((order) => {
             const orderDate = new Date(order.created_at);
@@ -114,7 +114,7 @@ export function NotificationBell() {
     // Poll every 30 seconds
     const interval = setInterval(checkNotifications, 30000);
     return () => clearInterval(interval);
-  }, [token, lastCheck]);
+  }, [user, lastCheck]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

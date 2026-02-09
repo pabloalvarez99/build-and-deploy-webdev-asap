@@ -8,7 +8,7 @@ import { Plus, Edit, Trash2, X, AlertTriangle, Package } from 'lucide-react';
 
 export default function AdminCategoriesPage() {
   const router = useRouter();
-  const { user, token } = useAuthStore();
+  const { user } = useAuthStore();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,12 +25,12 @@ export default function AdminCategoriesPage() {
   });
 
   useEffect(() => {
-    if (!token || (user && user.role !== 'admin')) {
+    if (!user || user.role !== 'admin') {
       router.push('/');
       return;
     }
     loadCategories();
-  }, [token, user, router]);
+  }, [user, router]);
 
   const loadCategories = async () => {
     setIsLoading(true);
@@ -56,18 +56,16 @@ export default function AdminCategoriesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
-
     try {
       if (editingCategory) {
-        await productApi.updateCategory(token, editingCategory.id, {
+        await productApi.updateCategory(editingCategory.id, {
           name: formData.name,
           slug: formData.slug,
           description: formData.description || undefined,
           active: formData.active,
         });
       } else {
-        await productApi.createCategory(token, {
+        await productApi.createCategory({
           name: formData.name,
           slug: formData.slug,
           description: formData.description || undefined,
@@ -96,7 +94,7 @@ export default function AdminCategoriesPage() {
   };
 
   const handleDelete = async () => {
-    if (!token || !deleteConfirm) return;
+    if (!deleteConfirm) return;
 
     const count = productCounts[deleteConfirm.id] || 0;
     if (count > 0) {
@@ -106,7 +104,7 @@ export default function AdminCategoriesPage() {
     }
 
     try {
-      await productApi.deleteCategory(token, deleteConfirm.id);
+      await productApi.deleteCategory(deleteConfirm.id);
       setDeleteConfirm(null);
       loadCategories();
     } catch (error) {

@@ -9,7 +9,7 @@ import { formatPrice } from '@/lib/format';
 
 export default function AdminProductsPage() {
   const router = useRouter();
-  const { user, token } = useAuthStore();
+  const { user } = useAuthStore();
 
   const [products, setProducts] = useState<PaginatedProducts | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -51,13 +51,13 @@ export default function AdminProductsPage() {
   });
 
   useEffect(() => {
-    if (!token || (user && user.role !== 'admin')) {
+    if (!user || user.role !== 'admin') {
       router.push('/');
       return;
     }
     loadCategories();
     loadLaboratories();
-  }, [token, user, router]);
+  }, [user, router]);
 
   useEffect(() => {
     // Check URL params for filters and actions
@@ -78,10 +78,10 @@ export default function AdminProductsPage() {
   }, []);
 
   useEffect(() => {
-    if (token) {
+    if (user) {
       loadProducts();
     }
-  }, [token, currentPage, searchTerm, selectedCategory, selectedLaboratory, selectedPrescription, sortBy, stockFilter]);
+  }, [user, currentPage, searchTerm, selectedCategory, selectedLaboratory, selectedPrescription, sortBy, stockFilter]);
 
   const loadCategories = async () => {
     try {
@@ -103,7 +103,7 @@ export default function AdminProductsPage() {
   };
 
   const loadProducts = async () => {
-    if (!token) return;
+    if (!user) return;
 
     setIsLoading(true);
     try {
@@ -133,8 +133,6 @@ export default function AdminProductsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
-
     try {
       const data = {
         name: formData.name,
@@ -153,9 +151,9 @@ export default function AdminProductsPage() {
       };
 
       if (editingProduct) {
-        await productApi.update(token, editingProduct, data);
+        await productApi.update(editingProduct, data);
       } else {
-        await productApi.create(token, data);
+        await productApi.create(data);
       }
 
       setShowForm(false);
@@ -211,10 +209,10 @@ export default function AdminProductsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!token || !confirm('Estas seguro de eliminar este producto?')) return;
+    if (!confirm('Estas seguro de eliminar este producto?')) return;
 
     try {
-      await productApi.delete(token, id);
+      await productApi.delete(id);
       loadProducts();
     } catch (error) {
       console.error('Error deleting product:', error);
@@ -336,15 +334,15 @@ export default function AdminProductsPage() {
 
   // Bulk actions
   const handleBulkActivate = async (activate: boolean) => {
-    if (!token || selectedProducts.size === 0) return;
-    
+    if (selectedProducts.size === 0) return;
+
     const action = activate ? 'activar' : 'desactivar';
     if (!confirm(`¿Deseas ${action} ${selectedProducts.size} productos?`)) return;
 
     setBulkActionLoading(true);
     try {
       const promises = Array.from(selectedProducts).map(id =>
-        productApi.update(token, id, { active: activate })
+        productApi.update(id, { active: activate })
       );
       await Promise.all(promises);
       clearSelection();
@@ -358,14 +356,14 @@ export default function AdminProductsPage() {
   };
 
   const handleBulkDelete = async () => {
-    if (!token || selectedProducts.size === 0) return;
-    
+    if (selectedProducts.size === 0) return;
+
     if (!confirm(`¿Deseas ELIMINAR ${selectedProducts.size} productos? Esta acción no se puede deshacer.`)) return;
 
     setBulkActionLoading(true);
     try {
       const promises = Array.from(selectedProducts).map(id =>
-        productApi.delete(token, id)
+        productApi.delete(id)
       );
       await Promise.all(promises);
       clearSelection();

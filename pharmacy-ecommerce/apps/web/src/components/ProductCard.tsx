@@ -29,7 +29,7 @@ function ProductPlaceholder({ category }: { category?: string }) {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const { addToCartLocal } = useCartStore();
+  const { addToCart } = useCartStore();
   const [isAdding, setIsAdding] = useState(false);
   const [imageError, setImageError] = useState(false);
 
@@ -37,7 +37,7 @@ export function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     setIsAdding(true);
     try {
-      await addToCartLocal(product.id);
+      await addToCart(product.id);
     } catch (error) {
       console.error('Error adding to cart:', error);
     } finally {

@@ -11,7 +11,7 @@ type PaymentMethod = 'mercadopago' | 'store';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, fetchCartLocal, clearCartLocal, getSessionId } = useCartStore();
+  const { cart, fetchCart, clearCart, getSessionId } = useCartStore();
 
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
@@ -24,8 +24,8 @@ export default function CheckoutPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchCartLocal();
-  }, [fetchCartLocal]);
+    fetchCart();
+  }, [fetchCart]);
 
   const handleCheckout = async () => {
     if (!cart || cart.items.length === 0) return;
@@ -70,7 +70,7 @@ export default function CheckoutPage() {
           session_id: getSessionId(),
         });
 
-        clearCartLocal();
+        clearCart();
         window.location.href = response.init_point;
       } else {
         const response = await orderApi.storePickup({
@@ -83,7 +83,7 @@ export default function CheckoutPage() {
           session_id: getSessionId(),
         });
 
-        clearCartLocal();
+        clearCart();
         router.push(`/checkout/reservation?order_id=${response.order_id}&code=${response.pickup_code}&expires=${encodeURIComponent(response.expires_at)}&total=${response.total}`);
       }
     } catch (err) {

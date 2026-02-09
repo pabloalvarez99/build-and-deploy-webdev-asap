@@ -9,14 +9,14 @@ import { usePathname, useRouter } from 'next/navigation';
 
 export function Navbar() {
   const router = useRouter();
-  const { cart, fetchCartLocal } = useCartStore();
+  const { cart, fetchCart } = useCartStore();
   const { user, logout, checkAuth, isLoading } = useAuthStore();
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    fetchCartLocal();
+    fetchCart();
     checkAuth();
     
     const handleScroll = () => {
@@ -25,7 +25,7 @@ export function Navbar() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [fetchCartLocal, checkAuth]);
+  }, [fetchCart, checkAuth]);
 
   const handleLogout = () => {
     logout();

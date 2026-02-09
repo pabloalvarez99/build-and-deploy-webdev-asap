@@ -92,7 +92,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function AdminPage() {
   const router = useRouter();
-  const { user, token } = useAuthStore();
+  const { user } = useAuthStore();
   const [stats, setStats] = useState<Stats | null>(null);
   const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>([]);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
@@ -102,25 +102,25 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!token) {
+    if (!user) {
       router.push('/auth/login');
       return;
     }
-    if (user && user.role !== 'admin') {
+    if (user.role !== 'admin') {
       router.push('/');
     }
-  }, [token, user, router]);
+  }, [user, router]);
 
   useEffect(() => {
-    if (token && user?.role === 'admin') {
+    if (user?.role === 'admin') {
       loadStats();
       loadRecentOrders();
     }
-  }, [token, user]);
+  }, [user]);
 
   const loadRecentOrders = async () => {
     try {
-      const orders = await orderApi.list(token!, { limit: 5 });
+      const orders = await orderApi.list({ limit: 5 });
       setRecentOrders(orders.orders);
     } catch (error) {
       console.error('Error loading orders:', error);
@@ -135,8 +135,8 @@ export default function AdminPage() {
       const categories = await productApi.listCategories();
 
       // Load all orders for charts
-      const allOrders = await orderApi.list(token!, { limit: 1000 });
-      const pendingOrders = await orderApi.list(token!, { status: 'pending', limit: 1 });
+      const allOrders = await orderApi.list({ limit: 1000 });
+      const pendingOrders = await orderApi.list({ status: 'pending', limit: 1 });
 
       // Calculate inventory stats by fetching a larger batch
       const productsForStats = await productApi.list({ limit: 1000, active_only: false });

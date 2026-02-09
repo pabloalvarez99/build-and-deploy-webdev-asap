@@ -99,24 +99,22 @@ export default function AdminOrderDetailPage() {
   const router = useRouter();
   const orderId = params.id as string;
 
-  const { user, token } = useAuthStore();
+  const { user } = useAuthStore();
 
   const [order, setOrder] = useState<OrderWithItems | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!token || (user && user.role !== 'admin')) {
+    if (!user || user.role !== 'admin') {
       router.push('/');
       return;
     }
     loadOrder();
-  }, [token, user, router, orderId]);
+  }, [user, router, orderId]);
 
   const loadOrder = async () => {
-    if (!token) return;
-
     try {
-      const data = await orderApi.get(token, orderId);
+      const data = await orderApi.get(orderId);
       setOrder(data);
     } catch (error) {
       console.error('Error loading order:', error);
@@ -126,10 +124,10 @@ export default function AdminOrderDetailPage() {
   };
 
   const handleStatusChange = async (newStatus: string) => {
-    if (!token || !order) return;
+    if (!order) return;
 
     try {
-      await orderApi.updateStatus(token, order.id, newStatus);
+      await orderApi.updateStatus(order.id, newStatus);
       loadOrder();
     } catch (error) {
       console.error('Error updating status:', error);

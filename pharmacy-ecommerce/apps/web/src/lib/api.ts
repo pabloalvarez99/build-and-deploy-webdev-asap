@@ -1,28 +1,18 @@
-// API Gateway URLs - rewrites handled by next.config.js
-const AUTH_URL = '/backend/auth';
-const PRODUCT_URL = '/backend/products';
-const ORDER_URL = '/backend/orders';
+import { createClient } from '@/lib/supabase/client';
 
-type RequestOptions = {
-  method?: string;
-  body?: unknown;
-  token?: string;
-};
+// ============================================
+// Supabase client (for browser-side reads)
+// ============================================
+function getSupabase() {
+  return createClient();
+}
 
-async function request<T>(url: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, token } = options;
-
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
+// Helper for Next.js API route calls
+async function apiRequest<T>(url: string, options: { method?: string; body?: unknown } = {}): Promise<T> {
+  const { method = 'POST', body } = options;
   const response = await fetch(url, {
     method,
-    headers,
+    headers: { 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
   });
 
@@ -31,34 +21,15 @@ async function request<T>(url: string, options: RequestOptions = {}): Promise<T>
     throw new Error(error || `HTTP error! status: ${response.status}`);
   }
 
-  if (response.status === 204) {
-    return {} as T;
-  }
-
+  if (response.status === 204) return {} as T;
   return response.json();
 }
 
-// Auth API
-export const authApi = {
-  register: (data: { email: string; password: string; name?: string }) =>
-    request<{ token: string; user: User }>(`${AUTH_URL}/auth/register`, {
-      method: 'POST',
-      body: data,
-    }),
-
-  login: (data: { email: string; password: string }) =>
-    request<{ token: string; user: User }>(`${AUTH_URL}/auth/login`, {
-      method: 'POST',
-      body: data,
-    }),
-
-  me: (token: string) =>
-    request<User>(`${AUTH_URL}/auth/me`, { token }),
-};
-
-// Product API
+// ============================================
+// Product API (reads via Supabase, writes via API routes)
+// ============================================
 export const productApi = {
-  list: (params?: {
+  list: async (params?: {
     category?: string;
     laboratory?: string;
     therapeutic_action?: string;
@@ -72,133 +43,172 @@ export const productApi = {
     in_stock?: boolean;
     min_price?: number;
     max_price?: number;
-  }) => {
-    const searchParams = new URLSearchParams();
-    if (params?.category) searchParams.set('category', params.category);
-    if (params?.laboratory) searchParams.set('laboratory', params.laboratory);
-    if (params?.therapeutic_action) searchParams.set('therapeutic_action', params.therapeutic_action);
-    if (params?.prescription_type) searchParams.set('prescription_type', params.prescription_type);
-    if (params?.active_ingredient) searchParams.set('active_ingredient', params.active_ingredient);
-    if (params?.search) searchParams.set('search', params.search);
-    if (params?.page) searchParams.set('page', String(params.page));
-    if (params?.limit) searchParams.set('limit', String(params.limit));
-    if (params?.active_only !== undefined) searchParams.set('active_only', String(params.active_only));
-    if (params?.sort_by) searchParams.set('sort_by', params.sort_by);
-    if (params?.in_stock) searchParams.set('in_stock', 'true');
-    if (params?.min_price) searchParams.set('min_price', String(params.min_price));
-    if (params?.max_price) searchParams.set('max_price', String(params.max_price));
+  }): Promise<PaginatedProducts> => {
+    const supabase = getSupabase();
+    const page = params?.page || 1;
+    const limit = Math.min(params?.limit || 12, 100);
+    const offset = (page - 1) * limit;
+    const activeOnly = params?.active_only !== false;
 
-    const query = searchParams.toString();
-    return request<PaginatedProducts>(`${PRODUCT_URL}/products${query ? `?${query}` : ''}`);
+    let query = supabase
+      .from('products')
+      .select('*, categories(name, slug)', { count: 'exact' });
+
+    if (activeOnly) query = query.eq('active', true);
+    if (params?.category) {
+      // Filter by category slug via join
+      query = query.eq('categories.slug', params.category);
+    }
+    if (params?.laboratory) query = query.eq('laboratory', params.laboratory);
+    if (params?.therapeutic_action) query = query.eq('therapeutic_action', params.therapeutic_action);
+    if (params?.prescription_type) query = query.eq('prescription_type', params.prescription_type);
+    if (params?.active_ingredient) query = query.ilike('active_ingredient', `%${params.active_ingredient}%`);
+    if (params?.search) {
+      query = query.or(`name.ilike.%${params.search}%,description.ilike.%${params.search}%,laboratory.ilike.%${params.search}%`);
+    }
+    if (params?.in_stock) query = query.gt('stock', 0);
+    if (params?.min_price) query = query.gte('price', params.min_price);
+    if (params?.max_price) query = query.lte('price', params.max_price);
+
+    // Sorting
+    const sortBy = params?.sort_by || 'created_at';
+    switch (sortBy) {
+      case 'name':
+      case 'name_asc':
+        query = query.order('name', { ascending: true });
+        break;
+      case 'name_desc':
+        query = query.order('name', { ascending: false });
+        break;
+      case 'price_asc':
+        query = query.order('price', { ascending: true });
+        break;
+      case 'price_desc':
+        query = query.order('price', { ascending: false });
+        break;
+      case 'stock':
+      case 'stock_desc':
+        query = query.order('stock', { ascending: false });
+        break;
+      case 'stock_asc':
+        query = query.order('stock', { ascending: true });
+        break;
+      default:
+        query = query.order('created_at', { ascending: false });
+    }
+
+    query = query.range(offset, offset + limit - 1);
+
+    const { data, error, count } = await query;
+    if (error) throw new Error(error.message);
+
+    // If filtering by category slug, we need to filter out products where categories is null
+    // (because the inner join filter on categories.slug returns null categories for non-matching)
+    let products = (data || []).map(transformProduct);
+    if (params?.category) {
+      products = products.filter(p => p.category_slug === params.category);
+    }
+
+    const total = count || 0;
+    return {
+      products,
+      total,
+      page,
+      limit,
+      total_pages: Math.ceil(total / limit),
+    };
   },
 
-  // Get unique laboratories for filtering
-  getLaboratories: () =>
-    request<{ laboratories: string[] }>(`${PRODUCT_URL}/filters/laboratories`).catch(() => ({ laboratories: [] })),
+  getLaboratories: async (): Promise<{ laboratories: string[] }> => {
+    const supabase = getSupabase();
+    const { data, error } = await supabase.rpc('get_distinct_laboratories');
+    if (error) return { laboratories: [] };
+    return { laboratories: (data || []).map((r: { laboratory: string }) => r.laboratory) };
+  },
 
-  // Get unique therapeutic actions for filtering
-  getTherapeuticActions: () =>
-    request<{ therapeutic_actions: string[] }>(`${PRODUCT_URL}/filters/therapeutic-actions`).catch(() => ({ therapeutic_actions: [] })),
+  getTherapeuticActions: async (): Promise<{ therapeutic_actions: string[] }> => {
+    const supabase = getSupabase();
+    const { data, error } = await supabase.rpc('get_distinct_therapeutic_actions');
+    if (error) return { therapeutic_actions: [] };
+    return { therapeutic_actions: (data || []).map((r: { therapeutic_action: string }) => r.therapeutic_action) };
+  },
 
-  // Get unique active ingredients for filtering
-  getActiveIngredients: () =>
-    request<{ active_ingredients: string[] }>(`${PRODUCT_URL}/filters/active-ingredients`).catch(() => ({ active_ingredients: [] })),
+  getActiveIngredients: async (): Promise<{ active_ingredients: string[] }> => {
+    const supabase = getSupabase();
+    const { data, error } = await supabase.rpc('get_distinct_active_ingredients');
+    if (error) return { active_ingredients: [] };
+    return { active_ingredients: (data || []).map((r: { active_ingredient: string }) => r.active_ingredient) };
+  },
 
-  get: (slug: string) =>
-    request<ProductWithCategory>(`${PRODUCT_URL}/products/${slug}`),
+  get: async (slug: string): Promise<ProductWithCategory> => {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('products')
+      .select('*, categories(name, slug)')
+      .eq('slug', slug)
+      .single();
+    if (error) throw new Error(error.message);
+    return transformProduct(data);
+  },
 
-  getById: (id: string) =>
-    request<ProductWithCategory>(`${PRODUCT_URL}/products/id/${id}`),
+  getById: async (id: string): Promise<ProductWithCategory> => {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('products')
+      .select('*, categories(name, slug)')
+      .eq('id', id)
+      .single();
+    if (error) throw new Error(error.message);
+    return transformProduct(data);
+  },
 
-  create: (token: string, data: CreateProductData) =>
-    request<Product>(`${PRODUCT_URL}/admin/products`, {
-      method: 'POST',
-      body: data,
-      token,
-    }),
+  // Admin operations via API routes
+  create: (data: CreateProductData) =>
+    apiRequest<Product>('/api/admin/products', { body: data }),
 
-  update: (token: string, id: string, data: Partial<CreateProductData>) =>
-    request<Product>(`${PRODUCT_URL}/admin/products/${id}`, {
-      method: 'PUT',
-      body: data,
-      token,
-    }),
+  update: (id: string, data: Partial<CreateProductData>) =>
+    apiRequest<Product>(`/api/admin/products/${id}`, { method: 'PUT', body: data }),
 
-  delete: (token: string, id: string) =>
-    request<void>(`${PRODUCT_URL}/admin/products/${id}`, {
-      method: 'DELETE',
-      token,
-    }),
+  delete: (id: string) =>
+    apiRequest<void>(`/api/admin/products/${id}`, { method: 'DELETE' }),
 
-  listCategories: () =>
-    request<Category[]>(`${PRODUCT_URL}/categories`),
+  listCategories: async (): Promise<Category[]> => {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('active', true)
+      .order('name');
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
 
-  createCategory: (token: string, data: { name: string; slug: string; description?: string }) =>
-    request<Category>(`${PRODUCT_URL}/admin/categories`, {
-      method: 'POST',
-      body: data,
-      token,
-    }),
+  createCategory: (data: { name: string; slug: string; description?: string }) =>
+    apiRequest<Category>('/api/admin/categories', { body: data }),
 
-  updateCategory: (token: string, id: string, data: { name?: string; slug?: string; description?: string; active?: boolean }) =>
-    request<Category>(`${PRODUCT_URL}/admin/categories/${id}`, {
-      method: 'PUT',
-      body: data,
-      token,
-    }),
+  updateCategory: (id: string, data: { name?: string; slug?: string; description?: string; active?: boolean }) =>
+    apiRequest<Category>(`/api/admin/categories/${id}`, { method: 'PUT', body: data }),
 
-  deleteCategory: (token: string, id: string) =>
-    request<void>(`${PRODUCT_URL}/admin/categories/${id}`, {
-      method: 'DELETE',
-      token,
-    }),
+  deleteCategory: (id: string) =>
+    apiRequest<void>(`/api/admin/categories/${id}`, { method: 'DELETE' }),
 
-  getCategoryProductCount: (token: string, categoryId: string) =>
-    request<{ count: number }>(`${PRODUCT_URL}/admin/categories/${categoryId}/products/count`, {
-      token,
-    }).catch(() => ({ count: 0 })),
+  getCategoryProductCount: async (categoryId: string): Promise<{ count: number }> => {
+    const supabase = getSupabase();
+    const { count, error } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('category_id', categoryId);
+    if (error) return { count: 0 };
+    return { count: count || 0 };
+  },
 };
 
-// Cart API
-export const cartApi = {
-  get: (token: string) =>
-    request<CartResponse>(`${ORDER_URL}/cart`, { token }),
-
-  add: (token: string, productId: string, quantity?: number) =>
-    request<CartResponse>(`${ORDER_URL}/cart/add`, {
-      method: 'POST',
-      body: { product_id: productId, quantity },
-      token,
-    }),
-
-  update: (token: string, productId: string, quantity: number) =>
-    request<CartResponse>(`${ORDER_URL}/cart/update`, {
-      method: 'PUT',
-      body: { product_id: productId, quantity },
-      token,
-    }),
-
-  remove: (token: string, productId: string) =>
-    request<CartResponse>(`${ORDER_URL}/cart/remove/${productId}`, {
-      method: 'DELETE',
-      token,
-    }),
-
-  clear: (token: string) =>
-    request<void>(`${ORDER_URL}/cart/clear`, {
-      method: 'DELETE',
-      token,
-    }),
-};
-
-// Order API
+// ============================================
+// Order API (reads via Supabase, writes via API routes)
+// ============================================
 export const orderApi = {
-  checkout: (token: string, data: { shipping_address?: string; notes?: string }) =>
-    request<CheckoutResponse>(`${ORDER_URL}/checkout`, {
-      method: 'POST',
-      body: data,
-      token,
-    }),
+  checkout: (data: { shipping_address?: string; notes?: string }) =>
+    apiRequest<CheckoutResponse>('/api/checkout', { body: data }),
 
   guestCheckout: (data: {
     items: { product_id: string; quantity: number }[];
@@ -208,11 +218,7 @@ export const orderApi = {
     shipping_address?: string;
     notes?: string;
     session_id: string;
-  }) =>
-    request<CheckoutResponse>(`${ORDER_URL}/guest-checkout`, {
-      method: 'POST',
-      body: data,
-    }),
+  }) => apiRequest<CheckoutResponse>('/api/guest-checkout', { body: data }),
 
   storePickup: (data: {
     items: { product_id: string; quantity: number }[];
@@ -222,34 +228,93 @@ export const orderApi = {
     phone: string;
     notes?: string;
     session_id: string;
-  }) =>
-    request<StorePickupResponse>(`${ORDER_URL}/store-pickup`, {
-      method: 'POST',
-      body: data,
-    }),
+  }) => apiRequest<StorePickupResponse>('/api/store-pickup', { body: data }),
 
-  list: (token: string, params?: { page?: number; limit?: number; status?: string }) => {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', String(params.page));
-    if (params?.limit) searchParams.set('limit', String(params.limit));
-    if (params?.status) searchParams.set('status', params.status);
+  list: async (params?: { page?: number; limit?: number; status?: string }): Promise<PaginatedOrders> => {
+    const supabase = getSupabase();
+    const page = params?.page || 1;
+    const limit = params?.limit || 10;
+    const offset = (page - 1) * limit;
 
-    const query = searchParams.toString();
-    return request<PaginatedOrders>(`${ORDER_URL}/orders${query ? `?${query}` : ''}`, { token });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    let query = supabase
+      .from('orders')
+      .select('*', { count: 'exact' })
+      .eq('user_id', user.id);
+
+    if (params?.status) query = query.eq('status', params.status);
+    query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
+
+    const { data, error, count } = await query;
+    if (error) throw new Error(error.message);
+
+    const total = count || 0;
+    return {
+      orders: data || [],
+      total,
+      page,
+      limit,
+      total_pages: Math.ceil(total / limit),
+    };
   },
 
-  get: (token: string, id: string) =>
-    request<OrderWithItems>(`${ORDER_URL}/orders/${id}`, { token }),
+  get: async (id: string): Promise<OrderWithItems> => {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*, order_items(*)')
+      .eq('id', id)
+      .single();
+    if (error) throw new Error(error.message);
+    return {
+      ...data,
+      items: data.order_items || [],
+    };
+  },
 
-  updateStatus: (token: string, id: string, status: string) =>
-    request<Order>(`${ORDER_URL}/orders/${id}/status`, {
-      method: 'PUT',
-      body: { status },
-      token,
-    }),
+  // Admin operations
+  listAll: async (params?: { page?: number; limit?: number; status?: string }): Promise<PaginatedOrders> => {
+    return apiRequest<PaginatedOrders>('/api/admin/orders', {
+      method: 'GET',
+    });
+  },
+
+  updateStatus: (id: string, status: string) =>
+    apiRequest<Order>(`/api/admin/orders/${id}`, { method: 'PUT', body: { status } }),
 };
 
-// Types
+// ============================================
+// Transform Supabase response to match existing types
+// ============================================
+function transformProduct(raw: any): ProductWithCategory {
+  const categories = raw.categories;
+  return {
+    id: raw.id,
+    name: raw.name,
+    slug: raw.slug,
+    description: raw.description,
+    price: String(raw.price),
+    stock: raw.stock,
+    category_id: raw.category_id,
+    image_url: raw.image_url,
+    active: raw.active,
+    external_id: raw.external_id,
+    laboratory: raw.laboratory,
+    therapeutic_action: raw.therapeutic_action,
+    active_ingredient: raw.active_ingredient,
+    prescription_type: raw.prescription_type,
+    presentation: raw.presentation,
+    created_at: raw.created_at,
+    category_name: categories?.name || null,
+    category_slug: categories?.slug || null,
+  };
+}
+
+// ============================================
+// Types (unchanged - same interface for the frontend)
+// ============================================
 export interface User {
   id: string;
   email: string;
@@ -289,10 +354,6 @@ export interface Product {
 export interface ProductWithCategory extends Product {
   category_name: string | null;
   category_slug: string | null;
-  therapeutic_action: string | null;
-  active_ingredient: string | null;
-  prescription_type: 'direct' | 'prescription' | 'retained' | null;
-  presentation: string | null;
 }
 
 export interface PaginatedProducts {

@@ -91,7 +91,7 @@ const quickActions: SearchResult[] = [
 
 export function CommandPalette({ isOpen, onClose, onNewProduct }: CommandPaletteProps) {
   const router = useRouter();
-  const { token } = useAuthStore();
+  const { user } = useAuthStore();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>(quickActions);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -119,7 +119,7 @@ export function CommandPalette({ isOpen, onClose, onNewProduct }: CommandPalette
 
   // Search products and orders
   const performSearch = useCallback(async (searchQuery: string) => {
-    if (!searchQuery.trim() || !token) {
+    if (!searchQuery.trim() || !user) {
       setResults(quickActions);
       return;
     }
@@ -158,7 +158,7 @@ export function CommandPalette({ isOpen, onClose, onNewProduct }: CommandPalette
       // Search orders by ID
       if (searchQuery.length >= 4) {
         try {
-          const orderResults = await orderApi.list(token, { limit: 5 });
+          const orderResults = await orderApi.list({ limit: 5 });
           orderResults.orders
             .filter((o) => o.id.toLowerCase().includes(searchQuery.toLowerCase()))
             .forEach((order) => {
@@ -185,7 +185,7 @@ export function CommandPalette({ isOpen, onClose, onNewProduct }: CommandPalette
       setResults(searchResults);
       setSelectedIndex(0);
     }
-  }, [token, router, onClose]);
+  }, [user, router, onClose]);
 
   // Debounced search
   useEffect(() => {

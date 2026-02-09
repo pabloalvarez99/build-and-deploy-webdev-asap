@@ -21,24 +21,22 @@ export default function OrderDetailPage() {
   const router = useRouter();
   const orderId = params.id as string;
 
-  const { token } = useAuthStore();
+  const { user } = useAuthStore();
 
   const [order, setOrder] = useState<OrderWithItems | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!token) {
+    if (!user) {
       router.push('/auth/login');
       return;
     }
     loadOrder();
-  }, [token, router, orderId]);
+  }, [user, router, orderId]);
 
   const loadOrder = async () => {
-    if (!token) return;
-
     try {
-      const data = await orderApi.get(token, orderId);
+      const data = await orderApi.get(orderId);
       setOrder(data);
     } catch (error) {
       console.error('Error loading order:', error);
