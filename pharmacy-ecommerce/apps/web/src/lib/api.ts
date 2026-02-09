@@ -288,6 +288,13 @@ export const orderApi = {
 // ============================================
 // Transform Supabase response to match existing types
 // ============================================
+function sanitizeImageUrl(url: string | null): string | null {
+  if (!url) return null;
+  // Ensure https to avoid mixed content warnings
+  if (url.startsWith('http://')) return 'https://' + url.slice(7);
+  return url;
+}
+
 function transformProduct(raw: any): ProductWithCategory {
   const categories = raw.categories;
   return {
@@ -298,7 +305,7 @@ function transformProduct(raw: any): ProductWithCategory {
     price: String(raw.price),
     stock: raw.stock,
     category_id: raw.category_id,
-    image_url: raw.image_url,
+    image_url: sanitizeImageUrl(raw.image_url),
     active: raw.active,
     external_id: raw.external_id,
     laboratory: raw.laboratory,

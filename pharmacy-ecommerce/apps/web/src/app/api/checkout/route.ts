@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     await supabase.from('order_items').insert(orderItemsData);
 
     // Create MercadoPago preference
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').trim().replace(/\/+$/, '');
     const isLocalhost = siteUrl.includes('localhost');
 
     const preference = {

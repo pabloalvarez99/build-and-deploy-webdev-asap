@@ -110,6 +110,9 @@ def main():
         image_url = search_image(search_query)
 
         if image_url:
+            # Always use https to avoid mixed content on HTTPS sites
+            if image_url.startswith('http://'):
+                image_url = 'https://' + image_url[7:]
             try:
                 supabase_patch('products', f'id=eq.{pid}', {'image_url': image_url})
                 updated += 1

@@ -66,6 +66,31 @@ Pasos completados:
 - Descripciones profesionales con: acción terapéutica, principio activo, presentación, receta, laboratorio, registro sanitario, bioequivalencia
 - Búsqueda automática de imágenes via DuckDuckGo (en proceso)
 
+### 2026-02-08: Corrección errores checkout y Mixed Content (COMPLETADA)
+
+**Errores detectados en producción:**
+1. Mixed Content: 24 productos tenían image_url con `http://` en vez de `https://`
+2. MercadoPago back_urls error: `NEXT_PUBLIC_SITE_URL` no estaba configurado correctamente
+3. guest-checkout 500: causado por error #2
+4. Algunas imágenes con ERR_NAME_NOT_RESOLVED (dominios caídos)
+
+**Correcciones aplicadas:**
+1. **NEXT_PUBLIC_SITE_URL**: Re-configurado en Vercel producción como `https://tu-farmacia.vercel.app`
+2. **Mixed Content DB**: Actualización SQL de 24 productos `http://` → `https://` en Supabase
+3. **Mixed Content código**: `sanitizeImageUrl()` en `api.ts` convierte automáticamente `http://` → `https://`
+4. **Script imágenes**: `update_images_supabase.py` ahora convierte URLs a `https://` antes de guardar
+5. **guest-checkout**: Ahora guarda `guest_name` y `guest_surname` en la orden
+6. **URL robusta**: `siteUrl` en checkout/guest-checkout hace `.trim().replace(/\/+$/, '')` para evitar trailing slashes
+7. **Errores usuario**: Checkout muestra mensajes amigables en vez de JSON raw de MercadoPago
+8. **Logging**: console.error en guest-checkout para debug de errores MercadoPago
+
+**Archivos modificados:**
+- `src/lib/api.ts` - sanitizeImageUrl() para Mixed Content
+- `src/app/api/guest-checkout/route.ts` - guest_name/surname, URL trim, logging
+- `src/app/api/checkout/route.ts` - URL trim
+- `src/app/checkout/page.tsx` - mensajes de error amigables
+- `scripts/update_images_supabase.py` - forzar https en URLs
+
 ---
 
 ## Archivos clave

@@ -87,7 +87,17 @@ export default function CheckoutPage() {
         router.push(`/checkout/reservation?order_id=${response.order_id}&code=${response.pickup_code}&expires=${encodeURIComponent(response.expires_at)}&total=${response.total}`);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al procesar el pedido');
+      const raw = err instanceof Error ? err.message : 'Error al procesar el pedido';
+      // Show user-friendly message instead of raw API errors
+      if (raw.includes('MercadoPago') || raw.includes('back_urls') || raw.includes('preference')) {
+        setError('Error al conectar con MercadoPago. Por favor intenta nuevamente.');
+      } else if (raw.includes('stock') || raw.includes('Stock')) {
+        setError('Algunos productos no tienen suficiente stock disponible.');
+      } else if (raw.includes('not found')) {
+        setError('Uno de los productos ya no esta disponible. Revisa tu carrito.');
+      } else {
+        setError(raw);
+      }
       setIsProcessing(false);
     }
   };

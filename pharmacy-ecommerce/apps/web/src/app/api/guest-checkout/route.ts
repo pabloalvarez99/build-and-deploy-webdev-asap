@@ -53,6 +53,8 @@ export async function POST(request: NextRequest) {
         shipping_address,
         notes,
         guest_email: email,
+        guest_name: name,
+        guest_surname: surname,
         guest_session_id: session_id,
         payment_provider: 'mercadopago',
       })
@@ -73,7 +75,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Create MercadoPago preference
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').trim().replace(/\/+$/, '');
     const isLocalhost = siteUrl.includes('localhost');
 
     const preference = {
@@ -101,6 +103,7 @@ export async function POST(request: NextRequest) {
 
     if (!mpResponse.ok) {
       const mpError = await mpResponse.text();
+      console.error('MercadoPago preference error:', mpError, 'back_urls:', preference.back_urls);
       return errorResponse(`MercadoPago error: ${mpError}`, 500);
     }
 
