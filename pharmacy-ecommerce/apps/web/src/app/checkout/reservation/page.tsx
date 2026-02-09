@@ -34,100 +34,98 @@ function ReservationContent() {
   };
 
   return (
-    <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       <div className="text-center mb-8">
-        <div className="bg-emerald-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="bg-emerald-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5">
           <Store className="w-10 h-10 text-emerald-600" />
         </div>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
           Reserva confirmada
         </h1>
-        <p className="text-gray-600">
+        <p className="text-slate-500 text-lg">
           Tu pedido ha sido reservado exitosamente
         </p>
       </div>
 
-      {/* Pickup Code */}
+      {/* Pickup Code - Extra large for elderly */}
       {code && (
-        <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-6 mb-6 text-center">
-          <p className="text-sm font-medium text-emerald-700 mb-2">
+        <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-6 mb-5 text-center">
+          <p className="font-semibold text-emerald-700 mb-3">
             Codigo de retiro
           </p>
           <div className="flex items-center justify-center gap-3">
-            <span className="text-4xl font-mono font-bold tracking-[0.3em] text-emerald-800">
+            <span className="text-5xl font-mono font-black tracking-[0.3em] text-emerald-800">
               {code}
             </span>
             <button
               onClick={handleCopy}
-              className="p-2 rounded-lg hover:bg-emerald-100 transition-colors"
+              className="p-3 rounded-xl hover:bg-emerald-100 transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center"
               title="Copiar codigo"
             >
               {copied ? (
-                <CheckCircle className="w-5 h-5 text-emerald-600" />
+                <CheckCircle className="w-6 h-6 text-emerald-600" />
               ) : (
-                <Copy className="w-5 h-5 text-emerald-600" />
+                <Copy className="w-6 h-6 text-emerald-600" />
               )}
             </button>
           </div>
-          <p className="text-xs text-emerald-600 mt-2">
+          <p className="text-emerald-600 mt-3">
             Presenta este codigo al retirar tu pedido
           </p>
         </div>
       )}
 
       {/* Order Details */}
-      <div className="card p-6 mb-6 space-y-4">
+      <div className="bg-white rounded-2xl border-2 border-slate-100 p-5 mb-5 space-y-4">
         {orderId && (
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">N de orden</span>
-            <span className="font-mono text-gray-900 text-xs">{orderId}</span>
+          <div className="flex justify-between">
+            <span className="text-slate-500">N de orden</span>
+            <span className="font-mono text-slate-900 text-sm">{orderId.substring(0, 8)}...</span>
           </div>
         )}
         {total && (
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Total a pagar en tienda</span>
-            <span className="font-semibold text-gray-900">{formatPrice(total)}</span>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Total a pagar en tienda</span>
+            <span className="font-bold text-lg text-slate-900">{formatPrice(total)}</span>
           </div>
         )}
         {formattedExpires && (
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Valida hasta</span>
-            <span className="text-gray-900">{formattedExpires}</span>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Valida hasta</span>
+            <span className="text-slate-900">{formattedExpires}</span>
           </div>
         )}
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-500">Estado</span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-            <Clock className="w-3 h-3" />
+        <div className="flex justify-between items-center">
+          <span className="text-slate-500">Estado</span>
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-semibold bg-amber-100 text-amber-800">
+            <Clock className="w-4 h-4" />
             Pendiente de retiro
           </span>
         </div>
       </div>
 
-      {/* Instructions */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-8">
-        <h3 className="font-semibold text-blue-900 mb-3">Instrucciones de retiro</h3>
-        <ol className="text-sm text-blue-800 space-y-2 list-decimal list-inside">
-          <li>Acercate a la farmacia dentro de las proximas 48 horas</li>
+      {/* Instructions - Larger text */}
+      <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-5 mb-8">
+        <h3 className="font-bold text-blue-900 mb-3 text-lg">Instrucciones de retiro</h3>
+        <ol className="text-blue-800 space-y-3 list-decimal list-inside">
+          <li>Acercate a la farmacia dentro de las proximas <strong>48 horas</strong></li>
           <li>Indica tu codigo de retiro <strong>{code}</strong> al personal</li>
           <li>Realiza el pago en tienda (efectivo, tarjeta o transferencia)</li>
           <li>Retira tus productos</li>
         </ol>
       </div>
 
-      <div className="space-y-4">
-        <Link href="/" className="btn btn-primary block text-center">
-          Seguir comprando
-        </Link>
-      </div>
+      <Link href="/" className="btn btn-primary block text-center text-lg w-full min-h-[56px]">
+        Seguir comprando
+      </Link>
     </div>
   );
 }
 
 export default function ReservationPage() {
   return (
-    <Suspense fallback={<div className="text-center py-16">Cargando...</div>}>
+    <Suspense fallback={<div className="text-center py-16 text-lg text-slate-400">Cargando...</div>}>
       <ReservationContent />
     </Suspense>
   );

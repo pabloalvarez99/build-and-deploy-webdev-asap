@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
 import { ShoppingBag, ArrowRight, Trash2, Plus, Minus, Package } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
-import Image from 'next/image';
 
 export default function CartPage() {
   const { cart, fetchCart, updateQuantity, removeFromCart, isLoading } = useCartStore();
@@ -15,157 +14,152 @@ export default function CartPage() {
   }, [fetchCart]);
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8">
+    <div className="min-h-screen bg-slate-50 py-4 sm:py-6">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-2xl font-bold text-slate-900 mb-8">Mi Carrito</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mb-6">Mi Carrito</h1>
 
         {isLoading ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="animate-pulse bg-white p-4 rounded-lg flex items-center gap-4">
-                <div className="w-16 h-16 bg-slate-200 rounded-lg" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-5 bg-slate-200 rounded w-1/2" />
-                  <div className="h-4 bg-slate-200 rounded w-1/4" />
+              <div key={i} className="animate-pulse bg-white p-4 rounded-2xl flex items-center gap-4">
+                <div className="w-20 h-20 bg-slate-100 rounded-xl" />
+                <div className="flex-1 space-y-3">
+                  <div className="h-5 bg-slate-100 rounded w-2/3" />
+                  <div className="h-5 bg-slate-100 rounded w-1/3" />
                 </div>
-                <div className="h-8 bg-slate-200 rounded w-24" />
               </div>
             ))}
           </div>
         ) : !cart || cart.items.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 text-center py-16 px-4">
-            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <ShoppingBag className="w-8 h-8 text-slate-400" />
+          <div className="bg-white rounded-2xl border-2 border-slate-100 text-center py-16 px-6">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-5">
+              <ShoppingBag className="w-10 h-10 text-slate-300" />
             </div>
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">
-              Tu carrito está vacío
+            <h2 className="text-xl font-bold text-slate-900 mb-3">
+              Tu carrito esta vacio
             </h2>
-            <p className="text-slate-500 mb-8 max-w-sm mx-auto">
-              ¡Explora nuestro catálogo y encuentra todo lo que necesitas para tu salud y bienestar!
+            <p className="text-slate-500 mb-8 text-lg max-w-sm mx-auto">
+              Explora nuestro catalogo y encuentra lo que necesitas
             </p>
-            <Link 
-              href="/" 
-              className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 bg-emerald-600 text-white px-8 py-4 rounded-2xl hover:bg-emerald-700 transition-colors font-bold text-lg min-h-[56px]"
             >
-              Ver catálogo
-              <ArrowRight className="w-4 h-4" />
+              Ver catalogo
+              <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-                <div className="divide-y divide-slate-100">
-                  {cart.items.map((item) => (
-                    <div key={item.product_id} className="p-4 sm:p-6 flex gap-4 sm:gap-6">
-                      {/* Product Image/Icon */}
-                      <div className="w-20 h-20 bg-slate-50 rounded-lg flex-shrink-0 flex items-center justify-center border border-slate-100">
-                        {item.product_image ? (
-                          <div className="relative w-full h-full">
-                            <Image
-                              src={item.product_image}
-                              alt={item.product_name}
-                              fill
-                              className="object-contain p-2"
-                            />
-                          </div>
-                        ) : (
-                          <Package className="w-8 h-8 text-slate-300" />
-                        )}
+          <div className="space-y-4">
+            {/* Cart Items */}
+            <div className="bg-white rounded-2xl border-2 border-slate-100 overflow-hidden">
+              <div className="divide-y divide-slate-100">
+                {cart.items.map((item) => (
+                  <div key={item.product_id} className="p-4 flex gap-4">
+                    {/* Product Image */}
+                    <div className="w-24 h-24 bg-slate-50 rounded-xl flex-shrink-0 flex items-center justify-center border-2 border-slate-100 overflow-hidden">
+                      {item.product_image ? (
+                        <img
+                          src={item.product_image}
+                          alt={item.product_name}
+                          className="w-full h-full object-contain p-2"
+                        />
+                      ) : (
+                        <Package className="w-10 h-10 text-slate-300" />
+                      )}
+                    </div>
+
+                    {/* Product Details */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-between">
+                      <div>
+                        <Link
+                          href={`/producto/${item.product_slug}`}
+                          className="font-bold text-slate-900 hover:text-emerald-600 transition-colors line-clamp-2 leading-snug"
+                        >
+                          {item.product_name}
+                        </Link>
+                        <p className="text-sm text-slate-400 mt-1">
+                          {formatPrice(parseFloat(item.price))} c/u
+                        </p>
                       </div>
 
-                      {/* Product Details */}
-                      <div className="flex-1 min-w-0 flex flex-col justify-between">
-                        <div>
-                          <Link 
-                            href={`/producto/${item.product_slug}`}
-                            className="text-base font-medium text-slate-900 hover:text-emerald-600 transition-colors line-clamp-2 mb-1"
+                      <div className="flex items-center justify-between mt-3">
+                        {/* Quantity controls - Large buttons */}
+                        <div className="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden">
+                          <button
+                            onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
+                            className="w-11 h-11 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors disabled:opacity-30"
+                            disabled={item.quantity <= 1}
                           >
-                            {item.product_name}
-                          </Link>
-                          <p className="text-sm text-slate-500">
-                            {formatPrice(parseFloat(item.price))} c/u
-                          </p>
+                            <Minus className="w-4 h-4" />
+                          </button>
+                          <span className="w-10 text-center font-bold text-lg text-slate-900">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
+                            className="w-11 h-11 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
                         </div>
 
-                        <div className="flex items-center justify-between mt-4">
-                          <div className="flex items-center border border-slate-200 rounded-lg bg-white">
-                            <button
-                              onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
-                              className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-l-lg transition-colors disabled:opacity-50"
-                              disabled={item.quantity <= 1}
-                            >
-                              <Minus className="w-4 h-4" />
-                            </button>
-                            <span className="w-10 text-center text-sm font-medium text-slate-900">
-                              {item.quantity}
-                            </span>
-                            <button
-                              onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                              className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-r-lg transition-colors"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
-                          </div>
-
-                          <div className="flex items-center gap-4">
-                            <span className="text-base font-bold text-gray-900">
-                              {formatPrice(parseFloat(item.subtotal))}
-                            </span>
-                            <button
-                              onClick={() => removeFromCart(item.product_id)}
-                              className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                              title="Eliminar producto"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg font-black text-slate-900">
+                            {formatPrice(parseFloat(item.subtotal))}
+                          </span>
+                          <button
+                            onClick={() => removeFromCart(item.product_id)}
+                            className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                            title="Eliminar producto"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-24">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                  Resumen del pedido
-                </h2>
+            {/* Order Summary - Always visible, not sidebar */}
+            <div className="bg-white rounded-2xl border-2 border-slate-100 p-5">
+              <h2 className="text-lg font-bold text-slate-900 mb-4">
+                Resumen del pedido
+              </h2>
 
-                <div className="space-y-3 border-b border-gray-100 pb-4 mb-4">
-                  <div className="flex justify-between text-gray-600">
-                    <span>Subtotal ({cart.items.reduce((acc, item) => acc + item.quantity, 0)} productos)</span>
-                    <span className="font-medium">{formatPrice(parseFloat(cart.total))}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-600">
-                    <span>Envío</span>
-                    <span className="text-emerald-600 font-medium">Gratis</span>
-                  </div>
+              <div className="space-y-3 border-b-2 border-slate-100 pb-4 mb-4">
+                <div className="flex justify-between text-slate-500">
+                  <span>Subtotal ({cart.items.reduce((acc, item) => acc + item.quantity, 0)} productos)</span>
+                  <span className="font-semibold text-slate-700">{formatPrice(parseFloat(cart.total))}</span>
                 </div>
-
-                <div className="flex justify-between items-end mb-6">
-                  <span className="text-base font-medium text-gray-900">Total</span>
-                  <span className="text-2xl font-bold text-gray-900">{formatPrice(parseFloat(cart.total))}</span>
+                <div className="flex justify-between text-slate-500">
+                  <span>Envio</span>
+                  <span className="text-emerald-600 font-semibold">Gratis</span>
                 </div>
+              </div>
 
+              <div className="flex justify-between items-end mb-6">
+                <span className="text-lg font-bold text-slate-900">Total</span>
+                <span className="text-3xl font-black text-emerald-700">{formatPrice(parseFloat(cart.total))}</span>
+              </div>
+
+              <Link
+                href="/checkout"
+                className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-4 px-4 rounded-2xl hover:bg-emerald-700 transition-colors font-bold text-lg shadow-lg shadow-emerald-600/20 min-h-[56px]"
+              >
+                Continuar al pago
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+
+              <div className="mt-4 text-center">
                 <Link
-                  href="/checkout"
-                  className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-3.5 px-4 rounded-lg hover:bg-emerald-700 transition-colors font-medium shadow-sm hover:shadow"
+                  href="/"
+                  className="text-emerald-600 font-semibold hover:underline text-base"
                 >
-                  Continuar al pago
-                  <ArrowRight className="w-4 h-4" />
+                  Seguir comprando
                 </Link>
-
-                <div className="mt-4 text-center">
-                  <Link
-                    href="/"
-                    className="text-sm text-gray-500 hover:text-emerald-600 hover:underline transition-colors"
-                  >
-                    Seguir comprando
-                  </Link>
-                </div>
               </div>
             </div>
           </div>

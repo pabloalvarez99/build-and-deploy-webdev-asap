@@ -1,18 +1,13 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { productApi, PaginatedProducts, Category, Product } from '@/lib/api';
-import { Search, ChevronLeft, ChevronRight, ShoppingCart, Filter, ChevronDown, LogIn, MapPin, Package, LayoutGrid, List, Plus, Check, X, ChevronUp, SlidersHorizontal } from 'lucide-react';
+import { Search, ShoppingCart, Check, X, ChevronUp, Package, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
-import { useAuthStore } from '@/store/auth';
 import { formatPrice } from '@/lib/format';
-import FilterSidebar from '@/components/filters/FilterSidebar';
-import FilterDrawer from '@/components/filters/FilterDrawer';
-import CategoryPills from '@/components/filters/CategoryPills';
-import ActiveFilters from '@/components/filters/ActiveFilters';
 
-// Toast notification component
+// Toast notification - grande para adultos mayores
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   useEffect(() => {
     const timer = setTimeout(onClose, 2500);
@@ -20,155 +15,46 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   }, [onClose]);
 
   return (
-    <div className="fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
-      <div className="flex items-center gap-2 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl">
-        <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
-          <Check className="w-3 h-3" />
+    <div className="fixed bottom-24 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-auto z-50">
+      <div className="flex items-center gap-3 bg-slate-900 text-white px-5 py-4 rounded-2xl shadow-2xl">
+        <div className="w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+          <Check className="w-4 h-4" />
         </div>
-        <span className="text-sm font-medium">{message}</span>
-        <button onClick={onClose} className="ml-2 text-slate-400 hover:text-white">
-          <X className="w-4 h-4" />
-        </button>
+        <span className="font-medium">{message}</span>
       </div>
     </div>
   );
 }
 
-const PRESCRIPTION_LABELS: Record<string, string> = {
-  direct: 'Venta Directa',
-  prescription: 'Receta Medica',
-  retained: 'Receta Retenida',
-};
-
 export default function Home() {
   const [products, setProducts] = useState<PaginatedProducts | null>(null);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [laboratories, setLaboratories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedLaboratory, setSelectedLaboratory] = useState<string>('');
-  const [selectedPrescription, setSelectedPrescription] = useState<string>('');
-  const [minPrice, setMinPrice] = useState<string>('');
-  const [maxPrice, setMaxPrice] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
-  const [sortBy, setSortBy] = useState<string>('name');
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(50);
+  const [hasMore, setHasMore] = useState(true);
   const { addToCart, cart } = useCartStore();
-  const { user } = useAuthStore();
   const [addingId, setAddingId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
-  const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [showFilterDrawer, setShowFilterDrawer] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const mainRef = useRef<HTMLElement>(null);
+  const ITEMS_PER_PAGE = 20;
 
-  const mapsUrl = "https://www.google.com/maps/place/Tu+Farmacia/@-29.9574998,-71.3444193,17z";
-
-  // Count active filters
-  const activeFilterCount = useMemo(() => {
-    let count = 0;
-    if (selectedCategory) count++;
-    if (selectedLaboratory) count++;
-    if (selectedPrescription) count++;
-    if (minPrice) count++;
-    if (maxPrice) count++;
-    if (onlyAvailable) count++;
-    return count;
-  }, [selectedCategory, selectedLaboratory, selectedPrescription, minPrice, maxPrice, onlyAvailable]);
-
-  // Build active filters for chips
-  const activeFiltersList = useMemo(() => {
-    const filters: { key: string; label: string; value: string }[] = [];
-    if (selectedCategory) {
-      const cat = categories.find((c) => c.slug === selectedCategory);
-      filters.push({ key: 'category', label: 'Categoria', value: cat?.name || selectedCategory });
-    }
-    if (selectedLaboratory) {
-      filters.push({ key: 'laboratory', label: 'Laboratorio', value: selectedLaboratory });
-    }
-    if (selectedPrescription) {
-      filters.push({ key: 'prescription', label: 'Tipo', value: PRESCRIPTION_LABELS[selectedPrescription] || selectedPrescription });
-    }
-    if (minPrice) {
-      filters.push({ key: 'minPrice', label: 'Desde', value: `$${Number(minPrice).toLocaleString()}` });
-    }
-    if (maxPrice) {
-      filters.push({ key: 'maxPrice', label: 'Hasta', value: `$${Number(maxPrice).toLocaleString()}` });
-    }
-    if (onlyAvailable) {
-      filters.push({ key: 'available', label: 'Disponibilidad', value: 'En stock' });
-    }
-    return filters;
-  }, [selectedCategory, selectedLaboratory, selectedPrescription, minPrice, maxPrice, onlyAvailable, categories]);
-
-  const handleRemoveFilter = useCallback((key: string) => {
-    switch (key) {
-      case 'category': setSelectedCategory(''); break;
-      case 'laboratory': setSelectedLaboratory(''); break;
-      case 'prescription': setSelectedPrescription(''); break;
-      case 'minPrice': setMinPrice(''); break;
-      case 'maxPrice': setMaxPrice(''); break;
-      case 'available': setOnlyAvailable(false); break;
-    }
-    setCurrentPage(1);
-  }, []);
-
-  const handleClearAllFilters = useCallback(() => {
-    setSelectedCategory('');
-    setSelectedLaboratory('');
-    setSelectedPrescription('');
-    setMinPrice('');
-    setMaxPrice('');
-    setOnlyAvailable(false);
-    setCurrentPage(1);
-  }, []);
-
-  // Load view preference from localStorage
+  // Scroll listener
   useEffect(() => {
-    const savedView = localStorage.getItem('pharmacy-view-mode');
-    if (savedView === 'grid' || savedView === 'list') {
-      setViewMode(savedView);
-    }
-  }, []);
-
-  // Save view preference to localStorage
-  useEffect(() => {
-    localStorage.setItem('pharmacy-view-mode', viewMode);
-  }, [viewMode]);
-
-  // Scroll listener for scroll-to-top button
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 400);
-    };
+    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Keyboard shortcut for search (Ctrl+K or /)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey && e.key === 'k') || (e.key === '/' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName))) {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
   useEffect(() => {
     loadCategories();
-    loadLaboratories();
   }, []);
-
-  useEffect(() => {
-    loadProducts();
-  }, [selectedCategory, selectedLaboratory, selectedPrescription, minPrice, maxPrice, currentPage, sortBy, searchTerm, itemsPerPage, onlyAvailable]);
 
   // Debounced search
   useEffect(() => {
@@ -176,15 +62,16 @@ export default function Home() {
       if (searchInput !== searchTerm) {
         setSearchTerm(searchInput);
         setCurrentPage(1);
+        setAllProducts([]);
       }
-    }, 300);
+    }, 400);
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Scroll to top when page changes
+  // Load products when filters change
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [currentPage]);
+    loadProducts(1, true);
+  }, [selectedCategory, searchTerm]);
 
   const loadCategories = async () => {
     try {
@@ -196,631 +83,294 @@ export default function Home() {
     }
   };
 
-  const loadLaboratories = async () => {
-    try {
-      const data = await productApi.getLaboratories();
-      setLaboratories(data.laboratories.sort());
-    } catch (error) {
-      console.error('Error loading laboratories:', error);
-    }
-  };
+  const loadProducts = async (page: number, reset: boolean) => {
+    if (reset) setIsLoading(true);
+    else setIsLoadingMore(true);
 
-  const loadProducts = async () => {
-    setIsLoading(true);
     try {
       const data = await productApi.list({
         category: selectedCategory || undefined,
-        laboratory: selectedLaboratory || undefined,
-        prescription_type: selectedPrescription || undefined,
-        min_price: minPrice ? Number(minPrice) : undefined,
-        max_price: maxPrice ? Number(maxPrice) : undefined,
         search: searchTerm || undefined,
-        page: currentPage,
-        limit: itemsPerPage,
-        sort_by: sortBy || undefined,
-        in_stock: onlyAvailable || undefined,
+        page,
+        limit: ITEMS_PER_PAGE,
+        sort_by: 'name',
+        in_stock: true,
       });
+
+      if (reset) {
+        setAllProducts(data.products);
+      } else {
+        setAllProducts(prev => [...prev, ...data.products]);
+      }
       setProducts(data);
+      setCurrentPage(page);
+      setHasMore(page < data.total_pages);
     } catch (error) {
       console.error('Error loading products:', error);
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
+  };
+
+  const handleLoadMore = () => {
+    loadProducts(currentPage + 1, false);
   };
 
   const handleAddToCart = async (product: Product) => {
     setAddingId(product.id);
     await addToCart(product.id);
-    setToast(`${product.name.substring(0, 30)}${product.name.length > 30 ? '...' : ''} agregado al carrito`);
-    setTimeout(() => setAddingId(null), 500);
+    const shortName = product.name.length > 25 ? product.name.substring(0, 25) + '...' : product.name;
+    setToast(`${shortName} agregado`);
+    setTimeout(() => setAddingId(null), 600);
   };
 
   const handleCategoryChange = useCallback((slug: string) => {
     setSelectedCategory(slug);
     setCurrentPage(1);
+    setAllProducts([]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const getPageNumbers = useCallback(() => {
-    if (!products) return [];
-    const totalPages = products.total_pages;
-    const current = currentPage;
-    const pages: (number | string)[] = [];
-
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      if (current <= 3) {
-        pages.push(1, 2, 3, 4, '...', totalPages);
-      } else if (current >= totalPages - 2) {
-        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-      } else {
-        pages.push(1, '...', current - 1, current, current + 1, '...', totalPages);
-      }
-    }
-    return pages;
-  }, [products, currentPage]);
-
-  const filteredProducts = products?.products || [];
-
-  // Shared filter props for sidebar and drawer
-  const filterProps = {
-    selectedCategory,
-    selectedLaboratory,
-    selectedPrescription,
-    minPrice,
-    maxPrice,
-    onlyAvailable,
-    categories,
-    laboratories,
-    onCategoryChange: handleCategoryChange,
-    onLaboratoryChange: (lab: string) => { setSelectedLaboratory(lab); setCurrentPage(1); },
-    onPrescriptionChange: (type: string) => { setSelectedPrescription(type); setCurrentPage(1); },
-    onMinPriceChange: (value: string) => { setMinPrice(value); setCurrentPage(1); },
-    onMaxPriceChange: (value: string) => { setMaxPrice(value); setCurrentPage(1); },
-    onAvailableChange: (value: boolean) => { setOnlyAvailable(value); setCurrentPage(1); },
-    onClearAll: handleClearAllFilters,
-    activeFilterCount,
-  };
+  const selectedCategoryName = categories.find(c => c.slug === selectedCategory)?.name;
+  const visibleCategories = showAllCategories ? categories : categories.slice(0, 8);
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Toast Notification */}
+      {/* Toast */}
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
 
-      {/* Scroll to Top Button */}
+      {/* Scroll to Top */}
       {showScrollTop && (
         <button
-          onClick={scrollToTop}
-          className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 p-3 bg-emerald-500 text-white rounded-full shadow-lg hover:bg-emerald-600 transition-all hover:scale-110 animate-in fade-in slide-in-from-bottom-4"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-24 right-4 z-40 w-12 h-12 bg-emerald-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-emerald-700 transition-all"
         >
-          <ChevronUp className="w-5 h-5" />
+          <ChevronUp className="w-6 h-6" />
         </button>
       )}
 
-      {/* Modern Glass Navbar */}
-      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20 gap-4">
-            {/* Logo Area + Dirección */}
-            <div className="flex-shrink-0 flex items-center gap-3 cursor-pointer group" onClick={() => {handleClearAllFilters(); setSearchInput('');}}>
-              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 group-hover:scale-105 transition-transform">
-                <Package className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
-                  Tu Farmacia
-                </span>
-                <a
-                  href={mapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="hidden sm:flex items-center gap-1 text-[11px] text-slate-500 hover:text-emerald-600 transition-colors"
-                >
-                  <MapPin className="w-3 h-3" />
-                  <span>Jose Santiago Aldunate 1535, Coquimbo</span>
-                </a>
-              </div>
+      {/* Search Bar - Siempre visible, grande */}
+      <div className="bg-white px-4 py-3 border-b border-slate-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-slate-400" />
             </div>
-
-            {/* Search Bar - Capsule Style */}
-            <div className="flex-1 max-w-xl mx-auto hidden md:block">
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Search className="h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
-                </div>
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Buscar medicamentos... (Ctrl+K)"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  className="block w-full pl-11 pr-4 py-2.5 bg-slate-100/50 border border-slate-200 rounded-full text-sm text-slate-900 placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white focus:border-emerald-300 transition-all duration-200"
-                />
-                {searchInput && (
-                  <button
-                    onClick={() => setSearchInput('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* Login Button */}
-              {!user && (
-                <Link
-                  href="/auth/login"
-                  className="flex items-center gap-2 bg-emerald-600 text-white text-sm font-semibold py-2 sm:py-2.5 px-3 sm:px-5 rounded-xl hover:bg-emerald-700 transition-all shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/30 active:scale-95"
-                >
-                  <LogIn className="w-4 h-4" />
-                  <span className="hidden sm:inline">Iniciar Sesion</span>
-                </Link>
-              )}
-
-              {user && (
-                <Link
-                  href="/admin/productos"
-                  className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-emerald-600 py-2 px-2 sm:px-3 rounded-lg hover:bg-slate-100 transition-colors"
-                >
-                  <span className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
-                    {user.name ? user.name[0].toUpperCase() : 'U'}
-                  </span>
-                  <span className="hidden sm:inline">{user.name?.split(' ')[0]}</span>
-                </Link>
-              )}
-
-              {/* Cart Button */}
-              <Link href="/carrito" className="relative p-2.5 sm:p-3 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-600 transition-colors group border border-slate-200 hover:border-emerald-300">
-                <ShoppingCart className="w-5 h-5 text-slate-600 group-hover:text-emerald-600 transition-colors" />
-                {cart && cart.item_count > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-md border-2 border-white animate-in zoom-in">
-                    {cart.item_count}
-                  </span>
-                )}
-              </Link>
-            </div>
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Buscar medicamentos..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="block w-full pl-12 pr-12 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-2xl text-lg focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-400 transition-all"
+            />
+            {searchInput && (
+              <button
+                onClick={() => { setSearchInput(''); setSearchTerm(''); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-slate-200 text-slate-500"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
-        </div>
-      </nav>
-
-      {/* Mobile Search (visible only on mobile) */}
-      <div className="md:hidden px-4 py-3 bg-white border-b border-slate-200">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-slate-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Buscar..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="block w-full pl-10 pr-10 py-2.5 bg-slate-100 border-0 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20"
-          />
-          {searchInput && (
-            <button
-              onClick={() => setSearchInput('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
         </div>
       </div>
 
-      <main ref={mainRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
 
-        {/* Category Pills */}
-        <div className="mb-4">
-          <CategoryPills
-            categories={categories}
-            selectedCategory={selectedCategory}
-            onCategoryChange={handleCategoryChange}
-          />
-        </div>
-
-        {/* Active Filters */}
-        {activeFiltersList.length > 0 && (
+        {/* Selected Category Chip */}
+        {selectedCategory && selectedCategoryName && (
           <div className="mb-4">
-            <ActiveFilters
-              filters={activeFiltersList}
-              onRemove={handleRemoveFilter}
-              onClearAll={handleClearAllFilters}
-            />
+            <button
+              onClick={() => handleCategoryChange('')}
+              className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-100 text-emerald-800 rounded-xl font-semibold border-2 border-emerald-300 text-base"
+            >
+              {selectedCategoryName}
+              <X className="w-5 h-5" />
+            </button>
           </div>
         )}
 
-        {/* Main Layout: Sidebar + Content */}
-        <div className="flex gap-6">
-          {/* Desktop Filter Sidebar */}
-          <FilterSidebar {...filterProps} />
-
-          {/* Content Area */}
-          <div className="flex-1 min-w-0">
-            {/* Controls Bar */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
-              <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-                {/* Mobile Filter Button */}
+        {/* Categories Grid - Solo cuando NO hay categoría seleccionada y NO hay búsqueda */}
+        {!selectedCategory && !searchTerm && (
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-slate-800 mb-3">Categorias</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+              {visibleCategories.map((cat) => (
                 <button
-                  onClick={() => setShowFilterDrawer(true)}
-                  className="lg:hidden flex items-center gap-2 px-3 sm:px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-emerald-500/50 transition-all whitespace-nowrap"
+                  key={cat.id}
+                  onClick={() => handleCategoryChange(cat.slug)}
+                  className="flex items-center justify-center text-center px-3 py-3.5 bg-white border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700 transition-all min-h-[48px] leading-tight"
                 >
-                  <SlidersHorizontal className="w-4 h-4" />
-                  <span>Filtros</span>
-                  {activeFilterCount > 0 && (
-                    <span className="w-5 h-5 bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full">
-                      {activeFilterCount}
-                    </span>
-                  )}
+                  {cat.name}
                 </button>
-
-                <div className="relative min-w-[140px] sm:min-w-[160px]">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
-                    className="appearance-none w-full pl-3 sm:pl-4 pr-8 sm:pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-emerald-500/50 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
-                  >
-                    <option value="name">Nombre A-Z</option>
-                    <option value="name_desc">Nombre Z-A</option>
-                    <option value="price_asc">Menor precio</option>
-                    <option value="price_desc">Mayor precio</option>
-                    <option value="stock_desc">Mayor stock</option>
-                  </select>
-                  <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-                </div>
-
-                <div className="relative min-w-[100px] sm:min-w-[120px]">
-                  <select
-                    value={itemsPerPage}
-                    onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                    className="appearance-none w-full pl-3 sm:pl-4 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-emerald-500/50 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
-                  >
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </div>
-              </div>
-
-              {/* View Toggle + Count */}
-              <div className="flex items-center justify-between sm:justify-end gap-3">
-                {/* View Mode Toggle */}
-                <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 rounded-lg transition-all ${
-                      viewMode === 'list'
-                        ? 'bg-emerald-500 text-white shadow-sm'
-                        : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
-                    }`}
-                    title="Vista lista"
-                  >
-                    <List className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded-lg transition-all ${
-                      viewMode === 'grid'
-                        ? 'bg-emerald-500 text-white shadow-sm'
-                        : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
-                    }`}
-                    title="Vista galeria"
-                  >
-                    <LayoutGrid className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {products && (
-                  <div className="text-xs font-medium text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm whitespace-nowrap">
-                    {products.total.toLocaleString()} productos
-                  </div>
-                )}
-              </div>
+              ))}
             </div>
+            {categories.length > 8 && (
+              <button
+                onClick={() => setShowAllCategories(!showAllCategories)}
+                className="mt-3 flex items-center gap-1 text-emerald-600 font-semibold text-sm mx-auto"
+              >
+                {showAllCategories ? 'Ver menos' : `Ver todas (${categories.length})`}
+                <ChevronDown className={`w-4 h-4 transition-transform ${showAllCategories ? 'rotate-180' : ''}`} />
+              </button>
+            )}
+          </div>
+        )}
 
-            {/* Products View */}
-            {viewMode === 'list' ? (
-              /* List View - Table */
-              <div className="bg-white rounded-2xl shadow-[0_2px_12px_-4px_rgba(6,81,237,0.1)] border border-slate-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-slate-100 bg-slate-50/50">
-                        <th className="text-left py-3 sm:py-4 pl-4 sm:pl-6 pr-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Producto</th>
-                        <th className="text-left py-3 sm:py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Laboratorio</th>
-                        <th className="text-right py-3 sm:py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Precio</th>
-                        <th className="text-center py-3 sm:py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:table-cell">Estado</th>
-                        <th className="text-right py-3 sm:py-4 pl-4 pr-4 sm:pr-6 w-24 sm:w-28"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {isLoading ? (
-                        [...Array(10)].map((_, i) => (
-                          <tr key={i} className="animate-pulse">
-                            <td className="py-4 pl-4 sm:pl-6">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-100 rounded-lg" />
-                                <div className="h-4 bg-slate-100 rounded w-32 sm:w-48" />
-                              </div>
-                            </td>
-                            <td className="hidden md:table-cell px-4"><div className="h-4 bg-slate-100 rounded w-24" /></td>
-                            <td className="px-4"><div className="h-4 bg-slate-100 rounded w-16 ml-auto" /></td>
-                            <td className="hidden sm:table-cell px-4"><div className="h-4 bg-slate-100 rounded w-12 mx-auto" /></td>
-                            <td className="pr-4 sm:pr-6"><div className="h-8 bg-slate-100 rounded-lg w-full" /></td>
-                          </tr>
-                        ))
-                      ) : filteredProducts.length > 0 ? (
-                        filteredProducts.map((product) => (
-                          <tr key={product.id} className="group hover:bg-slate-50/80 transition-colors duration-150">
-                            <td className="py-3 sm:py-3.5 pl-4 sm:pl-6 pr-4">
-                              <Link href={`/producto/${product.slug}`} className="flex items-center gap-3">
-                                <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
-                                  {product.image_url ? (
-                                    <img
-                                      src={product.image_url}
-                                      alt={product.name}
-                                      loading="lazy"
-                                      className="w-full h-full object-cover"
-                                      onError={(e) => {
-                                        (e.target as HTMLImageElement).style.display = 'none';
-                                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                                      }}
-                                    />
-                                  ) : null}
-                                  <div className={`w-full h-full flex items-center justify-center text-slate-400 ${product.image_url ? 'hidden' : ''}`}>
-                                    <Package className="w-4 h-4 sm:w-5 sm:h-5" />
-                                  </div>
-                                </div>
-                                <div className="min-w-0">
-                                  <span className="text-xs sm:text-sm font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors line-clamp-2">
-                                    {product.name}
-                                  </span>
-                                  <span className="md:hidden block text-[10px] sm:text-xs text-slate-400 mt-0.5">
-                                    {product.laboratory || product.category_name}
-                                  </span>
-                                </div>
-                              </Link>
-                            </td>
-                            <td className="py-3.5 px-4 hidden md:table-cell">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
-                                {product.laboratory || product.category_name || 'General'}
-                              </span>
-                            </td>
-                            <td className="py-3.5 px-4 text-right">
-                              <span className="text-xs sm:text-sm font-bold text-slate-800 tracking-tight">
-                                {formatPrice(product.price)}
-                              </span>
-                            </td>
-                            <td className="py-3.5 px-4 text-center hidden sm:table-cell">
-                              <div className="flex items-center justify-center gap-1.5">
-                                <div className={`w-1.5 h-1.5 rounded-full ${product.stock > 5 ? 'bg-emerald-500' : product.stock > 0 ? 'bg-amber-500' : 'bg-red-500'}`} />
-                                <span className={`text-xs font-medium ${product.stock > 0 ? 'text-slate-600' : 'text-red-500'}`}>
-                                  {product.stock > 0 ? `${product.stock} un.` : 'Agotado'}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="py-3 px-2 sm:px-4 pr-4 sm:pr-6 text-right">
-                              {product.stock > 0 ? (
-                                <button
-                                  onClick={() => handleAddToCart(product)}
-                                  disabled={addingId === product.id}
-                                  className={`
-                                    inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200
-                                    ${addingId === product.id
-                                      ? 'bg-emerald-600 text-white shadow-inner scale-95'
-                                      : 'bg-white border border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-600 hover:shadow-sm active:scale-95'
-                                    }
-                                  `}
-                                >
-                                  {addingId === product.id ? <Check className="w-4 h-4" /> : 'Agregar'}
-                                </button>
-                              ) : (
-                                <span className="text-xs text-red-400 font-medium sm:hidden">Agotado</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={5} className="py-16 text-center">
-                            <div className="flex flex-col items-center justify-center text-slate-400">
-                              <Search className="w-8 h-8 mb-3 opacity-50" />
-                              <p className="text-sm">No se encontraron productos que coincidan.</p>
-                              {activeFilterCount > 0 && (
-                                <button
-                                  onClick={handleClearAllFilters}
-                                  className="mt-3 text-emerald-600 text-sm font-medium hover:underline"
-                                >
-                                  Limpiar filtros
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+        {/* Product Count */}
+        {products && (
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm text-slate-500 font-medium">
+              {searchTerm ? `Resultados para "${searchTerm}"` : selectedCategoryName || 'Todos los productos'}
+            </p>
+            <span className="text-sm text-slate-400">{products.total} productos</span>
+          </div>
+        )}
+
+        {/* Products Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl border-2 border-slate-100 p-3 animate-pulse">
+                <div className="aspect-square bg-slate-100 rounded-xl mb-3" />
+                <div className="h-4 bg-slate-100 rounded w-3/4 mb-2" />
+                <div className="h-6 bg-slate-100 rounded w-1/2 mb-3" />
+                <div className="h-11 bg-slate-100 rounded-xl" />
               </div>
-            ) : (
-              /* Grid View - Gallery */
-              <div>
-                {isLoading ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                    {[...Array(10)].map((_, i) => (
-                      <div key={i} className="bg-white rounded-xl border border-slate-100 p-2 sm:p-3 animate-pulse">
-                        <div className="aspect-square bg-slate-100 rounded-lg mb-2 sm:mb-3" />
-                        <div className="h-3 sm:h-4 bg-slate-100 rounded w-3/4 mb-2" />
-                        <div className="h-3 bg-slate-100 rounded w-1/2" />
+            ))}
+          </div>
+        ) : allProducts.length > 0 ? (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              {allProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="bg-white rounded-2xl border-2 border-slate-100 overflow-hidden flex flex-col hover:border-emerald-200 hover:shadow-md transition-all"
+                >
+                  {/* Image */}
+                  <Link href={`/producto/${product.slug}`} className="block">
+                    <div className="aspect-square bg-slate-50 relative overflow-hidden">
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          loading="lazy"
+                          className="w-full h-full object-contain p-2"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <div className={`absolute inset-0 flex items-center justify-center text-slate-300 ${product.image_url ? 'hidden' : ''}`}>
+                        <Package className="w-12 h-12" />
                       </div>
-                    ))}
-                  </div>
-                ) : filteredProducts.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                    {filteredProducts.map((product) => (
-                      <div
-                        key={product.id}
-                        className="group bg-white rounded-xl border border-slate-100 hover:border-emerald-200 hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col"
-                      >
-                        <Link href={`/producto/${product.slug}`} className="block">
-                          <div className="aspect-square bg-slate-50 relative overflow-hidden">
-                            {product.image_url ? (
-                              <img
-                                src={product.image_url}
-                                alt={product.name}
-                                loading="lazy"
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = 'none';
-                                  (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                                }}
-                              />
-                            ) : null}
-                            <div className={`absolute inset-0 flex items-center justify-center text-slate-300 ${product.image_url ? 'hidden' : ''}`}>
-                              <Package className="w-10 h-10 sm:w-12 sm:h-12" />
-                            </div>
-                            {/* Stock Badge */}
-                            <div className="absolute top-2 right-2">
-                              {product.stock === 0 ? (
-                                <span className="px-2 py-1 text-[9px] sm:text-[10px] font-bold bg-red-500 text-white rounded-full">Agotado</span>
-                              ) : product.stock <= 5 ? (
-                                <span className="px-2 py-1 text-[9px] sm:text-[10px] font-bold bg-amber-500 text-white rounded-full">{product.stock} un.</span>
-                              ) : null}
-                            </div>
-                          </div>
-                        </Link>
-                        <div className="p-2 sm:p-3 flex flex-col flex-1">
-                          <Link href={`/producto/${product.slug}`}>
-                            <h3 className="text-[11px] sm:text-xs font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors line-clamp-2 mb-1">
-                              {product.name}
-                            </h3>
-                          </Link>
-                          <span className="text-[9px] sm:text-[10px] text-slate-400 mb-2 line-clamp-1">
-                            {product.laboratory || product.category_name || 'General'}
+                      {product.stock <= 0 && (
+                        <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                          <span className="text-red-600 font-bold text-sm border-2 border-red-500 px-3 py-1.5 rounded-lg -rotate-6 bg-white">
+                            AGOTADO
                           </span>
-                          <div className="mt-auto flex items-center justify-between gap-1 sm:gap-2">
-                            <span className="text-xs sm:text-sm font-bold text-slate-800">
-                              {formatPrice(product.price)}
-                            </span>
-                            {product.stock > 0 && (
-                              <button
-                                onClick={() => handleAddToCart(product)}
-                                disabled={addingId === product.id}
-                                className={`p-1.5 sm:p-2 rounded-lg transition-all ${
-                                  addingId === product.id
-                                    ? 'bg-emerald-500 text-white scale-95'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-emerald-500 hover:text-white active:scale-95'
-                                }`}
-                              >
-                                {addingId === product.id ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
-                              </button>
-                            )}
-                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-white rounded-2xl border border-slate-100 py-16 text-center">
-                    <div className="flex flex-col items-center justify-center text-slate-400">
-                      <Search className="w-8 h-8 mb-3 opacity-50" />
-                      <p className="text-sm">No se encontraron productos que coincidan.</p>
-                      {activeFilterCount > 0 && (
+                      )}
+                    </div>
+                  </Link>
+
+                  {/* Info */}
+                  <div className="p-3 flex flex-col flex-1">
+                    <Link href={`/producto/${product.slug}`}>
+                      <h3 className="font-bold text-slate-800 text-sm leading-snug line-clamp-2 mb-1 min-h-[2.5rem]">
+                        {product.name}
+                      </h3>
+                    </Link>
+                    {product.laboratory && (
+                      <span className="text-xs text-slate-400 mb-2 truncate">{product.laboratory}</span>
+                    )}
+
+                    {/* Price */}
+                    <div className="mt-auto">
+                      <span className="text-xl font-black text-emerald-700 block mb-2">
+                        {formatPrice(product.price)}
+                      </span>
+
+                      {/* Add to Cart Button - Full width, grande */}
+                      {product.stock > 0 ? (
                         <button
-                          onClick={handleClearAllFilters}
-                          className="mt-3 text-emerald-600 text-sm font-medium hover:underline"
+                          onClick={() => handleAddToCart(product)}
+                          disabled={addingId === product.id}
+                          className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all min-h-[44px] ${
+                            addingId === product.id
+                              ? 'bg-emerald-600 text-white scale-95'
+                              : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/20 active:scale-95'
+                          }`}
                         >
-                          Limpiar filtros
+                          {addingId === product.id ? (
+                            <Check className="w-5 h-5" />
+                          ) : (
+                            <>
+                              <ShoppingCart className="w-4 h-4" />
+                              <span>Agregar</span>
+                            </>
+                          )}
                         </button>
+                      ) : (
+                        <div className="w-full py-3 rounded-xl bg-slate-100 text-slate-400 text-center font-semibold text-sm">
+                          Sin stock
+                        </div>
                       )}
                     </div>
                   </div>
-                )}
+                </div>
+              ))}
+            </div>
+
+            {/* Load More Button */}
+            {hasMore && (
+              <div className="mt-6 text-center">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  className="w-full sm:w-auto px-8 py-4 bg-white border-2 border-emerald-300 text-emerald-700 rounded-2xl font-bold text-lg hover:bg-emerald-50 transition-all min-h-[56px] disabled:opacity-50"
+                >
+                  {isLoadingMore ? 'Cargando...' : 'Cargar mas productos'}
+                </button>
               </div>
             )}
-
-            {/* Pagination Footer */}
-            {products && products.total_pages > 1 && (
-              <div className="mt-6 bg-white rounded-xl border border-slate-100 px-4 sm:px-6 py-4 flex items-center justify-between">
-                <span className="text-xs text-slate-400 hidden sm:inline-block">
-                  Pagina {currentPage} de {products.total_pages}
-                </span>
-                <div className="flex items-center gap-1 sm:gap-1.5 mx-auto sm:mx-0">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="p-1.5 sm:p-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:shadow-sm disabled:opacity-30 disabled:hover:shadow-none transition-all"
-                  >
-                    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </button>
-
-                  <div className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2">
-                    {getPageNumbers().map((page, idx) => (
-                      typeof page === 'number' ? (
-                        <button
-                          key={idx}
-                          onClick={() => setCurrentPage(page)}
-                          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-xs font-semibold transition-all ${
-                            currentPage === page
-                              ? 'bg-emerald-500 text-white shadow-sm'
-                              : 'text-slate-500 hover:bg-slate-50'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      ) : (
-                        <span key={idx} className="text-slate-300 text-xs px-1">...</span>
-                      )
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.min(products.total_pages, p + 1))}
-                    disabled={currentPage === products.total_pages}
-                    className="p-1.5 sm:p-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:shadow-sm disabled:opacity-30 disabled:hover:shadow-none transition-all"
-                  >
-                    <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </button>
-                </div>
-              </div>
+          </>
+        ) : (
+          <div className="bg-white rounded-2xl border-2 border-slate-100 py-16 text-center">
+            <Search className="w-10 h-10 text-slate-300 mx-auto mb-4" />
+            <p className="text-lg text-slate-500 font-medium">No se encontraron productos</p>
+            {(selectedCategory || searchTerm) && (
+              <button
+                onClick={() => { setSelectedCategory(''); setSearchInput(''); setSearchTerm(''); }}
+                className="mt-4 text-emerald-600 font-bold hover:underline text-lg"
+              >
+                Ver todos los productos
+              </button>
             )}
           </div>
-        </div>
+        )}
       </main>
 
-      {/* Mobile Filter Drawer */}
-      <FilterDrawer
-        isOpen={showFilterDrawer}
-        onClose={() => setShowFilterDrawer(false)}
-        resultCount={products?.total || 0}
-        {...filterProps}
-      />
-
-      {/* Mobile Bottom Cart Bar */}
+      {/* Mobile Bottom Cart Bar - Grande y siempre visible */}
       {cart && cart.item_count > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 sm:hidden bg-white border-t border-slate-200 p-3 z-40 animate-in slide-in-from-bottom">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-slate-200 p-3 z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
           <Link
             href="/carrito"
-            className="flex items-center justify-between bg-emerald-600 text-white rounded-xl px-4 py-3 shadow-lg"
+            className="flex items-center justify-between bg-emerald-600 text-white rounded-2xl px-5 py-4 shadow-lg"
           >
             <div className="flex items-center gap-3">
               <div className="relative">
-                <ShoppingCart className="w-5 h-5" />
-                <span className="absolute -top-2 -right-2 w-4 h-4 bg-white text-emerald-600 text-[10px] font-bold flex items-center justify-center rounded-full">
+                <ShoppingCart className="w-6 h-6" />
+                <span className="absolute -top-2 -right-2 w-5 h-5 bg-white text-emerald-600 text-xs font-bold flex items-center justify-center rounded-full">
                   {cart.item_count}
                 </span>
               </div>
-              <span className="font-semibold">Ver carrito</span>
+              <span className="font-bold text-lg">Ver carrito</span>
             </div>
-            <span className="font-bold">{formatPrice(cart.total)}</span>
+            <span className="font-black text-xl">{formatPrice(cart.total)}</span>
           </Link>
         </div>
       )}

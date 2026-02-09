@@ -3,22 +3,25 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    font-size: 18px;
+  }
   body {
-    @apply bg-slate-50 text-slate-900 antialiased selection:bg-emerald-200 selection:text-emerald-900;
+    @apply bg-white text-slate-900 antialiased selection:bg-emerald-200 selection:text-emerald-900;
   }
 }
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98];
+    @apply inline-flex items-center justify-center px-6 py-3.5 rounded-xl font-semibold text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px];
   }
 
   .btn-primary {
-    @apply bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/30 focus:ring-emerald-500 border border-transparent;
+    @apply bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-600/25 hover:shadow-emerald-600/40 focus:ring-emerald-500 border border-transparent text-lg;
   }
 
   .btn-secondary {
-    @apply bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 shadow-sm hover:shadow focus:ring-slate-200;
+    @apply bg-white text-slate-700 hover:bg-slate-50 border-2 border-slate-200 shadow-sm hover:shadow focus:ring-slate-200;
   }
 
   .btn-outline {
@@ -30,17 +33,17 @@
   }
 
   .input {
-    @apply w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-200 shadow-sm;
+    @apply w-full px-4 py-3.5 bg-white border-2 border-slate-200 rounded-xl text-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-200 min-h-[52px];
   }
 
   .card {
-    @apply bg-white rounded-2xl shadow-sm border border-slate-100/50 hover:shadow-md transition-shadow duration-300;
+    @apply bg-white rounded-2xl shadow-sm border border-slate-200 transition-shadow duration-300;
   }
-  
+
   .glass-nav {
-    @apply bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shadow-sm;
+    @apply bg-white/95 backdrop-blur-xl border-b-2 border-slate-100 shadow-sm;
   }
-  
+
   .container-custom {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }

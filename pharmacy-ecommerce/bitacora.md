@@ -9,96 +9,101 @@
 
 ---
 
-## TAREA EN PROGRESO: Sistema de Filtros + Descripciones (Febrero 2026)
+## COMPLETADO: Rediseño Mobile-First para Tercera Edad (Febrero 2026)
 
 ### Problema
-1. **Filtros primitivos**: Solo un dropdown de categorías. La API ya soporta filtrar por laboratorio, tipo receta, rango precio, principio activo - pero el UI no los expone.
-2. **Descripciones inútiles**: Dump mecánico de metadata en texto plano ("Acción terapéutica: X. Principio activo: Y. Laboratorio: Z...") que repite info ya visible en otros campos.
+El sitio tenía texto pequeño (11-14px), botones diminutos, filtros complejos (sidebar, pills, dropdowns), y una UX pensada para usuarios tech-savvy. El público principal son adultos mayores en Coquimbo, Chile, que usan celular.
 
 ### Objetivo
-Transformar a nivel farmacia profesional (Cruz Verde, Ahumada): sidebar de filtros en desktop, drawer en mobile, pills de categorías, badges en producto, tabla info estructurada.
+Rediseño completo mobile-first: texto 18px+ base, botones 48px+ touch targets, interfaz extremadamente simple, perfecto en cualquier celular.
 
-### Estado de las tareas
+### Cambios realizados
 
-#### COMPLETADO - Componentes de filtros creados:
-Los 5 componentes de filtros ya están escritos y listos:
-- `src/components/filters/FilterContent.tsx` - UI compartido de filtros (tipo venta, categorías, laboratorio buscable, rango precio, disponibilidad)
-- `src/components/filters/FilterSidebar.tsx` - Wrapper desktop: sidebar sticky w-64 a la izquierda
-- `src/components/filters/FilterDrawer.tsx` - Wrapper mobile: drawer overlay desde abajo con backdrop
-- `src/components/filters/CategoryPills.tsx` - Fila horizontal scrollable de pills de categorías
-- `src/components/filters/ActiveFilters.tsx` - Chips removibles de filtros activos con "Limpiar todos"
+#### 1. `globals.css` — Base tipográfica agrandada
+- `html { font-size: 18px }` (antes ~14-16px)
+- `.btn`: min-h-[48px], py-3.5, text-base
+- `.btn-primary`: text-lg, sombra pronunciada
+- `.input`: min-h-[52px], border-2, text-lg
+- Body bg: white con antialiased
 
-#### COMPLETADO - Homepage refactoreada (`src/app/page.tsx`):
-El homepage ya fue reescrito con:
-- Layout sidebar (desktop lg+) + contenido a la derecha
-- CategoryPills arriba del grid
-- ActiveFilters chips debajo de pills
-- Botón "Filtros (N)" en mobile que abre FilterDrawer
-- Todos los filtros conectados a la API: category, laboratory, prescription_type, min_price, max_price, in_stock
-- `loadLaboratories()` carga labs al inicio via `productApi.getLaboratories()`
-- Estado de filtros con `useState` + `useMemo` para conteo y lista de filtros activos
-- Se eliminó el dropdown de categoría viejo (mal etiquetado "Todos los laboratorios")
-- Se eliminó el botón "Disponibles" del controls bar (movido al sidebar)
-- Grid view ajustado a lg:grid-cols-4 (era 5, ahora hay sidebar)
+#### 2. `Navbar.tsx` — Header simplificado
+- Una sola fila: Logo + Avatar usuario + Botón carrito
+- Eliminado: botón "Iniciar Sesión" verde (reemplazado por icono avatar)
+- Carrito prominente con emerald-50 bg y badge de count
+- Menú usuario click-to-open con backdrop overlay
+- Búsqueda movida al homepage inline
 
-#### COMPLETADO - CSS actualizado (`src/app/globals.css`):
-- Agregado `.scrollbar-hide` utility para pills horizontales
-- Agregados `@keyframes slideUp` y `fadeIn` para animación del drawer mobile
+#### 3. `page.tsx` — Homepage reescrita completamente
+- **ELIMINADO**: vista lista, sort dropdown, items-per-page, view mode toggle, paginación numérica, FilterSidebar, FilterDrawer, CategoryPills, ActiveFilters
+- **AGREGADO**: Grid de categorías 2 cols con botones grandes (52px), búsqueda siempre visible (text-lg, border-2), "Cargar más" en vez de paginación, cards con botón "Agregar" full-width, barra carrito sticky bottom (64px)
+- Filtro `in_stock: true` por defecto, 20 items por página acumulados
 
-#### COMPLETADO - Página de producto (`src/app/producto/[slug]/page.tsx`):
-Rediseñada con:
+#### 4. `producto/[slug]/page.tsx` — Detalle de producto agrandado
+- Precio: text-4xl font-black (antes text-3xl)
+- Badges: px-3 py-1.5 rounded-xl text-sm (antes px-2.5 py-1 text-xs)
+- Info table: py-3, border-2 (antes py-2.5, border)
+- Botones +/-: w-12 h-12 (antes p-3), cantidad text-xl
+- "Agregar al carrito": min-h-[64px] text-xl (antes py-4 text-lg)
+- Envío/seguridad: iconos w-6 h-6 con bg rounded-xl
+- Breadcrumb reemplazado por botón "Volver" simple
+- Feedback visual: checkmark "Agregado" antes de navegar al carrito
 
-1. **Badges row** (entre nombre y precio):
-   - Tipo receta: verde (Venta Directa), amarillo (Receta Médica), rojo (Receta Retenida)
-   - Bioequivalente: badge azul (detección regex en description)
-   - Categoría: badge slate clickeable → navega a `/?category=<slug>`
+#### 5. `carrito/page.tsx` — Carrito agrandado
+- Imágenes: w-24 h-24 (antes w-20 h-20) con `<img>` directo
+- Botones +/-: w-11 h-11 (antes p-1.5), cantidad text-lg font-bold
+- Subtotal: text-lg font-black
+- Botón eliminar: w-10 h-10 con hover bg-red-50
+- Total: text-3xl font-black text-emerald-700
+- "Continuar al pago": min-h-[56px] text-lg font-bold rounded-2xl
+- Layout: stacked (no sidebar) para mobile
 
-2. **Tabla de información estructurada** (entre precio y envío/seguridad):
-   - Filas condicionales: Principio Activo, Presentación, Acción Terapéutica
-   - NO repite laboratorio (ya arriba), NO muestra registro sanitario/control legal
+#### 6. `checkout/page.tsx` — Checkout agrandado
+- Método pago cards: min-h-[80px], p-5, rounded-2xl, iconos w-7 h-7
+- Labels: font-semibold text-slate-700
+- Inputs: heredan .input (min-h-[52px] border-2 text-lg)
+- Total: text-3xl font-black
+- Botón pagar: min-h-[60px] text-lg font-bold
+- Error msg: border-2 rounded-xl font-semibold
+- Layout: stacked (no sidebar) para mobile
 
-3. **Eliminado** el bloque `prose prose-sm` que mostraba description como texto raw
+#### 7. `checkout/reservation/page.tsx` — Reserva agrandada
+- Código retiro: text-5xl font-black (antes text-4xl)
+- Botón copiar: min-w-[48px] min-h-[48px]
+- Instrucciones: text-base (antes text-sm), space-y-3
+- Botón "Seguir comprando": min-h-[56px] text-lg
 
-#### COMPLETADO - Build verificado:
-- `next build` exitoso sin errores de TypeScript ni compilación
-- 24 páginas generadas correctamente
+#### 8. `layout.tsx` — Footer actualizado
+- Nombre farmacia: text-lg font-bold
+- Ubicación: "Coquimbo, Chile"
+- Copyright con año dinámico
+- Border-t-2 para visibilidad
 
-#### PENDIENTE - Deploy:
-1. `git add` los archivos modificados y nuevos
-2. `git commit` y `git push origin main` para auto-deploy en Vercel
-3. Verificar en https://tu-farmacia.vercel.app que filtros y página de producto funcionan
+### Build
+- `next build` exitoso, 24 páginas, 0 errores TypeScript
 
-### Archivos modificados (sin commitear):
-```
-MODIFICADOS:
-  pharmacy-ecommerce/apps/web/src/app/globals.css     # scrollbar-hide + keyframes
-  pharmacy-ecommerce/apps/web/src/app/page.tsx         # refactor completo con filtros
+### Plan detallado
+Ver `.claude/plans/tranquil-discovering-alpaca.md`
 
-NUEVOS:
-  pharmacy-ecommerce/apps/web/src/components/filters/FilterContent.tsx
-  pharmacy-ecommerce/apps/web/src/components/filters/FilterSidebar.tsx
-  pharmacy-ecommerce/apps/web/src/components/filters/FilterDrawer.tsx
-  pharmacy-ecommerce/apps/web/src/components/filters/CategoryPills.tsx
-  pharmacy-ecommerce/apps/web/src/components/filters/ActiveFilters.tsx
+---
 
-MODIFICADO:
-  pharmacy-ecommerce/apps/web/src/app/producto/[slug]/page.tsx  # badges + tabla info (COMPLETADO)
-```
+## COMPLETADO: Sistema de Filtros + Descripciones (Febrero 2026)
 
-### API ya disponible (NO necesita cambios):
-```typescript
-// Filtros en productApi.list():
-category, laboratory, prescription_type, min_price, max_price, in_stock, search
+### Cambios realizados
+- 5 componentes de filtros creados (FilterContent, FilterSidebar, FilterDrawer, CategoryPills, ActiveFilters)
+- Homepage refactoreada con sidebar filtros + pills
+- Página de producto con badges (receta, bioequivalente, categoría) y tabla info estructurada
+- **NOTA**: Los componentes de filtros fueron reemplazados por el rediseño mobile-first (categorías como grid simple)
 
-// RPCs para opciones de filtros:
-productApi.getLaboratories()        // string[]
-productApi.getTherapeuticActions()  // string[]
-productApi.getActiveIngredients()   // string[]
-productApi.listCategories()         // Category[]
-```
+---
 
-### Referencia del plan completo:
-Ver `.claude/plans/shimmering-wishing-pearl.md` para el plan detallado con diseño de cada componente.
+## COMPLETADO: Corrección páginas de pago (Febrero 2026)
+
+### Cambios
+- Formato precios CLP corregido ($3990.00 → $3.990) en mis-pedidos
+- Locale es-AR → es-CL para fechas
+- Estado `reserved` agregado en mis-pedidos, admin/ordenes (4 archivos)
+- checkout/failure rediseñado (no "Volver al carrito", sino "Volver a intentar")
+- checkout/success, pending mejorados con Suspense wrappers
 
 ---
 
@@ -149,43 +154,19 @@ productos-naturales, otros
 **Antes**: 3 microservicios Rust en Railway + PostgreSQL + Redis
 **Después**: Supabase (DB+Auth) + Next.js API routes
 
-Pasos completados:
-1. Schema SQL idempotente con RLS, triggers, funciones RPC
-2. Supabase clients (browser + server + middleware)
-3. Reescritura de `api.ts` (Supabase JS directo), `auth.ts` (Supabase Auth), `cart.ts` (localStorage only)
-4. 10 API routes (checkout, webhook, admin CRUD)
-5. Actualización de todas las páginas (eliminado parámetro `token` en todas las llamadas)
-6. Limpieza de `next.config.js` (eliminados rewrites a Railway)
-7. Variables de entorno en Vercel (6 env vars)
-8. Deploy producción exitoso
-9. Usuario admin creado (timadapa@gmail.com)
-
 ### 2026-02-09: Importación de productos (COMPLETADA)
 
 - 1189 productos importados desde Excel
-- Mapeo inteligente de categorías (acción terapéutica → categoría, con fallback por departamento)
-- Precios parseados de formato CLP ("$3,990") a integer (3990)
-- Descripciones generadas con: acción terapéutica, principio activo, presentación, receta, laboratorio, registro sanitario, bioequivalencia
-- Búsqueda automática de imágenes via DuckDuckGo: **1075/1188 (90.5%)** en 107 minutos
-- Corrección masiva http→https: 24+55=79 URLs corregidas en DB
+- Búsqueda automática de imágenes: **1075/1188 (90.5%)**
+- Corrección masiva http→https: 79 URLs corregidas
 
 ### 2026-02-08: Corrección errores checkout y Mixed Content (COMPLETADA)
 
-**Errores detectados en producción:**
-1. Mixed Content: 24 productos tenían image_url con `http://` en vez de `https://`
-2. MercadoPago back_urls error: `NEXT_PUBLIC_SITE_URL` no estaba configurado correctamente
-3. guest-checkout 500: causado por error #2
-4. Algunas imágenes con ERR_NAME_NOT_RESOLVED (dominios caídos)
-
-**Correcciones aplicadas:**
-1. **NEXT_PUBLIC_SITE_URL**: Re-configurado en Vercel producción como `https://tu-farmacia.vercel.app`
-2. **Mixed Content DB**: Actualización SQL de 24 productos `http://` → `https://` en Supabase
-3. **Mixed Content código**: `sanitizeImageUrl()` en `api.ts` convierte automáticamente `http://` → `https://`
-4. **Script imágenes**: `update_images_supabase.py` ahora convierte URLs a `https://` antes de guardar
-5. **guest-checkout**: Ahora guarda `guest_name` y `guest_surname` en la orden
-6. **URL robusta**: `siteUrl` en checkout/guest-checkout hace `.trim().replace(/\/+$/, '')` para evitar trailing slashes
-7. **Errores usuario**: Checkout muestra mensajes amigables en vez de JSON raw de MercadoPago
-8. **Logging**: console.error en guest-checkout para debug de errores MercadoPago
+- NEXT_PUBLIC_SITE_URL configurado
+- Mixed Content DB: 24 productos http:// → https://
+- sanitizeImageUrl() en api.ts
+- guest-checkout: guarda guest_name/guest_surname
+- Errores usuario amigables en checkout
 
 ---
 
@@ -195,14 +176,18 @@ Pasos completados:
 apps/web/
 ├── src/lib/supabase/client.ts    # Cliente browser (anon key)
 ├── src/lib/supabase/server.ts    # Cliente server (service role)
-├── src/lib/api.ts                # API de productos/órdenes (tiene TODOS los filtros)
+├── src/lib/api.ts                # API de productos/órdenes
 ├── src/store/auth.ts             # Zustand auth (Supabase Auth)
 ├── src/store/cart.ts             # Zustand cart (localStorage)
 ├── src/middleware.ts              # Auth session refresh
 ├── src/app/api/                  # 10 API routes
-├── src/app/page.tsx              # Homepage con filtros (REFACTOREADO)
-├── src/app/producto/[slug]/page.tsx  # Detalle producto (PENDIENTE rediseño)
-└── src/components/filters/       # 5 componentes de filtros (NUEVOS)
+├── src/app/page.tsx              # Homepage mobile-first (REDISEÑADO)
+├── src/app/producto/[slug]/page.tsx  # Detalle producto (REDISEÑADO)
+├── src/app/carrito/page.tsx      # Carrito (REDISEÑADO)
+├── src/app/checkout/page.tsx     # Checkout (REDISEÑADO)
+├── src/app/checkout/reservation/page.tsx  # Reserva (REDISEÑADO)
+├── src/components/Navbar.tsx     # Navbar simplificado (REDISEÑADO)
+└── src/app/globals.css           # Base 18px (REDISEÑADO)
 
 scripts/
 ├── import_to_supabase.js         # Importar Excel → Supabase
@@ -221,3 +206,5 @@ supabase/migrations/
 - `vercel link` puede sobrescribir `.env.local` - siempre hacer backup
 - Deploy via `git push origin main` (auto-deploy GitHub integration)
 - Root dir en Vercel: `pharmacy-ecommerce/apps/web`
+- **Build**: usar `./node_modules/.bin/next build` (NO `npx next build` que usa v16)
+- **Diseño**: Mobile-first, 18px base, 48px+ touch targets, alto contraste

@@ -19,10 +19,16 @@ export default function RootLayout({
     <html lang="es">
       <body className={inter.className}>
         <main className="min-h-screen">{children}</main>
-        <footer className="bg-white border-t border-gray-100 py-8 mt-12">
+        <footer className="bg-white border-t-2 border-slate-100 py-8 mt-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center text-gray-500 text-sm">
-              <p>&copy; 2024 Tu Farmacia. Todos los derechos reservados.</p>
+            <div className="text-center space-y-3">
+              <p className="font-bold text-slate-800 text-lg">Tu Farmacia</p>
+              <p className="text-slate-500">
+                Coquimbo, Chile
+              </p>
+              <p className="text-slate-400 text-sm">
+                &copy; {new Date().getFullYear()} Tu Farmacia. Todos los derechos reservados.
+              </p>
             </div>
           </div>
         </footer>
