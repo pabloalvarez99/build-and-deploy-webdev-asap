@@ -18,6 +18,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={inter.className}>
+        <Navbar />
         <main className="min-h-screen">{children}</main>
         <footer className="bg-white border-t-2 border-slate-100 py-8 mt-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
