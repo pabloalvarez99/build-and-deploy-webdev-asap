@@ -56,8 +56,15 @@ export const productApi = {
 
     if (activeOnly) query = query.eq('active', true);
     if (params?.category) {
-      // Filter by category slug via join
-      query = query.eq('categories.slug', params.category);
+      // Lookup category ID from slug, then filter directly by category_id
+      const { data: cat } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('slug', params.category)
+        .single();
+      if (cat) {
+        query = query.eq('category_id', cat.id);
+      }
     }
     if (params?.laboratory) query = query.eq('laboratory', params.laboratory);
     if (params?.therapeutic_action) query = query.eq('therapeutic_action', params.therapeutic_action);
@@ -102,13 +109,7 @@ export const productApi = {
     const { data, error, count } = await query;
     if (error) throw new Error(error.message);
 
-    // If filtering by category slug, we need to filter out products where categories is null
-    // (because the inner join filter on categories.slug returns null categories for non-matching)
-    let products = (data || []).map(transformProduct);
-    if (params?.category) {
-      products = products.filter(p => p.category_slug === params.category);
-    }
-
+    const products = (data || []).map(transformProduct);
     const total = count || 0;
     return {
       products,

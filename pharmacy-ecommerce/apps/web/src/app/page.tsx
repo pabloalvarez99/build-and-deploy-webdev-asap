@@ -1,11 +1,43 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { productApi, PaginatedProducts, Category, Product } from '@/lib/api';
 import { Search, ShoppingCart, Check, X, ChevronUp, Package, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
 import { formatPrice } from '@/lib/format';
+
+// Emoji icons per category slug for visual recognition
+const categoryIcons: Record<string, string> = {
+  'dolor-fiebre': '💊',
+  'sistema-digestivo': '🫁',
+  'sistema-cardiovascular': '❤️',
+  'sistema-nervioso': '🧠',
+  'sistema-respiratorio': '🫁',
+  'dermatologia': '🧴',
+  'oftalmologia': '👁️',
+  'salud-femenina': '🌸',
+  'diabetes-metabolismo': '🩸',
+  'antibioticos-infecciones': '🦠',
+  'vitaminas-suplementos': '💪',
+  'higiene-cuidado-personal': '🧼',
+  'bebes-ninos': '👶',
+  'adulto-mayor': '🧓',
+  'insumos-medicos': '🩺',
+  'productos-naturales': '🌿',
+  'otros': '📦',
+};
+
+// Priority order: most relevant for elderly users first
+const prioritySlugs = [
+  'dolor-fiebre',
+  'sistema-cardiovascular',
+  'diabetes-metabolismo',
+  'vitaminas-suplementos',
+  'sistema-digestivo',
+  'sistema-nervioso',
+];
 
 // Toast notification - grande para adultos mayores
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
@@ -27,6 +59,15 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
 }
 
 export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50" />}>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+function HomeContent() {
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState<PaginatedProducts | null>(null);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -44,6 +85,12 @@ export default function Home() {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const ITEMS_PER_PAGE = 20;
+
+  // Read category from URL on mount
+  useEffect(() => {
+    const cat = searchParams.get('category');
+    if (cat) setSelectedCategory(cat);
+  }, [searchParams]);
 
   // Scroll listener
   useEffect(() => {
@@ -129,11 +176,27 @@ export default function Home() {
     setSelectedCategory(slug);
     setCurrentPage(1);
     setAllProducts([]);
+    // Sync URL
+    if (slug) {
+      window.history.replaceState({}, '', `/?category=${slug}`);
+    } else {
+      window.history.replaceState({}, '', '/');
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   const selectedCategoryName = categories.find(c => c.slug === selectedCategory)?.name;
-  const visibleCategories = showAllCategories ? categories : categories.slice(0, 8);
+
+  // Sort categories: priority ones first, then the rest alphabetically
+  const sortedCategories = [...categories].sort((a, b) => {
+    const aIdx = prioritySlugs.indexOf(a.slug);
+    const bIdx = prioritySlugs.indexOf(b.slug);
+    if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+    if (aIdx !== -1) return -1;
+    if (bIdx !== -1) return 1;
+    return a.name.localeCompare(b.name);
+  });
+  const visibleCategories = showAllCategories ? sortedCategories : sortedCategories.slice(0, 6);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -201,18 +264,19 @@ export default function Home() {
                 <button
                   key={cat.id}
                   onClick={() => handleCategoryChange(cat.slug)}
-                  className="flex items-center justify-center text-center px-3 py-3.5 bg-white border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700 transition-all min-h-[48px] leading-tight"
+                  className="flex items-center gap-2 justify-center text-center px-3 py-3.5 bg-white border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700 transition-all min-h-[52px] leading-tight"
                 >
-                  {cat.name}
+                  <span className="text-lg">{categoryIcons[cat.slug] || '📦'}</span>
+                  <span>{cat.name}</span>
                 </button>
               ))}
             </div>
-            {categories.length > 8 && (
+            {sortedCategories.length > 6 && (
               <button
                 onClick={() => setShowAllCategories(!showAllCategories)}
                 className="mt-3 flex items-center gap-1 text-emerald-600 font-semibold text-sm mx-auto"
               >
-                {showAllCategories ? 'Ver menos' : `Ver todas (${categories.length})`}
+                {showAllCategories ? 'Ver menos' : `Ver todas (${sortedCategories.length})`}
                 <ChevronDown className={`w-4 h-4 transition-transform ${showAllCategories ? 'rotate-180' : ''}`} />
               </button>
             )}
@@ -344,7 +408,7 @@ export default function Home() {
             <p className="text-lg text-slate-500 font-medium">No se encontraron productos</p>
             {(selectedCategory || searchTerm) && (
               <button
-                onClick={() => { setSelectedCategory(''); setSearchInput(''); setSearchTerm(''); }}
+                onClick={() => { handleCategoryChange(''); setSearchInput(''); setSearchTerm(''); }}
                 className="mt-4 text-emerald-600 font-bold hover:underline text-lg"
               >
                 Ver todos los productos
