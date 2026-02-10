@@ -16,7 +16,9 @@ import {
   X,
   Calendar,
   Search,
-  RefreshCw
+  RefreshCw,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 
 const statusOptions = [
@@ -153,6 +155,28 @@ export default function AdminOrdersPage() {
     } catch (error) {
       console.error('Error updating status:', error);
       alert('Error al actualizar el estado');
+    }
+  };
+
+  const handleApproveReservation = async (orderId: string) => {
+    if (!confirm('Aprobar esta reserva? El stock de los productos se reducira.')) return;
+    try {
+      await orderApi.approveReservation(orderId);
+      loadOrders();
+    } catch (error) {
+      console.error('Error approving reservation:', error);
+      alert(error instanceof Error ? error.message : 'Error al aprobar la reserva');
+    }
+  };
+
+  const handleRejectReservation = async (orderId: string) => {
+    if (!confirm('Rechazar esta reserva? La orden sera cancelada.')) return;
+    try {
+      await orderApi.rejectReservation(orderId);
+      loadOrders();
+    } catch (error) {
+      console.error('Error rejecting reservation:', error);
+      alert(error instanceof Error ? error.message : 'Error al rechazar la reserva');
     }
   };
 
@@ -414,20 +438,39 @@ export default function AdminOrdersPage() {
                         {formatPrice(order.total)}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="relative">
-                          <select
-                            value={order.status}
-                            onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                            className={`appearance-none pr-8 pl-3 py-1 rounded-full text-sm font-medium cursor-pointer ${currentStatus?.color || 'bg-gray-100 text-gray-800'}`}
-                          >
-                            {statusOptions.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" />
-                        </div>
+                        {order.status === 'reserved' ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleApproveReservation(order.id)}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition-colors"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                              Aprobar
+                            </button>
+                            <button
+                              onClick={() => handleRejectReservation(order.id)}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium bg-red-100 text-red-800 hover:bg-red-200 transition-colors"
+                            >
+                              <XCircle className="w-4 h-4" />
+                              Rechazar
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="relative">
+                            <select
+                              value={order.status}
+                              onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                              className={`appearance-none pr-8 pl-3 py-1 rounded-full text-sm font-medium cursor-pointer ${currentStatus?.color || 'bg-gray-100 text-gray-800'}`}
+                            >
+                              {statusOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </select>
+                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" />
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <Link

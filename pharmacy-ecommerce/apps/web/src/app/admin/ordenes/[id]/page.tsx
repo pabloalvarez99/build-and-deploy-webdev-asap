@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { orderApi, OrderWithItems } from '@/lib/api';
-import { ArrowLeft, Package, MapPin, FileText, User, Mail, Printer, Check, Clock, Truck, CheckCircle, XCircle, Store } from 'lucide-react';
+import { ArrowLeft, Package, MapPin, FileText, User, Mail, Printer, Check, Clock, Truck, CheckCircle, XCircle, Store, Phone } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 const statusOptions = [
@@ -19,7 +19,7 @@ const statusOptions = [
 ];
 
 const statusFlow = ['pending', 'paid', 'processing', 'shipped', 'delivered'];
-const reservedFlow = ['reserved', 'paid', 'processing', 'shipped', 'delivered'];
+const reservedFlow = ['reserved', 'processing', 'delivered'];
 
 const statusIcons: Record<string, React.ReactNode> = {
   pending: <Clock className="w-5 h-5" />,
@@ -99,6 +99,7 @@ export default function AdminOrderDetailPage() {
 
   const [order, setOrder] = useState<OrderWithItems | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {
@@ -128,6 +129,36 @@ export default function AdminOrderDetailPage() {
     } catch (error) {
       console.error('Error updating status:', error);
       alert('Error al actualizar el estado');
+    }
+  };
+
+  const handleApproveReservation = async () => {
+    if (!order) return;
+    if (!confirm('Aprobar esta reserva? El stock de los productos se reducira.')) return;
+    setIsProcessing(true);
+    try {
+      await orderApi.approveReservation(order.id);
+      loadOrder();
+    } catch (error) {
+      console.error('Error approving reservation:', error);
+      alert(error instanceof Error ? error.message : 'Error al aprobar la reserva');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleRejectReservation = async () => {
+    if (!order) return;
+    if (!confirm('Rechazar esta reserva? La orden sera cancelada.')) return;
+    setIsProcessing(true);
+    try {
+      await orderApi.rejectReservation(order.id);
+      loadOrder();
+    } catch (error) {
+      console.error('Error rejecting reservation:', error);
+      alert(error instanceof Error ? error.message : 'Error al rechazar la reserva');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -181,18 +212,91 @@ export default function AdminOrderDetailPage() {
           <p className="text-gray-500 dark:text-gray-400 mt-1">{date}</p>
         </div>
 
-        <select
-          value={order.status}
-          onChange={(e) => handleStatusChange(e.target.value)}
-          className={`px-4 py-2 rounded-lg font-medium ${currentStatus?.color || 'bg-gray-100'}`}
-        >
-          {statusOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        {order.status !== 'reserved' && (
+          <select
+            value={order.status}
+            onChange={(e) => handleStatusChange(e.target.value)}
+            className={`px-4 py-2 rounded-lg font-medium ${currentStatus?.color || 'bg-gray-100'}`}
+          >
+            {statusOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        )}
+        {order.status === 'reserved' && (
+          <span className={`px-4 py-2 rounded-lg font-medium ${currentStatus?.color || 'bg-amber-100 text-amber-800'}`}>
+            Reservado
+          </span>
+        )}
       </div>
+
+      {/* Reservation Approval Section */}
+      {order.status === 'reserved' && (
+        <div className="card border-2 border-amber-300 bg-amber-50 dark:bg-amber-900/20 p-6 mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Store className="w-6 h-6 text-amber-600" />
+            <h2 className="text-lg font-bold text-amber-900 dark:text-amber-300">
+              Reserva pendiente de aprobacion
+            </h2>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4 mb-6">
+            {(order.guest_name || order.guest_surname) && (
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4 text-amber-600" />
+                <span className="font-medium">{order.guest_name} {order.guest_surname}</span>
+              </div>
+            )}
+            {order.customer_phone && (
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-amber-600" />
+                <span>{order.customer_phone}</span>
+              </div>
+            )}
+            {order.guest_email && (
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-amber-600" />
+                <a href={`mailto:${order.guest_email}`} className="text-amber-800 hover:underline">{order.guest_email}</a>
+              </div>
+            )}
+            {order.pickup_code && (
+              <div className="flex items-center gap-2">
+                <Store className="w-4 h-4 text-amber-600" />
+                <span>Codigo retiro: <strong className="font-mono text-lg">{order.pickup_code}</strong></span>
+              </div>
+            )}
+            {order.reservation_expires_at && (
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-600" />
+                <span>Expira: {new Date(order.reservation_expires_at).toLocaleDateString('es-CL', {
+                  day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'
+                })}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={handleApproveReservation}
+              disabled={isProcessing}
+              className="flex items-center gap-2 px-6 py-3 min-h-[56px] rounded-xl text-lg font-bold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+            >
+              <CheckCircle className="w-5 h-5" />
+              {isProcessing ? 'Procesando...' : 'Aprobar Reserva'}
+            </button>
+            <button
+              onClick={handleRejectReservation}
+              disabled={isProcessing}
+              className="flex items-center gap-2 px-6 py-3 min-h-[56px] rounded-xl text-lg font-bold bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+            >
+              <XCircle className="w-5 h-5" />
+              Rechazar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Status Timeline */}
       <OrderTimeline currentStatus={order.status} />

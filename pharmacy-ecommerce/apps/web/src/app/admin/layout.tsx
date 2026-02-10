@@ -17,6 +17,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isShortcutsHelpOpen, setIsShortcutsHelpOpen] = useState(false);
   const [pendingOrders, setPendingOrders] = useState(0);
+  const [pendingReservations, setPendingReservations] = useState(0);
   const [criticalStock, setCriticalStock] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -72,6 +73,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         const orders = await orderApi.list({ status: 'pending', limit: 1 });
         setPendingOrders(orders.total);
 
+        // Pending reservations count
+        const reservations = await orderApi.listAll({ status: 'reserved', limit: 1 });
+        setPendingReservations(reservations.total);
+
         // Critical stock count
         const products = await productApi.list({ limit: 1000, active_only: true });
         const critical = products.products.filter((p) => p.stock <= 10).length;
@@ -101,6 +106,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Sidebar */}
       <Sidebar
         pendingOrders={pendingOrders}
+        pendingReservations={pendingReservations}
         criticalStock={criticalStock}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />

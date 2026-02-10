@@ -19,6 +19,7 @@ import {
 
 interface SidebarProps {
   pendingOrders?: number;
+  pendingReservations?: number;
   criticalStock?: number;
   onOpenCommandPalette?: () => void;
 }
@@ -30,7 +31,7 @@ const navItems = [
   { href: '/admin/categorias', icon: Tags, label: 'Categorias' },
 ];
 
-export function Sidebar({ pendingOrders = 0, criticalStock = 0, onOpenCommandPalette }: SidebarProps) {
+export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalStock = 0, onOpenCommandPalette }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -98,6 +99,7 @@ export function Sidebar({ pendingOrders = 0, criticalStock = 0, onOpenCommandPal
         {navItems.map((item) => {
           const active = isActive(item.href, item.exact);
           const showBadge = item.href === '/admin/ordenes' && pendingOrders > 0;
+          const showReservationBadge = item.href === '/admin/ordenes' && pendingReservations > 0;
           const showStockBadge = item.href === '/admin/productos' && criticalStock > 0;
 
           return (
@@ -115,6 +117,11 @@ export function Sidebar({ pendingOrders = 0, criticalStock = 0, onOpenCommandPal
               {!isCollapsed && (
                 <>
                   <span className="flex-1">{item.label}</span>
+                  {showReservationBadge && (
+                    <span className="px-2 py-0.5 text-xs font-bold bg-amber-100 text-amber-800 rounded-full">
+                      {pendingReservations}
+                    </span>
+                  )}
                   {showBadge && (
                     <span className="px-2 py-0.5 text-xs font-bold bg-yellow-100 text-yellow-800 rounded-full">
                       {pendingOrders}
@@ -128,8 +135,8 @@ export function Sidebar({ pendingOrders = 0, criticalStock = 0, onOpenCommandPal
                   )}
                 </>
               )}
-              {isCollapsed && showBadge && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-yellow-500 rounded-full" />
+              {isCollapsed && (showBadge || showReservationBadge) && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-amber-500 rounded-full" />
               )}
             </Link>
           );
