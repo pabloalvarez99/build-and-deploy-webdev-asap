@@ -32,7 +32,7 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 bg-white border-b-2 border-slate-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Fila 1: Logo + Usuario + Carrito */}
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-[72px]">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
             <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
@@ -52,7 +52,7 @@ export function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="flex items-center gap-2 p-2 rounded-xl hover:bg-slate-50 transition-colors"
+                  className="flex items-center gap-2 p-2.5 rounded-xl hover:bg-slate-50 transition-colors min-h-[56px] min-w-[56px] justify-center"
                 >
                   <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
                     {user.name ? user.name[0].toUpperCase() : 'U'}
@@ -65,14 +65,14 @@ export function Navbar() {
                     <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border-2 border-slate-100 py-2 z-50">
                       <div className="px-4 py-3 border-b border-slate-100">
                         <p className="font-bold text-slate-900">{user.name}</p>
-                        <p className="text-sm text-slate-500">{user.email}</p>
+                        <p className="text-base text-slate-500">{user.email}</p>
                       </div>
 
                       {user.role === 'admin' && (
                         <Link
                           href="/admin/productos"
                           onClick={() => setIsMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                          className="flex items-center gap-3 px-4 py-3.5 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors min-h-[56px]"
                         >
                           <Package className="w-5 h-5" />
                           Panel Admin
@@ -82,7 +82,7 @@ export function Navbar() {
                       <Link
                         href="/mis-pedidos"
                         onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                        className="flex items-center gap-3 px-4 py-3.5 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors min-h-[56px]"
                       >
                         <UserIcon className="w-5 h-5" />
                         Mis Pedidos
@@ -91,7 +91,7 @@ export function Navbar() {
                       <div className="border-t border-slate-100 mt-1 pt-1">
                         <button
                           onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 text-left transition-colors"
+                          className="w-full flex items-center gap-3 px-4 py-3.5 text-red-600 hover:bg-red-50 text-left transition-colors min-h-[56px]"
                         >
                           <LogOut className="w-5 h-5" />
                           Cerrar Sesion
@@ -104,7 +104,7 @@ export function Navbar() {
             ) : (
               <Link
                 href="/auth/login"
-                className="flex items-center gap-2 p-2 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors"
+                className="flex items-center gap-2 p-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors min-h-[56px] min-w-[56px] justify-center"
               >
                 <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
                   <UserIcon className="w-5 h-5" />
@@ -115,7 +115,7 @@ export function Navbar() {
             {/* Cart Button - Grande y claro */}
             <Link
               href="/carrito"
-              className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all font-bold ${
+              className={`relative flex items-center gap-2 px-4 py-3 rounded-2xl transition-all font-bold min-h-[56px] ${
                 pathname === '/carrito'
                   ? 'bg-emerald-600 text-white'
                   : 'bg-emerald-50 text-emerald-700 border-2 border-emerald-200 hover:bg-emerald-100'
@@ -125,7 +125,7 @@ export function Navbar() {
               {itemCount > 0 ? (
                 <span className="text-base">{itemCount}</span>
               ) : (
-                <span className="text-sm hidden sm:inline">Carrito</span>
+                <span className="text-base hidden sm:inline">Carrito</span>
               )}
               {itemCount > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">

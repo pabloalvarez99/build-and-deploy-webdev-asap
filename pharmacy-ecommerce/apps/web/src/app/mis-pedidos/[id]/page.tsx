@@ -51,11 +51,11 @@ export default function OrderDetailPage() {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-32" />
+          <div className="h-8 bg-slate-200 rounded w-32" />
           <div className="card p-6 space-y-4">
-            <div className="h-6 bg-gray-200 rounded w-1/3" />
-            <div className="h-4 bg-gray-200 rounded w-1/4" />
-            <div className="h-24 bg-gray-200 rounded" />
+            <div className="h-6 bg-slate-200 rounded w-1/3" />
+            <div className="h-4 bg-slate-200 rounded w-1/4" />
+            <div className="h-24 bg-slate-200 rounded" />
           </div>
         </div>
       </div>
@@ -65,7 +65,7 @@ export default function OrderDetailPage() {
   if (!order) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Pedido no encontrado</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mb-4">Pedido no encontrado</h1>
         <Link href="/mis-pedidos" className="btn btn-primary">
           Volver a mis pedidos
         </Link>
@@ -87,7 +87,7 @@ export default function OrderDetailPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <Link
         href="/mis-pedidos"
-        className="inline-flex items-center text-gray-600 hover:text-primary-600 mb-6"
+        className="inline-flex items-center text-slate-600 hover:text-emerald-600 mb-6 min-h-[56px]"
       >
         <ArrowLeft className="w-5 h-5 mr-2" />
         Volver a mis pedidos
@@ -95,10 +95,10 @@ export default function OrderDetailPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-slate-900">
             Pedido #{order.id.slice(0, 8)}
           </h1>
-          <p className="text-gray-500 mt-1">{date}</p>
+          <p className="text-slate-500 mt-1">{date}</p>
         </div>
         <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${status.color}`}>
           {status.icon}
@@ -110,21 +110,21 @@ export default function OrderDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Order Items */}
           <div className="card p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Productos</h2>
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">Productos</h2>
             <div className="space-y-4">
               {order.items.map((item) => {
                 const price = parseFloat(item.price_at_purchase);
                 const subtotal = price * item.quantity;
 
                 return (
-                  <div key={item.id} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0">
+                  <div key={item.id} className="flex justify-between items-center py-3 border-b border-slate-100 last:border-0">
                     <div>
-                      <p className="font-medium text-gray-900">{item.product_name}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-medium text-slate-900">{item.product_name}</p>
+                      <p className="text-base text-slate-500">
                         {formatPrice(price)} x {item.quantity}
                       </p>
                     </div>
-                    <p className="font-semibold text-gray-900">
+                    <p className="font-semibold text-slate-900">
                       {formatPrice(subtotal)}
                     </p>
                   </div>
@@ -137,22 +137,22 @@ export default function OrderDetailPage() {
           {order.shipping_address && (
             <div className="card p-6">
               <div className="flex items-center gap-3 mb-3">
-                <MapPin className="w-5 h-5 text-primary-600" />
-                <h2 className="text-lg font-semibold text-gray-900">
+                <MapPin className="w-5 h-5 text-emerald-600" />
+                <h2 className="text-lg font-semibold text-slate-900">
                   Direccion de envio
                 </h2>
               </div>
-              <p className="text-gray-600">{order.shipping_address}</p>
+              <p className="text-slate-600">{order.shipping_address}</p>
             </div>
           )}
 
           {/* Notes */}
           {order.notes && (
             <div className="card p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-3">
+              <h2 className="text-lg font-semibold text-slate-900 mb-3">
                 Notas
               </h2>
-              <p className="text-gray-600">{order.notes}</p>
+              <p className="text-slate-600">{order.notes}</p>
             </div>
           )}
         </div>
@@ -160,28 +160,28 @@ export default function OrderDetailPage() {
         {/* Order Summary */}
         <div className="lg:col-span-1">
           <div className="card p-6 sticky top-24">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">
               Resumen
             </h2>
 
-            <div className="space-y-3 border-b border-gray-100 pb-4 mb-4">
-              <div className="flex justify-between text-gray-600">
+            <div className="space-y-3 border-b border-slate-100 pb-4 mb-4">
+              <div className="flex justify-between text-slate-600">
                 <span>Subtotal</span>
                 <span>{formatPrice(total)}</span>
               </div>
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between text-slate-600">
                 <span>Envio</span>
-                <span className="text-green-600">Gratis</span>
+                <span className="text-emerald-600">Gratis</span>
               </div>
             </div>
 
-            <div className="flex justify-between text-xl font-bold text-gray-900">
+            <div className="flex justify-between text-xl font-bold text-slate-900">
               <span>Total</span>
               <span>{formatPrice(total)}</span>
             </div>
 
             {order.mercadopago_payment_id && (
-              <p className="text-xs text-gray-500 mt-4">
+              <p className="text-sm text-slate-500 mt-4">
                 ID de pago: {order.mercadopago_payment_id}
               </p>
             )}

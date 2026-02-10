@@ -52,7 +52,7 @@ export default function MyOrdersPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Mis Pedidos</h1>
+      <h1 className="text-3xl font-bold text-slate-900 mb-8">Mis Pedidos</h1>
 
       {isLoading ? (
         <div className="space-y-4">
@@ -60,21 +60,21 @@ export default function MyOrdersPage() {
             <div key={i} className="card p-6 animate-pulse">
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
-                  <div className="h-5 bg-gray-200 rounded w-32" />
-                  <div className="h-4 bg-gray-200 rounded w-24" />
+                  <div className="h-5 bg-slate-200 rounded w-32" />
+                  <div className="h-4 bg-slate-200 rounded w-24" />
                 </div>
-                <div className="h-8 bg-gray-200 rounded w-24" />
+                <div className="h-8 bg-slate-200 rounded w-24" />
               </div>
             </div>
           ))}
         </div>
       ) : !orders || orders.orders.length === 0 ? (
         <div className="text-center py-12">
-          <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-700 mb-2">
+          <Package className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-slate-700 mb-2">
             No tienes pedidos
           </h2>
-          <p className="text-gray-500 mb-6">
+          <p className="text-slate-500 mb-6">
             Cuando realices una compra, aparecera aqui
           </p>
           <Link href="/" className="btn btn-primary">
@@ -101,16 +101,16 @@ export default function MyOrdersPage() {
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm text-gray-500">Pedido #{order.id.slice(0, 8)}</p>
-                      <p className="font-semibold text-gray-900 mt-1">{formatPrice(total)}</p>
-                      <p className="text-sm text-gray-500 mt-1">{date}</p>
+                      <p className="text-base text-slate-500">Pedido #{order.id.slice(0, 8)}</p>
+                      <p className="font-semibold text-slate-900 mt-1">{formatPrice(total)}</p>
+                      <p className="text-base text-slate-500 mt-1">{date}</p>
                     </div>
                     <div className="flex items-center gap-4">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${status.color}`}>
                         {status.icon}
                         {status.label}
                       </span>
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                      <ChevronRight className="w-5 h-5 text-slate-400" />
                     </div>
                   </div>
                 </Link>
@@ -127,7 +127,7 @@ export default function MyOrdersPage() {
               >
                 Anterior
               </button>
-              <span className="px-4 py-2 text-gray-600">
+              <span className="px-4 py-2 text-slate-600">
                 Pagina {currentPage} de {orders.total_pages}
               </span>
               <button

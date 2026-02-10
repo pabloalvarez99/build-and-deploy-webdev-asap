@@ -45,26 +45,26 @@ export default function RegisterPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="card p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Crear Cuenta</h1>
-          <p className="text-gray-500 mt-2">
+          <h1 className="text-2xl font-bold text-slate-900">Crear Cuenta</h1>
+          <p className="text-slate-500 mt-2">
             Registrate para empezar a comprar
           </p>
         </div>
 
         {displayError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start gap-3">
+          <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <p className="text-red-600 text-sm">{displayError}</p>
+            <p className="text-red-600 text-base">{displayError}</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="name" className="block text-base font-medium text-slate-700 mb-2">
               Nombre (opcional)
             </label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 id="name"
                 type="text"
@@ -77,11 +77,11 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="email" className="block text-base font-medium text-slate-700 mb-2">
               Email
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 id="email"
                 type="email"
@@ -95,11 +95,11 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="password" className="block text-base font-medium text-slate-700 mb-2">
               Contrasena
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 id="password"
                 type="password"
@@ -113,11 +113,11 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="confirmPassword" className="block text-base font-medium text-slate-700 mb-2">
               Confirmar Contrasena
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 id="confirmPassword"
                 type="password"
@@ -139,7 +139,7 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        <p className="text-center text-gray-500 mt-6">
+        <p className="text-center text-slate-500 mt-6">
           Ya tienes cuenta?{' '}
           <Link href="/auth/login" className="text-primary-600 hover:underline font-medium">
             Inicia sesion

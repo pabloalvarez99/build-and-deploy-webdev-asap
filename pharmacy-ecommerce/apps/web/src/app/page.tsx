@@ -3,30 +3,31 @@
 import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { productApi, PaginatedProducts, Category, Product } from '@/lib/api';
-import { Search, ShoppingCart, Check, X, ChevronUp, Package, ChevronDown } from 'lucide-react';
+import { Search, ShoppingCart, Check, X, ChevronUp, Package, ChevronDown, Pill, Heart, Droplets, Apple, Stethoscope, Brain, Wind, Sparkles, Eye, Flower2, Shield, Droplet, Baby, Users, Activity, Leaf } from 'lucide-react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
 import { formatPrice } from '@/lib/format';
+import { ReactNode } from 'react';
 
-// Emoji icons per category slug for visual recognition
-const categoryIcons: Record<string, string> = {
-  'dolor-fiebre': '💊',
-  'sistema-digestivo': '🫁',
-  'sistema-cardiovascular': '❤️',
-  'sistema-nervioso': '🧠',
-  'sistema-respiratorio': '🫁',
-  'dermatologia': '🧴',
-  'oftalmologia': '👁️',
-  'salud-femenina': '🌸',
-  'diabetes-metabolismo': '🩸',
-  'antibioticos-infecciones': '🦠',
-  'vitaminas-suplementos': '💪',
-  'higiene-cuidado-personal': '🧼',
-  'bebes-ninos': '👶',
-  'adulto-mayor': '🧓',
-  'insumos-medicos': '🩺',
-  'productos-naturales': '🌿',
-  'otros': '📦',
+// Lucide icons per category slug for professional visual recognition
+const categoryIcons: Record<string, ReactNode> = {
+  'dolor-fiebre': <Pill className="w-5 h-5" />,
+  'sistema-digestivo': <Stethoscope className="w-5 h-5" />,
+  'sistema-cardiovascular': <Heart className="w-5 h-5" />,
+  'sistema-nervioso': <Brain className="w-5 h-5" />,
+  'sistema-respiratorio': <Wind className="w-5 h-5" />,
+  'dermatologia': <Sparkles className="w-5 h-5" />,
+  'oftalmologia': <Eye className="w-5 h-5" />,
+  'salud-femenina': <Flower2 className="w-5 h-5" />,
+  'diabetes-metabolismo': <Droplets className="w-5 h-5" />,
+  'antibioticos-infecciones': <Shield className="w-5 h-5" />,
+  'vitaminas-suplementos': <Apple className="w-5 h-5" />,
+  'higiene-cuidado-personal': <Droplet className="w-5 h-5" />,
+  'bebes-ninos': <Baby className="w-5 h-5" />,
+  'adulto-mayor': <Users className="w-5 h-5" />,
+  'insumos-medicos': <Activity className="w-5 h-5" />,
+  'productos-naturales': <Leaf className="w-5 h-5" />,
+  'otros': <Package className="w-5 h-5" />,
 };
 
 // Priority order: most relevant for elderly users first
@@ -207,7 +208,7 @@ function HomeContent() {
       {showScrollTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-24 right-4 z-40 w-12 h-12 bg-emerald-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-emerald-700 transition-all"
+          className="fixed bottom-24 right-4 z-40 w-14 h-14 bg-emerald-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-emerald-700 transition-all"
         >
           <ChevronUp className="w-6 h-6" />
         </button>
@@ -231,9 +232,9 @@ function HomeContent() {
             {searchInput && (
               <button
                 onClick={() => { setSearchInput(''); setSearchTerm(''); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-slate-200 text-slate-500"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-slate-200 text-slate-500"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             )}
           </div>
@@ -258,15 +259,15 @@ function HomeContent() {
         {/* Categories Grid - Solo cuando NO hay categoría seleccionada y NO hay búsqueda */}
         {!selectedCategory && !searchTerm && (
           <div className="mb-6">
-            <h2 className="text-lg font-bold text-slate-800 mb-3">Categorias</h2>
+            <h2 className="text-xl font-bold text-slate-800 mb-3">Categorias</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
               {visibleCategories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => handleCategoryChange(cat.slug)}
-                  className="flex items-center gap-2 justify-center text-center px-3 py-3.5 bg-white border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700 transition-all min-h-[52px] leading-tight"
+                  className="flex items-center gap-2.5 justify-center text-center px-3 py-3.5 bg-white border-2 border-slate-200 rounded-2xl text-base font-semibold text-slate-700 hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700 transition-all min-h-[56px] leading-tight"
                 >
-                  <span className="text-lg">{categoryIcons[cat.slug] || '📦'}</span>
+                  <span className="text-emerald-600 flex-shrink-0">{categoryIcons[cat.slug] || <Package className="w-5 h-5" />}</span>
                   <span>{cat.name}</span>
                 </button>
               ))}
@@ -274,10 +275,10 @@ function HomeContent() {
             {sortedCategories.length > 6 && (
               <button
                 onClick={() => setShowAllCategories(!showAllCategories)}
-                className="mt-3 flex items-center gap-1 text-emerald-600 font-semibold text-sm mx-auto"
+                className="mt-3 flex items-center gap-1.5 text-emerald-600 font-semibold text-base mx-auto min-h-[48px] px-3"
               >
                 {showAllCategories ? 'Ver menos' : `Ver todas (${sortedCategories.length})`}
-                <ChevronDown className={`w-4 h-4 transition-transform ${showAllCategories ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-5 h-5 transition-transform ${showAllCategories ? 'rotate-180' : ''}`} />
               </button>
             )}
           </div>
@@ -286,10 +287,10 @@ function HomeContent() {
         {/* Product Count */}
         {products && (
           <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm text-slate-500 font-medium">
+            <p className="text-base text-slate-500 font-medium">
               {searchTerm ? `Resultados para "${searchTerm}"` : selectedCategoryName || 'Todos los productos'}
             </p>
-            <span className="text-sm text-slate-400">{products.total} productos</span>
+            <span className="text-base text-slate-400">{products.total} productos</span>
           </div>
         )}
 
@@ -333,7 +334,7 @@ function HomeContent() {
                       </div>
                       {product.stock <= 0 && (
                         <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                          <span className="text-red-600 font-bold text-sm border-2 border-red-500 px-3 py-1.5 rounded-lg -rotate-6 bg-white">
+                          <span className="text-red-600 font-bold text-base border-2 border-red-500 px-3 py-1.5 rounded-2xl -rotate-6 bg-white">
                             AGOTADO
                           </span>
                         </div>
@@ -344,12 +345,12 @@ function HomeContent() {
                   {/* Info */}
                   <div className="p-3 flex flex-col flex-1">
                     <Link href={`/producto/${product.slug}`}>
-                      <h3 className="font-bold text-slate-800 text-sm leading-snug line-clamp-2 mb-1 min-h-[2.5rem]">
+                      <h3 className="font-bold text-slate-800 text-base leading-snug line-clamp-2 mb-1 min-h-[2.5rem]">
                         {product.name}
                       </h3>
                     </Link>
                     {product.laboratory && (
-                      <span className="text-xs text-slate-400 mb-2 truncate">{product.laboratory}</span>
+                      <span className="text-sm text-slate-500 mb-2 truncate">{product.laboratory}</span>
                     )}
 
                     {/* Price */}
@@ -363,7 +364,7 @@ function HomeContent() {
                         <button
                           onClick={() => handleAddToCart(product)}
                           disabled={addingId === product.id}
-                          className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all min-h-[44px] ${
+                          className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-base transition-all min-h-[56px] border-2 border-emerald-600 ${
                             addingId === product.id
                               ? 'bg-emerald-600 text-white scale-95'
                               : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/20 active:scale-95'
@@ -379,7 +380,7 @@ function HomeContent() {
                           )}
                         </button>
                       ) : (
-                        <div className="w-full py-3 rounded-xl bg-slate-100 text-slate-400 text-center font-semibold text-sm">
+                        <div className="w-full py-3.5 rounded-2xl bg-slate-100 text-slate-400 text-center font-semibold text-base min-h-[56px] flex items-center justify-center">
                           Sin stock
                         </div>
                       )}
@@ -405,7 +406,7 @@ function HomeContent() {
         ) : (
           <div className="bg-white rounded-2xl border-2 border-slate-100 py-16 text-center">
             <Search className="w-10 h-10 text-slate-300 mx-auto mb-4" />
-            <p className="text-lg text-slate-500 font-medium">No se encontraron productos</p>
+            <p className="text-xl text-slate-500 font-medium">No se encontraron productos</p>
             {(selectedCategory || searchTerm) && (
               <button
                 onClick={() => { handleCategoryChange(''); setSearchInput(''); setSearchTerm(''); }}

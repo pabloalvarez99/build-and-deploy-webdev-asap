@@ -228,7 +228,7 @@ export default function CheckoutPage() {
             className="input"
             required
           />
-          <p className="text-slate-400 mt-2">
+          <p className="text-slate-500 mt-2">
             Enviaremos la confirmacion a este email
           </p>
         </div>
@@ -250,7 +250,7 @@ export default function CheckoutPage() {
               className="input"
               required
             />
-            <p className="text-slate-400 mt-2">
+            <p className="text-slate-500 mt-2">
               Te contactaremos cuando tu pedido este listo
             </p>
           </div>
@@ -337,7 +337,7 @@ export default function CheckoutPage() {
           <button
             onClick={handleCheckout}
             disabled={isProcessing || !email || !name || !surname || (paymentMethod === 'store' && !phone)}
-            className={`w-full py-4 px-4 font-bold text-lg rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-colors min-h-[60px] ${
+            className={`w-full py-4 px-4 font-bold text-lg rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-colors min-h-[64px] ${
               paymentMethod === 'mercadopago'
                 ? 'bg-[#009ee3] hover:bg-[#0080c3] text-white shadow-lg shadow-blue-500/20'
                 : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20'
@@ -360,7 +360,7 @@ export default function CheckoutPage() {
 
           <div className="flex items-center justify-center gap-2 mt-4 text-slate-400">
             <ShieldCheck className="w-5 h-5" />
-            <span className="text-sm">
+            <span className="text-base">
               {paymentMethod === 'mercadopago'
                 ? 'Pago seguro con MercadoPago'
                 : 'Reserva garantizada por 48 horas'
