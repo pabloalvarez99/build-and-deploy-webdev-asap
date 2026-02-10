@@ -72,8 +72,8 @@ export default function AdminOrdersPage() {
   const loadOrders = async () => {
     setIsLoading(true);
     try {
-      // Load all orders for filtering (in production, this would be server-side)
-      const allData = await orderApi.list({ limit: 1000 });
+      // Load all orders via admin endpoint (service role, sees all including guest orders)
+      const allData = await orderApi.listAll({ limit: 1000 });
       setAllOrders(allData.orders);
 
       // Apply filters client-side for now

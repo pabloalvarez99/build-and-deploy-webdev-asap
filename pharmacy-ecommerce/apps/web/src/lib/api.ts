@@ -276,7 +276,12 @@ export const orderApi = {
 
   // Admin operations
   listAll: async (params?: { page?: number; limit?: number; status?: string }): Promise<PaginatedOrders> => {
-    return apiRequest<PaginatedOrders>('/api/admin/orders', {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', String(params.page));
+    if (params?.limit) searchParams.set('limit', String(params.limit));
+    if (params?.status) searchParams.set('status', params.status);
+    const qs = searchParams.toString();
+    return apiRequest<PaginatedOrders>(`/api/admin/orders${qs ? `?${qs}` : ''}`, {
       method: 'GET',
     });
   },
