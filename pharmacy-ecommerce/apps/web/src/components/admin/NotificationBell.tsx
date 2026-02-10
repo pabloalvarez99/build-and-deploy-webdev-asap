@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Package, ShoppingBag, AlertTriangle, X, Check } from 'lucide-react';
+import { Bell, Package, ShoppingBag, AlertTriangle, X, Check, Store } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import { productApi, orderApi } from '@/lib/api';
 import { formatPrice } from '@/lib/format';
@@ -9,7 +9,7 @@ import Link from 'next/link';
 
 interface Notification {
   id: string;
-  type: 'order' | 'stock' | 'critical';
+  type: 'order' | 'stock' | 'critical' | 'reservation';
   title: string;
   message: string;
   timestamp: Date;
@@ -59,6 +59,22 @@ export function NotificationBell() {
                 link: `/admin/ordenes/${order.id}`,
               });
             }
+          });
+        }
+
+        // Check for reserved orders (store pickup pending approval)
+        const reservedOrders = await orderApi.listAll({ status: 'reserved', limit: 10 });
+        if (reservedOrders.total > 0) {
+          reservedOrders.orders.forEach((order) => {
+            newNotifications.push({
+              id: `reservation-${order.id}`,
+              type: 'reservation',
+              title: 'Reserva pendiente de aprobacion',
+              message: `Reserva #${order.id.slice(0, 8)} por ${formatPrice(order.total)}`,
+              timestamp: new Date(order.created_at),
+              read: false,
+              link: `/admin/ordenes/${order.id}`,
+            });
           });
         }
 
@@ -136,6 +152,8 @@ export function NotificationBell() {
     switch (type) {
       case 'order':
         return <ShoppingBag className="w-4 h-4 text-emerald-500" />;
+      case 'reservation':
+        return <Store className="w-4 h-4 text-amber-500" />;
       case 'stock':
         return <Package className="w-4 h-4 text-orange-500" />;
       case 'critical':

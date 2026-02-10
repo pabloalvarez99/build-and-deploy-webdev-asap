@@ -289,6 +289,12 @@ export const orderApi = {
 
   updateStatus: (id: string, status: string) =>
     apiRequest<Order>(`/api/admin/orders/${id}`, { method: 'PUT', body: { status } }),
+
+  approveReservation: (id: string) =>
+    apiRequest<Order>(`/api/admin/orders/${id}`, { method: 'PUT', body: { action: 'approve_reservation' } }),
+
+  rejectReservation: (id: string) =>
+    apiRequest<Order>(`/api/admin/orders/${id}`, { method: 'PUT', body: { action: 'reject_reservation' } }),
 };
 
 // ============================================
