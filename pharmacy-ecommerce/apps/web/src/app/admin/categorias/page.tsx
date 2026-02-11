@@ -132,10 +132,10 @@ export default function AdminCategoriesPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Categorias</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">Categorias</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
             Gestiona las categorias de productos
           </p>
         </div>
@@ -145,7 +145,7 @@ export default function AdminCategoriesPage() {
             setEditingCategory(null);
             setShowForm(true);
           }}
-          className="btn btn-primary flex items-center gap-2"
+          className="btn btn-primary flex items-center gap-2 w-full sm:w-auto justify-center min-h-[44px]"
         >
           <Plus className="w-5 h-5" />
           Nueva Categoria
@@ -155,9 +155,9 @@ export default function AdminCategoriesPage() {
       {/* Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl p-6 w-full max-w-md shadow-xl">
+          <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
                 {editingCategory ? 'Editar Categoria' : 'Nueva Categoria'}
               </h2>
               <button
@@ -166,15 +166,15 @@ export default function AdminCategoriesPage() {
                   setEditingCategory(null);
                   resetForm();
                 }}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg"
+                className="p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-slate-500" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Nombre
                 </label>
                 <input
@@ -193,7 +193,7 @@ export default function AdminCategoriesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Slug
                 </label>
                 <input
@@ -203,11 +203,11 @@ export default function AdminCategoriesPage() {
                   className="input"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">URL amigable: /categoria/{formData.slug}</p>
+                <p className="text-xs text-slate-500 mt-1">URL amigable: /categoria/{formData.slug}</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Descripcion
                 </label>
                 <textarea
@@ -224,9 +224,9 @@ export default function AdminCategoriesPage() {
                     id="active"
                     checked={formData.active}
                     onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
-                    className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                    className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
                   />
-                  <label htmlFor="active" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label htmlFor="active" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     Categoria activa (visible en tienda)
                   </label>
                 </div>
@@ -256,13 +256,13 @@ export default function AdminCategoriesPage() {
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl p-6 w-full max-w-sm shadow-xl">
+          <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-6 w-full max-w-sm shadow-xl">
             <div className="flex items-center gap-3 mb-4 text-red-600">
               <AlertTriangle className="w-6 h-6" />
               <h3 className="text-lg font-semibold">Eliminar Categoria</h3>
             </div>
 
-            <p className="text-gray-600 dark:text-gray-400 mb-2">
+            <p className="text-slate-600 dark:text-slate-400 mb-2">
               ¿Estas seguro de eliminar la categoria <strong>{deleteConfirm.name}</strong>?
             </p>
 
@@ -299,7 +299,7 @@ export default function AdminCategoriesPage() {
         <div className="grid gap-4">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="card p-4 animate-pulse">
-              <div className="h-6 bg-gray-200 dark:bg-slate-700 rounded w-1/3" />
+              <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
             </div>
           ))}
         </div>
@@ -307,41 +307,41 @@ export default function AdminCategoriesPage() {
         <div className="grid gap-4">
           {categories.map((category) => (
             <div key={category.id} className="card p-4 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{category.name}</h3>
+                    <h3 className="font-semibold text-slate-900 dark:text-white">{category.name}</h3>
                     <span
                       className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                         category.active
                           ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                          : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+                          : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400'
                       }`}
                     >
                       {category.active ? 'Activo' : 'Inactivo'}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">/{category.slug}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">/{category.slug}</p>
                   {category.description && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{category.description}</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">{category.description}</p>
                   )}
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 flex items-center gap-1">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-2 flex items-center gap-1">
                     <Package className="w-3 h-3" />
                     {productCounts[category.id] || 0} productos
                   </p>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
                   <button
                     onClick={() => handleEdit(category)}
-                    className="p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
+                    className="p-2.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                     title="Editar"
                   >
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setDeleteConfirm(category)}
-                    className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                    className="p-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                     title="Eliminar"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -353,8 +353,8 @@ export default function AdminCategoriesPage() {
         </div>
       ) : (
         <div className="card p-12 text-center">
-          <Package className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-          <p className="text-gray-500 dark:text-gray-400 mb-4">No hay categorias registradas</p>
+          <Package className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
+          <p className="text-slate-500 dark:text-slate-400 mb-4">No hay categorias registradas</p>
           <button
             onClick={() => {
               resetForm();

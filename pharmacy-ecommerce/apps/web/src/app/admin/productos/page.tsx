@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { productApi, PaginatedProducts, Category } from '@/lib/api';
-import { Plus, Edit, Trash2, Search, Download, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Download, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 export default function AdminProductsPage() {
@@ -387,8 +387,8 @@ export default function AdminProductsPage() {
     <div className="max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Productos</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Productos</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
             Gestiona el catalogo de productos
           </p>
         </div>
@@ -416,10 +416,10 @@ export default function AdminProductsPage() {
 
       {/* Search and Filters */}
       <div className="card p-4 mb-6">
-        <div className="flex flex-wrap items-center gap-4">
-          <form onSubmit={handleSearch} className="flex-1 min-w-[200px]">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          <form onSubmit={handleSearch} className="flex-1 min-w-0 w-full sm:w-auto sm:min-w-[200px]">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 type="text"
                 placeholder="Buscar productos..."
@@ -436,7 +436,7 @@ export default function AdminProductsPage() {
               setSelectedCategory(e.target.value);
               setCurrentPage(1);
             }}
-            className="input py-2 px-3 min-w-[180px]"
+            className="input py-2 px-3 w-full sm:w-auto sm:min-w-[180px]"
           >
             <option value="">Todas las categorias</option>
             {categories.map((cat) => (
@@ -453,7 +453,7 @@ export default function AdminProductsPage() {
               setSortBy(e.target.value === 'low' ? 'stock_asc' : sortBy);
               setCurrentPage(1);
             }}
-            className={`input py-2 px-3 min-w-[140px] ${stockFilter === 'low' ? 'border-orange-400 bg-orange-50' : ''}`}
+            className={`input py-2 px-3 w-full sm:w-auto sm:min-w-[140px] ${stockFilter === 'low' ? 'border-orange-400 bg-orange-50' : ''}`}
           >
             <option value="">Todo el stock</option>
             <option value="low">Stock bajo</option>
@@ -466,7 +466,7 @@ export default function AdminProductsPage() {
               setSortBy(e.target.value);
               setCurrentPage(1);
             }}
-            className="input py-2 px-3 min-w-[160px]"
+            className="input py-2 px-3 w-full sm:w-auto sm:min-w-[160px]"
           >
             <option value="">Mas recientes</option>
             <option value="name">Nombre A-Z</option>
@@ -492,7 +492,7 @@ export default function AdminProductsPage() {
           {(searchTerm || selectedCategory || selectedLaboratory || selectedPrescription || sortBy || stockFilter) && (
             <button
               onClick={clearFilters}
-              className="text-sm text-gray-500 hover:text-gray-700"
+              className="text-sm text-slate-500 hover:text-slate-700"
             >
               Limpiar todo
             </button>
@@ -501,11 +501,11 @@ export default function AdminProductsPage() {
 
         {/* Advanced Filters Panel */}
         {showAdvancedFilters && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-t border-slate-200">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Laboratory Filter with Search */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Laboratorio</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Laboratorio</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -545,7 +545,7 @@ export default function AdminProductsPage() {
 
               {/* Prescription Type Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Venta</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Venta</label>
                 <select
                   value={selectedPrescription}
                   onChange={(e) => {
@@ -559,7 +559,7 @@ export default function AdminProductsPage() {
                   <option value="prescription">Receta Medica</option>
                   <option value="retained">Receta Retenida</option>
                 </select>
-                <div className="mt-2 text-xs text-gray-500">
+                <div className="mt-2 text-xs text-slate-500">
                   <p><span className="font-medium">Directa:</span> Sin receta</p>
                   <p><span className="font-medium">Medica:</span> Requiere receta</p>
                   <p><span className="font-medium">Retenida:</span> Controlados</p>
@@ -568,8 +568,8 @@ export default function AdminProductsPage() {
 
               {/* Quick Stats */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Resumen</label>
-                <div className="bg-gray-50 rounded-lg p-3 text-sm space-y-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">Resumen</label>
+                <div className="bg-slate-50 rounded-lg p-3 text-sm space-y-1">
                   <p><span className="font-medium">{products?.total.toLocaleString('es-CL') || 0}</span> productos encontrados</p>
                   <p><span className="font-medium">{laboratories.length}</span> laboratorios</p>
                   <p><span className="font-medium">{categories.length}</span> categorias</p>
@@ -625,7 +625,7 @@ export default function AdminProductsPage() {
 
       {/* Results count */}
       {products && (
-        <div className="text-sm text-gray-500 mb-4">
+        <div className="text-sm text-slate-500 mb-4">
           Mostrando {showingStart}-{showingEnd} de {products.total.toLocaleString('es-CL')} productos
         </div>
       )}
@@ -633,14 +633,14 @@ export default function AdminProductsPage() {
       {/* Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">
+          <div className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold text-slate-900 mb-6">
               {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Nombre</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -657,7 +657,7 @@ export default function AdminProductsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Slug</label>
                 <input
                   type="text"
                   value={formData.slug}
@@ -668,7 +668,7 @@ export default function AdminProductsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Descripcion</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Descripcion</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -676,9 +676,9 @@ export default function AdminProductsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Precio (CLP)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Precio (CLP)</label>
                   <input
                     type="number"
                     step="1"
@@ -689,7 +689,7 @@ export default function AdminProductsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Stock</label>
                   <input
                     type="number"
                     value={formData.stock}
@@ -701,7 +701,7 @@ export default function AdminProductsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Categoria</label>
                 <select
                   value={formData.category_id}
                   onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
@@ -717,7 +717,7 @@ export default function AdminProductsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">URL de imagen</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">URL de imagen</label>
                 <input
                   type="url"
                   value={formData.image_url}
@@ -738,7 +738,7 @@ export default function AdminProductsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Laboratorio</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Laboratorio</label>
                 <input
                   type="text"
                   value={formData.laboratory}
@@ -754,9 +754,9 @@ export default function AdminProductsPage() {
                 </datalist>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Accion Terapeutica</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Accion Terapeutica</label>
                   <input
                     type="text"
                     value={formData.therapeutic_action}
@@ -766,7 +766,7 @@ export default function AdminProductsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Principio Activo</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Principio Activo</label>
                   <input
                     type="text"
                     value={formData.active_ingredient}
@@ -777,9 +777,9 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Venta</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Venta</label>
                   <select
                     value={formData.prescription_type}
                     onChange={(e) => setFormData({ ...formData, prescription_type: e.target.value as 'direct' | 'prescription' | 'retained' })}
@@ -791,7 +791,7 @@ export default function AdminProductsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Presentacion</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Presentacion</label>
                   <input
                     type="text"
                     value={formData.presentation}
@@ -808,9 +808,9 @@ export default function AdminProductsPage() {
                   id="active"
                   checked={formData.active}
                   onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
-                  className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                  className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
                 />
-                <label htmlFor="active" className="text-sm font-medium text-gray-700">
+                <label htmlFor="active" className="text-sm font-medium text-slate-700">
                   Producto activo (visible en tienda)
                 </label>
               </div>
@@ -841,40 +841,127 @@ export default function AdminProductsPage() {
         <div className="card p-6 animate-pulse">
           <div className="space-y-4">
             {[...Array(10)].map((_, i) => (
-              <div key={i} className="h-16 bg-gray-200 rounded" />
+              <div key={i} className="h-16 bg-slate-200 rounded" />
             ))}
           </div>
         </div>
       ) : products && products.products.length > 0 ? (
         <>
-          <div className="card overflow-hidden">
+          {/* Mobile Card Layout */}
+          <div className="md:hidden space-y-3">
+            {products.products
+              .filter(p => {
+                if (stockFilter === 'low') return p.stock > 0 && p.stock <= 10;
+                if (stockFilter === 'out') return p.stock === 0;
+                return true;
+              })
+              .map((product) => (
+              <div
+                key={product.id}
+                className={`card p-4 ${product.stock === 0 ? 'border-red-200 bg-red-50/30' : product.stock <= 10 ? 'border-orange-200 bg-orange-50/30' : ''}`}
+              >
+                <div className="flex items-start gap-3">
+                  {product.image_url ? (
+                    <img
+                      src={product.image_url}
+                      alt=""
+                      className="w-14 h-14 object-contain rounded-lg bg-white border border-slate-100 shrink-0"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 bg-slate-100 rounded-lg flex items-center justify-center shrink-0">
+                      <Package className="w-5 h-5 text-slate-300" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-medium text-slate-900 truncate">{product.name}</p>
+                        <p className="text-xs text-slate-500 truncate">{product.laboratory || 'Sin laboratorio'}</p>
+                      </div>
+                      <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${
+                        product.active ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {product.active ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 mt-2">
+                      <span className="font-bold text-slate-900">{formatPrice(product.price)}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                        product.stock === 0 ? 'bg-red-100 text-red-700' :
+                        product.stock <= 10 ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-700'
+                      }`}>
+                        Stock: {product.stock}
+                      </span>
+                      {product.category_name && (
+                        <span className="text-xs text-slate-500 truncate">{product.category_name}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 mt-3">
+                      {(product as any).prescription_type === 'prescription' && (
+                        <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded">RX</span>
+                      )}
+                      {(product as any).prescription_type === 'retained' && (
+                        <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-medium rounded">RR</span>
+                      )}
+                      <div className="flex-1" />
+                      <button
+                        onClick={() => handleDuplicate(product)}
+                        className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                        title="Duplicar"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleEdit(product)}
+                        className="p-2.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg"
+                        title="Editar"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(product.id)}
+                        className="p-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table Layout */}
+          <div className="hidden md:block card overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
                     <th className="px-3 py-3 text-center w-10">
                       <button
                         onClick={selectAllOnPage}
-                        className="p-1 hover:bg-gray-200 rounded"
+                        className="p-1 hover:bg-slate-200 rounded"
                         title="Seleccionar todos"
                       >
                         {products?.products.every(p => selectedProducts.has(p.id)) ? (
                           <CheckSquare className="w-5 h-5 text-emerald-600" />
                         ) : (
-                          <Square className="w-5 h-5 text-gray-400" />
+                          <Square className="w-5 h-5 text-slate-400" />
                         )}
                       </button>
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Laboratorio</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Precio</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Stock</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Estado</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Producto</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Laboratorio</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Precio</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Stock</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Categoria</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Estado</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-slate-200">
                   {products.products
                     .filter(p => {
                       if (stockFilter === 'low') return p.stock > 0 && p.stock <= 10;
@@ -884,17 +971,17 @@ export default function AdminProductsPage() {
                     .map((product) => (
                     <tr 
                       key={product.id} 
-                      className={`hover:bg-gray-50 ${selectedProducts.has(product.id) ? 'bg-emerald-50' : ''} ${product.stock === 0 ? 'bg-red-50/50' : product.stock <= 10 ? 'bg-orange-50/50' : ''}`}
+                      className={`hover:bg-slate-50 ${selectedProducts.has(product.id) ? 'bg-emerald-50' : ''} ${product.stock === 0 ? 'bg-red-50/50' : product.stock <= 10 ? 'bg-orange-50/50' : ''}`}
                     >
                       <td className="px-3 py-3 text-center">
                         <button
                           onClick={() => toggleSelectProduct(product.id)}
-                          className="p-1 hover:bg-gray-200 rounded"
+                          className="p-1 hover:bg-slate-200 rounded"
                         >
                           {selectedProducts.has(product.id) ? (
                             <CheckSquare className="w-5 h-5 text-emerald-600" />
                           ) : (
-                            <Square className="w-5 h-5 text-gray-400" />
+                            <Square className="w-5 h-5 text-slate-400" />
                           )}
                         </button>
                       </td>
@@ -904,12 +991,12 @@ export default function AdminProductsPage() {
                             <img
                               src={product.image_url}
                               alt=""
-                              className="w-10 h-10 object-contain rounded bg-white border border-gray-100"
+                              className="w-10 h-10 object-contain rounded bg-white border border-slate-100"
                               loading="lazy"
                             />
                           ) : (
-                            <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center shrink-0">
-                              <span className="text-[10px] text-gray-400">Sin img</span>
+                            <div className="w-10 h-10 bg-slate-100 rounded flex items-center justify-center shrink-0">
+                              <span className="text-[10px] text-slate-400">Sin img</span>
                             </div>
                           )}
                           <div className="flex flex-col min-w-0">
@@ -922,7 +1009,7 @@ export default function AdminProductsPage() {
                                   <AlertTriangle className="flex-shrink-0 w-4 h-4 text-orange-500" />
                                 </span>
                               )}
-                              <span className="font-medium text-gray-900 truncate max-w-[200px]">{product.name}</span>
+                              <span className="font-medium text-slate-900 truncate max-w-[200px]">{product.name}</span>
                               {(product as any).prescription_type === 'prescription' && (
                                 <span className="flex-shrink-0 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded" title="Receta Medica">
                                   RX
@@ -935,7 +1022,7 @@ export default function AdminProductsPage() {
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-500 truncate max-w-[150px]">{product.slug}</span>
+                              <span className="text-xs text-slate-500 truncate max-w-[150px]">{product.slug}</span>
                               {(product as any).therapeutic_action && (
                                 <span className="text-xs text-emerald-600 truncate max-w-[100px]" title={(product as any).therapeutic_action}>
                                   {(product as any).therapeutic_action}
@@ -945,26 +1032,26 @@ export default function AdminProductsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500 truncate max-w-[150px]">
+                      <td className="px-4 py-3 text-sm text-slate-500 truncate max-w-[150px]">
                         {product.laboratory || '-'}
                       </td>
-                      <td className="px-4 py-3 text-right text-gray-900 font-medium">
+                      <td className="px-4 py-3 text-right text-slate-900 font-medium">
                         {formatPrice(product.price)}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span className={`inline-flex items-center justify-center min-w-[40px] px-2 py-0.5 rounded-full text-sm font-bold ${
                           product.stock === 0 ? 'bg-red-100 text-red-700' :
-                          product.stock <= 10 ? 'bg-orange-100 text-orange-700' : 'text-gray-900'
+                          product.stock <= 10 ? 'bg-orange-100 text-orange-700' : 'text-slate-900'
                         }`}>
                           {product.stock}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500 truncate max-w-[120px]">
+                      <td className="px-4 py-3 text-sm text-slate-500 truncate max-w-[120px]">
                         {product.category_name || '-'}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          product.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          product.active ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'
                         }`}>
                           {product.active ? 'Activo' : 'Inactivo'}
                         </span>
@@ -972,21 +1059,21 @@ export default function AdminProductsPage() {
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         <button
                           onClick={() => handleDuplicate(product)}
-                          className="p-2 text-gray-600 hover:text-blue-600"
+                          className="p-2 text-slate-600 hover:text-blue-600"
                           title="Duplicar"
                         >
                           <Copy className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleEdit(product)}
-                          className="p-2 text-gray-600 hover:text-primary-600"
+                          className="p-2 text-slate-600 hover:text-primary-600"
                           title="Editar"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(product.id)}
-                          className="p-2 text-gray-600 hover:text-red-600"
+                          className="p-2 text-slate-600 hover:text-red-600"
                           title="Eliminar"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -1005,17 +1092,17 @@ export default function AdminProductsPage() {
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="p-2 rounded-lg border border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <span className="px-4 py-2 text-gray-600">
+              <span className="px-4 py-2 text-slate-600">
                 Pagina {currentPage} de {products.total_pages}
               </span>
               <button
                 onClick={() => setCurrentPage((p) => Math.min(products.total_pages, p + 1))}
                 disabled={currentPage === products.total_pages}
-                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="p-2 rounded-lg border border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -1024,7 +1111,7 @@ export default function AdminProductsPage() {
         </>
       ) : (
         <div className="card p-12 text-center">
-          <p className="text-gray-500 mb-4">No se encontraron productos</p>
+          <p className="text-slate-500 mb-4">No se encontraron productos</p>
           {(searchTerm || selectedCategory) && (
             <button onClick={clearFilters} className="btn btn-secondary">
               Limpiar filtros

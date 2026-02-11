@@ -295,7 +295,7 @@ export function CommandPalette({ isOpen, onClose, onNewProduct }: CommandPalette
           </div>
 
           {/* Results */}
-          <div className="max-h-[400px] overflow-y-auto py-2">
+          <div className="max-h-[50vh] sm:max-h-[400px] overflow-y-auto py-2">
             {isSearching ? (
               <div className="px-4 py-8 text-center text-slate-500">
                 <div className="animate-spin w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-2" />

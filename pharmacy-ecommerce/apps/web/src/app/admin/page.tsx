@@ -312,25 +312,25 @@ export default function AdminPage() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Panel de Administracion</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">Bienvenido, {user.name || user.email}</p>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Panel de Administracion</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-2">Bienvenido, {user.name || user.email}</p>
       </div>
 
       {/* Statistics */}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Resumen</h2>
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">Resumen</h2>
         {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="card p-4 animate-pulse">
-                <div className="h-10 w-10 bg-gray-200 dark:bg-slate-700 rounded-lg mb-3" />
-                <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-20 mb-2" />
-                <div className="h-6 bg-gray-200 dark:bg-slate-700 rounded w-16" />
+                <div className="h-10 w-10 bg-slate-200 dark:bg-slate-700 rounded-lg mb-3" />
+                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-20 mb-2" />
+                <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-16" />
               </div>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {statCards.map((stat) => (
               <div key={stat.title} className="card p-4">
                 <div
@@ -338,7 +338,7 @@ export default function AdminPage() {
                 >
                   {stat.icon}
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{stat.title}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{stat.title}</p>
                 <p className={`text-xl font-bold ${stat.textColor}`}>{stat.value}</p>
               </div>
             ))}
@@ -351,7 +351,7 @@ export default function AdminPage() {
         <div className="grid lg:grid-cols-2 gap-6 mb-8">
           {/* Sales Line Chart */}
           <div className="card p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ventas Ultimos 7 Dias</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Ventas Ultimos 7 Dias</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={salesData}>
@@ -382,7 +382,7 @@ export default function AdminPage() {
 
           {/* Orders by Status Pie Chart */}
           <div className="card p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ordenes por Estado</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Ordenes por Estado</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -416,7 +416,7 @@ export default function AdminPage() {
 
           {/* Top Products Bar Chart */}
           <div className="card p-6 lg:col-span-2">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top Productos</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Top Productos</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={topProducts} layout="vertical">
@@ -457,12 +457,12 @@ export default function AdminPage() {
               </Link>
             </div>
           </div>
-          <div className="divide-y divide-gray-100 dark:divide-slate-700">
+          <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {lowStockProducts.length > 0 ? (
               lowStockProducts.map((product) => (
-                <div key={product.id} className="px-6 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-slate-800">
+                <div key={product.id} className="px-6 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{product.name}</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{product.name}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <span
@@ -476,7 +476,7 @@ export default function AdminPage() {
                     </span>
                     <Link
                       href={`/admin/productos?search=${encodeURIComponent(product.name)}`}
-                      className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
+                      className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
                     >
                       <ExternalLink className="w-4 h-4" />
                     </Link>
@@ -484,8 +484,8 @@ export default function AdminPage() {
                 </div>
               ))
             ) : (
-              <div className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                <Package className="w-10 h-10 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
+              <div className="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
+                <Package className="w-10 h-10 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
                 <p>No hay productos con stock bajo</p>
               </div>
             )}
@@ -508,7 +508,7 @@ export default function AdminPage() {
               </Link>
             </div>
           </div>
-          <div className="divide-y divide-gray-100 dark:divide-slate-700">
+          <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {recentOrders.length > 0 ? (
               recentOrders.map((order) => {
                 const statusColors: Record<string, string> = {
@@ -537,18 +537,18 @@ export default function AdminPage() {
                   <Link
                     key={order.id}
                     href={`/admin/ordenes/${order.id}`}
-                    className="px-6 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+                    className="px-6 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-mono text-gray-600 dark:text-gray-400">#{order.id.slice(0, 8)}</p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500">{date}</p>
+                      <p className="text-sm font-mono text-slate-600 dark:text-slate-400">#{order.id.slice(0, 8)}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{date}</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                      <span className="text-sm font-semibold text-slate-900 dark:text-white">
                         {formatPrice(order.total)}
                       </span>
                       <span
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[order.status] || 'bg-slate-100 text-slate-800'}`}
                       >
                         {statusLabels[order.status] || order.status}
                       </span>
@@ -557,8 +557,8 @@ export default function AdminPage() {
                 );
               })
             ) : (
-              <div className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                <ShoppingBag className="w-10 h-10 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
+              <div className="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
+                <ShoppingBag className="w-10 h-10 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
                 <p>No hay ordenes recientes</p>
               </div>
             )}

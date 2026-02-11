@@ -9,6 +9,25 @@
 
 ---
 
+## COMPLETADO: Admin Mobile Responsive (Febrero 2026)
+
+### Problema
+Panel admin no era usable en celulares: tablas con min-w-[800px] forzaban scroll horizontal, dropdowns desbordaban la pantalla, touch targets muy pequeños, colores inconsistentes (gray vs slate).
+
+### Cambios realizados (9 archivos, 7 fases)
+- **Sidebar.tsx**: Hamburger touch target p-3, sidebar max-w-[85vw]
+- **layout.tsx**: Padding responsive px-4 sm:px-6 lg:px-8
+- **NotificationBell.tsx**: Dropdown max-w-[calc(100vw-2rem)], max-h-[60vh] sm:max-h-96
+- **CommandPalette.tsx**: Resultados max-h-[50vh] sm:max-h-[400px]
+- **admin/page.tsx**: Stat grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6
+- **ordenes/page.tsx**: Tabla → cards en mobile (md:hidden), filtros sm:grid-cols-2
+- **ordenes/[id]/page.tsx**: Quick actions grid-cols-1 sm:grid-cols-2, min-h-[44px]
+- **productos/page.tsx**: Tabla → cards en mobile, filtros w-full sm:w-auto, form grid-cols-1 sm:grid-cols-2
+- **categorias/page.tsx**: Header flex-col sm:flex-row, modal p-4 sm:p-6, botones min-h-[44px]
+- **Todos los archivos admin**: gray-* → slate-* (178 ocurrencias) para consistencia de color
+
+---
+
 ## COMPLETADO: Sistema de Aprobacion de Reservas (Febrero 2026)
 
 ### Problema
