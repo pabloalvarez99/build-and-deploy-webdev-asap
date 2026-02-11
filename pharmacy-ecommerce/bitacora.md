@@ -9,6 +9,49 @@
 
 ---
 
+## COMPLETADO: Sistema de Aprobacion de Reservas (Febrero 2026)
+
+### Problema
+Las reservas para retiro en tienda (store-pickup) no tenian flujo de aprobacion: el admin no recibia notificacion, no podia aceptar/rechazar, y el stock no se reducia al reservar.
+
+### Cambios realizados (8 archivos, 6 fases)
+
+#### Fase 1: API (admin/orders/[id]/route.ts)
+- Nuevo action `approve_reservation`: valida status='reserved', llama decrement_stock() por cada item, cambia a 'processing'
+- Nuevo action `reject_reservation`: valida status='reserved', cambia a 'cancelled'
+
+#### Fase 2: API Client (lib/api.ts)
+- `orderApi.approveReservation(id)` y `orderApi.rejectReservation(id)`
+
+#### Fase 3: Notificaciones
+- NotificationBell: polling de ordenes 'reserved' con tipo 'reservation' (icono Store, color amber)
+- Sidebar: badge amber para reservas pendientes
+- Layout: carga stats de reservas para sidebar
+
+#### Fase 4: Admin Lista Ordenes (admin/ordenes/page.tsx)
+- Ordenes 'reserved': botones "Aprobar"/"Rechazar" en vez de dropdown de estado
+- Confirmacion antes de ejecutar
+
+#### Fase 5: Admin Detalle Orden (admin/ordenes/[id]/page.tsx)
+- Seccion prominente con fondo amber: info cliente, telefono, email, codigo retiro, expiracion
+- Botones grandes "Aprobar Reserva" (emerald) y "Rechazar" (rojo), min-h-56px
+- Dropdown de estado deshabilitado para ordenes reservadas
+- Timeline simplificado: reserved → processing → delivered
+
+#### Fase 6: Paginas Cliente
+- reservation/page.tsx: "Pendiente de aprobacion" + aviso de revision por farmacia
+- mis-pedidos: badges contextuales para store-pickup (Pendiente aprobacion / Aprobado - Listo para retiro)
+- mis-pedidos/[id]: seccion retiro en tienda con codigo y estado
+
+### Flujo
+```
+Cliente reserva → status='reserved' (stock sin reducir)
+  ├── Admin ACEPTA → status='processing' + stock reducido
+  └── Admin RECHAZA → status='cancelled'
+```
+
+---
+
 ## COMPLETADO: Perfeccionamiento Frontend Tercera Edad (Febrero 2026)
 
 ### Problema

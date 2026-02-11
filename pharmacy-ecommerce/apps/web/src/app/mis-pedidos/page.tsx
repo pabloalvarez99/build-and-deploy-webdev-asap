@@ -85,7 +85,16 @@ export default function MyOrdersPage() {
         <>
           <div className="space-y-4">
             {orders.orders.map((order) => {
-              const status = statusConfig[order.status] || statusConfig.pending;
+              const isStorePickup = order.payment_provider === 'store';
+              let status = statusConfig[order.status] || statusConfig.pending;
+
+              // Override labels for store-pickup orders
+              if (isStorePickup && order.status === 'reserved') {
+                status = { label: 'Pendiente aprobacion', color: 'bg-amber-100 text-amber-800', icon: <Clock className="w-4 h-4" /> };
+              } else if (isStorePickup && order.status === 'processing') {
+                status = { label: 'Aprobado - Listo para retiro', color: 'bg-emerald-100 text-emerald-800', icon: <CheckCircle className="w-4 h-4" /> };
+              }
+
               const total = parseFloat(order.total);
               const date = new Date(order.created_at).toLocaleDateString('es-CL', {
                 year: 'numeric',

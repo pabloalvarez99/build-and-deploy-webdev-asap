@@ -73,7 +73,16 @@ export default function OrderDetailPage() {
     );
   }
 
-  const status = statusConfig[order.status] || statusConfig.pending;
+  const isStorePickup = order.payment_provider === 'store';
+  let status = statusConfig[order.status] || statusConfig.pending;
+
+  // Override labels for store-pickup orders
+  if (isStorePickup && order.status === 'reserved') {
+    status = { label: 'Pendiente aprobacion', color: 'bg-amber-100 text-amber-800', icon: <Clock className="w-5 h-5" /> };
+  } else if (isStorePickup && order.status === 'processing') {
+    status = { label: 'Aprobado - Listo para retiro', color: 'bg-emerald-100 text-emerald-800', icon: <CheckCircle className="w-5 h-5" /> };
+  }
+
   const total = parseFloat(order.total);
   const date = new Date(order.created_at).toLocaleDateString('es-CL', {
     year: 'numeric',
@@ -143,6 +152,26 @@ export default function OrderDetailPage() {
                 </h2>
               </div>
               <p className="text-slate-600">{order.shipping_address}</p>
+            </div>
+          )}
+
+          {/* Store Pickup Info */}
+          {isStorePickup && order.pickup_code && (
+            <div className="card p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <Store className="w-5 h-5 text-amber-600" />
+                <h2 className="text-lg font-semibold text-slate-900">Retiro en tienda</h2>
+              </div>
+              <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 text-center">
+                <p className="text-amber-700 font-medium mb-2">Codigo de retiro</p>
+                <p className="text-4xl font-mono font-black tracking-[0.3em] text-amber-900">{order.pickup_code}</p>
+              </div>
+              {order.status === 'reserved' && (
+                <p className="text-amber-700 text-center mt-3">Tu reserva esta pendiente de aprobacion por la farmacia.</p>
+              )}
+              {order.status === 'processing' && (
+                <p className="text-emerald-700 text-center mt-3 font-medium">Reserva aprobada. Acercate a la farmacia para retirar y pagar.</p>
+              )}
             </div>
           )}
 
