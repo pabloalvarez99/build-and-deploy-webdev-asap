@@ -180,7 +180,7 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
       {/* Mobile menu button */}
       <button
         onClick={() => setIsMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-40 p-2 bg-white rounded-lg shadow-lg border border-slate-200"
+        className="lg:hidden fixed top-4 left-4 z-40 p-3 bg-white rounded-lg shadow-lg border border-slate-200"
       >
         <Menu className="w-5 h-5 text-slate-600" />
       </button>
@@ -195,7 +195,7 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
 
       {/* Mobile sidebar */}
       <aside
-        className={`lg:hidden fixed inset-y-0 left-0 z-50 w-64 bg-white transform transition-transform ${
+        className={`lg:hidden fixed inset-y-0 left-0 z-50 w-64 max-w-[85vw] bg-white transform transition-transform ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

@@ -119,7 +119,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       >
         {/* Top bar */}
         <header className="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700">
-          <div className="flex items-center justify-between h-16 px-4 lg:px-8">
+          <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
             {/* Left side - breadcrumbs on larger screens */}
             <div className="flex-1 pl-12 lg:pl-0">
               <Breadcrumbs />
