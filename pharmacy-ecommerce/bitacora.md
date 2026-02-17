@@ -9,6 +9,24 @@
 
 ---
 
+## COMPLETADO: Mejora Panel Admin Órdenes (Febrero 2026)
+
+### Cambios realizados (`src/app/admin/ordenes/page.tsx`)
+- **Stats bar**: 4 tarjetas con ingresos totales, total órdenes, pendientes, reservas. Las de pendientes y reservas son clickeables como filtros rápidos.
+- **Columna Cliente**: nombre del cliente (guest o registrado) + email con icono
+- **Columna Pago**: badge "MercadoPago" (azul) o "Retiro en tienda" (ámbar)
+- **Búsqueda visible siempre**: barra de búsqueda fuera del panel de filtros, busca por ID + nombre + email
+- **Chips de estado en filtros**: pills con colores por estado, sin abrir dropdowns
+- **Paginación numerada**: botones con números de página + indicador "X–Y de Z"
+- **CSV mejorado**: incluye nombre, email, teléfono, método de pago, código retiro (con BOM UTF-8 para Excel)
+- **Refactor filtros**: `useMemo` para filtrado reactivo sin re-fetch
+
+### Cambios en `src/lib/api.ts`
+- Interface `Order`: agregados `guest_name`, `guest_surname`, `guest_email` (estaban solo en `OrderWithItems`)
+- Interface `OrderWithItems`: eliminados campos duplicados (ahora heredados de `Order`)
+
+---
+
 ## COMPLETADO: Importación Excel desde Admin (Febrero 2026)
 
 ### Problema
