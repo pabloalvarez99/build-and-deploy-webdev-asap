@@ -1,3 +1,4 @@
+import { createClient } from '@/lib/supabase/client';
 import type { ProductWithCategory } from './api';
 
 // ─── Excel Column Structure ───
@@ -129,6 +130,54 @@ export const EXTRA_MAPPINGS: Record<string, string> = {
   'PROTECTOR SOLAR FACIAL': 'higiene-cuidado-personal',
   'DESMAQUILLANTE': 'higiene-cuidado-personal',
 };
+
+// ─── Load ALL products for diffing (bypasses the 100-item cap in productApi.list) ───
+
+export async function loadAllProductsForDiff(): Promise<ProductWithCategory[]> {
+  const supabase = createClient();
+  const PAGE_SIZE = 1000;
+  const all: ProductWithCategory[] = [];
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('products')
+      .select('id, external_id, name, slug, price, stock, category_id, image_url, active, laboratory, therapeutic_action, active_ingredient, prescription_type, presentation, created_at, categories(name, slug)')
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) throw new Error(error.message);
+    if (!data || data.length === 0) break;
+
+    for (const raw of data) {
+      const cats = raw.categories as unknown as { name: string; slug: string } | null;
+      all.push({
+        id: raw.id,
+        name: raw.name,
+        slug: raw.slug,
+        description: null,
+        price: String(raw.price),
+        stock: raw.stock,
+        category_id: raw.category_id,
+        image_url: raw.image_url,
+        active: raw.active,
+        external_id: raw.external_id,
+        laboratory: raw.laboratory,
+        therapeutic_action: raw.therapeutic_action,
+        active_ingredient: raw.active_ingredient,
+        prescription_type: raw.prescription_type,
+        presentation: raw.presentation,
+        created_at: raw.created_at,
+        category_name: cats?.name ?? null,
+        category_slug: cats?.slug ?? null,
+      });
+    }
+
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  return all;
+}
 
 // ─── Parse Excel File ───
 

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { productApi, PaginatedProducts, Category } from '@/lib/api';
 import { Plus, Edit, Trash2, Search, Download, Upload, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package, FileSpreadsheet, CheckCircle, XCircle, RefreshCw, ArrowRight } from 'lucide-react';
-import { parseExcelFile, diffProducts, parsePrice, type ExcelRow, type DiffResult } from '@/lib/excel-import';
+import { parseExcelFile, diffProducts, loadAllProductsForDiff, parsePrice, type ExcelRow, type DiffResult } from '@/lib/excel-import';
 import { formatPrice } from '@/lib/format';
 
 export default function AdminProductsPage() {
@@ -417,9 +417,9 @@ export default function AdminProductsPage() {
  return;
  }
 
- // Load ALL products for diffing
- const allProducts = await productApi.list({ limit: 10000, active_only: false });
- const diff = diffProducts(rows, allProducts.products);
+ // Load ALL products for diffing (bypasses the 100-item cap in productApi.list)
+ const allDbProducts = await loadAllProductsForDiff();
+ const diff = diffProducts(rows, allDbProducts);
  setDiffResults(diff);
  setImportStep('preview');
  } catch (error) {
