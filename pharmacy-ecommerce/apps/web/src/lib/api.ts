@@ -173,6 +173,11 @@ export const productApi = {
   delete: (id: string) =>
     apiRequest<void>(`/api/admin/products/${id}`, { method: 'DELETE' }),
 
+  bulkImport: (data: { newProducts: unknown[]; updateProducts: unknown[] }) =>
+    apiRequest<{ success: boolean; inserted: number; updated: number; errors?: string[] }>(
+      '/api/admin/products/import', { body: data }
+    ),
+
   listCategories: async (): Promise<Category[]> => {
     const supabase = getSupabase();
     const { data, error } = await supabase

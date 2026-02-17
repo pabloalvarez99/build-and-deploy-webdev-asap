@@ -9,6 +9,67 @@
 
 ---
 
+## COMPLETADO: Importación Excel desde Admin (Febrero 2026)
+
+### Problema
+La importación de productos desde Excel solo se puede hacer por CLI (`scripts/import_to_supabase.js`) y ese script **borra todos los productos** antes de importar. Se necesita una importación inteligente desde el panel admin que detecte productos nuevos vs existentes y muestre los cambios antes de aplicarlos.
+
+### Objetivo
+Botón "Importar Excel" en admin/productos que:
+1. Parsea Excel (.xlsx) en el navegador (misma estructura que `2026-01-19_LISTA_DE_PRECIOS.xlsx`)
+2. Compara contra productos existentes usando `external_id`
+3. Muestra vista previa: productos nuevos, cambios de stock/precio, sin cambios
+4. Aplica cambios (INSERT nuevos + UPDATE existentes, nunca DELETE)
+5. Muestra reporte de resultados
+
+### Formato Excel esperado (16 columnas)
+```
+id | producto | laboratorio | departamento | accion_terapeutica |
+principio_activo | unidades_presentacion | presentacion | receta |
+control_legal | es_bioequivalente | registro_sanitario |
+titular_registro | stock | precio | precio_por_unidad
+```
+
+### Archivos a crear/modificar
+
+#### Nuevos
+- `src/lib/excel-import.ts` — Parseo Excel + helpers (slugify, parsePrice, mapPrescriptionType, buildDescription) + constantes de categorías (DEPT_TO_CATEGORY, EXTRA_MAPPINGS) + función diffProducts()
+- `src/app/api/admin/products/import/route.ts` — API endpoint: auth admin, resuelve categorías, genera slugs únicos, upsert por batches de 100
+
+#### Modificados
+- `package.json` — agrega dependencia `xlsx: ^0.18.5`
+- `src/lib/api.ts` — agrega `productApi.bulkImport()`
+- `src/app/admin/productos/page.tsx` — botón "Importar Excel" + modal de 3 pasos (upload → preview → results)
+
+### Flujo UI
+```
+[Importar Excel] → Modal con file picker (.xlsx)
+  → Parsea en browser + carga todos los productos de DB
+  → Diff por external_id
+  → Vista previa:
+    - Tarjeta verde: N productos nuevos (tabla con nombre, lab, precio, stock)
+    - Tarjeta azul: N productos a actualizar (tabla con stock old→new, precio old→new)
+    - Tarjeta gris: N sin cambios
+  → [Importar N productos] → API upsert en batches
+  → Reporte: insertados + actualizados + errores
+  → [Cerrar] → recarga lista
+```
+
+### Lógica de categorías (misma que script CLI)
+1. Buscar `accion_terapeutica` en tabla `therapeutic_category_mapping`
+2. Si no: buscar `departamento` en DEPT_TO_CATEGORY
+3. Si no: slugificar departamento y buscar en categorías
+4. Fallback: categoría 'otros'
+
+### Notas técnicas
+- Parseo client-side con `xlsx` (evita complejidad de file upload al server)
+- Diffing por `external_id` (columna 'id' del Excel)
+- Non-destructive: solo INSERT + UPDATE, nunca DELETE
+- Upsert con `onConflict: 'external_id'`
+- Batches de 100 para evitar timeouts
+
+---
+
 ## COMPLETADO: Admin Mobile Responsive (Febrero 2026)
 
 ### Problema

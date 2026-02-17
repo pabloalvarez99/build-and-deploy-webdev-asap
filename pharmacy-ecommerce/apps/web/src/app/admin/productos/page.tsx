@@ -4,1121 +4,1504 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { productApi, PaginatedProducts, Category } from '@/lib/api';
-import { Plus, Edit, Trash2, Search, Download, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Download, Upload, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package, FileSpreadsheet, CheckCircle, XCircle, RefreshCw, ArrowRight } from 'lucide-react';
+import { parseExcelFile, diffProducts, parsePrice, type ExcelRow, type DiffResult } from '@/lib/excel-import';
 import { formatPrice } from '@/lib/format';
 
 export default function AdminProductsPage() {
-  const router = useRouter();
-  const { user } = useAuthStore();
-
-  const [products, setProducts] = useState<PaginatedProducts | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [laboratories, setLaboratories] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [showForm, setShowForm] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<string | null>(null);
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-
-  // Selection for bulk actions
-  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
-  const [bulkActionLoading, setBulkActionLoading] = useState(false);
-
-  // Filters
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedLaboratory, setSelectedLaboratory] = useState('');
-  const [selectedPrescription, setSelectedPrescription] = useState('');
-  const [sortBy, setSortBy] = useState('');
-  const [stockFilter, setStockFilter] = useState('');
-  const [labSearchTerm, setLabSearchTerm] = useState('');
-
-  // Form state
-  const [formData, setFormData] = useState({
-    name: '',
-    slug: '',
-    description: '',
-    price: '',
-    stock: '',
-    category_id: '',
-    image_url: '',
-    laboratory: '',
-    therapeutic_action: '',
-    active_ingredient: '',
-    prescription_type: 'direct' as 'direct' | 'prescription' | 'retained',
-    presentation: '',
-    active: true,
-  });
-
-  useEffect(() => {
-    if (!user || user.role !== 'admin') {
-      router.push('/');
-      return;
-    }
-    loadCategories();
-    loadLaboratories();
-  }, [user, router]);
-
-  useEffect(() => {
-    // Check URL params for filters and actions
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlStock = urlParams.get('stock');
-    const urlSearch = urlParams.get('search');
-    const urlAction = urlParams.get('action');
-    if (urlStock === 'low') setStockFilter('low');
-    if (urlStock === 'out') setStockFilter('out');
-    if (urlSearch) setSearchTerm(urlSearch);
-    if (urlAction === 'new') {
-      resetForm();
-      setEditingProduct(null);
-      setShowForm(true);
-      // Clear action param from URL
-      window.history.replaceState({}, '', '/admin/productos');
-    }
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      loadProducts();
-    }
-  }, [user, currentPage, searchTerm, selectedCategory, selectedLaboratory, selectedPrescription, sortBy, stockFilter]);
-
-  const loadCategories = async () => {
-    try {
-      const data = await productApi.listCategories();
-      data.sort((a, b) => a.name.localeCompare(b.name));
-      setCategories(data);
-    } catch (error) {
-      console.error('Error loading categories:', error);
-    }
-  };
-
-  const loadLaboratories = async () => {
-    try {
-      const data = await productApi.getLaboratories();
-      setLaboratories(data.laboratories || []);
-    } catch (error) {
-      console.error('Error loading laboratories:', error);
-    }
-  };
-
-  const loadProducts = async () => {
-    if (!user) return;
-
-    setIsLoading(true);
-    try {
-      const data = await productApi.list({
-        page: currentPage,
-        limit: 20,
-        active_only: false,
-        search: searchTerm || undefined,
-        category: selectedCategory || undefined,
-        laboratory: selectedLaboratory || undefined,
-        prescription_type: selectedPrescription || undefined,
-        sort_by: sortBy || undefined,
-      });
-      setProducts(data);
-    } catch (error) {
-      console.error('Error loading products:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCurrentPage(1);
-    loadProducts();
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const data = {
-        name: formData.name,
-        slug: formData.slug,
-        description: formData.description || undefined,
-        price: formData.price,
-        stock: parseInt(formData.stock),
-        category_id: formData.category_id || undefined,
-        image_url: formData.image_url || undefined,
-        laboratory: formData.laboratory || undefined,
-        therapeutic_action: formData.therapeutic_action || undefined,
-        active_ingredient: formData.active_ingredient || undefined,
-        prescription_type: formData.prescription_type,
-        presentation: formData.presentation || undefined,
-        active: formData.active,
-      };
-
-      if (editingProduct) {
-        await productApi.update(editingProduct, data);
-      } else {
-        await productApi.create(data);
-      }
-
-      setShowForm(false);
-      setEditingProduct(null);
-      resetForm();
-      loadProducts();
-      loadLaboratories(); // Refresh labs list if a new one was added
-    } catch (error) {
-      console.error('Error saving product:', error);
-      alert('Error al guardar el producto');
-    }
-  };
-
-  const handleEdit = (product: any) => {
-    setFormData({
-      name: product.name,
-      slug: product.slug,
-      description: product.description || '',
-      price: product.price,
-      stock: String(product.stock),
-      category_id: product.category_id || '',
-      image_url: product.image_url || '',
-      laboratory: product.laboratory || '',
-      therapeutic_action: product.therapeutic_action || '',
-      active_ingredient: product.active_ingredient || '',
-      prescription_type: product.prescription_type || 'direct',
-      presentation: product.presentation || '',
-      active: product.active ?? true,
-    });
-    setEditingProduct(product.id);
-    setShowForm(true);
-  };
-
-  const handleDuplicate = (product: any) => {
-    const newSlug = generateSlug(product.name + ' copia');
-    setFormData({
-      name: product.name + ' (copia)',
-      slug: newSlug,
-      description: product.description || '',
-      price: product.price,
-      stock: String(product.stock),
-      category_id: product.category_id || '',
-      image_url: product.image_url || '',
-      laboratory: product.laboratory || '',
-      therapeutic_action: product.therapeutic_action || '',
-      active_ingredient: product.active_ingredient || '',
-      prescription_type: product.prescription_type || 'direct',
-      presentation: product.presentation || '',
-      active: false, // Start as inactive
-    });
-    setEditingProduct(null); // This is a new product
-    setShowForm(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Estas seguro de eliminar este producto?')) return;
-
-    try {
-      await productApi.delete(id);
-      loadProducts();
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      alert('Error al eliminar el producto');
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      slug: '',
-      description: '',
-      price: '',
-      stock: '',
-      category_id: '',
-      image_url: '',
-      laboratory: '',
-      therapeutic_action: '',
-      active_ingredient: '',
-      prescription_type: 'direct',
-      presentation: '',
-      active: true,
-    });
-  };
-
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
-  };
-
-  const exportToCSV = () => {
-    if (!products) return;
-
-    const headers = ['Nombre', 'Slug', 'Precio', 'Stock', 'Categoria', 'Laboratorio', 'Accion Terapeutica', 'Principio Activo', 'Tipo Venta', 'Presentacion', 'Estado'];
-    const prescriptionLabels: Record<string, string> = {
-      direct: 'Venta Directa',
-      prescription: 'Receta Medica',
-      retained: 'Receta Retenida'
-    };
-    const rows = products.products.map(p => [
-      `"${p.name.replace(/"/g, '""')}"`,
-      p.slug,
-      p.price,
-      p.stock,
-      p.category_name || '',
-      p.laboratory || '',
-      (p as any).therapeutic_action || '',
-      (p as any).active_ingredient || '',
-      prescriptionLabels[(p as any).prescription_type] || 'Venta Directa',
-      (p as any).presentation || '',
-      p.active ? 'Activo' : 'Inactivo'
-    ]);
-
-    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
-    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM for Excel
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `productos_${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-  };
-
-  const clearFilters = () => {
-    setSearchTerm('');
-    setSelectedCategory('');
-    setSelectedLaboratory('');
-    setSelectedPrescription('');
-    setSortBy('');
-    setStockFilter('');
-    setLabSearchTerm('');
-    setCurrentPage(1);
-    // Clear URL params
-    window.history.replaceState({}, '', '/admin/productos');
-  };
-
-  // Count active filters
-  const activeFilterCount = [selectedCategory, selectedLaboratory, selectedPrescription, stockFilter].filter(Boolean).length;
-
-  // Filter laboratories by search term
-  const filteredLaboratories = laboratories.filter(lab =>
-    lab.toLowerCase().includes(labSearchTerm.toLowerCase())
-  );
-
-  // Selection helpers
-  const toggleSelectProduct = (id: string) => {
-    const newSelection = new Set(selectedProducts);
-    if (newSelection.has(id)) {
-      newSelection.delete(id);
-    } else {
-      newSelection.add(id);
-    }
-    setSelectedProducts(newSelection);
-  };
-
-  const selectAllOnPage = () => {
-    if (!products) return;
-    const allIds = products.products.map(p => p.id);
-    const allSelected = allIds.every(id => selectedProducts.has(id));
-    
-    if (allSelected) {
-      // Deselect all
-      const newSelection = new Set(selectedProducts);
-      allIds.forEach(id => newSelection.delete(id));
-      setSelectedProducts(newSelection);
-    } else {
-      // Select all
-      const newSelection = new Set(selectedProducts);
-      allIds.forEach(id => newSelection.add(id));
-      setSelectedProducts(newSelection);
-    }
-  };
-
-  const clearSelection = () => {
-    setSelectedProducts(new Set());
-  };
-
-  // Bulk actions
-  const handleBulkActivate = async (activate: boolean) => {
-    if (selectedProducts.size === 0) return;
-
-    const action = activate ? 'activar' : 'desactivar';
-    if (!confirm(`¿Deseas ${action} ${selectedProducts.size} productos?`)) return;
-
-    setBulkActionLoading(true);
-    try {
-      const promises = Array.from(selectedProducts).map(id =>
-        productApi.update(id, { active: activate })
-      );
-      await Promise.all(promises);
-      clearSelection();
-      loadProducts();
-    } catch (error) {
-      console.error('Error en acción masiva:', error);
-      alert('Error al realizar la acción');
-    } finally {
-      setBulkActionLoading(false);
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedProducts.size === 0) return;
-
-    if (!confirm(`¿Deseas ELIMINAR ${selectedProducts.size} productos? Esta acción no se puede deshacer.`)) return;
-
-    setBulkActionLoading(true);
-    try {
-      const promises = Array.from(selectedProducts).map(id =>
-        productApi.delete(id)
-      );
-      await Promise.all(promises);
-      clearSelection();
-      loadProducts();
-    } catch (error) {
-      console.error('Error eliminando productos:', error);
-      alert('Error al eliminar productos');
-    } finally {
-      setBulkActionLoading(false);
-    }
-  };
-
-  if (!user || user.role !== 'admin') {
-    return null;
-  }
-
-  const showingStart = products ? (currentPage - 1) * 20 + 1 : 0;
-  const showingEnd = products ? Math.min(currentPage * 20, products.total) : 0;
-
-  return (
-    <div className="max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Productos</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
-            Gestiona el catalogo de productos
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={exportToCSV}
-            className="btn btn-secondary flex items-center gap-2"
-          >
-            <Download className="w-5 h-5" />
-            Exportar CSV
-          </button>
-          <button
-            onClick={() => {
-              resetForm();
-              setEditingProduct(null);
-              setShowForm(true);
-            }}
-            className="btn btn-primary flex items-center gap-2"
-          >
-            <Plus className="w-5 h-5" />
-            Nuevo Producto
-          </button>
-        </div>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="card p-4 mb-6">
-        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-          <form onSubmit={handleSearch} className="flex-1 min-w-0 w-full sm:w-auto sm:min-w-[200px]">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Buscar productos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="input pl-10"
-              />
-            </div>
-          </form>
-
-          <select
-            value={selectedCategory}
-            onChange={(e) => {
-              setSelectedCategory(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="input py-2 px-3 w-full sm:w-auto sm:min-w-[180px]"
-          >
-            <option value="">Todas las categorias</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.slug}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={stockFilter}
-            onChange={(e) => {
-              setStockFilter(e.target.value);
-              setSortBy(e.target.value === 'low' ? 'stock_asc' : sortBy);
-              setCurrentPage(1);
-            }}
-            className={`input py-2 px-3 w-full sm:w-auto sm:min-w-[140px] ${stockFilter === 'low' ? 'border-orange-400 bg-orange-50' : ''}`}
-          >
-            <option value="">Todo el stock</option>
-            <option value="low">Stock bajo</option>
-            <option value="out">Agotados</option>
-          </select>
-
-          <select
-            value={sortBy}
-            onChange={(e) => {
-              setSortBy(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="input py-2 px-3 w-full sm:w-auto sm:min-w-[160px]"
-          >
-            <option value="">Mas recientes</option>
-            <option value="name">Nombre A-Z</option>
-            <option value="price_asc">Precio menor</option>
-            <option value="price_desc">Precio mayor</option>
-            <option value="stock_asc">Menor stock</option>
-            <option value="stock_desc">Mayor stock</option>
-          </select>
-
-          <button
-            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className={`btn ${showAdvancedFilters ? 'btn-primary' : 'btn-secondary'} flex items-center gap-2`}
-          >
-            <Filter className="w-4 h-4" />
-            Filtros
-            {activeFilterCount > 0 && (
-              <span className="bg-white text-emerald-600 rounded-full w-5 h-5 text-xs flex items-center justify-center font-bold">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-
-          {(searchTerm || selectedCategory || selectedLaboratory || selectedPrescription || sortBy || stockFilter) && (
-            <button
-              onClick={clearFilters}
-              className="text-sm text-slate-500 hover:text-slate-700"
-            >
-              Limpiar todo
-            </button>
-          )}
-        </div>
-
-        {/* Advanced Filters Panel */}
-        {showAdvancedFilters && (
-          <div className="mt-4 pt-4 border-t border-slate-200">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Laboratory Filter with Search */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Laboratorio</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Buscar laboratorio..."
-                    value={labSearchTerm}
-                    onChange={(e) => setLabSearchTerm(e.target.value)}
-                    className="input py-2 px-3 w-full text-sm mb-2"
-                  />
-                  <select
-                    value={selectedLaboratory}
-                    onChange={(e) => {
-                      setSelectedLaboratory(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="input py-2 px-3 w-full"
-                    size={5}
-                  >
-                    <option value="">Todos los laboratorios</option>
-                    {filteredLaboratories.map((lab) => (
-                      <option key={lab} value={lab}>
-                        {lab}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {selectedLaboratory && (
-                  <div className="mt-2 flex items-center gap-2 text-sm">
-                    <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded flex items-center gap-1">
-                      {selectedLaboratory}
-                      <button onClick={() => setSelectedLaboratory('')} className="hover:text-emerald-600">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Prescription Type Filter */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Venta</label>
-                <select
-                  value={selectedPrescription}
-                  onChange={(e) => {
-                    setSelectedPrescription(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="input py-2 px-3 w-full"
-                >
-                  <option value="">Todos los tipos</option>
-                  <option value="direct">Venta Directa</option>
-                  <option value="prescription">Receta Medica</option>
-                  <option value="retained">Receta Retenida</option>
-                </select>
-                <div className="mt-2 text-xs text-slate-500">
-                  <p><span className="font-medium">Directa:</span> Sin receta</p>
-                  <p><span className="font-medium">Medica:</span> Requiere receta</p>
-                  <p><span className="font-medium">Retenida:</span> Controlados</p>
-                </div>
-              </div>
-
-              {/* Quick Stats */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Resumen</label>
-                <div className="bg-slate-50 rounded-lg p-3 text-sm space-y-1">
-                  <p><span className="font-medium">{products?.total.toLocaleString('es-CL') || 0}</span> productos encontrados</p>
-                  <p><span className="font-medium">{laboratories.length}</span> laboratorios</p>
-                  <p><span className="font-medium">{categories.length}</span> categorias</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Bulk Actions Bar */}
-      {selectedProducts.size > 0 && (
-        <div className="card p-4 mb-4 bg-emerald-50 border border-emerald-200 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="font-medium text-emerald-800">
-              {selectedProducts.size} producto{selectedProducts.size > 1 ? 's' : ''} seleccionado{selectedProducts.size > 1 ? 's' : ''}
-            </span>
-            <button
-              onClick={clearSelection}
-              className="text-sm text-emerald-600 hover:text-emerald-800 underline"
-            >
-              Limpiar selección
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleBulkActivate(true)}
-              disabled={bulkActionLoading}
-              className="btn btn-secondary flex items-center gap-2 text-sm py-2"
-            >
-              <Power className="w-4 h-4" />
-              Activar
-            </button>
-            <button
-              onClick={() => handleBulkActivate(false)}
-              disabled={bulkActionLoading}
-              className="btn btn-secondary flex items-center gap-2 text-sm py-2"
-            >
-              <PowerOff className="w-4 h-4" />
-              Desactivar
-            </button>
-            <button
-              onClick={handleBulkDelete}
-              disabled={bulkActionLoading}
-              className="btn bg-red-600 text-white hover:bg-red-700 flex items-center gap-2 text-sm py-2"
-            >
-              <Trash2 className="w-4 h-4" />
-              Eliminar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Results count */}
-      {products && (
-        <div className="text-sm text-slate-500 mb-4">
-          Mostrando {showingStart}-{showingEnd} de {products.total.toLocaleString('es-CL')} productos
-        </div>
-      )}
-
-      {/* Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold text-slate-900 mb-6">
-              {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Nombre</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => {
-                    setFormData({
-                      ...formData,
-                      name: e.target.value,
-                      slug: editingProduct ? formData.slug : generateSlug(e.target.value),
-                    });
-                  }}
-                  className="input"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Slug</label>
-                <input
-                  type="text"
-                  value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  className="input"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Descripcion</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="input min-h-[80px]"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Precio (CLP)</label>
-                  <input
-                    type="number"
-                    step="1"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    className="input"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Stock</label>
-                  <input
-                    type="number"
-                    value={formData.stock}
-                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                    className="input"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Categoria</label>
-                <select
-                  value={formData.category_id}
-                  onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                  className="input"
-                >
-                  <option value="">Sin categoria</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">URL de imagen</label>
-                <input
-                  type="url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  className="input"
-                  placeholder="https://..."
-                />
-                {formData.image_url && (
-                  <div className="mt-2">
-                    <img 
-                      src={formData.image_url} 
-                      alt="Preview" 
-                      className="h-20 w-20 object-cover rounded border"
-                      onError={(e) => (e.currentTarget.style.display = 'none')}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Laboratorio</label>
-                <input
-                  type="text"
-                  value={formData.laboratory}
-                  onChange={(e) => setFormData({ ...formData, laboratory: e.target.value })}
-                  className="input"
-                  placeholder="Ej: SAVAL, RECALCINE..."
-                  list="laboratories-list"
-                />
-                <datalist id="laboratories-list">
-                  {laboratories.map((lab) => (
-                    <option key={lab} value={lab} />
-                  ))}
-                </datalist>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Accion Terapeutica</label>
-                  <input
-                    type="text"
-                    value={formData.therapeutic_action}
-                    onChange={(e) => setFormData({ ...formData, therapeutic_action: e.target.value })}
-                    className="input"
-                    placeholder="Ej: ANALGESICO, HIPOTENSOR..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Principio Activo</label>
-                  <input
-                    type="text"
-                    value={formData.active_ingredient}
-                    onChange={(e) => setFormData({ ...formData, active_ingredient: e.target.value })}
-                    className="input"
-                    placeholder="Ej: PARACETAMOL, IBUPROFENO..."
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Venta</label>
-                  <select
-                    value={formData.prescription_type}
-                    onChange={(e) => setFormData({ ...formData, prescription_type: e.target.value as 'direct' | 'prescription' | 'retained' })}
-                    className="input"
-                  >
-                    <option value="direct">Venta Directa</option>
-                    <option value="prescription">Receta Medica</option>
-                    <option value="retained">Receta Retenida</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Presentacion</label>
-                  <input
-                    type="text"
-                    value={formData.presentation}
-                    onChange={(e) => setFormData({ ...formData, presentation: e.target.value })}
-                    className="input"
-                    placeholder="Ej: COMPRIMIDO, JARABE..."
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="active"
-                  checked={formData.active}
-                  onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
-                  className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
-                />
-                <label htmlFor="active" className="text-sm font-medium text-slate-700">
-                  Producto activo (visible en tienda)
-                </label>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button type="submit" className="btn btn-primary flex-1">
-                  {editingProduct ? 'Guardar Cambios' : 'Crear Producto'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowForm(false);
-                    setEditingProduct(null);
-                    resetForm();
-                  }}
-                  className="btn btn-secondary"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Products Table */}
-      {isLoading ? (
-        <div className="card p-6 animate-pulse">
-          <div className="space-y-4">
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="h-16 bg-slate-200 rounded" />
-            ))}
-          </div>
-        </div>
-      ) : products && products.products.length > 0 ? (
-        <>
-          {/* Mobile Card Layout */}
-          <div className="md:hidden space-y-3">
-            {products.products
-              .filter(p => {
-                if (stockFilter === 'low') return p.stock > 0 && p.stock <= 10;
-                if (stockFilter === 'out') return p.stock === 0;
-                return true;
-              })
-              .map((product) => (
-              <div
-                key={product.id}
-                className={`card p-4 ${product.stock === 0 ? 'border-red-200 bg-red-50/30' : product.stock <= 10 ? 'border-orange-200 bg-orange-50/30' : ''}`}
-              >
-                <div className="flex items-start gap-3">
-                  {product.image_url ? (
-                    <img
-                      src={product.image_url}
-                      alt=""
-                      className="w-14 h-14 object-contain rounded-lg bg-white border border-slate-100 shrink-0"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-14 h-14 bg-slate-100 rounded-lg flex items-center justify-center shrink-0">
-                      <Package className="w-5 h-5 text-slate-300" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="font-medium text-slate-900 truncate">{product.name}</p>
-                        <p className="text-xs text-slate-500 truncate">{product.laboratory || 'Sin laboratorio'}</p>
-                      </div>
-                      <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${
-                        product.active ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-600'
-                      }`}>
-                        {product.active ? 'Activo' : 'Inactivo'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 mt-2">
-                      <span className="font-bold text-slate-900">{formatPrice(product.price)}</span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                        product.stock === 0 ? 'bg-red-100 text-red-700' :
-                        product.stock <= 10 ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-700'
-                      }`}>
-                        Stock: {product.stock}
-                      </span>
-                      {product.category_name && (
-                        <span className="text-xs text-slate-500 truncate">{product.category_name}</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 mt-3">
-                      {(product as any).prescription_type === 'prescription' && (
-                        <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded">RX</span>
-                      )}
-                      {(product as any).prescription_type === 'retained' && (
-                        <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-medium rounded">RR</span>
-                      )}
-                      <div className="flex-1" />
-                      <button
-                        onClick={() => handleDuplicate(product)}
-                        className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                        title="Duplicar"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleEdit(product)}
-                        className="p-2.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg"
-                        title="Editar"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product.id)}
-                        className="p-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Desktop Table Layout */}
-          <div className="hidden md:block card overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                  <tr>
-                    <th className="px-3 py-3 text-center w-10">
-                      <button
-                        onClick={selectAllOnPage}
-                        className="p-1 hover:bg-slate-200 rounded"
-                        title="Seleccionar todos"
-                      >
-                        {products?.products.every(p => selectedProducts.has(p.id)) ? (
-                          <CheckSquare className="w-5 h-5 text-emerald-600" />
-                        ) : (
-                          <Square className="w-5 h-5 text-slate-400" />
-                        )}
-                      </button>
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Producto</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Laboratorio</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Precio</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Stock</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Categoria</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Estado</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {products.products
-                    .filter(p => {
-                      if (stockFilter === 'low') return p.stock > 0 && p.stock <= 10;
-                      if (stockFilter === 'out') return p.stock === 0;
-                      return true;
-                    })
-                    .map((product) => (
-                    <tr 
-                      key={product.id} 
-                      className={`hover:bg-slate-50 ${selectedProducts.has(product.id) ? 'bg-emerald-50' : ''} ${product.stock === 0 ? 'bg-red-50/50' : product.stock <= 10 ? 'bg-orange-50/50' : ''}`}
-                    >
-                      <td className="px-3 py-3 text-center">
-                        <button
-                          onClick={() => toggleSelectProduct(product.id)}
-                          className="p-1 hover:bg-slate-200 rounded"
-                        >
-                          {selectedProducts.has(product.id) ? (
-                            <CheckSquare className="w-5 h-5 text-emerald-600" />
-                          ) : (
-                            <Square className="w-5 h-5 text-slate-400" />
-                          )}
-                        </button>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          {product.image_url ? (
-                            <img
-                              src={product.image_url}
-                              alt=""
-                              className="w-10 h-10 object-contain rounded bg-white border border-slate-100"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-slate-100 rounded flex items-center justify-center shrink-0">
-                              <span className="text-[10px] text-slate-400">Sin img</span>
-                            </div>
-                          )}
-                          <div className="flex flex-col min-w-0">
-                            <div className="flex items-center gap-2">
-                              {product.stock === 0 && (
-                                <span className="flex-shrink-0 w-2 h-2 rounded-full bg-red-500" title="Agotado" />
-                              )}
-                              {product.stock > 0 && product.stock <= 10 && (
-                                <span title="Stock bajo">
-                                  <AlertTriangle className="flex-shrink-0 w-4 h-4 text-orange-500" />
-                                </span>
-                              )}
-                              <span className="font-medium text-slate-900 truncate max-w-[200px]">{product.name}</span>
-                              {(product as any).prescription_type === 'prescription' && (
-                                <span className="flex-shrink-0 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded" title="Receta Medica">
-                                  RX
-                                </span>
-                              )}
-                              {(product as any).prescription_type === 'retained' && (
-                                <span className="flex-shrink-0 px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-medium rounded" title="Receta Retenida">
-                                  RR
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-slate-500 truncate max-w-[150px]">{product.slug}</span>
-                              {(product as any).therapeutic_action && (
-                                <span className="text-xs text-emerald-600 truncate max-w-[100px]" title={(product as any).therapeutic_action}>
-                                  {(product as any).therapeutic_action}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-500 truncate max-w-[150px]">
-                        {product.laboratory || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-right text-slate-900 font-medium">
-                        {formatPrice(product.price)}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className={`inline-flex items-center justify-center min-w-[40px] px-2 py-0.5 rounded-full text-sm font-bold ${
-                          product.stock === 0 ? 'bg-red-100 text-red-700' :
-                          product.stock <= 10 ? 'bg-orange-100 text-orange-700' : 'text-slate-900'
-                        }`}>
-                          {product.stock}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-500 truncate max-w-[120px]">
-                        {product.category_name || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          product.active ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'
-                        }`}>
-                          {product.active ? 'Activo' : 'Inactivo'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right whitespace-nowrap">
-                        <button
-                          onClick={() => handleDuplicate(product)}
-                          className="p-2 text-slate-600 hover:text-blue-600"
-                          title="Duplicar"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleEdit(product)}
-                          className="p-2 text-slate-600 hover:text-primary-600"
-                          title="Editar"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product.id)}
-                          className="p-2 text-slate-600 hover:text-red-600"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Pagination */}
-          {products.total_pages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-6">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <span className="px-4 py-2 text-slate-600">
-                Pagina {currentPage} de {products.total_pages}
-              </span>
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(products.total_pages, p + 1))}
-                disabled={currentPage === products.total_pages}
-                className="p-2 rounded-lg border border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          )}
-        </>
-      ) : (
-        <div className="card p-12 text-center">
-          <p className="text-slate-500 mb-4">No se encontraron productos</p>
-          {(searchTerm || selectedCategory) && (
-            <button onClick={clearFilters} className="btn btn-secondary">
-              Limpiar filtros
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
+ const router = useRouter();
+ const { user } = useAuthStore();
+
+ const [products, setProducts] = useState<PaginatedProducts | null>(null);
+ const [categories, setCategories] = useState<Category[]>([]);
+ const [laboratories, setLaboratories] = useState<string[]>([]);
+ const [isLoading, setIsLoading] = useState(true);
+ const [currentPage, setCurrentPage] = useState(1);
+ const [showForm, setShowForm] = useState(false);
+ const [editingProduct, setEditingProduct] = useState<string | null>(null);
+ const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+ // Selection for bulk actions
+ const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+ const [bulkActionLoading, setBulkActionLoading] = useState(false);
+
+ // Filters
+ const [searchTerm, setSearchTerm] = useState('');
+ const [selectedCategory, setSelectedCategory] = useState('');
+ const [selectedLaboratory, setSelectedLaboratory] = useState('');
+ const [selectedPrescription, setSelectedPrescription] = useState('');
+ const [sortBy, setSortBy] = useState('');
+ const [stockFilter, setStockFilter] = useState('');
+ const [labSearchTerm, setLabSearchTerm] = useState('');
+
+ // Import state
+ const [showImportModal, setShowImportModal] = useState(false);
+ const [importStep, setImportStep] = useState<'upload' | 'preview' | 'importing' | 'results'>('upload');
+ const [selectedFile, setSelectedFile] = useState<File | null>(null);
+ const [diffResults, setDiffResults] = useState<DiffResult | null>(null);
+ const [importResults, setImportResults] = useState<{ success: boolean; inserted: number; updated: number; errors?: string[] } | null>(null);
+ const [importLoading, setImportLoading] = useState(false);
+ const [parseErrors, setParseErrors] = useState<string[]>([]);
+
+ // Form state
+ const [formData, setFormData] = useState({
+ name: '',
+ slug: '',
+ description: '',
+ price: '',
+ stock: '',
+ category_id: '',
+ image_url: '',
+ laboratory: '',
+ therapeutic_action: '',
+ active_ingredient: '',
+ prescription_type: 'direct' as 'direct' | 'prescription' | 'retained',
+ presentation: '',
+ active: true,
+ });
+
+ useEffect(() => {
+ if (!user || user.role !== 'admin') {
+ router.push('/');
+ return;
+ }
+ loadCategories();
+ loadLaboratories();
+ }, [user, router]);
+
+ useEffect(() => {
+ // Check URL params for filters and actions
+ const urlParams = new URLSearchParams(window.location.search);
+ const urlStock = urlParams.get('stock');
+ const urlSearch = urlParams.get('search');
+ const urlAction = urlParams.get('action');
+ if (urlStock === 'low') setStockFilter('low');
+ if (urlStock === 'out') setStockFilter('out');
+ if (urlSearch) setSearchTerm(urlSearch);
+ if (urlAction === 'new') {
+ resetForm();
+ setEditingProduct(null);
+ setShowForm(true);
+ // Clear action param from URL
+ window.history.replaceState({}, '', '/admin/productos');
+ }
+ }, []);
+
+ useEffect(() => {
+ if (user) {
+ loadProducts();
+ }
+ }, [user, currentPage, searchTerm, selectedCategory, selectedLaboratory, selectedPrescription, sortBy, stockFilter]);
+
+ const loadCategories = async () => {
+ try {
+ const data = await productApi.listCategories();
+ data.sort((a, b) => a.name.localeCompare(b.name));
+ setCategories(data);
+ } catch (error) {
+ console.error('Error loading categories:', error);
+ }
+ };
+
+ const loadLaboratories = async () => {
+ try {
+ const data = await productApi.getLaboratories();
+ setLaboratories(data.laboratories || []);
+ } catch (error) {
+ console.error('Error loading laboratories:', error);
+ }
+ };
+
+ const loadProducts = async () => {
+ if (!user) return;
+
+ setIsLoading(true);
+ try {
+ const data = await productApi.list({
+ page: currentPage,
+ limit: 20,
+ active_only: false,
+ search: searchTerm || undefined,
+ category: selectedCategory || undefined,
+ laboratory: selectedLaboratory || undefined,
+ prescription_type: selectedPrescription || undefined,
+ sort_by: sortBy || undefined,
+ });
+ setProducts(data);
+ } catch (error) {
+ console.error('Error loading products:', error);
+ } finally {
+ setIsLoading(false);
+ }
+ };
+
+ const handleSearch = (e: React.FormEvent) => {
+ e.preventDefault();
+ setCurrentPage(1);
+ loadProducts();
+ };
+
+ const handleSubmit = async (e: React.FormEvent) => {
+ e.preventDefault();
+ try {
+ const data = {
+ name: formData.name,
+ slug: formData.slug,
+ description: formData.description || undefined,
+ price: formData.price,
+ stock: parseInt(formData.stock),
+ category_id: formData.category_id || undefined,
+ image_url: formData.image_url || undefined,
+ laboratory: formData.laboratory || undefined,
+ therapeutic_action: formData.therapeutic_action || undefined,
+ active_ingredient: formData.active_ingredient || undefined,
+ prescription_type: formData.prescription_type,
+ presentation: formData.presentation || undefined,
+ active: formData.active,
+ };
+
+ if (editingProduct) {
+ await productApi.update(editingProduct, data);
+ } else {
+ await productApi.create(data);
+ }
+
+ setShowForm(false);
+ setEditingProduct(null);
+ resetForm();
+ loadProducts();
+ loadLaboratories(); // Refresh labs list if a new one was added
+ } catch (error) {
+ console.error('Error saving product:', error);
+ alert('Error al guardar el producto');
+ }
+ };
+
+ const handleEdit = (product: any) => {
+ setFormData({
+ name: product.name,
+ slug: product.slug,
+ description: product.description || '',
+ price: product.price,
+ stock: String(product.stock),
+ category_id: product.category_id || '',
+ image_url: product.image_url || '',
+ laboratory: product.laboratory || '',
+ therapeutic_action: product.therapeutic_action || '',
+ active_ingredient: product.active_ingredient || '',
+ prescription_type: product.prescription_type || 'direct',
+ presentation: product.presentation || '',
+ active: product.active ?? true,
+ });
+ setEditingProduct(product.id);
+ setShowForm(true);
+ };
+
+ const handleDuplicate = (product: any) => {
+ const newSlug = generateSlug(product.name + ' copia');
+ setFormData({
+ name: product.name + ' (copia)',
+ slug: newSlug,
+ description: product.description || '',
+ price: product.price,
+ stock: String(product.stock),
+ category_id: product.category_id || '',
+ image_url: product.image_url || '',
+ laboratory: product.laboratory || '',
+ therapeutic_action: product.therapeutic_action || '',
+ active_ingredient: product.active_ingredient || '',
+ prescription_type: product.prescription_type || 'direct',
+ presentation: product.presentation || '',
+ active: false, // Start as inactive
+ });
+ setEditingProduct(null); // This is a new product
+ setShowForm(true);
+ };
+
+ const handleDelete = async (id: string) => {
+ if (!confirm('Estas seguro de eliminar este producto?')) return;
+
+ try {
+ await productApi.delete(id);
+ loadProducts();
+ } catch (error) {
+ console.error('Error deleting product:', error);
+ alert('Error al eliminar el producto');
+ }
+ };
+
+ const resetForm = () => {
+ setFormData({
+ name: '',
+ slug: '',
+ description: '',
+ price: '',
+ stock: '',
+ category_id: '',
+ image_url: '',
+ laboratory: '',
+ therapeutic_action: '',
+ active_ingredient: '',
+ prescription_type: 'direct',
+ presentation: '',
+ active: true,
+ });
+ };
+
+ const generateSlug = (name: string) => {
+ return name
+ .toLowerCase()
+ .normalize('NFD')
+ .replace(/[\u0300-\u036f]/g, '')
+ .replace(/[^a-z0-9]+/g, '-')
+ .replace(/(^-|-$)/g, '');
+ };
+
+ const exportToCSV = () => {
+ if (!products) return;
+
+ const headers = ['Nombre', 'Slug', 'Precio', 'Stock', 'Categoria', 'Laboratorio', 'Accion Terapeutica', 'Principio Activo', 'Tipo Venta', 'Presentacion', 'Estado'];
+ const prescriptionLabels: Record<string, string> = {
+ direct: 'Venta Directa',
+ prescription: 'Receta Medica',
+ retained: 'Receta Retenida'
+ };
+ const rows = products.products.map(p => [
+ `"${p.name.replace(/"/g, '""')}"`,
+ p.slug,
+ p.price,
+ p.stock,
+ p.category_name || '',
+ p.laboratory || '',
+ (p as any).therapeutic_action || '',
+ (p as any).active_ingredient || '',
+ prescriptionLabels[(p as any).prescription_type] || 'Venta Directa',
+ (p as any).presentation || '',
+ p.active ? 'Activo' : 'Inactivo'
+ ]);
+
+ const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+ const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM for Excel
+ const link = document.createElement('a');
+ link.href = URL.createObjectURL(blob);
+ link.download = `productos_${new Date().toISOString().split('T')[0]}.csv`;
+ link.click();
+ };
+
+ const clearFilters = () => {
+ setSearchTerm('');
+ setSelectedCategory('');
+ setSelectedLaboratory('');
+ setSelectedPrescription('');
+ setSortBy('');
+ setStockFilter('');
+ setLabSearchTerm('');
+ setCurrentPage(1);
+ // Clear URL params
+ window.history.replaceState({}, '', '/admin/productos');
+ };
+
+ // Count active filters
+ const activeFilterCount = [selectedCategory, selectedLaboratory, selectedPrescription, stockFilter].filter(Boolean).length;
+
+ // Filter laboratories by search term
+ const filteredLaboratories = laboratories.filter(lab =>
+ lab.toLowerCase().includes(labSearchTerm.toLowerCase())
+ );
+
+ // Selection helpers
+ const toggleSelectProduct = (id: string) => {
+ const newSelection = new Set(selectedProducts);
+ if (newSelection.has(id)) {
+ newSelection.delete(id);
+ } else {
+ newSelection.add(id);
+ }
+ setSelectedProducts(newSelection);
+ };
+
+ const selectAllOnPage = () => {
+ if (!products) return;
+ const allIds = products.products.map(p => p.id);
+ const allSelected = allIds.every(id => selectedProducts.has(id));
+ 
+ if (allSelected) {
+ // Deselect all
+ const newSelection = new Set(selectedProducts);
+ allIds.forEach(id => newSelection.delete(id));
+ setSelectedProducts(newSelection);
+ } else {
+ // Select all
+ const newSelection = new Set(selectedProducts);
+ allIds.forEach(id => newSelection.add(id));
+ setSelectedProducts(newSelection);
+ }
+ };
+
+ const clearSelection = () => {
+ setSelectedProducts(new Set());
+ };
+
+ // Bulk actions
+ const handleBulkActivate = async (activate: boolean) => {
+ if (selectedProducts.size === 0) return;
+
+ const action = activate ? 'activar' : 'desactivar';
+ if (!confirm(`¿Deseas ${action} ${selectedProducts.size} productos?`)) return;
+
+ setBulkActionLoading(true);
+ try {
+ const promises = Array.from(selectedProducts).map(id =>
+ productApi.update(id, { active: activate })
+ );
+ await Promise.all(promises);
+ clearSelection();
+ loadProducts();
+ } catch (error) {
+ console.error('Error en acción masiva:', error);
+ alert('Error al realizar la acción');
+ } finally {
+ setBulkActionLoading(false);
+ }
+ };
+
+ const handleBulkDelete = async () => {
+ if (selectedProducts.size === 0) return;
+
+ if (!confirm(`¿Deseas ELIMINAR ${selectedProducts.size} productos? Esta acción no se puede deshacer.`)) return;
+
+ setBulkActionLoading(true);
+ try {
+ const promises = Array.from(selectedProducts).map(id =>
+ productApi.delete(id)
+ );
+ await Promise.all(promises);
+ clearSelection();
+ loadProducts();
+ } catch (error) {
+ console.error('Error eliminando productos:', error);
+ alert('Error al eliminar productos');
+ } finally {
+ setBulkActionLoading(false);
+ }
+ };
+
+ // ─── Import handlers ───
+ const resetImportState = () => {
+ setSelectedFile(null);
+ setDiffResults(null);
+ setImportResults(null);
+ setImportStep('upload');
+ setImportLoading(false);
+ setParseErrors([]);
+ };
+
+ const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+ const file = e.target.files?.[0];
+ if (file) {
+ setSelectedFile(file);
+ setParseErrors([]);
+ }
+ };
+
+ const handleParseFile = async () => {
+ if (!selectedFile) return;
+ setImportLoading(true);
+ setParseErrors([]);
+
+ try {
+ const { rows, errors } = await parseExcelFile(selectedFile);
+ if (errors.length > 0) {
+ setParseErrors(errors);
+ setImportLoading(false);
+ return;
+ }
+
+ // Load ALL products for diffing
+ const allProducts = await productApi.list({ limit: 10000, active_only: false });
+ const diff = diffProducts(rows, allProducts.products);
+ setDiffResults(diff);
+ setImportStep('preview');
+ } catch (error) {
+ setParseErrors(['Error al procesar el archivo: ' + (error instanceof Error ? error.message : 'Error desconocido')]);
+ } finally {
+ setImportLoading(false);
+ }
+ };
+
+ const handleImport = async () => {
+ if (!diffResults) return;
+ setImportStep('importing');
+ setImportLoading(true);
+
+ try {
+ const results = await productApi.bulkImport({
+ newProducts: diffResults.newProducts,
+ updateProducts: diffResults.updatedProducts.map(u => u.excelRow),
+ });
+ setImportResults(results);
+ setImportStep('results');
+ } catch (error) {
+ setImportResults({
+ success: false,
+ inserted: 0,
+ updated: 0,
+ errors: [error instanceof Error ? error.message : 'Error desconocido'],
+ });
+ setImportStep('results');
+ } finally {
+ setImportLoading(false);
+ }
+ };
+
+ if (!user || user.role !== 'admin') {
+ return null;
+ }
+
+ const showingStart = products ? (currentPage - 1) * 20 + 1 : 0;
+ const showingEnd = products ? Math.min(currentPage * 20, products.total) : 0;
+
+ return (
+ <div className="max-w-7xl mx-auto">
+ <div className="flex justify-between items-center mb-6">
+ <div>
+ <h1 className="text-3xl font-bold text-slate-900">Productos</h1>
+ <p className="text-slate-500 mt-1">
+ Gestiona el catalogo de productos
+ </p>
+ </div>
+ <div className="flex flex-wrap gap-2">
+ <button
+ onClick={() => { resetImportState(); setShowImportModal(true); }}
+ className="btn btn-secondary flex items-center gap-2"
+ >
+ <Upload className="w-5 h-5" />
+ Importar Excel
+ </button>
+ <button
+ onClick={exportToCSV}
+ className="btn btn-secondary flex items-center gap-2"
+ >
+ <Download className="w-5 h-5" />
+ Exportar CSV
+ </button>
+ <button
+ onClick={() => {
+ resetForm();
+ setEditingProduct(null);
+ setShowForm(true);
+ }}
+ className="btn btn-primary flex items-center gap-2"
+ >
+ <Plus className="w-5 h-5" />
+ Nuevo Producto
+ </button>
+ </div>
+ </div>
+
+ {/* Search and Filters */}
+ <div className="card p-4 mb-6">
+ <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+ <form onSubmit={handleSearch} className="flex-1 min-w-0 w-full sm:w-auto sm:min-w-[200px]">
+ <div className="relative">
+ <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+ <input
+ type="text"
+ placeholder="Buscar productos..."
+ value={searchTerm}
+ onChange={(e) => setSearchTerm(e.target.value)}
+ className="input pl-10"
+ />
+ </div>
+ </form>
+
+ <select
+ value={selectedCategory}
+ onChange={(e) => {
+ setSelectedCategory(e.target.value);
+ setCurrentPage(1);
+ }}
+ className="input py-2 px-3 w-full sm:w-auto sm:min-w-[180px]"
+ >
+ <option value="">Todas las categorias</option>
+ {categories.map((cat) => (
+ <option key={cat.id} value={cat.slug}>
+ {cat.name}
+ </option>
+ ))}
+ </select>
+
+ <select
+ value={stockFilter}
+ onChange={(e) => {
+ setStockFilter(e.target.value);
+ setSortBy(e.target.value === 'low' ? 'stock_asc' : sortBy);
+ setCurrentPage(1);
+ }}
+ className={`input py-2 px-3 w-full sm:w-auto sm:min-w-[140px] ${stockFilter === 'low' ? 'border-orange-400 bg-orange-50' : ''}`}
+ >
+ <option value="">Todo el stock</option>
+ <option value="low">Stock bajo</option>
+ <option value="out">Agotados</option>
+ </select>
+
+ <select
+ value={sortBy}
+ onChange={(e) => {
+ setSortBy(e.target.value);
+ setCurrentPage(1);
+ }}
+ className="input py-2 px-3 w-full sm:w-auto sm:min-w-[160px]"
+ >
+ <option value="">Mas recientes</option>
+ <option value="name">Nombre A-Z</option>
+ <option value="price_asc">Precio menor</option>
+ <option value="price_desc">Precio mayor</option>
+ <option value="stock_asc">Menor stock</option>
+ <option value="stock_desc">Mayor stock</option>
+ </select>
+
+ <button
+ onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+ className={`btn ${showAdvancedFilters ? 'btn-primary' : 'btn-secondary'} flex items-center gap-2`}
+ >
+ <Filter className="w-4 h-4" />
+ Filtros
+ {activeFilterCount > 0 && (
+ <span className="bg-white text-emerald-600 rounded-full w-5 h-5 text-xs flex items-center justify-center font-bold">
+ {activeFilterCount}
+ </span>
+ )}
+ </button>
+
+ {(searchTerm || selectedCategory || selectedLaboratory || selectedPrescription || sortBy || stockFilter) && (
+ <button
+ onClick={clearFilters}
+ className="text-sm text-slate-500 hover:text-slate-700"
+ >
+ Limpiar todo
+ </button>
+ )}
+ </div>
+
+ {/* Advanced Filters Panel */}
+ {showAdvancedFilters && (
+ <div className="mt-4 pt-4 border-t border-slate-200">
+ <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+ {/* Laboratory Filter with Search */}
+ <div>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Laboratorio</label>
+ <div className="relative">
+ <input
+ type="text"
+ placeholder="Buscar laboratorio..."
+ value={labSearchTerm}
+ onChange={(e) => setLabSearchTerm(e.target.value)}
+ className="input py-2 px-3 w-full text-sm mb-2"
+ />
+ <select
+ value={selectedLaboratory}
+ onChange={(e) => {
+ setSelectedLaboratory(e.target.value);
+ setCurrentPage(1);
+ }}
+ className="input py-2 px-3 w-full"
+ size={5}
+ >
+ <option value="">Todos los laboratorios</option>
+ {filteredLaboratories.map((lab) => (
+ <option key={lab} value={lab}>
+ {lab}
+ </option>
+ ))}
+ </select>
+ </div>
+ {selectedLaboratory && (
+ <div className="mt-2 flex items-center gap-2 text-sm">
+ <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded flex items-center gap-1">
+ {selectedLaboratory}
+ <button onClick={() => setSelectedLaboratory('')} className="hover:text-emerald-600">
+ <X className="w-3 h-3" />
+ </button>
+ </span>
+ </div>
+ )}
+ </div>
+
+ {/* Prescription Type Filter */}
+ <div>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Venta</label>
+ <select
+ value={selectedPrescription}
+ onChange={(e) => {
+ setSelectedPrescription(e.target.value);
+ setCurrentPage(1);
+ }}
+ className="input py-2 px-3 w-full"
+ >
+ <option value="">Todos los tipos</option>
+ <option value="direct">Venta Directa</option>
+ <option value="prescription">Receta Medica</option>
+ <option value="retained">Receta Retenida</option>
+ </select>
+ <div className="mt-2 text-xs text-slate-500">
+ <p><span className="font-medium">Directa:</span> Sin receta</p>
+ <p><span className="font-medium">Medica:</span> Requiere receta</p>
+ <p><span className="font-medium">Retenida:</span> Controlados</p>
+ </div>
+ </div>
+
+ {/* Quick Stats */}
+ <div>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Resumen</label>
+ <div className="bg-slate-50 rounded-lg p-3 text-sm space-y-1">
+ <p><span className="font-medium">{products?.total.toLocaleString('es-CL') || 0}</span> productos encontrados</p>
+ <p><span className="font-medium">{laboratories.length}</span> laboratorios</p>
+ <p><span className="font-medium">{categories.length}</span> categorias</p>
+ </div>
+ </div>
+ </div>
+ </div>
+ )}
+ </div>
+
+ {/* Bulk Actions Bar */}
+ {selectedProducts.size > 0 && (
+ <div className="card p-4 mb-4 bg-emerald-50 border border-emerald-200 flex flex-wrap items-center justify-between gap-4">
+ <div className="flex items-center gap-3">
+ <span className="font-medium text-emerald-800">
+ {selectedProducts.size} producto{selectedProducts.size > 1 ? 's' : ''} seleccionado{selectedProducts.size > 1 ? 's' : ''}
+ </span>
+ <button
+ onClick={clearSelection}
+ className="text-sm text-emerald-600 hover:text-emerald-800 underline"
+ >
+ Limpiar selección
+ </button>
+ </div>
+ <div className="flex items-center gap-2">
+ <button
+ onClick={() => handleBulkActivate(true)}
+ disabled={bulkActionLoading}
+ className="btn btn-secondary flex items-center gap-2 text-sm py-2"
+ >
+ <Power className="w-4 h-4" />
+ Activar
+ </button>
+ <button
+ onClick={() => handleBulkActivate(false)}
+ disabled={bulkActionLoading}
+ className="btn btn-secondary flex items-center gap-2 text-sm py-2"
+ >
+ <PowerOff className="w-4 h-4" />
+ Desactivar
+ </button>
+ <button
+ onClick={handleBulkDelete}
+ disabled={bulkActionLoading}
+ className="btn bg-red-600 text-white hover:bg-red-700 flex items-center gap-2 text-sm py-2"
+ >
+ <Trash2 className="w-4 h-4" />
+ Eliminar
+ </button>
+ </div>
+ </div>
+ )}
+
+ {/* Results count */}
+ {products && (
+ <div className="text-sm text-slate-500 mb-4">
+ Mostrando {showingStart}-{showingEnd} de {products.total.toLocaleString('es-CL')} productos
+ </div>
+ )}
+
+ {/* Form Modal */}
+ {showForm && (
+ <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+ <div className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+ <h2 className="text-xl font-bold text-slate-900 mb-6">
+ {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
+ </h2>
+
+ <form onSubmit={handleSubmit} className="space-y-4">
+ <div>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Nombre</label>
+ <input
+ type="text"
+ value={formData.name}
+ onChange={(e) => {
+ setFormData({
+ ...formData,
+ name: e.target.value,
+ slug: editingProduct ? formData.slug : generateSlug(e.target.value),
+ });
+ }}
+ className="input"
+ required
+ />
+ </div>
+
+ <div>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Slug</label>
+ <input
+ type="text"
+ value={formData.slug}
+ onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+ className="input"
+ required
+ />
+ </div>
+
+ <div>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Descripcion</label>
+ <textarea
+ value={formData.description}
+ onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+ className="input min-h-[80px]"
+ />
+ </div>
+
+ <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+ <div>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Precio (CLP)</label>
+ <input
+ type="number"
+ step="1"
+ value={formData.price}
+ onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+ className="input"
+ required
+ />
+ </div>
+ <div>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Stock</label>
+ <input
+ type="number"
+ value={formData.stock}
+ onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+ className="input"
+ required
+ />
+ </div>
+ </div>
+
+ <div>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Categoria</label>
+ <select
+ value={formData.category_id}
+ onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+ className="input"
+ >
+ <option value="">Sin categoria</option>
+ {categories.map((cat) => (
+ <option key={cat.id} value={cat.id}>
+ {cat.name}
+ </option>
+ ))}
+ </select>
+ </div>
+
+ <div>
+ <label className="block text-sm font-medium text-slate-700 mb-1">URL de imagen</label>
+ <input
+ type="url"
+ value={formData.image_url}
+ onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+ className="input"
+ placeholder="https://..."
+ />
+ {formData.image_url && (
+ <div className="mt-2">
+ <img 
+ src={formData.image_url} 
+ alt="Preview" 
+ className="h-20 w-20 object-cover rounded border"
+ onError={(e) => (e.currentTarget.style.display = 'none')}
+ />
+ </div>
+ )}
+ </div>
+
+ <div>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Laboratorio</label>
+ <input
+ type="text"
+ value={formData.laboratory}
+ onChange={(e) => setFormData({ ...formData, laboratory: e.target.value })}
+ className="input"
+ placeholder="Ej: SAVAL, RECALCINE..."
+ list="laboratories-list"
+ />
+ <datalist id="laboratories-list">
+ {laboratories.map((lab) => (
+ <option key={lab} value={lab} />
+ ))}
+ </datalist>
+ </div>
+
+ <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+ <div>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Accion Terapeutica</label>
+ <input
+ type="text"
+ value={formData.therapeutic_action}
+ onChange={(e) => setFormData({ ...formData, therapeutic_action: e.target.value })}
+ className="input"
+ placeholder="Ej: ANALGESICO, HIPOTENSOR..."
+ />
+ </div>
+ <div>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Principio Activo</label>
+ <input
+ type="text"
+ value={formData.active_ingredient}
+ onChange={(e) => setFormData({ ...formData, active_ingredient: e.target.value })}
+ className="input"
+ placeholder="Ej: PARACETAMOL, IBUPROFENO..."
+ />
+ </div>
+ </div>
+
+ <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+ <div>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Venta</label>
+ <select
+ value={formData.prescription_type}
+ onChange={(e) => setFormData({ ...formData, prescription_type: e.target.value as 'direct' | 'prescription' | 'retained' })}
+ className="input"
+ >
+ <option value="direct">Venta Directa</option>
+ <option value="prescription">Receta Medica</option>
+ <option value="retained">Receta Retenida</option>
+ </select>
+ </div>
+ <div>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Presentacion</label>
+ <input
+ type="text"
+ value={formData.presentation}
+ onChange={(e) => setFormData({ ...formData, presentation: e.target.value })}
+ className="input"
+ placeholder="Ej: COMPRIMIDO, JARABE..."
+ />
+ </div>
+ </div>
+
+ <div className="flex items-center gap-3">
+ <input
+ type="checkbox"
+ id="active"
+ checked={formData.active}
+ onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+ className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+ />
+ <label htmlFor="active" className="text-sm font-medium text-slate-700">
+ Producto activo (visible en tienda)
+ </label>
+ </div>
+
+ <div className="flex gap-3 pt-4">
+ <button type="submit" className="btn btn-primary flex-1">
+ {editingProduct ? 'Guardar Cambios' : 'Crear Producto'}
+ </button>
+ <button
+ type="button"
+ onClick={() => {
+ setShowForm(false);
+ setEditingProduct(null);
+ resetForm();
+ }}
+ className="btn btn-secondary"
+ >
+ Cancelar
+ </button>
+ </div>
+ </form>
+ </div>
+ </div>
+ )}
+
+ {/* Import Excel Modal */}
+ {showImportModal && (
+ <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+ <div className="bg-white rounded-2xl p-4 sm:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto my-auto">
+
+ {/* Step 1: Upload */}
+ {importStep === 'upload' && (
+ <>
+ <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
+ <FileSpreadsheet className="w-7 h-7 text-emerald-600" />
+ Importar Productos desde Excel
+ </h2>
+
+ <div
+ className="border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center mb-4 hover:border-emerald-400 transition-colors cursor-pointer"
+ onClick={() => document.getElementById('excel-upload')?.click()}
+ >
+ <input
+ type="file"
+ accept=".xlsx,.xls"
+ onChange={handleFileSelect}
+ className="hidden"
+ id="excel-upload"
+ />
+ <Upload className="w-14 h-14 mx-auto mb-3 text-emerald-600" />
+ <p className="text-lg font-medium mb-1">Selecciona un archivo Excel</p>
+ <p className="text-slate-500">.xlsx o .xls</p>
+ </div>
+
+ {selectedFile && (
+ <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 mb-4 flex items-center gap-3">
+ <FileSpreadsheet className="w-6 h-6 text-emerald-600 shrink-0" />
+ <div>
+ <p className="font-medium">{selectedFile.name}</p>
+ <p className="text-sm text-slate-600">{(selectedFile.size / 1024).toFixed(1)} KB</p>
+ </div>
+ </div>
+ )}
+
+ {parseErrors.length > 0 && (
+ <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 mb-4">
+ {parseErrors.map((err, i) => (
+ <p key={i} className="text-red-700 font-medium">{err}</p>
+ ))}
+ </div>
+ )}
+
+ <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4 mb-6">
+ <p className="font-medium text-blue-900 mb-2">Formato esperado del Excel:</p>
+ <p className="text-sm text-blue-800">Columnas: id, producto, laboratorio, departamento, precio, stock, accion_terapeutica, principio_activo, presentacion, receta...</p>
+ <p className="text-sm text-blue-700 mt-2">La columna &quot;id&quot; se usa para detectar productos existentes. Los productos nuevos se insertan y los existentes se actualizan (stock, precio).</p>
+ </div>
+
+ <div className="flex gap-3">
+ <button
+ onClick={handleParseFile}
+ disabled={!selectedFile || importLoading}
+ className="btn btn-primary flex-1 flex items-center justify-center gap-2"
+ >
+ {importLoading ? (
+ <>
+ <RefreshCw className="w-5 h-5 animate-spin" />
+ Analizando...
+ </>
+ ) : (
+ <>
+ Analizar Archivo
+ <ArrowRight className="w-5 h-5" />
+ </>
+ )}
+ </button>
+ <button
+ onClick={() => { setShowImportModal(false); resetImportState(); }}
+ className="btn btn-secondary"
+ disabled={importLoading}
+ >
+ Cancelar
+ </button>
+ </div>
+ </>
+ )}
+
+ {/* Step 2: Preview */}
+ {importStep === 'preview' && diffResults && (
+ <>
+ <h2 className="text-2xl font-bold text-slate-900 mb-4">Vista Previa de Importación</h2>
+
+ {/* Summary cards */}
+ <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+ <div className="rounded-2xl border-2 border-green-200 bg-green-50 p-4">
+ <p className="text-sm text-slate-600">Productos nuevos</p>
+ <p className="text-3xl font-bold text-green-700">{diffResults.newProducts.length}</p>
+ </div>
+ <div className="rounded-2xl border-2 border-blue-200 bg-blue-50 p-4">
+ <p className="text-sm text-slate-600">Con cambios</p>
+ <p className="text-3xl font-bold text-blue-700">{diffResults.updatedProducts.length}</p>
+ </div>
+ <div className="rounded-2xl border-2 border-slate-200 bg-slate-50 p-4">
+ <p className="text-sm text-slate-600">Sin cambios</p>
+ <p className="text-3xl font-bold text-slate-700">{diffResults.unchangedCount}</p>
+ </div>
+ </div>
+
+ {/* New products */}
+ {diffResults.newProducts.length > 0 && (
+ <div className="mb-6">
+ <h3 className="text-lg font-bold mb-2 flex items-center gap-2 text-green-700">
+ <Plus className="w-5 h-5" />
+ Productos Nuevos ({diffResults.newProducts.length})
+ </h3>
+ <div className="max-h-48 overflow-y-auto border-2 rounded-2xl">
+ <table className="w-full text-sm">
+ <thead className="bg-slate-50 sticky top-0">
+ <tr>
+ <th className="px-3 py-2 text-left font-medium">Nombre</th>
+ <th className="px-3 py-2 text-left font-medium">Laboratorio</th>
+ <th className="px-3 py-2 text-right font-medium">Precio</th>
+ <th className="px-3 py-2 text-right font-medium">Stock</th>
+ </tr>
+ </thead>
+ <tbody className="divide-y divide-slate-100">
+ {diffResults.newProducts.slice(0, 100).map((row, i) => (
+ <tr key={i} className="hover:bg-green-50/50">
+ <td className="px-3 py-2 truncate max-w-[200px]">{row.producto}</td>
+ <td className="px-3 py-2 text-slate-500 truncate max-w-[120px]">{row.laboratorio || '-'}</td>
+ <td className="px-3 py-2 text-right font-medium">{formatPrice(String(parsePrice(row.precio)))}</td>
+ <td className="px-3 py-2 text-right">{parseInt(row.stock) || 0}</td>
+ </tr>
+ ))}
+ </tbody>
+ </table>
+ {diffResults.newProducts.length > 100 && (
+ <p className="p-3 text-sm text-slate-500 text-center border-t">
+ ... y {diffResults.newProducts.length - 100} más
+ </p>
+ )}
+ </div>
+ </div>
+ )}
+
+ {/* Updated products */}
+ {diffResults.updatedProducts.length > 0 && (
+ <div className="mb-6">
+ <h3 className="text-lg font-bold mb-2 flex items-center gap-2 text-blue-700">
+ <RefreshCw className="w-5 h-5" />
+ Productos con Cambios ({diffResults.updatedProducts.length})
+ </h3>
+ <div className="max-h-48 overflow-y-auto border-2 rounded-2xl">
+ <table className="w-full text-sm">
+ <thead className="bg-slate-50 sticky top-0">
+ <tr>
+ <th className="px-3 py-2 text-left font-medium">Nombre</th>
+ <th className="px-3 py-2 text-right font-medium">Stock</th>
+ <th className="px-3 py-2 text-right font-medium">Precio</th>
+ </tr>
+ </thead>
+ <tbody className="divide-y divide-slate-100">
+ {diffResults.updatedProducts.slice(0, 100).map((update, i) => (
+ <tr key={i} className="hover:bg-blue-50/50">
+ <td className="px-3 py-2 truncate max-w-[200px]">{update.excelRow.producto}</td>
+ <td className="px-3 py-2 text-right">
+ {update.stockChange ? (
+ <span className="font-medium">
+ <span className="text-slate-400">{update.stockChange.old}</span>
+ <span className="text-slate-400 mx-1">→</span>
+ <span className={update.stockChange.new > update.stockChange.old ? 'text-green-600' : 'text-orange-600'}>
+ {update.stockChange.new}
+ </span>
+ </span>
+ ) : (
+ <span className="text-slate-400">-</span>
+ )}
+ </td>
+ <td className="px-3 py-2 text-right">
+ {update.priceChange ? (
+ <span className="font-medium">
+ <span className="text-slate-400">{formatPrice(String(update.priceChange.old))}</span>
+ <span className="text-slate-400 mx-1">→</span>
+ <span className="text-blue-600">{formatPrice(String(update.priceChange.new))}</span>
+ </span>
+ ) : (
+ <span className="text-slate-400">-</span>
+ )}
+ </td>
+ </tr>
+ ))}
+ </tbody>
+ </table>
+ {diffResults.updatedProducts.length > 100 && (
+ <p className="p-3 text-sm text-slate-500 text-center border-t">
+ ... y {diffResults.updatedProducts.length - 100} más
+ </p>
+ )}
+ </div>
+ </div>
+ )}
+
+ {/* No changes warning */}
+ {diffResults.newProducts.length === 0 && diffResults.updatedProducts.length === 0 && (
+ <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-4 mb-6">
+ <p className="text-yellow-800 font-medium">
+ No hay cambios para aplicar. Todos los productos del Excel ya están actualizados en la base de datos.
+ </p>
+ </div>
+ )}
+
+ {/* Actions */}
+ <div className="flex flex-wrap gap-3 pt-4 border-t-2">
+ <button
+ onClick={handleImport}
+ disabled={diffResults.newProducts.length === 0 && diffResults.updatedProducts.length === 0}
+ className="btn btn-primary flex-1 flex items-center justify-center gap-2"
+ >
+ <CheckCircle className="w-5 h-5" />
+ Importar {diffResults.newProducts.length + diffResults.updatedProducts.length} Productos
+ </button>
+ <button onClick={() => setImportStep('upload')} className="btn btn-secondary">
+ Volver
+ </button>
+ <button onClick={() => { setShowImportModal(false); resetImportState(); }} className="btn btn-secondary">
+ Cancelar
+ </button>
+ </div>
+ </>
+ )}
+
+ {/* Step 2.5: Importing */}
+ {importStep === 'importing' && (
+ <div className="text-center py-12">
+ <RefreshCw className="w-16 h-16 mx-auto mb-4 text-emerald-600 animate-spin" />
+ <h2 className="text-2xl font-bold text-slate-900 mb-2">Importando productos...</h2>
+ <p className="text-slate-500">Esto puede tomar unos segundos</p>
+ </div>
+ )}
+
+ {/* Step 3: Results */}
+ {importStep === 'results' && importResults && (
+ <>
+ <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
+ {importResults.success ? (
+ <CheckCircle className="w-8 h-8 text-green-600" />
+ ) : (
+ <XCircle className="w-8 h-8 text-red-600" />
+ )}
+ {importResults.success ? 'Importación Completada' : 'Error en Importación'}
+ </h2>
+
+ {importResults.success ? (
+ <>
+ <div className="grid grid-cols-2 gap-4 mb-6">
+ <div className="rounded-2xl border-2 border-green-200 bg-green-50 p-4">
+ <p className="text-sm text-slate-600 mb-1">Productos insertados</p>
+ <p className="text-3xl font-bold text-green-700">{importResults.inserted}</p>
+ </div>
+ <div className="rounded-2xl border-2 border-blue-200 bg-blue-50 p-4">
+ <p className="text-sm text-slate-600 mb-1">Productos actualizados</p>
+ <p className="text-3xl font-bold text-blue-700">{importResults.updated}</p>
+ </div>
+ </div>
+ {importResults.errors && importResults.errors.length > 0 && (
+ <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-4 mb-6">
+ <p className="font-medium text-orange-800 mb-2">Advertencias ({importResults.errors.length}):</p>
+ <div className="max-h-32 overflow-y-auto text-sm text-orange-700 space-y-1">
+ {importResults.errors.map((err, i) => (
+ <p key={i}>{err}</p>
+ ))}
+ </div>
+ </div>
+ )}
+ <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 mb-6">
+ <p className="text-emerald-800">La importación se completó exitosamente.</p>
+ </div>
+ </>
+ ) : (
+ <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 mb-6">
+ <p className="text-red-800 font-medium mb-2">Error:</p>
+ {importResults.errors?.map((err, i) => (
+ <p key={i} className="text-sm text-red-700">{err}</p>
+ ))}
+ </div>
+ )}
+
+ <button
+ onClick={() => {
+ setShowImportModal(false);
+ resetImportState();
+ loadProducts();
+ }}
+ className="btn btn-primary w-full"
+ >
+ Cerrar
+ </button>
+ </>
+ )}
+ </div>
+ </div>
+ )}
+
+ {/* Products Table */}
+ {isLoading ? (
+ <div className="card p-6 animate-pulse">
+ <div className="space-y-4">
+ {[...Array(10)].map((_, i) => (
+ <div key={i} className="h-16 bg-slate-200 rounded" />
+ ))}
+ </div>
+ </div>
+ ) : products && products.products.length > 0 ? (
+ <>
+ {/* Mobile Card Layout */}
+ <div className="md:hidden space-y-3">
+ {products.products
+ .filter(p => {
+ if (stockFilter === 'low') return p.stock > 0 && p.stock <= 10;
+ if (stockFilter === 'out') return p.stock === 0;
+ return true;
+ })
+ .map((product) => (
+ <div
+ key={product.id}
+ className={`card p-4 ${product.stock === 0 ? 'border-red-200 bg-red-50/30' : product.stock <= 10 ? 'border-orange-200 bg-orange-50/30' : ''}`}
+ >
+ <div className="flex items-start gap-3">
+ {product.image_url ? (
+ <img
+ src={product.image_url}
+ alt=""
+ className="w-14 h-14 object-contain rounded-lg bg-white border border-slate-100 shrink-0"
+ loading="lazy"
+ />
+ ) : (
+ <div className="w-14 h-14 bg-slate-100 rounded-lg flex items-center justify-center shrink-0">
+ <Package className="w-5 h-5 text-slate-300" />
+ </div>
+ )}
+ <div className="flex-1 min-w-0">
+ <div className="flex items-start justify-between gap-2">
+ <div className="min-w-0">
+ <p className="font-medium text-slate-900 truncate">{product.name}</p>
+ <p className="text-xs text-slate-500 truncate">{product.laboratory || 'Sin laboratorio'}</p>
+ </div>
+ <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${
+ product.active ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-600'
+ }`}>
+ {product.active ? 'Activo' : 'Inactivo'}
+ </span>
+ </div>
+ <div className="flex items-center gap-3 mt-2">
+ <span className="font-bold text-slate-900">{formatPrice(product.price)}</span>
+ <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+ product.stock === 0 ? 'bg-red-100 text-red-700' :
+ product.stock <= 10 ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-700'
+ }`}>
+ Stock: {product.stock}
+ </span>
+ {product.category_name && (
+ <span className="text-xs text-slate-500 truncate">{product.category_name}</span>
+ )}
+ </div>
+ <div className="flex items-center gap-1 mt-3">
+ {(product as any).prescription_type === 'prescription' && (
+ <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded">RX</span>
+ )}
+ {(product as any).prescription_type === 'retained' && (
+ <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-medium rounded">RR</span>
+ )}
+ <div className="flex-1" />
+ <button
+ onClick={() => handleDuplicate(product)}
+ className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+ title="Duplicar"
+ >
+ <Copy className="w-4 h-4" />
+ </button>
+ <button
+ onClick={() => handleEdit(product)}
+ className="p-2.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg"
+ title="Editar"
+ >
+ <Edit className="w-4 h-4" />
+ </button>
+ <button
+ onClick={() => handleDelete(product.id)}
+ className="p-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
+ title="Eliminar"
+ >
+ <Trash2 className="w-4 h-4" />
+ </button>
+ </div>
+ </div>
+ </div>
+ </div>
+ ))}
+ </div>
+
+ {/* Desktop Table Layout */}
+ <div className="hidden md:block card overflow-hidden">
+ <div className="overflow-x-auto">
+ <table className="w-full">
+ <thead className="bg-slate-50 border-b border-slate-200">
+ <tr>
+ <th className="px-3 py-3 text-center w-10">
+ <button
+ onClick={selectAllOnPage}
+ className="p-1 hover:bg-slate-200 rounded"
+ title="Seleccionar todos"
+ >
+ {products?.products.every(p => selectedProducts.has(p.id)) ? (
+ <CheckSquare className="w-5 h-5 text-emerald-600" />
+ ) : (
+ <Square className="w-5 h-5 text-slate-400" />
+ )}
+ </button>
+ </th>
+ <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Producto</th>
+ <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Laboratorio</th>
+ <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Precio</th>
+ <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Stock</th>
+ <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Categoria</th>
+ <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Estado</th>
+ <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Acciones</th>
+ </tr>
+ </thead>
+ <tbody className="divide-y divide-slate-200">
+ {products.products
+ .filter(p => {
+ if (stockFilter === 'low') return p.stock > 0 && p.stock <= 10;
+ if (stockFilter === 'out') return p.stock === 0;
+ return true;
+ })
+ .map((product) => (
+ <tr 
+ key={product.id} 
+ className={`hover:bg-slate-50 ${selectedProducts.has(product.id) ? 'bg-emerald-50' : ''} ${product.stock === 0 ? 'bg-red-50/50' : product.stock <= 10 ? 'bg-orange-50/50' : ''}`}
+ >
+ <td className="px-3 py-3 text-center">
+ <button
+ onClick={() => toggleSelectProduct(product.id)}
+ className="p-1 hover:bg-slate-200 rounded"
+ >
+ {selectedProducts.has(product.id) ? (
+ <CheckSquare className="w-5 h-5 text-emerald-600" />
+ ) : (
+ <Square className="w-5 h-5 text-slate-400" />
+ )}
+ </button>
+ </td>
+ <td className="px-4 py-3">
+ <div className="flex items-center gap-3">
+ {product.image_url ? (
+ <img
+ src={product.image_url}
+ alt=""
+ className="w-10 h-10 object-contain rounded bg-white border border-slate-100"
+ loading="lazy"
+ />
+ ) : (
+ <div className="w-10 h-10 bg-slate-100 rounded flex items-center justify-center shrink-0">
+ <span className="text-[10px] text-slate-400">Sin img</span>
+ </div>
+ )}
+ <div className="flex flex-col min-w-0">
+ <div className="flex items-center gap-2">
+ {product.stock === 0 && (
+ <span className="flex-shrink-0 w-2 h-2 rounded-full bg-red-500" title="Agotado" />
+ )}
+ {product.stock > 0 && product.stock <= 10 && (
+ <span title="Stock bajo">
+ <AlertTriangle className="flex-shrink-0 w-4 h-4 text-orange-500" />
+ </span>
+ )}
+ <span className="font-medium text-slate-900 truncate max-w-[200px]">{product.name}</span>
+ {(product as any).prescription_type === 'prescription' && (
+ <span className="flex-shrink-0 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded" title="Receta Medica">
+ RX
+ </span>
+ )}
+ {(product as any).prescription_type === 'retained' && (
+ <span className="flex-shrink-0 px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-medium rounded" title="Receta Retenida">
+ RR
+ </span>
+ )}
+ </div>
+ <div className="flex items-center gap-2">
+ <span className="text-xs text-slate-500 truncate max-w-[150px]">{product.slug}</span>
+ {(product as any).therapeutic_action && (
+ <span className="text-xs text-emerald-600 truncate max-w-[100px]" title={(product as any).therapeutic_action}>
+ {(product as any).therapeutic_action}
+ </span>
+ )}
+ </div>
+ </div>
+ </div>
+ </td>
+ <td className="px-4 py-3 text-sm text-slate-500 truncate max-w-[150px]">
+ {product.laboratory || '-'}
+ </td>
+ <td className="px-4 py-3 text-right text-slate-900 font-medium">
+ {formatPrice(product.price)}
+ </td>
+ <td className="px-4 py-3 text-right">
+ <span className={`inline-flex items-center justify-center min-w-[40px] px-2 py-0.5 rounded-full text-sm font-bold ${
+ product.stock === 0 ? 'bg-red-100 text-red-700' :
+ product.stock <= 10 ? 'bg-orange-100 text-orange-700' : 'text-slate-900'
+ }`}>
+ {product.stock}
+ </span>
+ </td>
+ <td className="px-4 py-3 text-sm text-slate-500 truncate max-w-[120px]">
+ {product.category_name || '-'}
+ </td>
+ <td className="px-4 py-3 text-center">
+ <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+ product.active ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'
+ }`}>
+ {product.active ? 'Activo' : 'Inactivo'}
+ </span>
+ </td>
+ <td className="px-4 py-3 text-right whitespace-nowrap">
+ <button
+ onClick={() => handleDuplicate(product)}
+ className="p-2 text-slate-600 hover:text-blue-600"
+ title="Duplicar"
+ >
+ <Copy className="w-4 h-4" />
+ </button>
+ <button
+ onClick={() => handleEdit(product)}
+ className="p-2 text-slate-600 hover:text-primary-600"
+ title="Editar"
+ >
+ <Edit className="w-4 h-4" />
+ </button>
+ <button
+ onClick={() => handleDelete(product.id)}
+ className="p-2 text-slate-600 hover:text-red-600"
+ title="Eliminar"
+ >
+ <Trash2 className="w-4 h-4" />
+ </button>
+ </td>
+ </tr>
+ ))}
+ </tbody>
+ </table>
+ </div>
+ </div>
+
+ {/* Pagination */}
+ {products.total_pages > 1 && (
+ <div className="flex justify-center items-center gap-2 mt-6">
+ <button
+ onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+ disabled={currentPage === 1}
+ className="p-2 rounded-lg border border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
+ >
+ <ChevronLeft className="w-5 h-5" />
+ </button>
+ <span className="px-4 py-2 text-slate-600">
+ Pagina {currentPage} de {products.total_pages}
+ </span>
+ <button
+ onClick={() => setCurrentPage((p) => Math.min(products.total_pages, p + 1))}
+ disabled={currentPage === products.total_pages}
+ className="p-2 rounded-lg border border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
+ >
+ <ChevronRight className="w-5 h-5" />
+ </button>
+ </div>
+ )}
+ </>
+ ) : (
+ <div className="card p-12 text-center">
+ <p className="text-slate-500 mb-4">No se encontraron productos</p>
+ {(searchTerm || selectedCategory) && (
+ <button onClick={clearFilters} className="btn btn-secondary">
+ Limpiar filtros
+ </button>
+ )}
+ </div>
+ )}
+ </div>
+ );
 }
