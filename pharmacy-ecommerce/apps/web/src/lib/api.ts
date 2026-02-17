@@ -447,6 +447,9 @@ export interface Order {
   pickup_code: string | null;
   reservation_expires_at: string | null;
   customer_phone: string | null;
+  guest_name: string | null;
+  guest_surname: string | null;
+  guest_email: string | null;
 }
 
 export interface OrderItem {
@@ -460,9 +463,6 @@ export interface OrderItem {
 
 export interface OrderWithItems extends Order {
   items: OrderItem[];
-  guest_name?: string | null;
-  guest_surname?: string | null;
-  guest_email?: string | null;
   guest_session_id?: string | null;
 }
 

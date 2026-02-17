@@ -68,6 +68,12 @@ titular_registro | stock | precio | precio_por_unidad
 - Upsert con `onConflict: 'external_id'`
 - Batches de 100 para evitar timeouts
 
+### Fix crítico post-implementación: productApi.list() cap de 100 items
+
+**Problema detectado en code review**: `productApi.list()` tiene un cap duro de 100 items (`Math.min(params?.limit || 12, 100)` en api.ts). Al llamar `productApi.list({ limit: 10000 })` solo devolvía 100 productos — con 1189 productos en DB, los 1089 restantes se habrían marcado como "nuevos" en cada re-importación, creando duplicados masivos.
+
+**Fix**: Creada función `loadAllProductsForDiff()` en `excel-import.ts` que consulta Supabase directamente en batches de 1000 hasta que no haya más datos. El componente admin ahora usa esta función en lugar de `productApi.list()`.
+
 ---
 
 ## COMPLETADO: Admin Mobile Responsive (Febrero 2026)
