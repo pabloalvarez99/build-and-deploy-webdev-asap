@@ -95,14 +95,6 @@ export default function LoginPage() {
           </Link>
         </p>
 
-        <div className="mt-6 pt-6 border-t border-slate-100">
-          <p className="text-center text-base text-slate-500">
-            Credenciales de prueba (admin):
-          </p>
-          <p className="text-center text-sm text-slate-400 mt-1">
-            admin@pharmacy.com / admin123
-          </p>
-        </div>
       </div>
     </div>
   );
