@@ -15,6 +15,8 @@ import {
   User,
   ChevronLeft,
   AlertTriangle,
+  BarChart2,
+  Settings,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -29,6 +31,8 @@ const navItems = [
   { href: '/admin/productos', icon: Package, label: 'Productos' },
   { href: '/admin/ordenes', icon: ShoppingBag, label: 'Ordenes' },
   { href: '/admin/categorias', icon: Tags, label: 'Categorias' },
+  { href: '/admin/reportes', icon: BarChart2, label: 'Reportes' },
+  { href: '/admin/configuracion', icon: Settings, label: 'Configuracion' },
 ];
 
 export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalStock = 0, onOpenCommandPalette }: SidebarProps) {
