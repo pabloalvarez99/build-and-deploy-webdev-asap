@@ -9,6 +9,48 @@
 
 ---
 
+## COMPLETADO: Stock Management + Reportes + Alertas Email (Marzo 2026)
+
+### 1. Gestión de Stock (`admin/productos`)
+- **Edición inline**: click en el número de stock en la tabla → se convierte en input, Enter guarda, Escape cancela
+- **StockModal** (`src/components/admin/StockModal.tsx`): botón 🕐 abre modal con stock actual, form para agregar/restar unidades, razón, e historial de movimientos
+- **API**: `PATCH /api/admin/products/[id]/stock` — delta + reason → actualiza `products.stock` + inserta en `stock_movements`
+- **API**: `GET /api/admin/products/[id]/stock` — devuelve historial de movimientos del producto
+- **DB**: tabla `stock_movements` (id, product_id, delta, reason, admin_id, created_at) con RLS admin-only
+
+### 2. Página de Reportes (`admin/reportes`)
+- Período: 7d / 30d / 90d con botones rápidos
+- KPIs: revenue total, órdenes pagadas, ticket promedio, productos distintos
+- Gráficos (Recharts): ventas por día (line), revenue por categoría (pie), top 10 productos (bar horizontal)
+- Tabla detallada con ranking de productos, exportable a CSV con BOM UTF-8
+- Datos reales desde `order_items` — reemplaza datos simulados del dashboard
+- **API**: `GET /api/admin/reportes?from=&to=`
+
+### 3. Configuración (`admin/configuracion`)
+- Form para `alert_email` y `low_stock_threshold`
+- **DB**: tabla `admin_settings` (key, value) con seed: threshold=10, email=admin@pharmacy.com
+- **API**: `GET/PATCH /api/admin/settings`
+
+### 4. Alertas Email (Resend)
+- Dependencia: `resend@^6.9.3`
+- `src/lib/email.ts`: `sendLowStockAlert(email, products, threshold)`
+- Trigger: al aprobar una reserva (`PUT /api/admin/orders/[id]` action=approve_reservation), si stock resultante ≤ umbral → email al admin
+- No-blocking: error en email no falla la respuesta principal
+
+### 5. Dashboard
+- Gráfico "Top Productos" ahora usa datos reales de `order_items` via `/api/admin/reportes`
+- Eliminada función `calculateTopProducts` que usaba datos simulados (`100 - stock`)
+
+### 6. Sidebar
+- Agregados links: "Reportes" (BarChart2) y "Configuracion" (Settings)
+
+### Pendiente (requiere acción manual del usuario)
+- Ejecutar migraciones SQL en Supabase dashboard (tablas `stock_movements` y `admin_settings`)
+- Configurar `RESEND_API_KEY` en variables de entorno de Vercel
+- Registrar dominio en Resend para enviar desde email propio (actualmente usa onboarding@resend.dev)
+
+---
+
 ## COMPLETADO: Mejora Panel Admin Órdenes (Febrero 2026)
 
 ### Cambios realizados (`src/app/admin/ordenes/page.tsx`)
