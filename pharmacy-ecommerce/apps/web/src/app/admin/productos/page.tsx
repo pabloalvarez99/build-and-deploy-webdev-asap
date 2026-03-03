@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { productApi, PaginatedProducts, Category } from '@/lib/api';
-import { Plus, Edit, Trash2, Search, Download, Upload, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package, FileSpreadsheet, CheckCircle, XCircle, RefreshCw, ArrowRight } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Download, Upload, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package, FileSpreadsheet, CheckCircle, XCircle, RefreshCw, ArrowRight, History } from 'lucide-react';
 import { parseExcelFile, diffProducts, loadAllProductsForDiff, parsePrice, type ExcelRow, type DiffResult } from '@/lib/excel-import';
+import { StockModal } from '@/components/admin/StockModal';
 import { formatPrice } from '@/lib/format';
 
 export default function AdminProductsPage() {
@@ -42,6 +43,11 @@ export default function AdminProductsPage() {
  const [importResults, setImportResults] = useState<{ success: boolean; inserted: number; updated: number; errors?: string[] } | null>(null);
  const [importLoading, setImportLoading] = useState(false);
  const [parseErrors, setParseErrors] = useState<string[]>([]);
+
+ // Stock inline editing
+ const [editingStockId, setEditingStockId] = useState<string | null>(null);
+ const [editingStockValue, setEditingStockValue] = useState<string>('');
+ const [stockModalProduct, setStockModalProduct] = useState<{ id: string; name: string; stock: number } | null>(null);
 
  // Form state
  const [formData, setFormData] = useState({
@@ -286,6 +292,33 @@ export default function AdminProductsPage() {
  link.href = URL.createObjectURL(blob);
  link.download = `productos_${new Date().toISOString().split('T')[0]}.csv`;
  link.click();
+ };
+
+ const handleStockClick = (productId: string, currentStock: number) => {
+  setEditingStockId(productId);
+  setEditingStockValue(String(currentStock));
+ };
+
+ const handleStockSave = async (productId: string) => {
+  const newQty = parseInt(editingStockValue);
+  const currentProducts = products?.products || [];
+  const product = currentProducts.find(p => p.id === productId);
+  if (!product || isNaN(newQty) || newQty < 0) { setEditingStockId(null); return; }
+  const delta = newQty - product.stock;
+  if (delta === 0) { setEditingStockId(null); return; }
+  try {
+   await fetch(`/api/admin/products/${productId}/stock`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ delta, reason: 'correccion' }),
+   });
+   setProducts(prev => prev ? { ...prev, products: prev.products.map(p => p.id === productId ? { ...p, stock: newQty } : p) } : prev);
+  } catch { /* silently fail */ }
+  setEditingStockId(null);
+ };
+
+ const handleStockModalUpdate = (productId: string, newStock: number) => {
+  setProducts(prev => prev ? { ...prev, products: prev.products.map(p => p.id === productId ? { ...p, stock: newStock } : p) } : prev);
  };
 
  const clearFilters = () => {
@@ -1421,13 +1454,42 @@ export default function AdminProductsPage() {
  <td className="px-4 py-3 text-right text-slate-900 font-medium">
  {formatPrice(product.price)}
  </td>
- <td className="px-4 py-3 text-right">
- <span className={`inline-flex items-center justify-center min-w-[40px] px-2 py-0.5 rounded-full text-sm font-bold ${
- product.stock === 0 ? 'bg-red-100 text-red-700' :
- product.stock <= 10 ? 'bg-orange-100 text-orange-700' : 'text-slate-900'
- }`}>
- {product.stock}
- </span>
+ <td className="px-4 py-3">
+ <div className="flex items-center justify-end gap-1">
+  {editingStockId === product.id ? (
+  <input
+   type="number"
+   min="0"
+   autoFocus
+   value={editingStockValue}
+   onChange={(e) => setEditingStockValue(e.target.value)}
+   onBlur={() => handleStockSave(product.id)}
+   onKeyDown={(e) => {
+   if (e.key === 'Enter') handleStockSave(product.id);
+   if (e.key === 'Escape') setEditingStockId(null);
+   }}
+   className="w-20 px-2 py-1 text-sm border-2 border-emerald-400 rounded-lg font-mono text-center focus:outline-none"
+  />
+  ) : (
+  <button
+   onClick={() => handleStockClick(product.id, product.stock)}
+   title="Click para editar"
+   className={`px-2.5 py-0.5 rounded-full text-sm font-bold cursor-text hover:ring-2 hover:ring-emerald-400 transition-all ${
+   product.stock === 0 ? 'bg-red-100 text-red-700' :
+   product.stock <= 10 ? 'bg-orange-100 text-orange-700' : 'text-slate-900'
+   }`}
+  >
+   {product.stock}
+  </button>
+  )}
+  <button
+  onClick={() => setStockModalProduct({ id: product.id, name: product.name, stock: product.stock })}
+  className="p-1 text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-slate-100 transition-colors"
+  title="Ver historial de stock"
+  >
+  <History className="w-3.5 h-3.5" />
+  </button>
+ </div>
  </td>
  <td className="px-4 py-3 text-sm text-slate-500 truncate max-w-[120px]">
  {product.category_name || '-'}
@@ -1501,6 +1563,15 @@ export default function AdminProductsPage() {
  </button>
  )}
  </div>
+ )}
+ {stockModalProduct && (
+  <StockModal
+  productId={stockModalProduct.id}
+  productName={stockModalProduct.name}
+  currentStock={stockModalProduct.stock}
+  onClose={() => setStockModalProduct(null)}
+  onStockUpdated={handleStockModalUpdate}
+  />
  )}
  </div>
  );
