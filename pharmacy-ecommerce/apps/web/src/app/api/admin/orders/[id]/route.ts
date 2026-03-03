@@ -83,7 +83,35 @@ async function approveReservation(supabase: ReturnType<typeof getServiceClient>,
     .single();
 
   if (error) return errorResponse(error.message, 500);
+
+  // Trigger low-stock email alert (non-blocking, best-effort)
+  const productIds = (items || []).map((i: { product_id: string | null }) => i.product_id).filter(Boolean) as string[];
+  checkAndAlertLowStock(supabase, productIds).catch(() => {});
+
   return NextResponse.json(data);
+}
+
+async function checkAndAlertLowStock(supabase: ReturnType<typeof getServiceClient>, productIds: string[]) {
+  if (productIds.length === 0) return;
+
+  const { data: settings } = await supabase.from('admin_settings').select('key, value');
+  const settingsMap = Object.fromEntries(
+    (settings || []).map((s: { key: string; value: string }) => [s.key, s.value])
+  );
+  const threshold = parseInt(settingsMap.low_stock_threshold || '10');
+  const alertEmail = settingsMap.alert_email;
+  if (!alertEmail) return;
+
+  const { data: products } = await supabase
+    .from('products')
+    .select('name, stock')
+    .in('id', productIds)
+    .lte('stock', threshold);
+
+  if (products && products.length > 0) {
+    const { sendLowStockAlert } = await import('@/lib/email');
+    await sendLowStockAlert(alertEmail, products as { name: string; stock: number }[], threshold);
+  }
 }
 
 async function rejectReservation(supabase: ReturnType<typeof getServiceClient>, orderId: string) {

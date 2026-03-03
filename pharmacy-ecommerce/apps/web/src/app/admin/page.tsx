@@ -183,9 +183,25 @@ export default function AdminPage() {
  const last7Days = generateSalesData(allOrders.orders);
  setSalesData(last7Days);
 
- // Calculate top products (mock data since we don't have item-level order data easily)
- const topProductsList = calculateTopProducts(allOrders.orders, productsForStats.products);
- setTopProducts(topProductsList);
+ // Real top products from order_items via reports API
+ try {
+  const from30d = new Date();
+  from30d.setDate(from30d.getDate() - 30);
+  const fromStr = from30d.toISOString().split('T')[0];
+  const toStr = new Date().toISOString().split('T')[0];
+  const reportRes = await fetch(`/api/admin/reportes?from=${fromStr}&to=${toStr}`);
+  const reportData = await reportRes.json();
+  const topProductsList: TopProduct[] = (reportData.topProducts || []).slice(0, 5).map(
+   (p: { name: string; units: number }) => ({
+    name: p.name.length > 20 ? p.name.slice(0, 20) + '...' : p.name,
+    cantidad: p.units,
+   })
+  );
+  setTopProducts(topProductsList);
+ } catch {
+  // Fallback to empty if reports fail
+  setTopProducts([]);
+ }
 
  // Calculate status distribution
  const statusDistribution = calculateStatusDistribution(allOrders.orders);
@@ -228,20 +244,6 @@ export default function AdminPage() {
  }
 
  return data;
- };
-
- const calculateTopProducts = (orders: Order[], products: ProductWithCategory[]): TopProduct[] => {
- // Since we don't have detailed order items, we'll show top products by stock movement
- // In a real scenario, we'd aggregate from order items
- const sorted = [...products]
- .filter((p) => p.active)
- .sort((a, b) => parseFloat(b.price) * (100 - b.stock) - parseFloat(a.price) * (100 - a.stock))
- .slice(0, 5);
-
- return sorted.map((p) => ({
- name: p.name.length > 20 ? p.name.substring(0, 20) + '...' : p.name,
- cantidad: Math.max(1, 100 - p.stock), // Simulated quantity sold
- }));
  };
 
  const calculateStatusDistribution = (orders: Order[]): StatusData[] => {
