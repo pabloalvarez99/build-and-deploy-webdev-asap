@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     for (const item of items) {
       const { data: product, error } = await supabase
         .from('products')
-        .select('id, name, price, stock')
+        .select('id, name, price, stock, discount_percent')
         .eq('id', item.product_id)
         .eq('active', true)
         .single();
@@ -26,7 +26,9 @@ export async function POST(request: NextRequest) {
       if (error || !product) return errorResponse(`Product ${item.product_id} not found`, 404);
       if (product.stock < item.quantity) return errorResponse(`Insufficient stock for ${product.name}`);
 
-      const price = parseFloat(product.price);
+      const rawPrice = parseFloat(product.price);
+      const disc = product.discount_percent as number | null;
+      const price = disc ? Math.ceil(rawPrice * (1 - disc / 100)) : rawPrice;
       total += price * item.quantity;
       orderItems.push({ product_id: product.id, product_name: product.name, quantity: item.quantity, price });
     }

@@ -27,6 +27,7 @@ export async function PUT(
     if (body.prescription_type !== undefined) updateData.prescription_type = body.prescription_type;
     if (body.presentation !== undefined) updateData.presentation = body.presentation || null;
     if (body.active !== undefined) updateData.active = body.active;
+    if (body.discount_percent !== undefined) updateData.discount_percent = body.discount_percent === 0 ? null : body.discount_percent || null;
 
     const { data, error } = await supabase
       .from('products')

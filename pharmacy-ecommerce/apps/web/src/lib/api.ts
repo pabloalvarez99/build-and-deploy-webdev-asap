@@ -330,6 +330,7 @@ function transformProduct(raw: any): ProductWithCategory {
     active_ingredient: raw.active_ingredient,
     prescription_type: raw.prescription_type,
     presentation: raw.presentation,
+    discount_percent: raw.discount_percent ?? null,
     created_at: raw.created_at,
     category_name: categories?.name || null,
     category_slug: categories?.slug || null,
@@ -372,6 +373,7 @@ export interface Product {
   active_ingredient: string | null;
   prescription_type: 'direct' | 'prescription' | 'retained' | null;
   presentation: string | null;
+  discount_percent: number | null;
   created_at: string;
 }
 
@@ -410,6 +412,8 @@ export interface CartItem {
   product_slug: string;
   product_image: string | null;
   price: string;
+  original_price?: string;
+  discount_percent?: number;
   quantity: number;
   subtotal: string;
 }

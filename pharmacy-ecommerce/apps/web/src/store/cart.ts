@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { CartResponse, productApi } from '@/lib/api';
+import { discountedPrice } from '@/lib/format';
 
 interface LocalCartItem {
   product_id: string;
@@ -67,15 +68,18 @@ export const useCartStore = create<CartState>((set, get) => ({
         localItems.map(async (item) => {
           try {
             const product = await productApi.getById(item.product_id);
-            const price = parseFloat(product.price);
+            const rawPrice = parseFloat(product.price);
+            const disc = product.discount_percent;
+            const effectivePrice = disc ? discountedPrice(rawPrice, disc) : rawPrice;
             return {
               product_id: item.product_id,
               product_name: product.name,
               product_slug: product.slug,
               product_image: product.image_url,
-              price: product.price,
+              price: effectivePrice.toString(),
+              ...(disc ? { original_price: product.price, discount_percent: disc } : {}),
               quantity: item.quantity,
-              subtotal: (price * item.quantity).toString(),
+              subtotal: (effectivePrice * item.quantity).toString(),
             };
           } catch {
             return null;

@@ -6,8 +6,9 @@ import { productApi, PaginatedProducts, Category, Product } from '@/lib/api';
 import { Search, ShoppingCart, Check, X, ChevronUp, Package, ChevronDown, Pill, Heart, Droplets, Apple, Stethoscope, Brain, Wind, Sparkles, Eye, Flower2, Shield, Droplet, Baby, Users, Activity, Leaf } from 'lucide-react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
-import { formatPrice } from '@/lib/format';
+import { formatPrice, discountedPrice } from '@/lib/format';
 import { ReactNode } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 // Lucide icons per category slug for professional visual recognition
 const categoryIcons: Record<string, ReactNode> = {
@@ -84,6 +85,7 @@ function HomeContent() {
   const [toast, setToast] = useState<string | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const [discountedProducts, setDiscountedProducts] = useState<Product[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const ITEMS_PER_PAGE = 20;
 
@@ -102,6 +104,7 @@ function HomeContent() {
 
   useEffect(() => {
     loadCategories();
+    loadDiscountedProducts();
   }, []);
 
   // Debounced search
@@ -128,6 +131,23 @@ function HomeContent() {
       setCategories(data);
     } catch (error) {
       console.error('Error loading categories:', error);
+    }
+  };
+
+  const loadDiscountedProducts = async () => {
+    try {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('products')
+        .select('*, categories(name, slug)')
+        .not('discount_percent', 'is', null)
+        .eq('active', true)
+        .gt('stock', 0)
+        .order('discount_percent', { ascending: false })
+        .limit(20);
+      if (data) setDiscountedProducts(data as Product[]);
+    } catch (error) {
+      console.error('Error loading discounted products:', error);
     }
   };
 
@@ -243,6 +263,71 @@ function HomeContent() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
 
+        {/* Ofertas Section */}
+        {discountedProducts.length > 0 && !selectedCategory && !searchTerm && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xl font-bold text-slate-800">🔥 Ofertas</h2>
+              <Link href="/?discount=true" className="text-emerald-600 font-semibold text-base hover:underline">
+                Ver todas →
+              </Link>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+              {discountedProducts.map((product) => {
+                const finalPrice = discountedPrice(Number(product.price), product.discount_percent!);
+                return (
+                  <div
+                    key={product.id}
+                    className="flex-shrink-0 w-36 sm:w-44 bg-white rounded-2xl border-2 border-red-200 shadow-md overflow-hidden flex flex-col"
+                  >
+                    <Link href={`/producto/${product.slug}`} className="block relative">
+                      <div className="aspect-square bg-slate-50 relative overflow-hidden">
+                        {product.image_url ? (
+                          <img
+                            src={product.image_url}
+                            alt={product.name}
+                            loading="lazy"
+                            className="w-full h-full object-contain p-2"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-slate-300">
+                            <Package className="w-10 h-10" />
+                          </div>
+                        )}
+                        <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-black px-2 py-1 rounded-lg">
+                          -{product.discount_percent}% OFF
+                        </div>
+                      </div>
+                    </Link>
+                    <div className="p-2.5 flex flex-col flex-1">
+                      <Link href={`/producto/${product.slug}`}>
+                        <h3 className="font-bold text-slate-800 text-sm leading-snug line-clamp-2 mb-1 min-h-[2.5rem]">
+                          {product.name}
+                        </h3>
+                      </Link>
+                      <div className="mt-auto">
+                        <span className="text-xs text-slate-400 line-through block">{formatPrice(product.price)}</span>
+                        <span className="text-base font-black text-emerald-700 block mb-2">{formatPrice(finalPrice)}</span>
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          disabled={addingId === product.id}
+                          className={`w-full flex items-center justify-center gap-1 py-2.5 rounded-xl font-bold text-sm transition-all border-2 border-emerald-600 ${
+                            addingId === product.id
+                              ? 'bg-emerald-600 text-white scale-95'
+                              : 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95'
+                          }`}
+                        >
+                          {addingId === product.id ? <Check className="w-4 h-4" /> : <><ShoppingCart className="w-3.5 h-3.5" /><span>Agregar</span></>}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Selected Category Chip */}
         {selectedCategory && selectedCategoryName && (
           <div className="mb-4">
@@ -332,6 +417,11 @@ function HomeContent() {
                       <div className={`absolute inset-0 flex items-center justify-center text-slate-300 ${product.image_url ? 'hidden' : ''}`}>
                         <Package className="w-12 h-12" />
                       </div>
+                      {product.discount_percent && (
+                        <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-black px-2 py-1 rounded-lg">
+                          -{product.discount_percent}% OFF
+                        </div>
+                      )}
                       {product.stock <= 0 && (
                         <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
                           <span className="text-red-600 font-bold text-base border-2 border-red-500 px-3 py-1.5 rounded-2xl -rotate-6 bg-white">
@@ -355,9 +445,18 @@ function HomeContent() {
 
                     {/* Price */}
                     <div className="mt-auto">
-                      <span className="text-xl font-black text-emerald-700 block mb-2">
-                        {formatPrice(product.price)}
-                      </span>
+                      {product.discount_percent ? (
+                        <>
+                          <span className="text-sm text-slate-400 line-through block">{formatPrice(product.price)}</span>
+                          <span className="text-xl font-black text-emerald-700 block mb-2">
+                            {formatPrice(discountedPrice(Number(product.price), product.discount_percent))}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-xl font-black text-emerald-700 block mb-2">
+                          {formatPrice(product.price)}
+                        </span>
+                      )}
 
                       {/* Add to Cart Button - Full width, grande */}
                       {product.stock > 0 ? (

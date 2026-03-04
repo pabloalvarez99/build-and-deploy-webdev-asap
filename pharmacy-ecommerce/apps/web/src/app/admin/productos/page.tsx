@@ -63,6 +63,7 @@ export default function AdminProductsPage() {
  active_ingredient: '',
  prescription_type: 'direct' as 'direct' | 'prescription' | 'retained',
  presentation: '',
+ discount_percent: '',
  active: true,
  });
 
@@ -163,6 +164,7 @@ export default function AdminProductsPage() {
  active_ingredient: formData.active_ingredient || undefined,
  prescription_type: formData.prescription_type,
  presentation: formData.presentation || undefined,
+ discount_percent: parseInt(formData.discount_percent) || 0,
  active: formData.active,
  };
 
@@ -197,6 +199,7 @@ export default function AdminProductsPage() {
  active_ingredient: product.active_ingredient || '',
  prescription_type: product.prescription_type || 'direct',
  presentation: product.presentation || '',
+ discount_percent: product.discount_percent ? String(product.discount_percent) : '',
  active: product.active ?? true,
  });
  setEditingProduct(product.id);
@@ -218,6 +221,7 @@ export default function AdminProductsPage() {
  active_ingredient: product.active_ingredient || '',
  prescription_type: product.prescription_type || 'direct',
  presentation: product.presentation || '',
+ discount_percent: '',
  active: false, // Start as inactive
  });
  setEditingProduct(null); // This is a new product
@@ -250,6 +254,7 @@ export default function AdminProductsPage() {
  active_ingredient: '',
  prescription_type: 'direct',
  presentation: '',
+ discount_percent: '',
  active: true,
  });
  };
@@ -920,6 +925,30 @@ export default function AdminProductsPage() {
  </div>
  </div>
 
+ <div>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Descuento (%)</label>
+ <div className="flex items-center gap-3">
+ <input
+ type="number"
+ min="0"
+ max="99"
+ value={formData.discount_percent}
+ onChange={(e) => setFormData({ ...formData, discount_percent: e.target.value })}
+ className="input w-32"
+ placeholder="0 = sin descuento"
+ />
+ {formData.discount_percent && parseInt(formData.discount_percent) > 0 && (
+ <span className="text-sm text-slate-600">
+ Precio final: <span className="font-bold text-emerald-700">
+ {new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(
+ Math.ceil(parseFloat(formData.price || '0') * (1 - parseInt(formData.discount_percent) / 100))
+ )}
+ </span>
+ </span>
+ )}
+ </div>
+ </div>
+
  <div className="flex items-center gap-3">
  <input
  type="checkbox"
@@ -1371,6 +1400,7 @@ export default function AdminProductsPage() {
  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Producto</th>
  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Laboratorio</th>
  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Precio</th>
+ <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Descuento</th>
  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Stock</th>
  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Categoria</th>
  <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Estado</th>
@@ -1453,6 +1483,15 @@ export default function AdminProductsPage() {
  </td>
  <td className="px-4 py-3 text-right text-slate-900 font-medium">
  {formatPrice(product.price)}
+ </td>
+ <td className="px-4 py-3 text-center">
+ {(product as any).discount_percent ? (
+ <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">
+ -{(product as any).discount_percent}% OFF
+ </span>
+ ) : (
+ <span className="text-slate-300">—</span>
+ )}
  </td>
  <td className="px-4 py-3">
  <div className="flex items-center justify-end gap-1">

@@ -142,7 +142,7 @@ export async function loadAllProductsForDiff(): Promise<ProductWithCategory[]> {
   while (true) {
     const { data, error } = await supabase
       .from('products')
-      .select('id, external_id, name, slug, price, stock, category_id, image_url, active, laboratory, therapeutic_action, active_ingredient, prescription_type, presentation, created_at, categories(name, slug)')
+      .select('id, external_id, name, slug, price, stock, category_id, image_url, active, laboratory, therapeutic_action, active_ingredient, prescription_type, presentation, discount_percent, created_at, categories(name, slug)')
       .range(from, from + PAGE_SIZE - 1);
 
     if (error) throw new Error(error.message);
@@ -166,6 +166,7 @@ export async function loadAllProductsForDiff(): Promise<ProductWithCategory[]> {
         active_ingredient: raw.active_ingredient,
         prescription_type: raw.prescription_type,
         presentation: raw.presentation,
+        discount_percent: raw.discount_percent ?? null,
         created_at: raw.created_at,
         category_name: cats?.name ?? null,
         category_slug: cats?.slug ?? null,

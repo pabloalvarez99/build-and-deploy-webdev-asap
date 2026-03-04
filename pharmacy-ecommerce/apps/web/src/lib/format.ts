@@ -22,3 +22,13 @@ export function formatPrice(price: string | number): string {
 export function formatNumber(num: number): string {
   return new Intl.NumberFormat('es-CL').format(num);
 }
+
+/**
+ * Calcula el precio con descuento (CLP, sin decimales)
+ * @param price - Precio original
+ * @param pct - Porcentaje de descuento (1-99)
+ * @returns Precio final redondeado hacia arriba
+ */
+export function discountedPrice(price: number, pct: number): number {
+  return Math.ceil(price * (1 - pct / 100));
+}
