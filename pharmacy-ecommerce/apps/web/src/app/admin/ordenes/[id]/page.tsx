@@ -18,8 +18,16 @@ const statusOptions = [
  { value: 'cancelled', label: 'Cancelado', color: 'bg-red-100 text-red-800' },
 ];
 
-const statusFlow = ['pending', 'paid', 'processing', 'shipped', 'delivered'];
-const reservedFlow = ['reserved', 'processing', 'delivered'];
+// Flujo para despacho a domicilio
+const deliveryFlow = ['pending', 'paid', 'processing', 'shipped', 'delivered'];
+// Flujo para retiro en tienda (sin "Enviado")
+const pickupFlow = ['reserved', 'processing', 'delivered'];
+
+const pickupLabels: Record<string, string> = {
+ reserved: 'Reservado',
+ processing: 'Preparando',
+ delivered: 'Retirado',
+};
 
 const statusIcons: Record<string, React.ReactNode> = {
  pending: <Clock className="w-5 h-5" />,
@@ -31,9 +39,9 @@ const statusIcons: Record<string, React.ReactNode> = {
  cancelled: <XCircle className="w-5 h-5" />,
 };
 
-function OrderTimeline({ currentStatus }: { currentStatus: string }) {
+function OrderTimeline({ currentStatus, isPickup }: { currentStatus: string; isPickup: boolean }) {
  const isCancelled = currentStatus === 'cancelled';
- const flow = currentStatus === 'reserved' ? reservedFlow : statusFlow;
+ const flow = isPickup ? pickupFlow : deliveryFlow;
  const currentIndex = flow.indexOf(currentStatus);
 
  return (
@@ -60,7 +68,9 @@ function OrderTimeline({ currentStatus }: { currentStatus: string }) {
  {flow.map((status, index) => {
  const isCompleted = index <= currentIndex;
  const isCurrent = index === currentIndex;
- const statusInfo = statusOptions.find((s) => s.value === status);
+ const label = isPickup
+  ? (pickupLabels[status] ?? statusOptions.find((s) => s.value === status)?.label)
+  : statusOptions.find((s) => s.value === status)?.label;
 
  return (
  <div key={status} className="flex flex-col items-center">
@@ -78,7 +88,7 @@ function OrderTimeline({ currentStatus }: { currentStatus: string }) {
  isCompleted ? 'text-emerald-600' : 'text-slate-400'
  }`}
  >
- {statusInfo?.label}
+ {label}
  </span>
  </div>
  );
@@ -192,6 +202,7 @@ export default function AdminOrderDetailPage() {
  );
  }
 
+ const isPickup = !!order.pickup_code;
  const currentStatus = statusOptions.find((s) => s.value === order.status);
  const total = parseFloat(order.total);
  const date = new Date(order.created_at).toLocaleDateString('es-CL', {
@@ -299,7 +310,7 @@ export default function AdminOrderDetailPage() {
  )}
 
  {/* Status Timeline */}
- <OrderTimeline currentStatus={order.status} />
+ <OrderTimeline currentStatus={order.status} isPickup={isPickup} />
 
  <div className="grid lg:grid-cols-3 gap-6">
  <div className="lg:col-span-2 space-y-6">
@@ -415,7 +426,7 @@ export default function AdminOrderDetailPage() {
  <span>{formatPrice(total)}</span>
  </div>
  <div className="flex justify-between text-slate-600">
- <span>Envio</span>
+ <span>{isPickup ? 'Retiro en tienda' : 'Envío'}</span>
  <span className="text-green-600">Gratis</span>
  </div>
  </div>
@@ -446,7 +457,12 @@ export default function AdminOrderDetailPage() {
  <div className="pt-4 border-t border-slate-100 space-y-2">
  <p className="text-xs font-medium text-slate-500 uppercase mb-3">Acciones rápidas</p>
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
- {statusOptions.map((opt) => (
+ {statusOptions
+  .filter((opt) => !isPickup || opt.value !== 'shipped')
+  .map((opt) => {
+   const displayLabel = isPickup && opt.value === 'delivered' ? 'Retirado' :
+    isPickup && opt.value === 'processing' ? 'Preparando' : opt.label;
+   return (
  <button
  key={opt.value}
  onClick={() => handleStatusChange(opt.value)}
@@ -457,9 +473,10 @@ export default function AdminOrderDetailPage() {
  : `${opt.color} hover:opacity-80`
  }`}
  >
- {opt.label}
+ {displayLabel}
  </button>
- ))}
+   );
+  })}
  </div>
  </div>
  </div>

@@ -41,7 +41,7 @@ export default function CheckoutPage() {
     }
 
     if (!email || !email.includes('@')) {
-      setError('Por favor ingresa un email valido');
+      setError('Por favor ingresa un email válido');
       return;
     }
 
