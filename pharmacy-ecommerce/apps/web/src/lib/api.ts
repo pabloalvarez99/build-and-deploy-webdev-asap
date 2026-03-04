@@ -403,6 +403,7 @@ export interface CreateProductData {
   active_ingredient?: string;
   prescription_type?: 'direct' | 'prescription' | 'retained';
   presentation?: string;
+  discount_percent?: number;
   active?: boolean;
 }
 
