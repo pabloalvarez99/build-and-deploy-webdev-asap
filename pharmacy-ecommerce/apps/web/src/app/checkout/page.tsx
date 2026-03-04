@@ -19,7 +19,7 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
   const [notes, setNotes] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('mercadopago');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('store');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
 
@@ -124,23 +124,18 @@ export default function CheckoutPage() {
             Método de pago
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => setPaymentMethod('mercadopago')}
-              className={`p-5 rounded-2xl border-2 transition-all text-left min-h-[80px] ${
-                paymentMethod === 'mercadopago'
-                  ? 'border-[#009ee3] bg-blue-50'
-                  : 'border-slate-200 hover:border-slate-300'
-              }`}
+            <div
+              className="p-5 rounded-2xl border-2 border-slate-200 text-left min-h-[80px] opacity-50 cursor-not-allowed relative"
             >
               <div className="flex items-center gap-3 mb-2">
-                <CreditCard className={`w-7 h-7 ${paymentMethod === 'mercadopago' ? 'text-[#009ee3]' : 'text-slate-400'}`} />
+                <CreditCard className="w-7 h-7 text-slate-400" />
                 <span className="font-bold text-slate-900 text-lg">Pagar ahora</span>
+                <span className="ml-auto text-xs font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Próximamente</span>
               </div>
               <p className="text-slate-500">
-                Tarjeta, transferencia o efectivo via MercadoPago
+                Tarjeta o transferencia vía Webpay Plus
               </p>
-            </button>
+            </div>
 
             <button
               type="button"
@@ -166,7 +161,7 @@ export default function CheckoutPage() {
               <div className="flex items-start gap-3">
                 <Clock className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="text-amber-800">
-                  <p className="font-bold">Tu reserva será válida por 48 horas</p>
+                  <p className="font-bold">Tu reserva será válida por 12 horas</p>
                   <p>Recibirás un código de retiro por email</p>
                 </div>
               </div>
@@ -363,7 +358,7 @@ export default function CheckoutPage() {
             <span className="text-base">
               {paymentMethod === 'mercadopago'
                 ? 'Pago seguro con MercadoPago'
-                : 'Reserva garantizada por 48 horas'
+                : 'Reserva garantizada por 12 horas'
               }
             </span>
           </div>
