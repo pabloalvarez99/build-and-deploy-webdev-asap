@@ -29,10 +29,10 @@ interface SidebarProps {
 const navItems = [
   { href: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
   { href: '/admin/productos', icon: Package, label: 'Productos' },
-  { href: '/admin/ordenes', icon: ShoppingBag, label: 'Ordenes' },
-  { href: '/admin/categorias', icon: Tags, label: 'Categorias' },
+  { href: '/admin/ordenes', icon: ShoppingBag, label: 'Órdenes' },
+  { href: '/admin/categorias', icon: Tags, label: 'Categorías' },
   { href: '/admin/reportes', icon: BarChart2, label: 'Reportes' },
-  { href: '/admin/configuracion', icon: Settings, label: 'Configuracion' },
+  { href: '/admin/configuracion', icon: Settings, label: 'Configuración' },
 ];
 
 export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalStock = 0, onOpenCommandPalette }: SidebarProps) {
@@ -170,10 +170,10 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 transition-colors ${
             isCollapsed ? 'justify-center' : ''
           }`}
-          title={isCollapsed ? 'Cerrar sesion' : undefined}
+          title={isCollapsed ? 'Cerrar sesión' : undefined}
         >
           <LogOut className="w-5 h-5" />
-          {!isCollapsed && <span>Cerrar sesion</span>}
+          {!isCollapsed && <span>Cerrar sesión</span>}
         </button>
       </div>
     </>

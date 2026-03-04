@@ -52,7 +52,7 @@ function ReservationContent() {
       {code && (
         <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-6 mb-5 text-center">
           <p className="font-semibold text-emerald-700 mb-3">
-            Codigo de retiro
+            Código de retiro
           </p>
           <div className="flex items-center justify-center gap-3">
             <span className="text-5xl font-mono font-black tracking-[0.3em] text-emerald-800">
@@ -61,7 +61,7 @@ function ReservationContent() {
             <button
               onClick={handleCopy}
               className="p-3 rounded-xl hover:bg-emerald-100 transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center"
-              title="Copiar codigo"
+              title="Copiar código"
             >
               {copied ? (
                 <CheckCircle className="w-6 h-6 text-emerald-600" />
@@ -71,7 +71,7 @@ function ReservationContent() {
             </button>
           </div>
           <p className="text-emerald-600 mt-3">
-            Presenta este codigo al retirar tu pedido
+            Presenta este código al retirar tu pedido
           </p>
         </div>
       )}
@@ -100,7 +100,7 @@ function ReservationContent() {
           <span className="text-slate-500">Estado</span>
           <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-semibold bg-amber-100 text-amber-800">
             <Clock className="w-4 h-4" />
-            Pendiente de aprobacion
+            Pendiente de aprobación
           </span>
         </div>
       </div>
@@ -108,7 +108,7 @@ function ReservationContent() {
       {/* Approval notice */}
       <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 mb-5">
         <p className="text-amber-800 font-medium text-center">
-          Tu reserva sera revisada por la farmacia. Te confirmaremos a la brevedad.
+          Tu reserva será revisada por la farmacia. Te confirmaremos a la brevedad.
         </p>
       </div>
 
@@ -116,9 +116,9 @@ function ReservationContent() {
       <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-5 mb-8">
         <h3 className="font-bold text-blue-900 mb-3 text-lg">Instrucciones de retiro</h3>
         <ol className="text-blue-800 space-y-3 list-decimal list-inside">
-          <li>Espera la confirmacion de la farmacia</li>
-          <li>Acercate a la farmacia dentro de las proximas <strong>48 horas</strong></li>
-          <li>Indica tu codigo de retiro <strong>{code}</strong> al personal</li>
+          <li>Espera la confirmación de la farmacia</li>
+          <li>Acércate a la farmacia dentro de las próximas <strong>48 horas</strong></li>
+          <li>Indica tu código de retiro <strong>{code}</strong> al personal</li>
           <li>Realiza el pago en tienda (efectivo, tarjeta o transferencia)</li>
           <li>Retira tus productos</li>
         </ol>

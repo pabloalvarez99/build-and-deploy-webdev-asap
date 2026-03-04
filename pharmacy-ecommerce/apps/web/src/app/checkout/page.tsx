@@ -121,7 +121,7 @@ export default function CheckoutPage() {
         {/* Payment Method Selection - Large cards */}
         <div className="bg-white rounded-2xl border-2 border-slate-100 p-5">
           <h2 className="text-lg font-bold text-slate-900 mb-4">
-            Metodo de pago
+            Método de pago
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
@@ -166,8 +166,8 @@ export default function CheckoutPage() {
               <div className="flex items-start gap-3">
                 <Clock className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="text-amber-800">
-                  <p className="font-bold">Tu reserva sera valida por 48 horas</p>
-                  <p>Recibiras un codigo de retiro por email</p>
+                  <p className="font-bold">Tu reserva será válida por 48 horas</p>
+                  <p>Recibirás un código de retiro por email</p>
                 </div>
               </div>
             </div>
@@ -179,7 +179,7 @@ export default function CheckoutPage() {
           <div className="flex items-center gap-3 mb-4">
             <Mail className="w-6 h-6 text-emerald-600" />
             <h2 className="text-lg font-bold text-slate-900">
-              Informacion personal
+              Información personal
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -229,7 +229,7 @@ export default function CheckoutPage() {
             required
           />
           <p className="text-slate-500 mt-2">
-            Enviaremos la confirmacion a este email
+            Enviaremos la confirmación a este email
           </p>
         </div>
 
@@ -239,7 +239,7 @@ export default function CheckoutPage() {
             <div className="flex items-center gap-3 mb-4">
               <Phone className="w-6 h-6 text-emerald-600" />
               <h2 className="text-lg font-bold text-slate-900">
-                Telefono de contacto *
+                Teléfono de contacto *
               </h2>
             </div>
             <input
@@ -251,7 +251,7 @@ export default function CheckoutPage() {
               required
             />
             <p className="text-slate-500 mt-2">
-              Te contactaremos cuando tu pedido este listo
+              Te contactaremos cuando tu pedido esté listo
             </p>
           </div>
         )}
@@ -262,13 +262,13 @@ export default function CheckoutPage() {
             <div className="flex items-center gap-3 mb-4">
               <MapPin className="w-6 h-6 text-emerald-600" />
               <h2 className="text-lg font-bold text-slate-900">
-                Direccion de envio
+                Dirección de envío
               </h2>
             </div>
             <textarea
               value={shippingAddress}
               onChange={(e) => setShippingAddress(e.target.value)}
-              placeholder="Ingresa tu direccion completa..."
+              placeholder="Ingresa tu dirección completa..."
               className="input min-h-[100px]"
             />
           </div>

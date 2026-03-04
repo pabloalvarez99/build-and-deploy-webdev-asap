@@ -91,8 +91,8 @@ export const SHORTCUTS_HELP = [
   { keys: ['Cmd/Ctrl', 'K'], description: 'Abrir paleta de comandos' },
   { keys: ['G', 'D'], description: 'Ir a Dashboard' },
   { keys: ['G', 'P'], description: 'Ir a Productos' },
-  { keys: ['G', 'O'], description: 'Ir a Ordenes' },
-  { keys: ['G', 'C'], description: 'Ir a Categorias' },
+  { keys: ['G', 'O'], description: 'Ir a Órdenes' },
+  { keys: ['G', 'C'], description: 'Ir a Categorías' },
   { keys: ['N', 'P'], description: 'Nuevo Producto' },
   { keys: ['?'], description: 'Mostrar ayuda' },
 ];

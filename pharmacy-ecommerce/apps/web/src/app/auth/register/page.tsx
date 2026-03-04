@@ -22,12 +22,12 @@ export default function RegisterPage() {
     setValidationError('');
 
     if (password !== confirmPassword) {
-      setValidationError('Las contrasenas no coinciden');
+      setValidationError('Las contraseñas no coinciden');
       return;
     }
 
     if (password.length < 6) {
-      setValidationError('La contrasena debe tener al menos 6 caracteres');
+      setValidationError('La contraseña debe tener al menos 6 caracteres');
       return;
     }
 
@@ -47,7 +47,7 @@ export default function RegisterPage() {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-slate-900">Crear Cuenta</h1>
           <p className="text-slate-500 mt-2">
-            Registrate para empezar a comprar
+            Regístrate para empezar a comprar
           </p>
         </div>
 
@@ -96,7 +96,7 @@ export default function RegisterPage() {
 
           <div>
             <label htmlFor="password" className="block text-base font-medium text-slate-700 mb-2">
-              Contrasena
+              Contraseña
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -114,7 +114,7 @@ export default function RegisterPage() {
 
           <div>
             <label htmlFor="confirmPassword" className="block text-base font-medium text-slate-700 mb-2">
-              Confirmar Contrasena
+              Confirmar Contraseña
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -124,7 +124,7 @@ export default function RegisterPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="input pl-10"
-                placeholder="Repite tu contrasena"
+                placeholder="Repite tu contraseña"
                 required
               />
             </div>
@@ -140,9 +140,9 @@ export default function RegisterPage() {
         </form>
 
         <p className="text-center text-slate-500 mt-6">
-          Ya tienes cuenta?{' '}
+          ¿Ya tienes cuenta?{' '}
           <Link href="/auth/login" className="text-primary-600 hover:underline font-medium">
-            Inicia sesion
+            Inicia sesión
           </Link>
         </p>
       </div>

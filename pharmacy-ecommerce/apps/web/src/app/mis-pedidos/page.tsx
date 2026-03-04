@@ -137,7 +137,7 @@ export default function MyOrdersPage() {
                 Anterior
               </button>
               <span className="px-4 py-2 text-slate-600">
-                Pagina {currentPage} de {orders.total_pages}
+                Página {currentPage} de {orders.total_pages}
               </span>
               <button
                 onClick={() => setCurrentPage((p) => Math.min(orders.total_pages, p + 1))}

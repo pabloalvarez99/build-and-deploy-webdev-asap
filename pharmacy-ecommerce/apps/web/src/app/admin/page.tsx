@@ -274,7 +274,7 @@ export default function AdminPage() {
  textColor: 'text-blue-600',
  },
  {
- title: 'Categorias',
+ title: 'Categorías',
  value: stats.totalCategories.toLocaleString('es-CL'),
  icon: <Tags className="w-6 h-6" />,
  color: 'bg-purple-500',
@@ -288,7 +288,7 @@ export default function AdminPage() {
  textColor: 'text-green-600',
  },
  {
- title: 'Ordenes Pendientes',
+ title: 'Órdenes Pendientes',
  value: stats.pendingOrders.toLocaleString('es-CL'),
  icon: <Clock className="w-6 h-6" />,
  color: 'bg-yellow-500',
@@ -314,7 +314,7 @@ export default function AdminPage() {
  return (
  <div className="max-w-7xl mx-auto">
  <div className="mb-8">
- <h1 className="text-3xl font-bold text-slate-900">Panel de Administracion</h1>
+ <h1 className="text-3xl font-bold text-slate-900">Panel de Administración</h1>
  <p className="text-slate-500 mt-2">Bienvenido, {user.name || user.email}</p>
  </div>
 
@@ -353,7 +353,7 @@ export default function AdminPage() {
  <div className="grid lg:grid-cols-2 gap-6 mb-8">
  {/* Sales Line Chart */}
  <div className="card p-6">
- <h3 className="text-lg font-semibold text-slate-900 mb-4">Ventas Ultimos 7 Dias</h3>
+ <h3 className="text-lg font-semibold text-slate-900 mb-4">Ventas Últimos 7 Días</h3>
  <div className="h-64">
  <ResponsiveContainer width="100%" height="100%">
  <LineChart data={salesData}>
@@ -384,7 +384,7 @@ export default function AdminPage() {
 
  {/* Orders by Status Pie Chart */}
  <div className="card p-6">
- <h3 className="text-lg font-semibold text-slate-900 mb-4">Ordenes por Estado</h3>
+ <h3 className="text-lg font-semibold text-slate-900 mb-4">Órdenes por Estado</h3>
  <div className="h-64">
  <ResponsiveContainer width="100%" height="100%">
  <PieChart>
@@ -500,7 +500,7 @@ export default function AdminPage() {
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-3 text-white">
  <ShoppingBag className="w-6 h-6" />
- <h3 className="text-lg font-semibold">Ordenes Recientes</h3>
+ <h3 className="text-lg font-semibold">Órdenes Recientes</h3>
  </div>
  <Link
  href="/admin/ordenes"

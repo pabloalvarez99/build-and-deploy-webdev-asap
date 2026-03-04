@@ -52,14 +52,14 @@ const quickActions: SearchResult[] = [
  {
  type: 'navigation',
  id: 'nav-orders',
- title: 'Ir a Ordenes',
+ title: 'Ir a Órdenes',
  icon: <ShoppingBag className="w-5 h-5" />,
  action: () => {},
  },
  {
  type: 'navigation',
  id: 'nav-categories',
- title: 'Ir a Categorias',
+ title: 'Ir a Categorías',
  icon: <Tags className="w-5 h-5" />,
  action: () => {},
  },
@@ -82,8 +82,8 @@ const quickActions: SearchResult[] = [
  {
  type: 'action',
  id: 'action-pending-orders',
- title: 'Ordenes Pendientes',
- subtitle: 'Ver ordenes sin procesar',
+ title: 'Órdenes Pendientes',
+ subtitle: 'Ver órdenes sin procesar',
  icon: <Clock className="w-5 h-5" />,
  action: () => {},
  },
@@ -309,10 +309,10 @@ export function CommandPalette({ isOpen, onClose, onNewProduct }: CommandPalette
  if (typeResults.length === 0) return null;
 
  const typeLabels: Record<string, string> = {
- navigation: 'Navegacion',
+ navigation: 'Navegación',
  action: 'Acciones',
  product: 'Productos',
- order: 'Ordenes',
+ order: 'Órdenes',
  };
 
  return (
@@ -368,7 +368,7 @@ export function CommandPalette({ isOpen, onClose, onNewProduct }: CommandPalette
  {!query && recentSearches.length > 0 && (
  <div className="border-t border-slate-200 mt-2 pt-2">
  <div className="px-4 py-2 text-xs font-medium text-slate-500 uppercase">
- Busquedas recientes
+ Búsquedas recientes
  </div>
  {recentSearches.map((search, i) => (
  <button

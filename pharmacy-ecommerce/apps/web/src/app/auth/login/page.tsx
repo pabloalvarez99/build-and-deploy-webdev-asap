@@ -29,7 +29,7 @@ export default function LoginPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="card p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-slate-900">Iniciar Sesion</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Iniciar Sesión</h1>
           <p className="text-slate-500 mt-2">
             Ingresa tus credenciales para continuar
           </p>
@@ -63,7 +63,7 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="password" className="block text-base font-medium text-slate-700 mb-2">
-              Contrasena
+              Contraseña
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -84,14 +84,14 @@ export default function LoginPage() {
             disabled={isLoading}
             className="btn btn-primary w-full py-3 disabled:opacity-50"
           >
-            {isLoading ? 'Iniciando sesion...' : 'Iniciar Sesion'}
+            {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </button>
         </form>
 
         <p className="text-center text-slate-500 mt-6">
-          No tienes cuenta?{' '}
+          ¿No tienes cuenta?{' '}
           <Link href="/auth/register" className="text-primary-600 hover:underline font-medium">
-            Registrate
+            Regístrate
           </Link>
         </p>
 

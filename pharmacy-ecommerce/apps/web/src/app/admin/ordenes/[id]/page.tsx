@@ -264,7 +264,7 @@ export default function AdminOrderDetailPage() {
  {order.pickup_code && (
  <div className="flex items-center gap-2">
  <Store className="w-4 h-4 text-amber-600" />
- <span>Codigo retiro: <strong className="font-mono text-lg">{order.pickup_code}</strong></span>
+ <span>Código retiro: <strong className="font-mono text-lg">{order.pickup_code}</strong></span>
  </div>
  )}
  {order.reservation_expires_at && (
@@ -365,7 +365,7 @@ export default function AdminOrderDetailPage() {
  </p>
  )}
  {!order.user_id && !order.guest_name && !order.guest_email && (
- <p className="text-slate-500 italic">Sin informacion de cliente</p>
+ <p className="text-slate-500 italic">Sin información de cliente</p>
  )}
  </div>
  </div>
@@ -376,7 +376,7 @@ export default function AdminOrderDetailPage() {
  <div className="flex items-center gap-3 mb-4">
  <MapPin className="w-5 h-5 text-emerald-600" />
  <h2 className="text-lg font-semibold text-slate-900">
- Direccion de envio
+ Dirección de envío
  </h2>
  </div>
  <p className="text-slate-600">{order.shipping_address}</p>
@@ -444,7 +444,7 @@ export default function AdminOrderDetailPage() {
 
  {/* Quick Actions */}
  <div className="pt-4 border-t border-slate-100 space-y-2">
- <p className="text-xs font-medium text-slate-500 uppercase mb-3">Acciones rapidas</p>
+ <p className="text-xs font-medium text-slate-500 uppercase mb-3">Acciones rápidas</p>
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
  {statusOptions.map((opt) => (
  <button

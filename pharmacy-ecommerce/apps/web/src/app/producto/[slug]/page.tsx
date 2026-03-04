@@ -78,7 +78,7 @@ export default function ProductPage() {
         <h1 className="text-2xl font-bold text-slate-900 mb-3">Producto no encontrado</h1>
         <p className="text-slate-500 mb-6 text-lg">El producto que buscas no existe o fue eliminado.</p>
         <Link href="/" className="btn btn-primary text-lg">
-          Volver al catalogo
+          Volver al catálogo
         </Link>
       </div>
     );
@@ -180,13 +180,13 @@ export default function ProductPage() {
                     )}
                     {product.presentation && (
                       <tr>
-                        <td className="px-4 py-3 font-semibold text-slate-500 bg-slate-50 w-40">Presentacion</td>
+                        <td className="px-4 py-3 font-semibold text-slate-500 bg-slate-50 w-40">Presentación</td>
                         <td className="px-4 py-3 text-slate-900">{product.presentation}</td>
                       </tr>
                     )}
                     {product.therapeutic_action && (
                       <tr>
-                        <td className="px-4 py-3 font-semibold text-slate-500 bg-slate-50 w-40">Accion Terapeutica</td>
+                        <td className="px-4 py-3 font-semibold text-slate-500 bg-slate-50 w-40">Acción Terapéutica</td>
                         <td className="px-4 py-3 text-slate-900">{product.therapeutic_action}</td>
                       </tr>
                     )}

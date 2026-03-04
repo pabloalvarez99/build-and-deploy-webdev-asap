@@ -7,8 +7,8 @@ import { ChevronRight, Home } from 'lucide-react';
 const routeLabels: Record<string, string> = {
  admin: 'Dashboard',
  productos: 'Productos',
- ordenes: 'Ordenes',
- categorias: 'Categorias',
+ ordenes: 'Órdenes',
+ categorias: 'Categorías',
 };
 
 export function Breadcrumbs() {

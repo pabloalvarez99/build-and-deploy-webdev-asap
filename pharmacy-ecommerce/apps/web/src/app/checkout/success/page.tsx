@@ -25,7 +25,7 @@ function CheckoutSuccessContent() {
 
       {orderId && (
         <p className="text-slate-500 mb-4">
-          Numero de orden: <span className="font-mono font-bold text-slate-700">{orderId.slice(0, 8)}</span>
+          Número de orden: <span className="font-mono font-bold text-slate-700">{orderId.slice(0, 8)}</span>
         </p>
       )}
 
@@ -35,7 +35,7 @@ function CheckoutSuccessContent() {
           <span className="text-base font-medium">Tu pago fue confirmado por MercadoPago</span>
         </div>
         <p className="text-sm text-emerald-600 mt-1">
-          Recibiras la confirmacion en tu email
+          Recibirás la confirmación en tu email
         </p>
       </div>
 

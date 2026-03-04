@@ -36,16 +36,16 @@ export default function CartPage() {
               <ShoppingBag className="w-10 h-10 text-slate-300" />
             </div>
             <h2 className="text-xl font-bold text-slate-900 mb-3">
-              Tu carrito esta vacio
+              Tu carrito está vacío
             </h2>
             <p className="text-slate-500 mb-8 text-lg max-w-sm mx-auto">
-              Explora nuestro catalogo y encuentra lo que necesitas
+              Explora nuestro catálogo y encuentra lo que necesitas
             </p>
             <Link
               href="/"
               className="inline-flex items-center gap-2 bg-emerald-600 text-white px-8 py-4 rounded-2xl hover:bg-emerald-700 transition-colors font-bold text-lg min-h-[56px]"
             >
-              Ver catalogo
+              Ver catálogo
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>

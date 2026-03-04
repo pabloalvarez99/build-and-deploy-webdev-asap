@@ -148,7 +148,7 @@ export default function OrderDetailPage() {
               <div className="flex items-center gap-3 mb-3">
                 <MapPin className="w-5 h-5 text-emerald-600" />
                 <h2 className="text-lg font-semibold text-slate-900">
-                  Direccion de envio
+                  Dirección de envío
                 </h2>
               </div>
               <p className="text-slate-600">{order.shipping_address}</p>
@@ -163,14 +163,14 @@ export default function OrderDetailPage() {
                 <h2 className="text-lg font-semibold text-slate-900">Retiro en tienda</h2>
               </div>
               <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 text-center">
-                <p className="text-amber-700 font-medium mb-2">Codigo de retiro</p>
+                <p className="text-amber-700 font-medium mb-2">Código de retiro</p>
                 <p className="text-4xl font-mono font-black tracking-[0.3em] text-amber-900">{order.pickup_code}</p>
               </div>
               {order.status === 'reserved' && (
-                <p className="text-amber-700 text-center mt-3">Tu reserva esta pendiente de aprobacion por la farmacia.</p>
+                <p className="text-amber-700 text-center mt-3">Tu reserva está pendiente de aprobación por la farmacia.</p>
               )}
               {order.status === 'processing' && (
-                <p className="text-emerald-700 text-center mt-3 font-medium">Reserva aprobada. Acercate a la farmacia para retirar y pagar.</p>
+                <p className="text-emerald-700 text-center mt-3 font-medium">Reserva aprobada. Acércate a la farmacia para retirar y pagar.</p>
               )}
             </div>
           )}

@@ -134,9 +134,9 @@ export default function AdminCategoriesPage() {
  <div className="max-w-4xl mx-auto">
  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
  <div>
- <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Categorias</h1>
+ <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Categorías</h1>
  <p className="text-slate-500 mt-1">
- Gestiona las categorias de productos
+ Gestiona las categorías de productos
  </p>
  </div>
  <button
@@ -148,7 +148,7 @@ export default function AdminCategoriesPage() {
  className="btn btn-primary flex items-center gap-2 w-full sm:w-auto justify-center min-h-[44px]"
  >
  <Plus className="w-5 h-5" />
- Nueva Categoria
+ Nueva Categoría
  </button>
  </div>
 
@@ -158,7 +158,7 @@ export default function AdminCategoriesPage() {
  <div className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
  <div className="flex items-center justify-between mb-6">
  <h2 className="text-lg sm:text-xl font-bold text-slate-900">
- {editingCategory ? 'Editar Categoria' : 'Nueva Categoria'}
+ {editingCategory ? 'Editar Categoría' : 'Nueva Categoría'}
  </h2>
  <button
  onClick={() => {
@@ -208,7 +208,7 @@ export default function AdminCategoriesPage() {
 
  <div>
  <label className="block text-sm font-medium text-slate-700 mb-1">
- Descripcion
+ Descripción
  </label>
  <textarea
  value={formData.description}
@@ -227,14 +227,14 @@ export default function AdminCategoriesPage() {
  className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
  />
  <label htmlFor="active" className="text-sm font-medium text-slate-700">
- Categoria activa (visible en tienda)
+ Categoría activa (visible en tienda)
  </label>
  </div>
  )}
 
  <div className="flex gap-3 pt-4">
  <button type="submit" className="btn btn-primary flex-1">
- {editingCategory ? 'Guardar Cambios' : 'Crear Categoria'}
+ {editingCategory ? 'Guardar Cambios' : 'Crear Categoría'}
  </button>
  <button
  type="button"
@@ -259,18 +259,18 @@ export default function AdminCategoriesPage() {
  <div className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-sm shadow-xl">
  <div className="flex items-center gap-3 mb-4 text-red-600">
  <AlertTriangle className="w-6 h-6" />
- <h3 className="text-lg font-semibold">Eliminar Categoria</h3>
+ <h3 className="text-lg font-semibold">Eliminar Categoría</h3>
  </div>
 
  <p className="text-slate-600 mb-2">
- ¿Estas seguro de eliminar la categoria <strong>{deleteConfirm.name}</strong>?
+ ¿Estás seguro de eliminar la categoría <strong>{deleteConfirm.name}</strong>?
  </p>
 
  {(productCounts[deleteConfirm.id] || 0) > 0 && (
  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
  <p className="text-sm text-yellow-800 flex items-center gap-2">
  <Package className="w-4 h-4" />
- Esta categoria tiene {productCounts[deleteConfirm.id]} productos asociados. No se puede eliminar.
+ Esta categoría tiene {productCounts[deleteConfirm.id]} productos asociados. No se puede eliminar.
  </p>
  </div>
  )}
@@ -354,7 +354,7 @@ export default function AdminCategoriesPage() {
  ) : (
  <div className="card p-12 text-center">
  <Package className="w-12 h-12 mx-auto text-slate-300 mb-4" />
- <p className="text-slate-500 mb-4">No hay categorias registradas</p>
+ <p className="text-slate-500 mb-4">No hay categorías registradas</p>
  <button
  onClick={() => {
  resetForm();
