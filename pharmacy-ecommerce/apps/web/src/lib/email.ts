@@ -28,7 +28,7 @@ export async function sendLowStockAlert(
       productList,
       '',
       'Ingresa al panel admin para gestionar el stock:',
-      'https://tu-farmacia.vercel.app/admin/productos',
+      `${process.env.NEXT_PUBLIC_SITE_URL || 'https://tu-farmacia.cl'}/admin/productos`,
     ].join('\n'),
   });
 }
