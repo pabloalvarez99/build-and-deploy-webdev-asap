@@ -80,7 +80,7 @@ function ReservationContent() {
       <div className="bg-white rounded-2xl border-2 border-slate-100 p-5 mb-5 space-y-4">
         {orderId && (
           <div className="flex justify-between">
-            <span className="text-slate-500">N de orden</span>
+            <span className="text-slate-500">N° de orden</span>
             <span className="font-mono text-slate-900 text-sm">{orderId.substring(0, 8)}...</span>
           </div>
         )}
@@ -92,7 +92,7 @@ function ReservationContent() {
         )}
         {formattedExpires && (
           <div className="flex justify-between">
-            <span className="text-slate-500">Valida hasta</span>
+            <span className="text-slate-500">Válida hasta</span>
             <span className="text-slate-900">{formattedExpires}</span>
           </div>
         )}

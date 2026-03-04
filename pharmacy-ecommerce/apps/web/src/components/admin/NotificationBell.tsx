@@ -69,7 +69,7 @@ export function NotificationBell() {
  newNotifications.push({
  id: `reservation-${order.id}`,
  type: 'reservation',
- title: 'Reserva pendiente de aprobacion',
+ title: 'Reserva pendiente de aprobación',
  message: `Reserva #${order.id.slice(0, 8)} por ${formatPrice(order.total)}`,
  timestamp: new Date(order.created_at),
  read: false,

@@ -100,7 +100,7 @@ export default function FilterContent({
       {/* Categories */}
       <div>
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-          Categorias
+          Categorías
         </h3>
         <div className="space-y-1">
           {visibleCategories.map((cat) => (

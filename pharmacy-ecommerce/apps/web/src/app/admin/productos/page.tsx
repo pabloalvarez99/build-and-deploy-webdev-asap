@@ -810,7 +810,7 @@ export default function AdminProductsPage() {
  </div>
 
  <div>
- <label className="block text-sm font-medium text-slate-700 mb-1">Descripcion</label>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Descripción</label>
  <textarea
  value={formData.description}
  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -849,7 +849,7 @@ export default function AdminProductsPage() {
  onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
  className="input"
  >
- <option value="">Sin categoria</option>
+ <option value="">Sin categoría</option>
  {categories.map((cat) => (
  <option key={cat.id} value={cat.id}>
  {cat.name}

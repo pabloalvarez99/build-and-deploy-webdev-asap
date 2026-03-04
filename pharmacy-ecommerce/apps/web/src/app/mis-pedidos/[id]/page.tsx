@@ -78,7 +78,7 @@ export default function OrderDetailPage() {
 
   // Override labels for store-pickup orders
   if (isStorePickup && order.status === 'reserved') {
-    status = { label: 'Pendiente aprobacion', color: 'bg-amber-100 text-amber-800', icon: <Clock className="w-5 h-5" /> };
+    status = { label: 'Pendiente aprobación', color: 'bg-amber-100 text-amber-800', icon: <Clock className="w-5 h-5" /> };
   } else if (isStorePickup && order.status === 'processing') {
     status = { label: 'Aprobado - Listo para retiro', color: 'bg-emerald-100 text-emerald-800', icon: <CheckCircle className="w-5 h-5" /> };
   }
@@ -199,7 +199,7 @@ export default function OrderDetailPage() {
                 <span>{formatPrice(total)}</span>
               </div>
               <div className="flex justify-between text-slate-600">
-                <span>Envio</span>
+                <span>Envío</span>
                 <span className="text-emerald-600">Gratis</span>
               </div>
             </div>

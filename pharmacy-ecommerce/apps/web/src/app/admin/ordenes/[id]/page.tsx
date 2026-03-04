@@ -249,7 +249,7 @@ export default function AdminOrderDetailPage() {
  <div className="flex items-center gap-3 mb-4">
  <Store className="w-6 h-6 text-amber-600" />
  <h2 className="text-lg font-bold text-amber-900">
- Reserva pendiente de aprobacion
+ Reserva pendiente de aprobación
  </h2>
  </div>
 

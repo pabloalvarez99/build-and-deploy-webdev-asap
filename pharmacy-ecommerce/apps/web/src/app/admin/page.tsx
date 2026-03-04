@@ -449,7 +449,7 @@ export default function AdminPage() {
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-3 text-white">
  <AlertTriangle className="w-6 h-6" />
- <h3 className="text-lg font-semibold">Stock Critico</h3>
+ <h3 className="text-lg font-semibold">Stock Crítico</h3>
  </div>
  <Link
  href="/admin/productos?stock=low"

@@ -201,7 +201,7 @@ export default function ProductPage() {
                 <div className="p-2.5 bg-emerald-50 rounded-xl text-emerald-600">
                   <Truck className="w-6 h-6" />
                 </div>
-                <span className="text-slate-700 font-medium">Envio disponible a todo Chile</span>
+                <span className="text-slate-700 font-medium">Envío disponible a todo Chile</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600">

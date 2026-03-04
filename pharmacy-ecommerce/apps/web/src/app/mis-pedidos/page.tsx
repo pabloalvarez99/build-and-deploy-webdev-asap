@@ -75,7 +75,7 @@ export default function MyOrdersPage() {
             No tienes pedidos
           </h2>
           <p className="text-slate-500 mb-6">
-            Cuando realices una compra, aparecera aqui
+            Cuando realices una compra, aparecerá aquí
           </p>
           <Link href="/" className="btn btn-primary">
             Explorar productos
@@ -90,7 +90,7 @@ export default function MyOrdersPage() {
 
               // Override labels for store-pickup orders
               if (isStorePickup && order.status === 'reserved') {
-                status = { label: 'Pendiente aprobacion', color: 'bg-amber-100 text-amber-800', icon: <Clock className="w-4 h-4" /> };
+                status = { label: 'Pendiente aprobación', color: 'bg-amber-100 text-amber-800', icon: <Clock className="w-4 h-4" /> };
               } else if (isStorePickup && order.status === 'processing') {
                 status = { label: 'Aprobado - Listo para retiro', color: 'bg-emerald-100 text-emerald-800', icon: <CheckCircle className="w-4 h-4" /> };
               }

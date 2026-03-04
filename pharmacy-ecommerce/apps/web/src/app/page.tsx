@@ -344,7 +344,7 @@ function HomeContent() {
         {/* Categories Grid - Solo cuando NO hay categoría seleccionada y NO hay búsqueda */}
         {!selectedCategory && !searchTerm && (
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-slate-800 mb-3">Categorias</h2>
+            <h2 className="text-xl font-bold text-slate-800 mb-3">Categorías</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
               {visibleCategories.map((cat) => (
                 <button

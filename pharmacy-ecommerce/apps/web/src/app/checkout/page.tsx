@@ -46,7 +46,7 @@ export default function CheckoutPage() {
     }
 
     if (paymentMethod === 'store' && (!phone || phone.trim().length < 8)) {
-      setError('Por favor ingresa un telefono valido para contactarte');
+      setError('Por favor ingresa un teléfono válido para contactarte');
       return;
     }
 
@@ -104,7 +104,7 @@ export default function CheckoutPage() {
   if (!cart || cart.items.length === 0) {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold text-slate-900 mb-4">Carrito vacio</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mb-4">Carrito vacío</h1>
         <p className="text-slate-500 text-lg mb-6">Agrega productos antes de continuar</p>
         <button onClick={() => router.push('/')} className="btn btn-primary text-lg">
           Ver productos
@@ -313,7 +313,7 @@ export default function CheckoutPage() {
               <span className="text-slate-700 font-semibold">{formatPrice(cart.total)}</span>
             </div>
             <div className="flex justify-between text-slate-500">
-              <span>{paymentMethod === 'store' ? 'Retiro' : 'Envio'}</span>
+              <span>{paymentMethod === 'store' ? 'Retiro' : 'Envío'}</span>
               <span className="text-emerald-600 font-semibold">Gratis</span>
             </div>
           </div>

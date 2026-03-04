@@ -78,7 +78,7 @@ export default function AdminCategoriesPage() {
  loadCategories();
  } catch (error) {
  console.error('Error saving category:', error);
- alert('Error al guardar la categoria');
+ alert('Error al guardar la categoría');
  }
  };
 
@@ -98,7 +98,7 @@ export default function AdminCategoriesPage() {
 
  const count = productCounts[deleteConfirm.id] || 0;
  if (count > 0) {
- alert(`No se puede eliminar la categoria porque tiene ${count} productos asociados.`);
+ alert(`No se puede eliminar la categoría porque tiene ${count} productos asociados.`);
  setDeleteConfirm(null);
  return;
  }
@@ -109,7 +109,7 @@ export default function AdminCategoriesPage() {
  loadCategories();
  } catch (error) {
  console.error('Error deleting category:', error);
- alert('Error al eliminar la categoria');
+ alert('Error al eliminar la categoría');
  }
  };
 
@@ -363,7 +363,7 @@ export default function AdminCategoriesPage() {
  className="btn btn-primary"
  >
  <Plus className="w-4 h-4 mr-2" />
- Crear primera categoria
+ Crear primera categoría
  </button>
  </div>
  )}

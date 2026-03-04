@@ -135,7 +135,7 @@ export default function CartPage() {
                   <span className="font-semibold text-slate-700">{formatPrice(parseFloat(cart.total))}</span>
                 </div>
                 <div className="flex justify-between text-slate-500">
-                  <span>Envio</span>
+                  <span>Envío</span>
                   <span className="text-emerald-600 font-semibold">Gratis</span>
                 </div>
               </div>

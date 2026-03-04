@@ -74,7 +74,7 @@ const quickActions: SearchResult[] = [
  {
  type: 'action',
  id: 'action-low-stock',
- title: 'Ver Stock Critico',
+ title: 'Ver Stock Crítico',
  subtitle: 'Productos con stock bajo o agotados',
  icon: <AlertTriangle className="w-5 h-5" />,
  action: () => {},
@@ -281,7 +281,7 @@ export function CommandPalette({ isOpen, onClose, onNewProduct }: CommandPalette
  value={query}
  onChange={(e) => setQuery(e.target.value)}
  onKeyDown={handleKeyDown}
- placeholder="Buscar productos, ordenes, acciones..."
+ placeholder="Buscar productos, órdenes, acciones..."
  className="flex-1 py-4 bg-transparent text-slate-900 placeholder:text-slate-400 focus:outline-none"
  />
  {query && (
