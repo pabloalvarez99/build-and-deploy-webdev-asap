@@ -100,6 +100,24 @@ export const productApi = {
       case 'stock_asc':
         query = query.order('stock', { ascending: true });
         break;
+      case 'laboratory_asc':
+        query = query.order('laboratory', { ascending: true });
+        break;
+      case 'laboratory_desc':
+        query = query.order('laboratory', { ascending: false });
+        break;
+      case 'discount_asc':
+        query = query.order('discount_percent', { ascending: true, nullsFirst: true });
+        break;
+      case 'discount_desc':
+        query = query.order('discount_percent', { ascending: false, nullsFirst: false });
+        break;
+      case 'active_asc':
+        query = query.order('active', { ascending: true });
+        break;
+      case 'active_desc':
+        query = query.order('active', { ascending: false });
+        break;
       default:
         query = query.order('created_at', { ascending: false });
     }

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { productApi, PaginatedProducts, Category } from '@/lib/api';
-import { Plus, Edit, Trash2, Search, Download, Upload, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package, FileSpreadsheet, CheckCircle, XCircle, RefreshCw, ArrowRight, History } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Download, Upload, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package, FileSpreadsheet, CheckCircle, XCircle, RefreshCw, ArrowRight, History, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { parseExcelFile, diffProducts, loadAllProductsForDiff, parsePrice, type ExcelRow, type DiffResult } from '@/lib/excel-import';
 import { StockModal } from '@/components/admin/StockModal';
 import { formatPrice } from '@/lib/format';
@@ -33,6 +33,20 @@ export default function AdminProductsPage() {
  const [selectedPrescription, setSelectedPrescription] = useState('');
  const [sortBy, setSortBy] = useState('');
  const [stockFilter, setStockFilter] = useState('');
+
+ const handleColumnSort = (field: string) => {
+  const isActive = sortBy === `${field}_asc` || sortBy === `${field}_desc` || (field === 'name' && (sortBy === 'name' || sortBy === 'name_asc'));
+  const isAsc = sortBy === `${field}_asc` || sortBy === 'name';
+  setSortBy(isActive && isAsc ? `${field}_desc` : `${field}_asc`);
+  setCurrentPage(1);
+ };
+
+ const getSortIcon = (field: string) => {
+  const isActive = sortBy === `${field}_asc` || sortBy === `${field}_desc` || (field === 'name' && (sortBy === 'name' || sortBy === 'name_asc'));
+  if (!isActive) return <ArrowUpDown className="w-3.5 h-3.5 opacity-30 group-hover:opacity-60" />;
+  const isAsc = sortBy === `${field}_asc` || sortBy === 'name';
+  return isAsc ? <ArrowUp className="w-3.5 h-3.5 text-emerald-600" /> : <ArrowDown className="w-3.5 h-3.5 text-emerald-600" />;
+ };
  const [labSearchTerm, setLabSearchTerm] = useState('');
 
  // Import state
@@ -271,7 +285,7 @@ export default function AdminProductsPage() {
  const exportToCSV = () => {
  if (!products) return;
 
- const headers = ['Nombre', 'Slug', 'Precio', 'Stock', 'Categoria', 'Laboratorio', 'Accion Terapeutica', 'Principio Activo', 'Tipo Venta', 'Presentacion', 'Estado'];
+ const headers = ['Nombre', 'Slug', 'Precio', 'Stock', 'Categoría', 'Laboratorio', 'Acción Terapéutica', 'Principio Activo', 'Tipo de Venta', 'Presentación', 'Estado'];
  const prescriptionLabels: Record<string, string> = {
  direct: 'Venta Directa',
  prescription: 'Receta Medica',
@@ -505,7 +519,7 @@ export default function AdminProductsPage() {
  <div>
  <h1 className="text-3xl font-bold text-slate-900">Productos</h1>
  <p className="text-slate-500 mt-1">
- Gestiona el catalogo de productos
+ Gestiona el catálogo de productos
  </p>
  </div>
  <div className="flex flex-wrap gap-2">
@@ -561,7 +575,7 @@ export default function AdminProductsPage() {
  }}
  className="input py-2 px-3 w-full sm:w-auto sm:min-w-[180px]"
  >
- <option value="">Todas las categorias</option>
+ <option value="">Todas las categorías</option>
  {categories.map((cat) => (
  <option key={cat.id} value={cat.slug}>
  {cat.name}
@@ -591,12 +605,17 @@ export default function AdminProductsPage() {
  }}
  className="input py-2 px-3 w-full sm:w-auto sm:min-w-[160px]"
  >
- <option value="">Mas recientes</option>
- <option value="name">Nombre A-Z</option>
+ <option value="">Más recientes</option>
+ <option value="name_asc">Nombre A-Z</option>
+ <option value="name_desc">Nombre Z-A</option>
+ <option value="laboratory_asc">Lab. A-Z</option>
+ <option value="laboratory_desc">Lab. Z-A</option>
  <option value="price_asc">Precio menor</option>
  <option value="price_desc">Precio mayor</option>
  <option value="stock_asc">Menor stock</option>
  <option value="stock_desc">Mayor stock</option>
+ <option value="discount_desc">Mayor descuento</option>
+ <option value="discount_asc">Menor descuento</option>
  </select>
 
  <button
@@ -824,7 +843,7 @@ export default function AdminProductsPage() {
  </div>
 
  <div>
- <label className="block text-sm font-medium text-slate-700 mb-1">Categoria</label>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Categoría</label>
  <select
  value={formData.category_id}
  onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
@@ -879,7 +898,7 @@ export default function AdminProductsPage() {
 
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
  <div>
- <label className="block text-sm font-medium text-slate-700 mb-1">Accion Terapeutica</label>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Acción Terapéutica</label>
  <input
  type="text"
  value={formData.therapeutic_action}
@@ -914,7 +933,7 @@ export default function AdminProductsPage() {
  </select>
  </div>
  <div>
- <label className="block text-sm font-medium text-slate-700 mb-1">Presentacion</label>
+ <label className="block text-sm font-medium text-slate-700 mb-1">Presentación</label>
  <input
  type="text"
  value={formData.presentation}
@@ -1397,13 +1416,37 @@ export default function AdminProductsPage() {
  )}
  </button>
  </th>
- <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Producto</th>
- <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Laboratorio</th>
- <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Precio</th>
- <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Descuento</th>
- <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Stock</th>
- <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Categoria</th>
- <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Estado</th>
+ <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">
+  <button onClick={() => handleColumnSort('name')} className="group flex items-center gap-1 hover:text-slate-800 transition-colors">
+   Producto {getSortIcon('name')}
+  </button>
+ </th>
+ <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">
+  <button onClick={() => handleColumnSort('laboratory')} className="group flex items-center gap-1 hover:text-slate-800 transition-colors">
+   Laboratorio {getSortIcon('laboratory')}
+  </button>
+ </th>
+ <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">
+  <button onClick={() => handleColumnSort('price')} className="group flex items-center gap-1 hover:text-slate-800 transition-colors ml-auto">
+   Precio {getSortIcon('price')}
+  </button>
+ </th>
+ <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">
+  <button onClick={() => handleColumnSort('discount')} className="group flex items-center gap-1 hover:text-slate-800 transition-colors mx-auto">
+   Descuento {getSortIcon('discount')}
+  </button>
+ </th>
+ <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">
+  <button onClick={() => handleColumnSort('stock')} className="group flex items-center gap-1 hover:text-slate-800 transition-colors ml-auto">
+   Stock {getSortIcon('stock')}
+  </button>
+ </th>
+ <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Categoría</th>
+ <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">
+  <button onClick={() => handleColumnSort('active')} className="group flex items-center gap-1 hover:text-slate-800 transition-colors mx-auto">
+   Estado {getSortIcon('active')}
+  </button>
+ </th>
  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Acciones</th>
  </tr>
  </thead>
@@ -1581,7 +1624,7 @@ export default function AdminProductsPage() {
  <ChevronLeft className="w-5 h-5" />
  </button>
  <span className="px-4 py-2 text-slate-600">
- Pagina {currentPage} de {products.total_pages}
+ Página {currentPage} de {products.total_pages}
  </span>
  <button
  onClick={() => setCurrentPage((p) => Math.min(products.total_pages, p + 1))}
