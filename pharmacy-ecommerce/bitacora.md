@@ -1,10 +1,9 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: PRODUCCIÓN (Febrero 2026)
+## Estado actual: PRODUCCIÓN (Marzo 2026)
 
-**Sitio live**: https://tu-farmacia.vercel.app
-**Admin**: https://tu-farmacia.vercel.app/admin
-  - admin@pharmacy.com / admin123
+**Sitio live**: https://tu-farmacia.cl (también https://tu-farmacia.vercel.app)
+**Admin**: https://tu-farmacia.cl/admin
   - timadapa@gmail.com / Admin123!
 
 ---
