@@ -47,10 +47,10 @@ export function Navbar() {
               <rect width="252" height="52" rx="9" fill="#0a8c8c" />
               {/* Circle */}
               <circle cx="31" cy="26" r="17" fill="none" stroke="white" strokeWidth="2.5" />
-              {/* Cross: vertical bar */}
+              {/* Cross: vertical bar — center (31,26), 18×7 */}
               <rect x="27.5" y="17" width="7" height="18" rx="1.5" fill="white" />
-              {/* Cross: horizontal bar */}
-              <rect x="19" y="22.5" width="24" height="7" rx="1.5" fill="white" />
+              {/* Cross: horizontal bar — same 18 length, 7 thick */}
+              <rect x="22" y="22.5" width="18" height="7" rx="1.5" fill="white" />
               {/* TU FARMACIA text */}
               <text
                 x="57"
