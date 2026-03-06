@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-Buscar y asignar imágenes a productos sin image_url via DuckDuckGo.
+Buscar y asignar imagenes a productos sin image_url via DuckDuckGo.
 Usa Supabase REST API.
 """
+import sys
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 import time
 import random
 import json
 import urllib.request
 import urllib.parse
-import sys
 
 try:
     from duckduckgo_search import DDGS
@@ -86,7 +89,7 @@ def search_image(name, lab='', retry_count=0):
             err_str = str(e).lower()
             if 'ratelimit' in err_str or '202' in str(e) or 'too many' in err_str:
                 if retry_count < 2:
-                    print(f'\n⏳ Rate limit detectado, esperando 30s...', flush=True)
+                    print('\n[RATE LIMIT] Esperando 30s...', flush=True)
                     time.sleep(30)
                     return search_image(name, lab, retry_count + 1)
             time.sleep(2)

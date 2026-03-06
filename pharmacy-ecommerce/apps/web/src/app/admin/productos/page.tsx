@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { productApi, PaginatedProducts, Category } from '@/lib/api';
 import { Plus, Edit, Trash2, Search, Download, Upload, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package, FileSpreadsheet, CheckCircle, XCircle, RefreshCw, ArrowRight, History, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
@@ -1340,7 +1341,7 @@ export default function AdminProductsPage() {
  <div className="flex-1 min-w-0">
  <div className="flex items-start justify-between gap-2">
  <div className="min-w-0">
- <p className="font-medium text-slate-900 truncate">{product.name}</p>
+ <Link href={`/producto/${product.slug}`} target="_blank" className="font-medium text-slate-900 truncate block hover:text-emerald-600 hover:underline">{product.name}</Link>
  <p className="text-xs text-slate-500 truncate">{product.laboratory || 'Sin laboratorio'}</p>
  </div>
  <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -1498,7 +1499,7 @@ export default function AdminProductsPage() {
  <AlertTriangle className="flex-shrink-0 w-4 h-4 text-orange-500" />
  </span>
  )}
- <span className="font-medium text-slate-900 truncate max-w-[200px]">{product.name}</span>
+ <Link href={`/producto/${product.slug}`} target="_blank" className="font-medium text-slate-900 truncate max-w-[200px] hover:text-emerald-600 hover:underline">{product.name}</Link>
  {(product as any).prescription_type === 'prescription' && (
  <span className="flex-shrink-0 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded" title="Receta Medica">
  RX
