@@ -148,9 +148,20 @@ export async function POST(request: NextRequest) {
     let updated = 0;
     const errors: string[] = [];
 
+    // Safety check: filter out products that already exist by external_id (prevents duplicates)
+    let trulyNewProducts = (newProducts || []) as Record<string, string>[];
+    if (trulyNewProducts.length > 0) {
+      const extIds = trulyNewProducts.map((r) => r.id).filter(Boolean);
+      if (extIds.length > 0) {
+        const { data: existing } = await supabase.from('products').select('external_id').in('external_id', extIds);
+        const existingExtIds = new Set((existing || []).map((p: { external_id: string }) => String(p.external_id)));
+        trulyNewProducts = trulyNewProducts.filter((r) => !existingExtIds.has(String(r.id)));
+      }
+    }
+
     // Insert new products in batches
-    if (newProducts && newProducts.length > 0) {
-      const records = newProducts.map((row: Record<string, string>) => ({
+    if (trulyNewProducts.length > 0) {
+      const records = trulyNewProducts.map((row: Record<string, string>) => ({
         name: row.producto,
         slug: getUniqueSlug(row.producto),
         description: buildDescription(row),
@@ -177,6 +188,8 @@ export async function POST(request: NextRequest) {
           inserted += batch.length;
         }
       }
+    } else if (newProducts && newProducts.length > 0) {
+      // All "new" products already exist in DB — nothing to insert (they'll be updated instead)
     }
 
     // Update existing products

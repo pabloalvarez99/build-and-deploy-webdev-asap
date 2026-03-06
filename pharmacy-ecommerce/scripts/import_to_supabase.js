@@ -166,6 +166,18 @@ async function supabaseUpsert(table, data) {
   }
 }
 
+async function supabasePatch(table, query, data) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, {
+    method: 'PATCH',
+    headers: { ...headers, 'Prefer': 'return=minimal' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`PATCH ${table}: ${res.status} ${text}`);
+  }
+}
+
 // ─── Main ───
 
 async function main() {
@@ -268,76 +280,120 @@ async function main() {
     return catBySlug['otros'] || null;
   }
 
-  // 6. Delete existing products
-  console.log('🗑️  Eliminando productos existentes...');
-  await supabaseDelete('order_items', 'id=not.is.null');
-  await supabaseDelete('products', 'id=not.is.null');
-  console.log('   ✅ Productos eliminados\n');
-
-  // 7. Build product records
-  console.log('🔨 Construyendo registros de productos...');
+  // 6. Load existing products by external_id (to preserve image_url)
+  console.log('🔍 Cargando productos existentes...');
+  const existingRaw = await supabaseGet('products', 'select=id,external_id,slug&limit=2000');
+  const existingByExtId = {};
   const usedSlugs = new Set();
-  const products = [];
+  existingRaw.forEach(p => {
+    if (p.external_id) existingByExtId[String(p.external_id)] = p;
+    if (p.slug) usedSlugs.add(p.slug);
+  });
+  console.log(`   ${existingRaw.length} productos en DB\n`);
+
+  // 7. Build records: split into new products vs existing to update
+  console.log('🔨 Construyendo registros...');
+  const toInsert = [];
+  const toUpdate = [];
 
   for (const row of rows) {
     let slug = slugify(row.producto);
     if (!slug) continue;
 
-    // Unique slug
-    let baseSlug = slug;
-    let counter = 1;
-    while (usedSlugs.has(slug)) {
-      slug = `${baseSlug}-${counter}`;
-      counter++;
-    }
-    usedSlugs.add(slug);
+    const extId = String(row.id || '');
+    const existing = extId ? existingByExtId[extId] : null;
 
-    products.push({
-      name: row.producto,
-      slug,
-      description: buildDescription(row),
-      price: parsePrice(row.precio),
-      stock: parseInt(row.stock) || 0,
-      category_id: resolveCategory(row),
-      image_url: null,
-      active: true,
-      external_id: row.id || null,
-      laboratory: row.laboratorio || null,
-      therapeutic_action: row.accion_terapeutica || null,
-      active_ingredient: row.principio_activo || null,
-      prescription_type: mapPrescriptionType(row.receta),
-      presentation: row.presentacion || null,
-    });
+    if (existing) {
+      // Update existing product — NEVER touch image_url
+      toUpdate.push({
+        id: existing.id,
+        stock: parseInt(row.stock) || 0,
+        price: parsePrice(row.precio),
+        description: buildDescription(row),
+        laboratory: row.laboratorio || null,
+        therapeutic_action: row.accion_terapeutica || null,
+        active_ingredient: row.principio_activo || null,
+        prescription_type: mapPrescriptionType(row.receta),
+        presentation: row.presentacion || null,
+        category_id: resolveCategory(row),
+      });
+    } else {
+      // New product — generate unique slug
+      let baseSlug = slug;
+      let counter = 1;
+      while (usedSlugs.has(slug)) {
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+      }
+      usedSlugs.add(slug);
+
+      toInsert.push({
+        name: row.producto,
+        slug,
+        description: buildDescription(row),
+        price: parsePrice(row.precio),
+        stock: parseInt(row.stock) || 0,
+        category_id: resolveCategory(row),
+        image_url: null,
+        active: true,
+        external_id: row.id || null,
+        laboratory: row.laboratorio || null,
+        therapeutic_action: row.accion_terapeutica || null,
+        active_ingredient: row.principio_activo || null,
+        prescription_type: mapPrescriptionType(row.receta),
+        presentation: row.presentacion || null,
+      });
+    }
   }
 
-  console.log(`   ${products.length} productos listos para insertar\n`);
+  console.log(`   ${toUpdate.length} existentes a actualizar, ${toInsert.length} nuevos a insertar\n`);
 
-  // 8. Insert in batches
-  console.log('📤 Insertando productos en Supabase...');
+  // 8a. Update existing products (preserves image_url)
+  let updated = 0;
+  let updateErrors = 0;
+  if (toUpdate.length > 0) {
+    console.log('🔄 Actualizando productos existentes...');
+    for (const p of toUpdate) {
+      const { id, ...data } = p;
+      try {
+        await supabasePatch('products', `id=eq.${id}`, data);
+        updated++;
+        if (updated % 100 === 0) console.log(`   Actualizados: ${updated}/${toUpdate.length}`);
+      } catch (e) {
+        updateErrors++;
+        console.error(`   ❌ Error actualizando id=${id}: ${e.message}`);
+      }
+    }
+    console.log(`   ✅ Actualizados: ${updated}/${toUpdate.length} (${updateErrors} errores)\n`);
+  }
+
+  // 8b. Insert new products in batches
   const BATCH_SIZE = 100;
   let inserted = 0;
   let errors = 0;
-
-  for (let i = 0; i < products.length; i += BATCH_SIZE) {
-    const batch = products.slice(i, i + BATCH_SIZE);
-    try {
-      await supabasePost('products', batch);
-      inserted += batch.length;
-      console.log(`   Insertados: ${inserted}/${products.length}`);
-    } catch (e) {
-      console.error(`   ❌ Error en batch ${i}-${i + batch.length}: ${e.message}`);
-      // Try one by one
-      for (const p of batch) {
-        try {
-          await supabasePost('products', [p]);
-          inserted++;
-        } catch (e2) {
-          errors++;
-          console.error(`   ❌ Error: ${p.name} - ${e2.message}`);
+  if (toInsert.length > 0) {
+    console.log('📤 Insertando productos nuevos...');
+    for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
+      const batch = toInsert.slice(i, i + BATCH_SIZE);
+      try {
+        await supabasePost('products', batch);
+        inserted += batch.length;
+        console.log(`   Insertados: ${inserted}/${toInsert.length}`);
+      } catch (e) {
+        console.error(`   ❌ Error en batch ${i}-${i + batch.length}: ${e.message}`);
+        for (const p of batch) {
+          try {
+            await supabasePost('products', [p]);
+            inserted++;
+          } catch (e2) {
+            errors++;
+            console.error(`   ❌ Error: ${p.name} - ${e2.message}`);
+          }
         }
+        console.log(`   Insertados: ${inserted}/${toInsert.length} (${errors} errores)`);
       }
-      console.log(`   Insertados: ${inserted}/${products.length} (${errors} errores)`);
     }
+    console.log(`   ✅ Insertados: ${inserted}/${toInsert.length} (${errors} errores)\n`);
   }
 
   // 9. Verify
@@ -369,8 +425,9 @@ async function main() {
   console.log('═══════════════════════════════════════════════════');
   console.log(`  Total productos en DB: ${totalCount}`);
   console.log(`  Con stock disponible:  ${stockCount}`);
-  console.log(`  Insertados OK:        ${inserted}`);
-  console.log(`  Errores:              ${errors}`);
+  console.log(`  Actualizados OK:      ${updated}`);
+  console.log(`  Insertados nuevos:    ${inserted}`);
+  console.log(`  Errores:              ${errors + updateErrors}`);
   console.log('');
   console.log('  📂 Productos por categoría:');
   Object.entries(byCat).sort((a, b) => b[1] - a[1]).forEach(([cat, count]) => {
