@@ -48,7 +48,7 @@ export function Navbar() {
               {/* Circle */}
               <circle cx="31" cy="26" r="17" fill="none" stroke="white" strokeWidth="2.5" />
               {/* Cross: vertical bar */}
-              <rect x="27.5" y="15" width="7" height="22" rx="1.5" fill="white" />
+              <rect x="27.5" y="17" width="7" height="18" rx="1.5" fill="white" />
               {/* Cross: horizontal bar */}
               <rect x="16" y="22.5" width="30" height="7" rx="1.5" fill="white" />
               {/* TU FARMACIA text */}
