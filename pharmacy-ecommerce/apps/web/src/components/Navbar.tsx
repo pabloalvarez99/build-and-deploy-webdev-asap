@@ -37,38 +37,29 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <svg
-              viewBox="0 0 220 52"
+              viewBox="0 0 252 52"
               height="44"
+              width="213"
               xmlns="http://www.w3.org/2000/svg"
               aria-label="Tu Farmacia"
             >
-              {/* Rounded rectangle background */}
-              <rect width="220" height="52" rx="10" ry="10" fill="#0a8c8c" />
-              {/* Subtle highlight top */}
-              <rect width="220" height="26" rx="10" ry="10" fill="url(#logoGrad)" />
-              <defs>
-                <linearGradient id="logoGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="rgba(255,255,255,0.08)" />
-                  <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-                </linearGradient>
-              </defs>
-              {/* Circle border */}
-              <circle cx="31" cy="26" r="18" fill="none" stroke="white" strokeWidth="2.5" />
-              {/* Medical cross */}
-              <rect x="24.5" y="19" width="13" height="14" rx="2" fill="white" />
-              <rect x="19" y="24.5" width="24" height="3" rx="1.5" fill="#0a8c8c" />
-              <rect x="28.5" y="15" width="5" height="22" rx="1.5" fill="#0a8c8c" />
-              <rect x="19" y="23.5" width="24" height="5" rx="1.5" fill="white" />
-              <rect x="28.5" y="14" width="5" height="24" rx="1.5" fill="white" />
+              {/* Background */}
+              <rect width="252" height="52" rx="9" fill="#0a8c8c" />
+              {/* Circle */}
+              <circle cx="31" cy="26" r="17" fill="none" stroke="white" strokeWidth="2.5" />
+              {/* Cross: vertical bar */}
+              <rect x="27.5" y="15" width="7" height="22" rx="1.5" fill="white" />
+              {/* Cross: horizontal bar */}
+              <rect x="16" y="22.5" width="30" height="7" rx="1.5" fill="white" />
               {/* TU FARMACIA text */}
               <text
-                x="58"
-                y="35"
-                fontFamily="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+                x="57"
+                y="34"
+                fontFamily="'Arial Black', Arial, sans-serif"
                 fontWeight="900"
-                fontSize="22"
+                fontSize="21"
                 fill="white"
-                letterSpacing="0.5"
+                letterSpacing="1"
               >TU FARMACIA</text>
             </svg>
           </Link>
