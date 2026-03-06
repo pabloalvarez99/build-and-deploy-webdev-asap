@@ -8,6 +8,22 @@
 
 ---
 
+## COMPLETADO: Fix Imágenes en Importación de Productos (Marzo 2026)
+
+### Bug crítico resuelto: importación destruía imágenes de productos
+
+**Problema**: `scripts/import_to_supabase.js` hacía `DELETE` de todos los productos y pedidos antes de reimportar, dejando `image_url: null` en 1189 productos.
+
+**Cambios**:
+- `scripts/import_to_supabase.js`: reemplazado DELETE-all + insert con UPSERT no-destructivo. Carga existentes por `external_id`, actualiza precio/stock/etc sin tocar `image_url`, inserta solo productos verdaderamente nuevos.
+- `apps/web/src/app/api/admin/products/import/route.ts`: añadido safety check antes de INSERT para filtrar productos que ya existen por `external_id` (previene duplicados cuando `diffProducts()` falla).
+- `scripts/update_images_supabase.py`: mejoras — múltiples queries de fallback por producto (hasta 4), detección de rate limit + espera 30s, archivo de progreso `image_search_progress.json` para reanudar si se interrumpe, filtro de `.gif` y URLs largas.
+- Instalado package `resend` (faltaba, bloqueaba build).
+
+**Para recuperar imágenes perdidas**: ejecutar `python scripts/update_images_supabase.py` desde `pharmacy-ecommerce/scripts/`.
+
+---
+
 ## COMPLETADO: Stock Management + Reportes + Alertas Email (Marzo 2026)
 
 ### 1. Gestión de Stock (`admin/productos`)
