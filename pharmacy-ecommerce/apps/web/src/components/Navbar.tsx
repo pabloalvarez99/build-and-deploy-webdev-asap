@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
 import { ShoppingCart, Package, LogOut, User as UserIcon, Loader2 } from 'lucide-react';
+// Package kept for admin menu item below
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { formatPrice } from '@/lib/format';
@@ -34,13 +35,42 @@ export function Navbar() {
         {/* Fila 1: Logo + Usuario + Carrito */}
         <div className="flex justify-between items-center h-[72px]">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
-              <Package className="w-6 h-6" />
-            </div>
-            <span className="text-xl font-bold text-slate-900 tracking-tight">
-              Tu Farmacia
-            </span>
+          <Link href="/" className="flex items-center">
+            <svg
+              viewBox="0 0 220 52"
+              height="44"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-label="Tu Farmacia"
+            >
+              {/* Rounded rectangle background */}
+              <rect width="220" height="52" rx="10" ry="10" fill="#0a8c8c" />
+              {/* Subtle highlight top */}
+              <rect width="220" height="26" rx="10" ry="10" fill="url(#logoGrad)" />
+              <defs>
+                <linearGradient id="logoGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="rgba(255,255,255,0.08)" />
+                  <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+                </linearGradient>
+              </defs>
+              {/* Circle border */}
+              <circle cx="31" cy="26" r="18" fill="none" stroke="white" strokeWidth="2.5" />
+              {/* Medical cross */}
+              <rect x="24.5" y="19" width="13" height="14" rx="2" fill="white" />
+              <rect x="19" y="24.5" width="24" height="3" rx="1.5" fill="#0a8c8c" />
+              <rect x="28.5" y="15" width="5" height="22" rx="1.5" fill="#0a8c8c" />
+              <rect x="19" y="23.5" width="24" height="5" rx="1.5" fill="white" />
+              <rect x="28.5" y="14" width="5" height="24" rx="1.5" fill="white" />
+              {/* TU FARMACIA text */}
+              <text
+                x="58"
+                y="35"
+                fontFamily="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+                fontWeight="900"
+                fontSize="22"
+                fill="white"
+                letterSpacing="0.5"
+              >TU FARMACIA</text>
+            </svg>
           </Link>
 
           {/* Actions */}
