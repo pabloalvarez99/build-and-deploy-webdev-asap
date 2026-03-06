@@ -37,27 +37,27 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <svg
-              viewBox="0 0 252 52"
+              viewBox="0 0 268 52"
               height="44"
-              width="213"
+              width="227"
               xmlns="http://www.w3.org/2000/svg"
               aria-label="Tu Farmacia"
             >
               {/* Background */}
-              <rect width="252" height="52" rx="9" fill="#0a8c8c" />
+              <rect width="268" height="52" rx="9" fill="#0a8c8c" />
               {/* Circle */}
               <circle cx="31" cy="26" r="17" fill="none" stroke="white" strokeWidth="2.5" />
-              {/* Cross: vertical bar — center (31,26), 18×7 */}
-              <rect x="27.5" y="17" width="7" height="18" rx="1.5" fill="white" />
-              {/* Cross: horizontal bar — same 18 length, 7 thick */}
-              <rect x="22" y="22.5" width="18" height="7" rx="1.5" fill="white" />
+              {/* Cross: vertical bar — center (31,26), 19×5 */}
+              <rect x="28.5" y="16.5" width="5" height="19" rx="1.5" fill="white" />
+              {/* Cross: horizontal bar — 19×5 */}
+              <rect x="21.5" y="23.5" width="19" height="5" rx="1.5" fill="white" />
               {/* TU FARMACIA text */}
               <text
                 x="57"
-                y="34"
+                y="35"
                 fontFamily="'Arial Black', Arial, sans-serif"
                 fontWeight="900"
-                fontSize="21"
+                fontSize="24"
                 fill="white"
                 letterSpacing="1"
               >TU FARMACIA</text>
