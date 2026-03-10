@@ -35,33 +35,25 @@ export function Navbar() {
         {/* Fila 1: Logo + Usuario + Carrito */}
         <div className="flex justify-between items-center h-[72px]">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
-            <svg
-              viewBox="0 0 268 52"
-              height="44"
-              width="227"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-label="Tu Farmacia"
-            >
-              {/* Background */}
-              <rect width="268" height="52" rx="9" fill="#0a8c8c" />
-              {/* Circle */}
-              <circle cx="31" cy="26" r="17" fill="none" stroke="white" strokeWidth="2.5" />
-              {/* Cross: vertical bar — center (31,26), 19×5 */}
-              <rect x="28.5" y="16.5" width="5" height="19" rx="1.5" fill="white" />
-              {/* Cross: horizontal bar — 19×5 */}
-              <rect x="21.5" y="23.5" width="19" height="5" rx="1.5" fill="white" />
-              {/* TU FARMACIA text */}
-              <text
-                x="57"
-                y="35"
-                fontFamily="'Arial Black', Arial, sans-serif"
-                fontWeight="900"
-                fontSize="24"
-                fill="white"
-                letterSpacing="1"
-              >TU FARMACIA</text>
-            </svg>
+          <Link href="/" className="flex items-center" aria-label="Tu Farmacia">
+            {/* CSS div so the teal background auto-sizes to content (no empty space on any font/device) */}
+            <div className="flex items-center gap-2 bg-[#0a8c8c] px-3 py-2 rounded-xl">
+              {/* Circle + cross icon */}
+              <svg width="34" height="34" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="18" cy="18" r="16" fill="none" stroke="white" strokeWidth="2.5" />
+                {/* Vertical bar 19×5 centered at (18,18) */}
+                <rect x="15.5" y="8.5" width="5" height="19" rx="1.5" fill="white" />
+                {/* Horizontal bar 19×5 centered at (18,18) */}
+                <rect x="8.5" y="15.5" width="19" height="5" rx="1.5" fill="white" />
+              </svg>
+              {/* Brand text — native CSS font, width adapts to actual rendered text */}
+              <span
+                className="text-white font-black text-lg tracking-wide leading-none whitespace-nowrap"
+                style={{ fontFamily: "'Arial Black', Arial, sans-serif" }}
+              >
+                TU FARMACIA
+              </span>
+            </div>
           </Link>
 
           {/* Actions */}
