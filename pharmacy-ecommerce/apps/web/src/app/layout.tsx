@@ -11,6 +11,12 @@ export const metadata: Metadata = {
   description: 'Tu Farmacia: medicamentos, productos de salud y belleza con despacho a todo Chile',
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
+
 export default function RootLayout({
   children,
 }: {

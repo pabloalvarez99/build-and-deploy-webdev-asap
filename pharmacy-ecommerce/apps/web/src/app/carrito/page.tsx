@@ -55,9 +55,9 @@ export default function CartPage() {
             <div className="bg-white rounded-2xl border-2 border-slate-100 overflow-hidden">
               <div className="divide-y divide-slate-100">
                 {cart.items.map((item) => (
-                  <div key={item.product_id} className="p-4 flex gap-4">
+                  <div key={item.product_id} className="p-3 sm:p-4 flex gap-3">
                     {/* Product Image */}
-                    <div className="w-28 h-28 bg-slate-50 rounded-2xl flex-shrink-0 flex items-center justify-center border-2 border-slate-100 overflow-hidden">
+                    <div className="w-20 h-20 sm:w-28 sm:h-28 bg-slate-50 rounded-2xl flex-shrink-0 flex items-center justify-center border-2 border-slate-100 overflow-hidden">
                       {item.product_image ? (
                         <img
                           src={item.product_image}
@@ -65,12 +65,12 @@ export default function CartPage() {
                           className="w-full h-full object-contain p-2"
                         />
                       ) : (
-                        <Package className="w-10 h-10 text-slate-300" />
+                        <Package className="w-8 h-8 sm:w-10 sm:h-10 text-slate-300" />
                       )}
                     </div>
 
                     {/* Product Details */}
-                    <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <div className="flex-1 min-w-0 flex flex-col">
                       <div>
                         <Link
                           href={`/producto/${item.product_slug}`}
@@ -78,44 +78,45 @@ export default function CartPage() {
                         >
                           {item.product_name}
                         </Link>
-                        <p className="text-base text-slate-500 mt-1">
+                        <p className="text-sm sm:text-base text-slate-500 mt-1">
                           {formatPrice(parseFloat(item.price))} c/u
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-between mt-3">
-                        {/* Quantity controls - Large buttons */}
+                      {/* Price */}
+                      <span className="text-lg font-black text-slate-900 mt-2">
+                        {formatPrice(parseFloat(item.subtotal))}
+                      </span>
+
+                      {/* Controls row - flex-wrap prevents overflow on small screens */}
+                      <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
+                        {/* Quantity controls */}
                         <div className="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden">
                           <button
                             onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
-                            className="w-14 h-14 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors disabled:opacity-30"
+                            className="w-11 h-11 sm:w-14 sm:h-14 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors disabled:opacity-30"
                             disabled={item.quantity <= 1}
                           >
-                            <Minus className="w-5 h-5" />
+                            <Minus className="w-4 h-4 sm:w-5 sm:h-5" />
                           </button>
-                          <span className="w-12 text-center font-bold text-lg text-slate-900">
+                          <span className="w-10 sm:w-12 text-center font-bold text-lg text-slate-900">
                             {item.quantity}
                           </span>
                           <button
                             onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                            className="w-14 h-14 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors"
+                            className="w-11 h-11 sm:w-14 sm:h-14 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors"
                           >
-                            <Plus className="w-5 h-5" />
+                            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
                           </button>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg font-black text-slate-900">
-                            {formatPrice(parseFloat(item.subtotal))}
-                          </span>
-                          <button
-                            onClick={() => removeFromCart(item.product_id)}
-                            className="w-14 h-14 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-colors"
-                            title="Eliminar producto"
-                          >
-                            <Trash2 className="w-6 h-6" />
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => removeFromCart(item.product_id)}
+                          className="w-11 h-11 sm:w-14 sm:h-14 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-colors"
+                          title="Eliminar producto"
+                        >
+                          <Trash2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                        </button>
                       </div>
                     </div>
                   </div>

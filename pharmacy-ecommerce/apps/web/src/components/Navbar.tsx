@@ -83,7 +83,7 @@ export function Navbar() {
                 {isMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
-                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border-2 border-slate-100 py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-1rem)] bg-white rounded-2xl shadow-2xl border-2 border-slate-100 py-2 z-50">
                       <div className="px-4 py-3 border-b border-slate-100">
                         <p className="font-bold text-slate-900">{user.name}</p>
                         <p className="text-base text-slate-500">{user.email}</p>
