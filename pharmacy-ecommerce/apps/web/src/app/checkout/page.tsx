@@ -161,7 +161,7 @@ export default function CheckoutPage() {
               <div className="flex items-start gap-3">
                 <Clock className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="text-amber-800">
-                  <p className="font-bold">Tu reserva será válida por 12 horas</p>
+                  <p className="font-bold">Tu reserva será válida por 4 horas</p>
                   <p>Recibirás un código de retiro por email</p>
                 </div>
               </div>
@@ -358,7 +358,7 @@ export default function CheckoutPage() {
             <span className="text-base">
               {paymentMethod === 'mercadopago'
                 ? 'Pago seguro con MercadoPago'
-                : 'Reserva garantizada por 12 horas'
+                : 'Reserva garantizada por 4 horas'
               }
             </span>
           </div>
