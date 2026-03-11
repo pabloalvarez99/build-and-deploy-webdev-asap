@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-Buscar y asignar imágenes a productos sin image_url via DuckDuckGo.
+Buscar y asignar imagenes a productos sin image_url via DuckDuckGo.
 Usa Supabase REST API.
 """
+import sys
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 import time
 import random
 import json
 import urllib.request
 import urllib.parse
-import sys
 
 try:
     from duckduckgo_search import DDGS
@@ -42,23 +45,55 @@ def supabase_patch(table, query, data):
     with urllib.request.urlopen(req) as resp:
         return resp.status
 
-def search_image(query):
-    """Search for an image using DuckDuckGo"""
+PROGRESS_FILE = 'image_search_progress.json'
+
+def load_progress():
+    """Load set of already-processed product IDs from progress file."""
     try:
-        with DDGS() as ddgs:
-            results = list(ddgs.images(
-                query,
-                region="cl-es",
-                safesearch="off",
-                max_results=3
-            ))
-            if results:
+        with open(PROGRESS_FILE, 'r') as f:
+            return set(json.load(f))
+    except Exception:
+        return set()
+
+def save_progress(done_ids):
+    with open(PROGRESS_FILE, 'w') as f:
+        json.dump(list(done_ids), f)
+
+def search_image(name, lab='', retry_count=0):
+    """Search for an image using multiple fallback queries."""
+    clean_name = name.split('(')[0].strip()
+    queries = [
+        f"{clean_name} {lab} farmacia".strip(),
+        f"{clean_name} medicamento",
+        f"{clean_name} comprimido pastilla",
+        clean_name[:40],
+    ]
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_queries = []
+    for q in queries:
+        if q.strip() and q not in seen:
+            seen.add(q)
+            unique_queries.append(q)
+
+    for query in unique_queries:
+        try:
+            with DDGS() as ddgs:
+                results = list(ddgs.images(query, region="cl-es", safesearch="off", max_results=5))
                 for r in results:
                     img = r.get('image', '')
-                    if img.startswith('http') and 'x-raw-image' not in img:
+                    if (img.startswith('http') and 'x-raw-image' not in img
+                            and len(img) < 500 and not img.endswith('.gif')):
                         return img
-    except Exception as e:
-        pass
+        except Exception as e:
+            err_str = str(e).lower()
+            if 'ratelimit' in err_str or '202' in str(e) or 'too many' in err_str:
+                if retry_count < 2:
+                    print('\n[RATE LIMIT] Esperando 30s...', flush=True)
+                    time.sleep(30)
+                    return search_image(name, lab, retry_count + 1)
+            time.sleep(2)
+
     return None
 
 def main():
@@ -66,6 +101,11 @@ def main():
     print('  BÚSQUEDA DE IMÁGENES PARA PRODUCTOS (Python)')
     print('=' * 55)
     print()
+
+    # Load already-processed IDs for resume support
+    done_ids = load_progress()
+    if done_ids:
+        print(f'Retomando desde progreso anterior ({len(done_ids)} ya procesados)...')
 
     # Get products without images
     print('Cargando productos sin imagen...')
@@ -80,6 +120,9 @@ def main():
         offset += 500
         if len(batch) < 500:
             break
+
+    # Filter out already-processed products
+    products = [p for p in products if p['id'] not in done_ids]
 
     total = len(products)
     print(f'Encontrados {total} productos sin imagen.\n')
@@ -98,19 +141,15 @@ def main():
         name = prod['name']
         lab = prod.get('laboratory', '') or ''
 
-        # Build search query
         clean_name = name.split('(')[0].strip()
-        search_query = f"{clean_name} {lab} medicamento chile".strip()
-
         elapsed = (time.time() - start) / 60
         eta = (elapsed / (i + 1)) * (total - i - 1) if i > 0 else 0
         short_name = clean_name[:40].ljust(40)
         print(f'[{i+1}/{total}] ({elapsed:.1f}m, ETA: {eta:.1f}m) {short_name} ', end='', flush=True)
 
-        image_url = search_image(search_query)
+        image_url = search_image(name, lab)
 
         if image_url:
-            # Always use https to avoid mixed content on HTTPS sites
             if image_url.startswith('http://'):
                 image_url = 'https://' + image_url[7:]
             try:
@@ -124,6 +163,11 @@ def main():
             failed += 1
             print('-')
 
+        # Mark as processed and save progress every 10 items
+        done_ids.add(pid)
+        if (i + 1) % 10 == 0:
+            save_progress(done_ids)
+
         # Random delay 1.5-3.5 seconds
         time.sleep(random.uniform(1.5, 3.5))
 
@@ -132,6 +176,7 @@ def main():
             pct = (updated / (i + 1)) * 100
             print(f'\n--- Progreso: {updated} OK ({pct:.0f}%), {failed} sin imagen, {errors} errores ---\n')
 
+    save_progress(done_ids)
     total_time = (time.time() - start) / 60
 
     print()

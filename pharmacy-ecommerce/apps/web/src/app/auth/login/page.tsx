@@ -27,7 +27,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <div className="card p-8 w-full max-w-md">
+      <div className="card p-5 sm:p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-slate-900">Iniciar Sesión</h1>
           <p className="text-slate-500 mt-2">

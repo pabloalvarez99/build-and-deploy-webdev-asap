@@ -103,7 +103,7 @@ export default function ProductPage() {
               <img
                 src={product.image_url}
                 alt={product.name}
-                className="w-full h-full object-contain p-6"
+                className="w-full h-full object-contain p-3 sm:p-6"
               />
             ) : (
               <Package className="w-24 h-24 text-slate-200" />
@@ -174,20 +174,20 @@ export default function ProductPage() {
                   <tbody className="divide-y divide-slate-100">
                     {product.active_ingredient && (
                       <tr>
-                        <td className="px-4 py-3 font-semibold text-slate-500 bg-slate-50 w-40">Principio Activo</td>
-                        <td className="px-4 py-3 text-slate-900">{product.active_ingredient}</td>
+                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 font-semibold text-slate-500 bg-slate-50 w-28 sm:w-40 text-sm sm:text-base align-top">Principio Activo</td>
+                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 text-slate-900 text-sm sm:text-base">{product.active_ingredient}</td>
                       </tr>
                     )}
                     {product.presentation && (
                       <tr>
-                        <td className="px-4 py-3 font-semibold text-slate-500 bg-slate-50 w-40">Presentación</td>
-                        <td className="px-4 py-3 text-slate-900">{product.presentation}</td>
+                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 font-semibold text-slate-500 bg-slate-50 w-28 sm:w-40 text-sm sm:text-base align-top">Presentación</td>
+                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 text-slate-900 text-sm sm:text-base">{product.presentation}</td>
                       </tr>
                     )}
                     {product.therapeutic_action && (
                       <tr>
-                        <td className="px-4 py-3 font-semibold text-slate-500 bg-slate-50 w-40">Acción Terapéutica</td>
-                        <td className="px-4 py-3 text-slate-900">{product.therapeutic_action}</td>
+                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 font-semibold text-slate-500 bg-slate-50 w-28 sm:w-40 text-sm sm:text-base align-top">Acción Terapéutica</td>
+                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 text-slate-900 text-sm sm:text-base">{product.therapeutic_action}</td>
                       </tr>
                     )}
                   </tbody>
@@ -214,24 +214,26 @@ export default function ProductPage() {
             {product.stock > 0 ? (
               <div className="space-y-5">
                 {/* Quantity selector - Large buttons */}
-                <div className="flex items-center gap-4">
-                  <span className="text-slate-700 font-semibold text-lg">Cantidad:</span>
-                  <div className="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden">
-                    <button
-                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      className="w-14 h-14 flex items-center justify-center hover:bg-slate-50 transition-colors"
-                    >
-                      <Minus className="w-5 h-5 text-slate-600" />
-                    </button>
-                    <span className="w-16 text-center font-bold text-xl text-slate-900">{quantity}</span>
-                    <button
-                      onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
-                      className="w-14 h-14 flex items-center justify-center hover:bg-slate-50 transition-colors"
-                    >
-                      <Plus className="w-5 h-5 text-slate-600" />
-                    </button>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-slate-700 font-semibold text-lg">Cantidad:</span>
+                    <div className="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center hover:bg-slate-50 transition-colors"
+                      >
+                        <Minus className="w-5 h-5 text-slate-600" />
+                      </button>
+                      <span className="w-12 sm:w-16 text-center font-bold text-xl text-slate-900">{quantity}</span>
+                      <button
+                        onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
+                        className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center hover:bg-slate-50 transition-colors"
+                      >
+                        <Plus className="w-5 h-5 text-slate-600" />
+                      </button>
+                    </div>
                   </div>
-                  <span className={`text-base font-semibold ${product.stock <= 10 ? 'text-orange-600' : 'text-slate-400'}`}>
+                  <span className={`text-sm sm:text-base font-semibold ${product.stock <= 10 ? 'text-orange-600' : 'text-slate-400'}`}>
                     {product.stock <= 10 ? `Quedan ${product.stock}` : `${product.stock} disponibles`}
                   </span>
                 </div>

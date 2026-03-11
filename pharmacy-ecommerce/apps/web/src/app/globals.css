@@ -57,6 +57,12 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
 
 @keyframes slideUp {

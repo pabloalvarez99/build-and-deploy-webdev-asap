@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { productApi, PaginatedProducts, Category } from '@/lib/api';
 import { Plus, Edit, Trash2, Search, Download, Upload, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package, FileSpreadsheet, CheckCircle, XCircle, RefreshCw, ArrowRight, History, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
@@ -33,6 +34,10 @@ export default function AdminProductsPage() {
  const [selectedPrescription, setSelectedPrescription] = useState('');
  const [sortBy, setSortBy] = useState('');
  const [stockFilter, setStockFilter] = useState('');
+ const [minPrice, setMinPrice] = useState('');
+ const [maxPrice, setMaxPrice] = useState('');
+ const [noImage, setNoImage] = useState(false);
+ const [hasDiscount, setHasDiscount] = useState(false);
 
  const handleColumnSort = (field: string) => {
   const isActive = sortBy === `${field}_asc` || sortBy === `${field}_desc` || (field === 'name' && (sortBy === 'name' || sortBy === 'name_asc'));
@@ -112,7 +117,7 @@ export default function AdminProductsPage() {
  if (user) {
  loadProducts();
  }
- }, [user, currentPage, searchTerm, selectedCategory, selectedLaboratory, selectedPrescription, sortBy, stockFilter]);
+ }, [user, currentPage, searchTerm, selectedCategory, selectedLaboratory, selectedPrescription, sortBy, stockFilter, minPrice, maxPrice, noImage, hasDiscount]);
 
  const loadCategories = async () => {
  try {
@@ -147,6 +152,12 @@ export default function AdminProductsPage() {
  laboratory: selectedLaboratory || undefined,
  prescription_type: selectedPrescription || undefined,
  sort_by: sortBy || undefined,
+ min_price: minPrice ? parseInt(minPrice) : undefined,
+ max_price: maxPrice ? parseInt(maxPrice) : undefined,
+ no_image: noImage || undefined,
+ has_discount: hasDiscount || undefined,
+ in_stock: stockFilter === 'in' ? true : undefined,
+ stock_filter: (stockFilter === 'low' || stockFilter === 'out') ? (stockFilter as 'low' | 'out') : undefined,
  });
  setProducts(data);
  } catch (error) {
@@ -348,13 +359,16 @@ export default function AdminProductsPage() {
  setSortBy('');
  setStockFilter('');
  setLabSearchTerm('');
+ setMinPrice('');
+ setMaxPrice('');
+ setNoImage(false);
+ setHasDiscount(false);
  setCurrentPage(1);
- // Clear URL params
  window.history.replaceState({}, '', '/admin/productos');
  };
 
- // Count active filters
- const activeFilterCount = [selectedCategory, selectedLaboratory, selectedPrescription, stockFilter].filter(Boolean).length;
+ // Count active filters (excludes search and sort — those are in the main bar)
+ const activeFilterCount = [selectedCategory, selectedLaboratory, selectedPrescription, stockFilter, minPrice || maxPrice ? 'price' : '', noImage ? 'noimg' : '', hasDiscount ? 'disc' : ''].filter(Boolean).length;
 
  // Filter laboratories by search term
  const filteredLaboratories = laboratories.filter(lab =>
@@ -553,169 +567,294 @@ export default function AdminProductsPage() {
 
  {/* Search and Filters */}
  <div className="card p-4 mb-6">
- <div className="flex flex-wrap items-center gap-3 sm:gap-4">
- <form onSubmit={handleSearch} className="flex-1 min-w-0 w-full sm:w-auto sm:min-w-[200px]">
+ {/* Main filter bar */}
+ <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+ <form onSubmit={handleSearch} className="flex-1 min-w-0 w-full sm:w-auto sm:min-w-[220px]">
  <div className="relative">
- <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+ <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
  <input
  type="text"
- placeholder="Buscar productos..."
+ placeholder="Buscar por nombre, lab, descripción..."
  value={searchTerm}
- onChange={(e) => setSearchTerm(e.target.value)}
- className="input pl-10"
+ onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+ className="w-full pl-9 pr-3 py-2 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all"
  />
  </div>
  </form>
 
  <select
  value={selectedCategory}
- onChange={(e) => {
- setSelectedCategory(e.target.value);
- setCurrentPage(1);
- }}
- className="input py-2 px-3 w-full sm:w-auto sm:min-w-[180px]"
+ onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
+ className="py-2 px-3 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 bg-white text-slate-700 min-w-[160px]"
  >
  <option value="">Todas las categorías</option>
  {categories.map((cat) => (
- <option key={cat.id} value={cat.slug}>
- {cat.name}
- </option>
+ <option key={cat.id} value={cat.slug}>{cat.name}</option>
  ))}
  </select>
 
  <select
  value={stockFilter}
- onChange={(e) => {
- setStockFilter(e.target.value);
- setSortBy(e.target.value === 'low' ? 'stock_asc' : sortBy);
- setCurrentPage(1);
- }}
- className={`input py-2 px-3 w-full sm:w-auto sm:min-w-[140px] ${stockFilter === 'low' ? 'border-orange-400 bg-orange-50' : ''}`}
+ onChange={(e) => { setStockFilter(e.target.value); setCurrentPage(1); }}
+ className={`py-2 px-3 border-2 rounded-xl text-sm focus:outline-none focus:border-emerald-500 bg-white min-w-[130px] ${
+ stockFilter === 'low' ? 'border-orange-400 text-orange-700 bg-orange-50' :
+ stockFilter === 'out' ? 'border-red-400 text-red-700 bg-red-50' : 'border-slate-200 text-slate-700'
+ }`}
  >
  <option value="">Todo el stock</option>
- <option value="low">Stock bajo</option>
- <option value="out">Agotados</option>
+ <option value="low">⚠ Stock bajo (≤10)</option>
+ <option value="out">✕ Agotados</option>
+ <option value="in">✓ Con stock</option>
  </select>
 
  <select
  value={sortBy}
- onChange={(e) => {
- setSortBy(e.target.value);
- setCurrentPage(1);
- }}
- className="input py-2 px-3 w-full sm:w-auto sm:min-w-[160px]"
+ onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
+ className="py-2 px-3 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 bg-white text-slate-700 min-w-[150px]"
  >
  <option value="">Más recientes</option>
- <option value="name_asc">Nombre A-Z</option>
- <option value="name_desc">Nombre Z-A</option>
- <option value="laboratory_asc">Lab. A-Z</option>
- <option value="laboratory_desc">Lab. Z-A</option>
- <option value="price_asc">Precio menor</option>
- <option value="price_desc">Precio mayor</option>
- <option value="stock_asc">Menor stock</option>
- <option value="stock_desc">Mayor stock</option>
+ <option value="name_asc">Nombre A→Z</option>
+ <option value="name_desc">Nombre Z→A</option>
+ <option value="laboratory_asc">Lab. A→Z</option>
+ <option value="laboratory_desc">Lab. Z→A</option>
+ <option value="price_asc">Precio ↑</option>
+ <option value="price_desc">Precio ↓</option>
+ <option value="stock_asc">Stock ↑</option>
+ <option value="stock_desc">Stock ↓</option>
  <option value="discount_desc">Mayor descuento</option>
- <option value="discount_asc">Menor descuento</option>
  </select>
 
  <button
  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
- className={`btn ${showAdvancedFilters ? 'btn-primary' : 'btn-secondary'} flex items-center gap-2`}
+ className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 text-sm font-medium transition-all ${
+ showAdvancedFilters || activeFilterCount > 0
+ ? 'bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-600/20'
+ : 'border-slate-200 text-slate-700 hover:border-emerald-400 hover:text-emerald-700'
+ }`}
  >
  <Filter className="w-4 h-4" />
  Filtros
  {activeFilterCount > 0 && (
- <span className="bg-white text-emerald-600 rounded-full w-5 h-5 text-xs flex items-center justify-center font-bold">
+ <span className={`rounded-full w-5 h-5 text-xs flex items-center justify-center font-bold ${showAdvancedFilters || activeFilterCount > 0 ? 'bg-white text-emerald-600' : 'bg-emerald-100 text-emerald-700'}`}>
  {activeFilterCount}
  </span>
  )}
  </button>
 
- {(searchTerm || selectedCategory || selectedLaboratory || selectedPrescription || sortBy || stockFilter) && (
- <button
- onClick={clearFilters}
- className="text-sm text-slate-500 hover:text-slate-700"
- >
- Limpiar todo
- </button>
- )}
+ {/* Stats pill */}
+ <span className="ml-auto text-xs text-slate-500 whitespace-nowrap hidden sm:block">
+ <span className="font-semibold text-slate-700">{(products?.total || 0).toLocaleString('es-CL')}</span> productos
+ </span>
  </div>
+
+ {/* Active filter chips */}
+ {(selectedCategory || selectedLaboratory || selectedPrescription || stockFilter || minPrice || maxPrice || noImage || hasDiscount) && (
+ <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-100">
+ <span className="text-xs text-slate-400 font-medium">Filtros activos:</span>
+ {selectedCategory && (
+ <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-xs font-medium">
+ {categories.find(c => c.slug === selectedCategory)?.name || selectedCategory}
+ <button onClick={() => { setSelectedCategory(''); setCurrentPage(1); }} className="hover:text-emerald-600"><X className="w-3 h-3" /></button>
+ </span>
+ )}
+ {selectedLaboratory && (
+ <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-800 border border-blue-200 rounded-full text-xs font-medium">
+ {selectedLaboratory}
+ <button onClick={() => { setSelectedLaboratory(''); setCurrentPage(1); }} className="hover:text-blue-600"><X className="w-3 h-3" /></button>
+ </span>
+ )}
+ {selectedPrescription && (
+ <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${
+ selectedPrescription === 'direct' ? 'bg-green-50 text-green-800 border-green-200' :
+ selectedPrescription === 'prescription' ? 'bg-yellow-50 text-yellow-800 border-yellow-200' :
+ 'bg-red-50 text-red-800 border-red-200'}`}>
+ {selectedPrescription === 'direct' ? 'Venta Directa' : selectedPrescription === 'prescription' ? 'Receta Médica' : 'Receta Retenida'}
+ <button onClick={() => { setSelectedPrescription(''); setCurrentPage(1); }} className="hover:opacity-70"><X className="w-3 h-3" /></button>
+ </span>
+ )}
+ {stockFilter && (
+ <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${stockFilter === 'out' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-orange-50 text-orange-800 border-orange-200'}`}>
+ {stockFilter === 'out' ? 'Agotados' : stockFilter === 'low' ? 'Stock bajo' : 'Con stock'}
+ <button onClick={() => { setStockFilter(''); setCurrentPage(1); }} className="hover:opacity-70"><X className="w-3 h-3" /></button>
+ </span>
+ )}
+ {(minPrice || maxPrice) && (
+ <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 text-purple-800 border border-purple-200 rounded-full text-xs font-medium">
+ Precio: {minPrice ? `$${parseInt(minPrice).toLocaleString('es-CL')}` : '$0'} — {maxPrice ? `$${parseInt(maxPrice).toLocaleString('es-CL')}` : '∞'}
+ <button onClick={() => { setMinPrice(''); setMaxPrice(''); setCurrentPage(1); }} className="hover:text-purple-600"><X className="w-3 h-3" /></button>
+ </span>
+ )}
+ {noImage && (
+ <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-xs font-medium">
+ Sin imagen
+ <button onClick={() => { setNoImage(false); setCurrentPage(1); }} className="hover:text-amber-600"><X className="w-3 h-3" /></button>
+ </span>
+ )}
+ {hasDiscount && (
+ <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-pink-50 text-pink-800 border border-pink-200 rounded-full text-xs font-medium">
+ Con descuento
+ <button onClick={() => { setHasDiscount(false); setCurrentPage(1); }} className="hover:text-pink-600"><X className="w-3 h-3" /></button>
+ </span>
+ )}
+ <button onClick={clearFilters} className="ml-auto text-xs text-slate-400 hover:text-slate-600 underline">Limpiar todo</button>
+ </div>
+ )}
 
  {/* Advanced Filters Panel */}
  {showAdvancedFilters && (
- <div className="mt-4 pt-4 border-t border-slate-200">
- <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
- {/* Laboratory Filter with Search */}
+ <div className="mt-3 pt-4 border-t border-slate-200">
+ <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+ {/* Laboratory */}
  <div>
- <label className="block text-sm font-medium text-slate-700 mb-1">Laboratorio</label>
- <div className="relative">
+ <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Laboratorio</label>
+ <div className="relative mb-2">
+ <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
  <input
  type="text"
  placeholder="Buscar laboratorio..."
  value={labSearchTerm}
  onChange={(e) => setLabSearchTerm(e.target.value)}
- className="input py-2 px-3 w-full text-sm mb-2"
+ className="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-400 bg-slate-50"
  />
- <select
- value={selectedLaboratory}
- onChange={(e) => {
- setSelectedLaboratory(e.target.value);
- setCurrentPage(1);
- }}
- className="input py-2 px-3 w-full"
- size={5}
- >
- <option value="">Todos los laboratorios</option>
- {filteredLaboratories.map((lab) => (
- <option key={lab} value={lab}>
- {lab}
- </option>
- ))}
- </select>
  </div>
- {selectedLaboratory && (
- <div className="mt-2 flex items-center gap-2 text-sm">
- <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded flex items-center gap-1">
- {selectedLaboratory}
- <button onClick={() => setSelectedLaboratory('')} className="hover:text-emerald-600">
- <X className="w-3 h-3" />
+ <div className="border border-slate-200 rounded-lg overflow-hidden">
+ <div className="max-h-44 overflow-y-auto">
+ {[{ value: '', label: 'Todos los laboratorios' }, ...filteredLaboratories.map(l => ({ value: l, label: l }))].map(({ value, label }) => (
+ <button
+ key={value}
+ onClick={() => { setSelectedLaboratory(value); setCurrentPage(1); }}
+ className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+ selectedLaboratory === value
+ ? 'bg-emerald-600 text-white font-medium'
+ : 'hover:bg-slate-50 text-slate-700'
+ } ${value === '' ? 'border-b border-slate-100 text-slate-500' : ''}`}
+ >
+ {label}
  </button>
- </span>
+ ))}
  </div>
- )}
+ </div>
  </div>
 
- {/* Prescription Type Filter */}
+ {/* Prescription type + Price */}
+ <div className="space-y-4">
  <div>
- <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Venta</label>
- <select
- value={selectedPrescription}
- onChange={(e) => {
- setSelectedPrescription(e.target.value);
- setCurrentPage(1);
- }}
- className="input py-2 px-3 w-full"
+ <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Tipo de Receta</label>
+ <div className="space-y-1.5">
+ {[
+ { value: '', label: 'Todos', color: 'slate' },
+ { value: 'direct', label: 'Venta Directa', color: 'green' },
+ { value: 'prescription', label: 'Receta Médica', color: 'yellow' },
+ { value: 'retained', label: 'Receta Retenida', color: 'red' },
+ ].map(({ value, label, color }) => (
+ <button
+ key={value}
+ onClick={() => { setSelectedPrescription(value); setCurrentPage(1); }}
+ className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border text-sm font-medium transition-all text-left ${
+ selectedPrescription === value
+ ? color === 'green' ? 'bg-green-600 border-green-600 text-white'
+ : color === 'yellow' ? 'bg-yellow-500 border-yellow-500 text-white'
+ : color === 'red' ? 'bg-red-600 border-red-600 text-white'
+ : 'bg-emerald-600 border-emerald-600 text-white'
+ : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+ }`}
  >
- <option value="">Todos los tipos</option>
- <option value="direct">Venta Directa</option>
- <option value="prescription">Receta Medica</option>
- <option value="retained">Receta Retenida</option>
- </select>
- <div className="mt-2 text-xs text-slate-500">
- <p><span className="font-medium">Directa:</span> Sin receta</p>
- <p><span className="font-medium">Medica:</span> Requiere receta</p>
- <p><span className="font-medium">Retenida:</span> Controlados</p>
+ <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+ selectedPrescription === value ? 'bg-white' :
+ color === 'green' ? 'bg-green-500' : color === 'yellow' ? 'bg-yellow-500' : color === 'red' ? 'bg-red-500' : 'bg-slate-400'
+ }`} />
+ {label}
+ </button>
+ ))}
  </div>
  </div>
 
- {/* Quick Stats */}
  <div>
- <label className="block text-sm font-medium text-slate-700 mb-1">Resumen</label>
- <div className="bg-slate-50 rounded-lg p-3 text-sm space-y-1">
- <p><span className="font-medium">{products?.total.toLocaleString('es-CL') || 0}</span> productos encontrados</p>
- <p><span className="font-medium">{laboratories.length}</span> laboratorios</p>
- <p><span className="font-medium">{categories.length}</span> categorias</p>
+ <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Precio (CLP)</label>
+ <div className="flex items-center gap-2">
+ <input
+ type="number"
+ placeholder="Mín"
+ value={minPrice}
+ onChange={(e) => { setMinPrice(e.target.value); setCurrentPage(1); }}
+ className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-400 bg-slate-50"
+ min="0"
+ step="100"
+ />
+ <span className="text-slate-400 text-xs">—</span>
+ <input
+ type="number"
+ placeholder="Máx"
+ value={maxPrice}
+ onChange={(e) => { setMaxPrice(e.target.value); setCurrentPage(1); }}
+ className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-400 bg-slate-50"
+ min="0"
+ step="100"
+ />
  </div>
+ </div>
+ </div>
+
+ {/* Quick filters + Stats */}
+ <div className="space-y-4">
+ <div>
+ <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Filtros Rápidos</label>
+ <div className="space-y-2">
+ <button
+ onClick={() => { setNoImage(!noImage); setCurrentPage(1); }}
+ className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+ noImage ? 'bg-amber-50 border-amber-400 text-amber-800' : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+ }`}
+ >
+ <span className="flex items-center gap-2">
+ <AlertTriangle className="w-4 h-4 text-amber-500" />
+ Sin imagen
+ </span>
+ {noImage && <span className="w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center text-white text-[10px]">✓</span>}
+ </button>
+ <button
+ onClick={() => { setHasDiscount(!hasDiscount); setCurrentPage(1); }}
+ className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+ hasDiscount ? 'bg-pink-50 border-pink-400 text-pink-800' : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+ }`}
+ >
+ <span className="flex items-center gap-2">
+ <span className="text-pink-500 font-bold text-base leading-none">%</span>
+ Con descuento
+ </span>
+ {hasDiscount && <span className="w-4 h-4 bg-pink-400 rounded-full flex items-center justify-center text-white text-[10px]">✓</span>}
+ </button>
+ </div>
+ </div>
+
+ <div>
+ <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Resumen</label>
+ <div className="bg-slate-50 rounded-lg p-3 space-y-2 text-sm">
+ <div className="flex justify-between">
+ <span className="text-slate-500">Resultados</span>
+ <span className="font-semibold text-slate-800">{(products?.total || 0).toLocaleString('es-CL')}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-slate-500">Laboratorios</span>
+ <span className="font-semibold text-slate-800">{laboratories.length}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-slate-500">Categorías</span>
+ <span className="font-semibold text-slate-800">{categories.length}</span>
+ </div>
+ </div>
+ </div>
+
+ {activeFilterCount > 0 && (
+ <button
+ onClick={clearFilters}
+ className="w-full flex items-center justify-center gap-2 px-3 py-2 border-2 border-slate-200 rounded-lg text-sm text-slate-500 hover:border-red-300 hover:text-red-600 hover:bg-red-50 transition-all"
+ >
+ <X className="w-4 h-4" />
+ Limpiar {activeFilterCount} filtro{activeFilterCount > 1 ? 's' : ''}
+ </button>
+ )}
  </div>
  </div>
  </div>
@@ -1340,7 +1479,7 @@ export default function AdminProductsPage() {
  <div className="flex-1 min-w-0">
  <div className="flex items-start justify-between gap-2">
  <div className="min-w-0">
- <p className="font-medium text-slate-900 truncate">{product.name}</p>
+ <Link href={`/producto/${product.slug}`} target="_blank" className="font-medium text-slate-900 truncate block hover:text-emerald-600 hover:underline">{product.name}</Link>
  <p className="text-xs text-slate-500 truncate">{product.laboratory || 'Sin laboratorio'}</p>
  </div>
  <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -1498,7 +1637,7 @@ export default function AdminProductsPage() {
  <AlertTriangle className="flex-shrink-0 w-4 h-4 text-orange-500" />
  </span>
  )}
- <span className="font-medium text-slate-900 truncate max-w-[200px]">{product.name}</span>
+ <Link href={`/producto/${product.slug}`} target="_blank" className="font-medium text-slate-900 truncate max-w-[200px] hover:text-emerald-600 hover:underline">{product.name}</Link>
  {(product as any).prescription_type === 'prescription' && (
  <span className="flex-shrink-0 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded" title="Receta Medica">
  RX

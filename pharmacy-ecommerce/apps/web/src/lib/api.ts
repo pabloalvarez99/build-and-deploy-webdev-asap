@@ -43,6 +43,9 @@ export const productApi = {
     in_stock?: boolean;
     min_price?: number;
     max_price?: number;
+    no_image?: boolean;
+    has_discount?: boolean;
+    stock_filter?: 'low' | 'out' | '';
   }): Promise<PaginatedProducts> => {
     const supabase = getSupabase();
     const page = params?.page || 1;
@@ -76,6 +79,10 @@ export const productApi = {
     if (params?.in_stock) query = query.gt('stock', 0);
     if (params?.min_price) query = query.gte('price', params.min_price);
     if (params?.max_price) query = query.lte('price', params.max_price);
+    if (params?.no_image) query = query.is('image_url', null);
+    if (params?.has_discount) query = query.gt('discount_percent', 0);
+    if (params?.stock_filter === 'low') { query = query.gt('stock', 0); query = query.lte('stock', 10); }
+    if (params?.stock_filter === 'out') query = query.eq('stock', 0);
 
     // Sorting
     const sortBy = params?.sort_by || 'created_at';

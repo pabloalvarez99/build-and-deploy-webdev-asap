@@ -117,7 +117,7 @@ function ReservationContent() {
         <h3 className="font-bold text-blue-900 mb-3 text-lg">Instrucciones de retiro</h3>
         <ol className="text-blue-800 space-y-3 list-decimal list-inside">
           <li>Espera la confirmación de la farmacia</li>
-          <li>Acércate a la farmacia dentro de las próximas <strong>48 horas</strong></li>
+          <li>Acércate a la farmacia dentro de las próximas <strong>4 horas</strong></li>
           <li>Indica tu código de retiro <strong>{code}</strong> al personal</li>
           <li>Realiza el pago en tienda (efectivo, tarjeta o transferencia)</li>
           <li>Retira tus productos</li>

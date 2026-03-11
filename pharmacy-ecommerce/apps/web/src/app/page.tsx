@@ -520,7 +520,7 @@ function HomeContent() {
 
       {/* Mobile Bottom Cart Bar - Grande y siempre visible */}
       {cart && cart.item_count > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-slate-200 p-3 z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-slate-200 p-3 pb-safe z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
           <Link
             href="/carrito"
             className="flex items-center justify-between bg-emerald-600 text-white rounded-2xl px-5 py-4 shadow-lg"

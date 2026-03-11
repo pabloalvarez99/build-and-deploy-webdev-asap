@@ -36,8 +36,8 @@ export async function POST(request: NextRequest) {
     // Generate 6-digit pickup code
     const pickupCode = String(Math.floor(100000 + Math.random() * 900000));
 
-    // Reservation expires in 12 hours
-    const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString();
+    // Reservation expires in 4 hours
+    const expiresAt = new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString();
 
     // Create order with 'reserved' status
     const { data: order, error: orderError } = await supabase
