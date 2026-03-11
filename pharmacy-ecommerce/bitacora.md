@@ -2,6 +2,29 @@
 
 ## Estado actual: PRODUCCIÓN (Marzo 2026)
 
+---
+
+## COMPLETADO: Sistema de Descuentos (Marzo 4, 2026)
+
+### Funcionalidad
+- **Campo DB**: `products.discount_percent INTEGER NULL CHECK(1-99)` — requiere migración SQL manual en Supabase
+- **Helper**: `discountedPrice(price, pct)` en `src/lib/format.ts` — Math.ceil, compatible con CLP
+- **Cart store**: aplica precio con descuento en `subtotal` y `total`; `CartItem` incluye `original_price` y `discount_percent`
+- **Admin productos**: columna "Descuento" en tabla con badge rojo `-X% OFF`; campo numérico en form con preview "Precio final: $..."
+- **API PATCH** `/api/admin/products/[id]`: acepta `discount_percent` (0 → null en DB)
+- **Homepage Ofertas**: carrusel horizontal entre buscador y categorías, solo si hay productos con descuento activos
+- **Homepage grid**: badge `-X% OFF` + precio original tachado en cards con descuento
+- **Checkout APIs**: `guest-checkout` y `store-pickup` usan precio con descuento en total y `price_at_purchase`
+
+### Migración SQL requerida
+```sql
+ALTER TABLE products
+ADD COLUMN discount_percent INTEGER DEFAULT NULL
+CHECK (discount_percent > 0 AND discount_percent <= 99);
+```
+
+---
+
 **Sitio live**: https://tu-farmacia.cl (también https://tu-farmacia.vercel.app)
 **Admin**: https://tu-farmacia.cl/admin
   - timadapa@gmail.com / Admin123!
