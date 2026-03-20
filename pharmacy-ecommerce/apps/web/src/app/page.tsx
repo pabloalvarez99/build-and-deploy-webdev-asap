@@ -487,6 +487,7 @@ function HomeContent() {
                         <button
                           onClick={() => handleAddToCart(product)}
                           disabled={addingId === product.id}
+                          aria-label={`Agregar ${product.name} al carrito`}
                           className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-base transition-all min-h-[56px] border-2 border-emerald-600 ${
                             addingId === product.id
                               ? 'bg-emerald-600 text-white scale-95'

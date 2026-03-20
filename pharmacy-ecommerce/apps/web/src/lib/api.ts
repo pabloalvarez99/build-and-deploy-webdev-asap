@@ -188,6 +188,17 @@ export const productApi = {
     return transformProduct(data);
   },
 
+  getByIds: async (ids: string[]): Promise<ProductWithCategory[]> => {
+    if (ids.length === 0) return [];
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('products')
+      .select('*, categories(name, slug)')
+      .in('id', ids);
+    if (error) throw new Error(error.message);
+    return (data || []).map(transformProduct);
+  },
+
   // Admin operations via API routes
   create: (data: CreateProductData) =>
     apiRequest<Product>('/api/admin/products', { body: data }),

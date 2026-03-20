@@ -64,30 +64,29 @@ export const useCartStore = create<CartState>((set, get) => ({
         return;
       }
 
-      const items = await Promise.all(
-        localItems.map(async (item) => {
-          try {
-            const product = await productApi.getById(item.product_id);
-            const rawPrice = parseFloat(product.price);
-            const disc = product.discount_percent;
-            const effectivePrice = disc ? discountedPrice(rawPrice, disc) : rawPrice;
-            return {
-              product_id: item.product_id,
-              product_name: product.name,
-              product_slug: product.slug,
-              product_image: product.image_url,
-              price: effectivePrice.toString(),
-              ...(disc ? { original_price: product.price, discount_percent: disc } : {}),
-              quantity: item.quantity,
-              subtotal: (effectivePrice * item.quantity).toString(),
-            };
-          } catch {
-            return null;
-          }
-        })
-      );
+      // Batch fetch all products in a single query instead of N individual calls
+      const products = await productApi.getByIds(localItems.map(i => i.product_id));
+      const productMap = new Map(products.map(p => [p.id, p]));
 
-      const validItems = items.filter(Boolean) as CartResponse['items'];
+      const validItems: CartResponse['items'] = [];
+      for (const item of localItems) {
+        const product = productMap.get(item.product_id);
+        if (!product) continue;
+        const rawPrice = parseFloat(product.price);
+        const disc = product.discount_percent;
+        const effectivePrice = disc ? discountedPrice(rawPrice, disc) : rawPrice;
+        validItems.push({
+          product_id: item.product_id,
+          product_name: product.name,
+          product_slug: product.slug,
+          product_image: product.image_url,
+          price: effectivePrice.toString(),
+          ...(disc ? { original_price: product.price, discount_percent: disc } : {}),
+          quantity: item.quantity,
+          subtotal: (effectivePrice * item.quantity).toString(),
+        });
+      }
+
       const total = validItems.reduce((sum, item) => sum + parseFloat(item.subtotal), 0);
 
       set({

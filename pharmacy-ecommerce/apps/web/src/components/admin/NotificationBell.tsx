@@ -78,29 +78,30 @@ export function NotificationBell() {
  });
  }
 
- // Check for critical stock
- const products = await productApi.list({ limit: 1000, active_only: true });
- const criticalProducts = products.products.filter((p) => p.stock === 0);
- const lowStockProducts = products.products.filter((p) => p.stock > 0 && p.stock <= 5);
+ // Check for critical stock using lightweight count queries
+ const [outOfStock, lowStock] = await Promise.all([
+ productApi.list({ limit: 1, active_only: true, stock_filter: 'out' }),
+ productApi.list({ limit: 1, active_only: true, stock_filter: 'low' }),
+ ]);
 
- if (criticalProducts.length > 0) {
+ if (outOfStock.total > 0) {
  newNotifications.push({
  id: `critical-${Date.now()}`,
  type: 'critical',
  title: 'Productos agotados',
- message: `${criticalProducts.length} producto${criticalProducts.length > 1 ? 's' : ''} sin stock`,
+ message: `${outOfStock.total} producto${outOfStock.total > 1 ? 's' : ''} sin stock`,
  timestamp: new Date(),
  read: false,
  link: '/admin/productos?stock=out',
  });
  }
 
- if (lowStockProducts.length > 0) {
+ if (lowStock.total > 0) {
  newNotifications.push({
  id: `low-${Date.now()}`,
  type: 'stock',
  title: 'Stock bajo',
- message: `${lowStockProducts.length} producto${lowStockProducts.length > 1 ? 's' : ''} con stock bajo`,
+ message: `${lowStock.total} producto${lowStock.total > 1 ? 's' : ''} con stock bajo`,
  timestamp: new Date(),
  read: false,
  link: '/admin/productos?stock=low',
@@ -199,7 +200,7 @@ export function NotificationBell() {
  className="text-xs text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
  >
  <Check className="w-3 h-3" />
- Marcar leidas
+ Marcar leídas
  </button>
  )}
  {notifications.length > 0 && (
