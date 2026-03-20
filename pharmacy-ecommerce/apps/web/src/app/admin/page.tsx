@@ -74,6 +74,7 @@ interface StatusData {
 
 const STATUS_COLORS: Record<string, string> = {
  pending: '#EAB308',
+ reserved: '#F59E0B',
  paid: '#22C55E',
  processing: '#3B82F6',
  shipped: '#A855F7',
@@ -83,6 +84,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 const STATUS_LABELS: Record<string, string> = {
  pending: 'Pendiente',
+ reserved: 'Reservado',
  paid: 'Pagado',
  processing: 'Procesando',
  shipped: 'Enviado',
@@ -515,6 +517,7 @@ export default function AdminPage() {
  recentOrders.map((order) => {
  const statusColors: Record<string, string> = {
  pending: 'bg-yellow-100 text-yellow-800',
+ reserved: 'bg-amber-100 text-amber-800',
  paid: 'bg-green-100 text-green-800',
  processing: 'bg-blue-100 text-blue-800',
  shipped: 'bg-purple-100 text-purple-800',
@@ -523,6 +526,7 @@ export default function AdminPage() {
  };
  const statusLabels: Record<string, string> = {
  pending: 'Pendiente',
+ reserved: 'Reservado',
  paid: 'Pagado',
  processing: 'Procesando',
  shipped: 'Enviado',

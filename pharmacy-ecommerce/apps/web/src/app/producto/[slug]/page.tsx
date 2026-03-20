@@ -217,17 +217,21 @@ export default function ProductPage() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
                     <span className="text-slate-700 font-semibold text-lg">Cantidad:</span>
-                    <div className="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden">
+                    <div className="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden" role="group" aria-label="Selector de cantidad">
                       <button
                         onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                        className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center hover:bg-slate-50 transition-colors"
+                        className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center hover:bg-slate-50 transition-colors disabled:opacity-30"
+                        disabled={quantity <= 1}
+                        aria-label="Reducir cantidad"
                       >
                         <Minus className="w-5 h-5 text-slate-600" />
                       </button>
-                      <span className="w-12 sm:w-16 text-center font-bold text-xl text-slate-900">{quantity}</span>
+                      <span className="w-12 sm:w-16 text-center font-bold text-xl text-slate-900" aria-live="polite">{quantity}</span>
                       <button
                         onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
-                        className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center hover:bg-slate-50 transition-colors"
+                        className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center hover:bg-slate-50 transition-colors disabled:opacity-30"
+                        disabled={quantity >= product.stock}
+                        aria-label="Aumentar cantidad"
                       >
                         <Plus className="w-5 h-5 text-slate-600" />
                       </button>

@@ -26,7 +26,28 @@ export async function updateSession(request: NextRequest) {
   );
 
   // Refresh session if expired
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Protect admin routes at middleware level
+  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin');
+  if (isAdminRoute) {
+    if (!user) {
+      const loginUrl = new URL('/auth/login', request.url);
+      loginUrl.searchParams.set('redirect', request.nextUrl.pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Check admin role
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile || profile.role !== 'admin') {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+  }
 
   return supabaseResponse;
 }

@@ -44,7 +44,7 @@ function CheckoutFailureContent() {
           Volver a intentar
         </Link>
         <a
-          href="https://wa.me/56912345678?text=Hola%2C%20tuve%20un%20problema%20con%20mi%20pago"
+          href="https://wa.me/56971074806?text=Hola%2C%20tuve%20un%20problema%20con%20mi%20pago%20en%20Tu%20Farmacia"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 w-full bg-white text-slate-700 py-4 px-4 rounded-2xl border-2 border-slate-200 hover:bg-slate-50 transition-colors font-bold text-lg min-h-[56px]"

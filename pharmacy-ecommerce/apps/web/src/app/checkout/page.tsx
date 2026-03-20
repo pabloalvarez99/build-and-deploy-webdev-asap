@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cart';
 import { orderApi } from '@/lib/api';
-import { MapPin, FileText, Mail, Loader2, ShieldCheck, Store, CreditCard, Phone, Clock } from 'lucide-react';
+import { MapPin, FileText, Mail, Loader2, ShieldCheck, Store, CreditCard, Phone, Clock, ShoppingCart, ClipboardList, Check } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 type PaymentMethod = 'mercadopago' | 'store';
@@ -27,26 +27,42 @@ export default function CheckoutPage() {
     fetchCart();
   }, [fetchCart]);
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone: string): boolean => {
+    // Chilean phone: +56 9 XXXX XXXX or 9 XXXX XXXX or just digits 8+
+    const cleaned = phone.replace(/[\s\-\+\(\)]/g, '');
+    return /^\d{8,12}$/.test(cleaned);
+  };
+
   const handleCheckout = async () => {
     if (!cart || cart.items.length === 0) return;
 
-    if (!name || name.trim().length === 0) {
-      setError('Por favor ingresa tu nombre');
+    const trimmedName = name.trim();
+    const trimmedSurname = surname.trim();
+    const trimmedEmail = email.trim();
+    const trimmedPhone = phone.trim();
+
+    if (!trimmedName || trimmedName.length < 2) {
+      setError('Por favor ingresa tu nombre (minimo 2 caracteres)');
       return;
     }
 
-    if (!surname || surname.trim().length === 0) {
-      setError('Por favor ingresa tu apellido');
+    if (!trimmedSurname || trimmedSurname.length < 2) {
+      setError('Por favor ingresa tu apellido (minimo 2 caracteres)');
       return;
     }
 
-    if (!email || !email.includes('@')) {
-      setError('Por favor ingresa un email válido');
+    if (!validateEmail(trimmedEmail)) {
+      setError('Por favor ingresa un email valido (ejemplo: tu@email.com)');
       return;
     }
 
-    if (paymentMethod === 'store' && (!phone || phone.trim().length < 8)) {
-      setError('Por favor ingresa un teléfono válido para contactarte');
+    if (paymentMethod === 'store' && !validatePhone(trimmedPhone)) {
+      setError('Por favor ingresa un telefono valido (ejemplo: 9 1234 5678)');
       return;
     }
 
@@ -115,7 +131,27 @@ export default function CheckoutPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-      <h1 className="text-2xl font-bold text-slate-900 mb-6">Finalizar compra</h1>
+      <h1 className="text-2xl font-bold text-slate-900 mb-4">Finalizar compra</h1>
+
+      {/* Progress Steps */}
+      <div className="flex items-center justify-center gap-0 mb-6">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+            <Check className="w-4 h-4" />
+          </div>
+          <span className="text-sm font-medium text-emerald-700 hidden sm:inline">Carrito</span>
+        </div>
+        <div className="w-8 sm:w-12 h-0.5 bg-emerald-600" />
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold">2</div>
+          <span className="text-sm font-medium text-emerald-700 hidden sm:inline">Datos y pago</span>
+        </div>
+        <div className="w-8 sm:w-12 h-0.5 bg-slate-200" />
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-sm font-bold">3</div>
+          <span className="text-sm font-medium text-slate-400 hidden sm:inline">Confirmacion</span>
+        </div>
+      </div>
 
       <div className="space-y-4">
         {/* Payment Method Selection - Large cards */}
@@ -179,29 +215,33 @@ export default function CheckoutPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block font-semibold text-slate-700 mb-2">
+              <label htmlFor="checkout-name" className="block font-semibold text-slate-700 mb-2">
                 Nombre *
               </label>
               <input
+                id="checkout-name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Juan"
                 className="input"
                 required
+                autoComplete="given-name"
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-700 mb-2">
+              <label htmlFor="checkout-surname" className="block font-semibold text-slate-700 mb-2">
                 Apellido *
               </label>
               <input
+                id="checkout-surname"
                 type="text"
                 value={surname}
                 onChange={(e) => setSurname(e.target.value)}
                 placeholder="Perez"
                 className="input"
                 required
+                autoComplete="family-name"
               />
             </div>
           </div>
@@ -216,15 +256,17 @@ export default function CheckoutPage() {
             </h2>
           </div>
           <input
+            id="checkout-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="tu@email.com"
             className="input"
             required
+            autoComplete="email"
           />
-          <p className="text-slate-500 mt-2">
-            Enviaremos la confirmación a este email
+          <p className="text-slate-500 mt-2" id="email-help">
+            Enviaremos la confirmacion a este email
           </p>
         </div>
 
@@ -238,15 +280,17 @@ export default function CheckoutPage() {
               </h2>
             </div>
             <input
+              id="checkout-phone"
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+56 9 1234 5678"
               className="input"
               required
+              autoComplete="tel"
             />
             <p className="text-slate-500 mt-2">
-              Te contactaremos cuando tu pedido esté listo
+              Te contactaremos cuando tu pedido este listo
             </p>
           </div>
         )}
@@ -361,6 +405,15 @@ export default function CheckoutPage() {
                 : 'Reserva garantizada por 4 horas'
               }
             </span>
+          </div>
+
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => router.push('/carrito')}
+              className="text-emerald-600 font-semibold hover:underline text-base"
+            >
+              Volver al carrito
+            </button>
           </div>
         </div>
       </div>

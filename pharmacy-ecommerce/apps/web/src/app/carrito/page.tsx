@@ -96,15 +96,17 @@ export default function CartPage() {
                             onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
                             className="w-11 h-11 sm:w-14 sm:h-14 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors disabled:opacity-30"
                             disabled={item.quantity <= 1}
+                            aria-label={`Reducir cantidad de ${item.product_name}`}
                           >
                             <Minus className="w-4 h-4 sm:w-5 sm:h-5" />
                           </button>
-                          <span className="w-10 sm:w-12 text-center font-bold text-lg text-slate-900">
+                          <span className="w-10 sm:w-12 text-center font-bold text-lg text-slate-900" aria-label={`Cantidad: ${item.quantity}`}>
                             {item.quantity}
                           </span>
                           <button
                             onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
                             className="w-11 h-11 sm:w-14 sm:h-14 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors"
+                            aria-label={`Aumentar cantidad de ${item.product_name}`}
                           >
                             <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
                           </button>
@@ -113,6 +115,7 @@ export default function CartPage() {
                         <button
                           onClick={() => removeFromCart(item.product_id)}
                           className="w-11 h-11 sm:w-14 sm:h-14 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-colors"
+                          aria-label={`Eliminar ${item.product_name} del carrito`}
                           title="Eliminar producto"
                         >
                           <Trash2 className="w-5 h-5 sm:w-6 sm:h-6" />

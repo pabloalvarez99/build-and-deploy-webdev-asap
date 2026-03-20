@@ -229,6 +229,8 @@ function HomeContent() {
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           className="fixed bottom-24 right-4 z-40 w-14 h-14 bg-emerald-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-emerald-700 transition-all"
+          aria-label="Volver arriba"
+          title="Volver arriba"
         >
           <ChevronUp className="w-6 h-6" />
         </button>
@@ -237,22 +239,26 @@ function HomeContent() {
       {/* Search Bar - Siempre visible, grande */}
       <div className="bg-white px-4 py-3 border-b border-slate-100">
         <div className="max-w-7xl mx-auto">
-          <div className="relative">
+          <div className="relative" role="search">
+            <label htmlFor="search-products" className="sr-only">Buscar medicamentos</label>
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-slate-400" />
+              <Search className="h-5 w-5 text-slate-400" aria-hidden="true" />
             </div>
             <input
               ref={searchInputRef}
-              type="text"
+              id="search-products"
+              type="search"
               placeholder="Buscar medicamentos..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="block w-full pl-12 pr-12 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-2xl text-lg focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-400 transition-all"
+              autoComplete="off"
             />
             {searchInput && (
               <button
-                onClick={() => { setSearchInput(''); setSearchTerm(''); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-slate-200 text-slate-500"
+                onClick={() => { setSearchInput(''); setSearchTerm(''); searchInputRef.current?.focus(); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 transition-colors"
+                aria-label="Limpiar busqueda"
               >
                 <X className="w-5 h-5" />
               </button>

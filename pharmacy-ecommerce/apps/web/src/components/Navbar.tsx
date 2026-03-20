@@ -27,12 +27,24 @@ export function Navbar() {
     setIsMenuOpen(false);
   };
 
+  // Close menu on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMenuOpen) {
+        setIsMenuOpen(false);
+      }
+    };
+    if (isMenuOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isMenuOpen]);
+
   const itemCount = cart?.item_count || 0;
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b-2 border-slate-100 shadow-sm">
+    <nav className="sticky top-0 z-50 bg-white border-b-2 border-slate-100 shadow-sm" role="navigation" aria-label="Principal">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Fila 1: Logo + Usuario + Carrito */}
         <div className="flex justify-between items-center h-[72px]">
           {/* Logo */}
           <Link href="/" className="flex items-center" aria-label="Tu Farmacia">
@@ -66,6 +78,9 @@ export function Navbar() {
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="flex items-center gap-2 p-2.5 rounded-xl hover:bg-slate-50 transition-colors min-h-[56px] min-w-[56px] justify-center"
+                  aria-expanded={isMenuOpen}
+                  aria-haspopup="true"
+                  aria-label="Menu de usuario"
                 >
                   <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
                     {user.name ? user.name[0].toUpperCase() : 'U'}
@@ -125,9 +140,10 @@ export function Navbar() {
               </Link>
             )}
 
-            {/* Cart Button - Grande y claro */}
+            {/* Cart Button */}
             <Link
               href="/carrito"
+              aria-label={`Carrito${itemCount > 0 ? `, ${itemCount} producto${itemCount > 1 ? 's' : ''}` : ''}`}
               className={`relative flex items-center gap-2 px-4 py-3 rounded-2xl transition-all font-bold min-h-[56px] ${
                 pathname === '/carrito'
                   ? 'bg-emerald-600 text-white'
