@@ -151,6 +151,20 @@ export default function CartPage() {
                   <span>Subtotal ({cart.items.reduce((acc, item) => acc + item.quantity, 0)} productos)</span>
                   <span className="font-semibold text-slate-700">{formatPrice(parseFloat(cart.total))}</span>
                 </div>
+                {cart.items.some(i => i.original_price && i.discount_percent) && (() => {
+                  const savings = cart.items.reduce((sum, i) => {
+                    if (i.original_price && i.discount_percent) {
+                      return sum + (parseFloat(i.original_price) - parseFloat(i.price)) * i.quantity;
+                    }
+                    return sum;
+                  }, 0);
+                  return savings > 0 ? (
+                    <div className="flex justify-between text-red-500">
+                      <span className="font-semibold">Descuentos</span>
+                      <span className="font-bold">-{formatPrice(savings)}</span>
+                    </div>
+                  ) : null;
+                })()}
                 <div className="flex justify-between text-slate-500">
                   <span>Envío</span>
                   <span className="text-emerald-600 font-semibold">Gratis</span>

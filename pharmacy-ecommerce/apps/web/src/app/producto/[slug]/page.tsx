@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { productApi, ProductWithCategory } from '@/lib/api';
+import { productApi, ProductWithCategory, Product } from '@/lib/api';
 import { useCartStore } from '@/store/cart';
 import { ShoppingCart, Minus, Plus, Package, Truck, ShieldCheck, ArrowLeft, Check } from 'lucide-react';
 import Link from 'next/link';
@@ -21,6 +21,7 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [added, setAdded] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     loadProduct();
@@ -30,6 +31,12 @@ export default function ProductPage() {
     try {
       const data = await productApi.get(slug);
       setProduct(data);
+      // Load related products from same category
+      if (data.category_slug) {
+        productApi.list({ category: data.category_slug, limit: 5, in_stock: true }).then(res => {
+          setRelatedProducts(res.products.filter(p => p.slug !== slug).slice(0, 4));
+        }).catch(() => {});
+      }
     } catch (error) {
       console.error('Error loading product:', error);
     } finally {
@@ -299,6 +306,54 @@ export default function ProductPage() {
             )}
           </div>
         </div>
+
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-8 sm:mt-12">
+            <h2 className="text-xl font-bold text-slate-900 mb-4">Productos relacionados</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {relatedProducts.map((rp) => (
+                <Link
+                  key={rp.id}
+                  href={`/producto/${rp.slug}`}
+                  className="bg-slate-50 rounded-2xl border-2 border-slate-100 overflow-hidden hover:border-emerald-200 hover:shadow-md transition-all flex flex-col"
+                >
+                  <div className="aspect-square relative bg-white overflow-hidden">
+                    {rp.image_url ? (
+                      <Image
+                        src={rp.image_url}
+                        alt={rp.name}
+                        fill
+                        sizes="(max-width: 640px) 50vw, 25vw"
+                        className="object-contain p-2"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center text-slate-300">
+                        <Package className="w-10 h-10" />
+                      </div>
+                    )}
+                    {rp.discount_percent && (
+                      <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-black px-2 py-1 rounded-lg">
+                        -{rp.discount_percent}%
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-2.5">
+                    <h3 className="font-bold text-slate-800 text-sm leading-snug line-clamp-2 min-h-[2.5rem]">{rp.name}</h3>
+                    {rp.discount_percent ? (
+                      <div className="mt-1">
+                        <span className="text-xs text-slate-400 line-through">{formatPrice(rp.price)}</span>
+                        <span className="text-base font-black text-emerald-700 block">{formatPrice(discountedPrice(Number(rp.price), rp.discount_percent))}</span>
+                      </div>
+                    ) : (
+                      <span className="text-base font-black text-emerald-700 block mt-1">{formatPrice(rp.price)}</span>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

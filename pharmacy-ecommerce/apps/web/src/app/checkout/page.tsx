@@ -238,7 +238,7 @@ export default function CheckoutPage() {
                 type="text"
                 value={surname}
                 onChange={(e) => setSurname(e.target.value)}
-                placeholder="Perez"
+                placeholder="Pérez"
                 className="input"
                 required
                 autoComplete="family-name"
@@ -340,10 +340,15 @@ export default function CheckoutPage() {
 
           <div className="space-y-3 border-b-2 border-slate-100 pb-4 mb-4">
             {cart.items.map((item) => (
-              <div key={item.product_id} className="flex justify-between">
-                <span className="text-slate-600 line-clamp-1 flex-1 mr-4">
-                  {item.product_name} x{item.quantity}
-                </span>
+              <div key={item.product_id} className="flex justify-between items-start">
+                <div className="flex-1 mr-4">
+                  <span className="text-slate-600 line-clamp-1">
+                    {item.product_name} x{item.quantity}
+                  </span>
+                  {item.discount_percent && (
+                    <span className="text-xs font-bold text-red-500">-{item.discount_percent}% OFF</span>
+                  )}
+                </div>
                 <span className="text-slate-900 font-semibold flex-shrink-0">
                   {formatPrice(item.subtotal)}
                 </span>
@@ -356,6 +361,20 @@ export default function CheckoutPage() {
               <span>Subtotal</span>
               <span className="text-slate-700 font-semibold">{formatPrice(cart.total)}</span>
             </div>
+            {cart.items.some(i => i.discount_percent) && (() => {
+              const savings = cart.items.reduce((sum, i) => {
+                if (i.original_price && i.discount_percent) {
+                  return sum + (parseFloat(i.original_price) - parseFloat(i.price)) * i.quantity;
+                }
+                return sum;
+              }, 0);
+              return savings > 0 ? (
+                <div className="flex justify-between text-red-500">
+                  <span className="font-semibold">Descuentos</span>
+                  <span className="font-bold">-{formatPrice(savings)}</span>
+                </div>
+              ) : null;
+            })()}
             <div className="flex justify-between text-slate-500">
               <span>{paymentMethod === 'store' ? 'Retiro' : 'Envío'}</span>
               <span className="text-emerald-600 font-semibold">Gratis</span>
