@@ -4,6 +4,26 @@
 
 ---
 
+## COMPLETADO: Fixes de calidad y seguridad (Marzo 20, 2026)
+
+### Mejoras implementadas
+
+**Validaciones y UX checkout**:
+- Dirección de envío ahora requerida para pagos con MercadoPago (antes era opcional, generando órdenes sin dirección)
+- Indicador visual `*` en campo de dirección
+- Placeholder mejorado con ejemplo: "Calle, número, departamento, ciudad..."
+
+**Store pickup**:
+- Tiempo de expiración de reserva extendido de 4 a 24 horas (más razonable para adultos mayores)
+
+**Robustez**:
+- `formatPrice()` ahora maneja NaN con guard: retorna `$0` en vez de `$NaN`
+
+**Accesibilidad y textos admin**:
+- Corregido acento: "Marcar leídas" en NotificationBell
+
+---
+
 ## COMPLETADO: UX y Rendimiento (Marzo 20, 2026)
 
 ### Mejoras implementadas

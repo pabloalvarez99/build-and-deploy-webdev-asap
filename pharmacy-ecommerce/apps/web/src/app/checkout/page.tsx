@@ -66,6 +66,11 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (paymentMethod === 'mercadopago' && !shippingAddress.trim()) {
+      setError('Por favor ingresa tu dirección de envío');
+      return;
+    }
+
     setIsProcessing(true);
     setError('');
 
@@ -301,14 +306,15 @@ export default function CheckoutPage() {
             <div className="flex items-center gap-3 mb-4">
               <MapPin className="w-6 h-6 text-emerald-600" />
               <h2 className="text-lg font-bold text-slate-900">
-                Dirección de envío
+                Dirección de envío <span className="text-red-500">*</span>
               </h2>
             </div>
             <textarea
               value={shippingAddress}
               onChange={(e) => setShippingAddress(e.target.value)}
-              placeholder="Ingresa tu dirección completa..."
+              placeholder="Calle, número, departamento, ciudad..."
               className="input min-h-[100px]"
+              required
             />
           </div>
         )}

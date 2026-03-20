@@ -5,7 +5,8 @@
  */
 export function formatPrice(price: string | number): string {
   const numPrice = typeof price === 'string' ? parseFloat(price) : price;
-  
+  if (isNaN(numPrice)) return '$0';
+
   return new Intl.NumberFormat('es-CL', {
     style: 'currency',
     currency: 'CLP',
