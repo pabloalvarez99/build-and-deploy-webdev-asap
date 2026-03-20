@@ -69,18 +69,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
  const loadStats = async () => {
  try {
- // Pending orders count
- const orders = await orderApi.list({ status: 'pending', limit: 1 });
+ const [orders, reservations, products] = await Promise.all([
+ orderApi.list({ status: 'pending', limit: 1 }),
+ orderApi.listAll({ status: 'reserved', limit: 1 }),
+ productApi.list({ limit: 1000, active_only: true }),
+ ]);
  setPendingOrders(orders.total);
-
- // Pending reservations count
- const reservations = await orderApi.listAll({ status: 'reserved', limit: 1 });
  setPendingReservations(reservations.total);
-
- // Critical stock count
- const products = await productApi.list({ limit: 1000, active_only: true });
- const critical = products.products.filter((p) => p.stock <= 10).length;
- setCriticalStock(critical);
+ setCriticalStock(products.products.filter((p) => p.stock <= 10).length);
  } catch (error) {
  console.error('Error loading admin stats:', error);
  }

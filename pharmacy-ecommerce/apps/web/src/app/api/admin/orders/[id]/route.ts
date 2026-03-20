@@ -26,6 +26,39 @@ export async function PUT(
       return errorResponse(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
     }
 
+    // When cancelling, restore stock if it was previously deducted
+    if (body.status === 'cancelled') {
+      const { data: currentOrder } = await supabase
+        .from('orders')
+        .select('status')
+        .eq('id', id)
+        .single();
+
+      const stockDeductedStatuses = ['paid', 'processing', 'shipped', 'delivered'];
+      if (currentOrder && stockDeductedStatuses.includes(currentOrder.status)) {
+        const { data: items } = await supabase
+          .from('order_items')
+          .select('product_id, quantity')
+          .eq('order_id', id);
+
+        for (const item of items || []) {
+          if (item.product_id) {
+            const { data: product } = await supabase
+              .from('products')
+              .select('stock')
+              .eq('id', item.product_id)
+              .single();
+            if (product) {
+              await supabase
+                .from('products')
+                .update({ stock: product.stock + item.quantity })
+                .eq('id', item.product_id);
+            }
+          }
+        }
+      }
+    }
+
     const { data, error } = await supabase
       .from('orders')
       .update({ status: body.status })

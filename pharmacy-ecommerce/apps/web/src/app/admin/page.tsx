@@ -131,26 +131,25 @@ export default function AdminPage() {
 
  const loadStats = async () => {
  try {
- // Load products stats
- const allProducts = await productApi.list({ limit: 1, active_only: false });
- const activeProducts = await productApi.list({ limit: 1, active_only: true });
- const categories = await productApi.listCategories();
-
- // Load all orders for charts
- const allOrders = await orderApi.list({ limit: 1000 });
- const pendingOrders = await orderApi.list({ status: 'pending', limit: 1 });
-
- // Calculate inventory stats by fetching a larger batch
- const productsForStats = await productApi.list({ limit: 1000, active_only: false });
+ // Load all data in parallel for faster dashboard load
+ const [allProducts, categories, allOrders, pendingOrders, productsForStats] = await Promise.all([
+ productApi.list({ limit: 1, active_only: false }),
+ productApi.listCategories(),
+ orderApi.list({ limit: 1000 }),
+ orderApi.list({ status: 'pending', limit: 1 }),
+ productApi.list({ limit: 1000, active_only: false }),
+ ]);
 
  let lowStock = 0;
  let outOfStock = 0;
  let inventoryValue = 0;
  const lowStockList: LowStockProduct[] = [];
 
+ let activeCount = 0;
  productsForStats.products.forEach((p) => {
  const price = parseFloat(p.price);
  inventoryValue += p.stock * price;
+ if (p.active !== false) activeCount++;
  if (p.stock === 0) {
  outOfStock++;
  lowStockList.push({ id: p.id, name: p.name, stock: p.stock, slug: p.slug });
@@ -171,7 +170,7 @@ export default function AdminPage() {
 
  setStats({
  totalProducts: allProducts.total,
- activeProducts: activeProducts.total,
+ activeProducts: activeCount,
  lowStockProducts: lowStock,
  outOfStockProducts: outOfStock,
  totalCategories: categories.length,
@@ -515,7 +514,7 @@ export default function AdminPage() {
  <div className="divide-y divide-slate-100">
  {recentOrders.length > 0 ? (
  recentOrders.map((order) => {
- const statusColors: Record<string, string> = {
+ const statusBadgeColors: Record<string, string> = {
  pending: 'bg-yellow-100 text-yellow-800',
  reserved: 'bg-amber-100 text-amber-800',
  paid: 'bg-green-100 text-green-800',
@@ -523,15 +522,6 @@ export default function AdminPage() {
  shipped: 'bg-purple-100 text-purple-800',
  delivered: 'bg-green-100 text-green-800',
  cancelled: 'bg-red-100 text-red-800',
- };
- const statusLabels: Record<string, string> = {
- pending: 'Pendiente',
- reserved: 'Reservado',
- paid: 'Pagado',
- processing: 'Procesando',
- shipped: 'Enviado',
- delivered: 'Entregado',
- cancelled: 'Cancelado',
  };
  const date = new Date(order.created_at).toLocaleDateString('es-CL', {
  day: '2-digit',
@@ -554,9 +544,9 @@ export default function AdminPage() {
  {formatPrice(order.total)}
  </span>
  <span
- className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[order.status] || 'bg-slate-100 text-slate-800'}`}
+ className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusBadgeColors[order.status] || 'bg-slate-100 text-slate-800'}`}
  >
- {statusLabels[order.status] || order.status}
+ {STATUS_LABELS[order.status] || order.status}
  </span>
  </div>
  </Link>
@@ -565,7 +555,7 @@ export default function AdminPage() {
  ) : (
  <div className="px-6 py-8 text-center text-slate-500">
  <ShoppingBag className="w-10 h-10 mx-auto mb-2 text-slate-300" />
- <p>No hay ordenes recientes</p>
+ <p>No hay órdenes recientes</p>
  </div>
  )}
  </div>

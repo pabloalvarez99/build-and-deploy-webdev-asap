@@ -47,22 +47,22 @@ export default function CheckoutPage() {
     const trimmedPhone = phone.trim();
 
     if (!trimmedName || trimmedName.length < 2) {
-      setError('Por favor ingresa tu nombre (minimo 2 caracteres)');
+      setError('Por favor ingresa tu nombre (mínimo 2 caracteres)');
       return;
     }
 
     if (!trimmedSurname || trimmedSurname.length < 2) {
-      setError('Por favor ingresa tu apellido (minimo 2 caracteres)');
+      setError('Por favor ingresa tu apellido (mínimo 2 caracteres)');
       return;
     }
 
     if (!validateEmail(trimmedEmail)) {
-      setError('Por favor ingresa un email valido (ejemplo: tu@email.com)');
+      setError('Por favor ingresa un email válido (ejemplo: tu@email.com)');
       return;
     }
 
     if (paymentMethod === 'store' && !validatePhone(trimmedPhone)) {
-      setError('Por favor ingresa un telefono valido (ejemplo: 9 1234 5678)');
+      setError('Por favor ingresa un teléfono válido (ejemplo: 9 1234 5678)');
       return;
     }
 
@@ -149,7 +149,7 @@ export default function CheckoutPage() {
         <div className="w-8 sm:w-12 h-0.5 bg-slate-200" />
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-sm font-bold">3</div>
-          <span className="text-sm font-medium text-slate-400 hidden sm:inline">Confirmacion</span>
+          <span className="text-sm font-medium text-slate-400 hidden sm:inline">Confirmación</span>
         </div>
       </div>
 
@@ -266,7 +266,7 @@ export default function CheckoutPage() {
             autoComplete="email"
           />
           <p className="text-slate-500 mt-2" id="email-help">
-            Enviaremos la confirmacion a este email
+            Enviaremos la confirmación a este email
           </p>
         </div>
 

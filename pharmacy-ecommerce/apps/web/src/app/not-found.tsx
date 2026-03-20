@@ -8,9 +8,9 @@ export default function NotFound() {
         <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <Search className="w-10 h-10 text-slate-400" />
         </div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-3">Pagina no encontrada</h1>
+        <h1 className="text-3xl font-bold text-slate-900 mb-3">Página no encontrada</h1>
         <p className="text-lg text-slate-500 mb-8">
-          La pagina que buscas no existe o fue movida. Te invitamos a volver al catalogo.
+          La página que buscas no existe o fue movida. Te invitamos a volver al catálogo.
         </p>
         <Link
           href="/"

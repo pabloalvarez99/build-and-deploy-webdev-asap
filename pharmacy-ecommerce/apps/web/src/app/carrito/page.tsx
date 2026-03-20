@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCartStore } from '@/store/cart';
 import { ShoppingBag, ArrowRight, Trash2, Plus, Minus, Package } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
@@ -57,15 +58,19 @@ export default function CartPage() {
                 {cart.items.map((item) => (
                   <div key={item.product_id} className="p-3 sm:p-4 flex gap-3">
                     {/* Product Image */}
-                    <div className="w-20 h-20 sm:w-28 sm:h-28 bg-slate-50 rounded-2xl flex-shrink-0 flex items-center justify-center border-2 border-slate-100 overflow-hidden">
+                    <div className="w-20 h-20 sm:w-28 sm:h-28 bg-slate-50 rounded-2xl flex-shrink-0 relative border-2 border-slate-100 overflow-hidden">
                       {item.product_image ? (
-                        <img
+                        <Image
                           src={item.product_image}
                           alt={item.product_name}
-                          className="w-full h-full object-contain p-2"
+                          fill
+                          sizes="(max-width: 640px) 80px, 112px"
+                          className="object-contain p-2"
                         />
                       ) : (
-                        <Package className="w-8 h-8 sm:w-10 sm:h-10 text-slate-300" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Package className="w-8 h-8 sm:w-10 sm:h-10 text-slate-300" />
+                        </div>
                       )}
                     </div>
 

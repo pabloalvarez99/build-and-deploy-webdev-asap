@@ -4,22 +4,9 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'via.placeholder.com',
-      },
-      {
-        protocol: 'http',
-        hostname: 'via.placeholder.com',
-      },
-      {
-        protocol: 'https',
         hostname: '**',
       },
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-      },
     ],
-    unoptimized: true,
   },
 }
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuthStore } from '@/store/auth';
 import { productApi, PaginatedProducts, Category } from '@/lib/api';
 import { Plus, Edit, Trash2, Search, Download, Upload, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package, FileSpreadsheet, CheckCircle, XCircle, RefreshCw, ArrowRight, History, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
@@ -299,7 +300,7 @@ export default function AdminProductsPage() {
  const headers = ['Nombre', 'Slug', 'Precio', 'Stock', 'Categoría', 'Laboratorio', 'Acción Terapéutica', 'Principio Activo', 'Tipo de Venta', 'Presentación', 'Estado'];
  const prescriptionLabels: Record<string, string> = {
  direct: 'Venta Directa',
- prescription: 'Receta Medica',
+ prescription: 'Receta Médica',
  retained: 'Receta Retenida'
  };
  const rows = products.products.map(p => [
@@ -1007,12 +1008,14 @@ export default function AdminProductsPage() {
  placeholder="https://..."
  />
  {formData.image_url && (
- <div className="mt-2">
- <img 
- src={formData.image_url} 
- alt="Preview" 
- className="h-20 w-20 object-cover rounded border"
- onError={(e) => (e.currentTarget.style.display = 'none')}
+ <div className="mt-2 relative h-20 w-20">
+ <Image
+ src={formData.image_url}
+ alt="Preview"
+ fill
+ sizes="80px"
+ className="object-cover rounded border"
+ onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
  />
  </div>
  )}
@@ -1067,7 +1070,7 @@ export default function AdminProductsPage() {
  className="input"
  >
  <option value="direct">Venta Directa</option>
- <option value="prescription">Receta Medica</option>
+ <option value="prescription">Receta Médica</option>
  <option value="retained">Receta Retenida</option>
  </select>
  </div>
@@ -1465,12 +1468,15 @@ export default function AdminProductsPage() {
  >
  <div className="flex items-start gap-3">
  {product.image_url ? (
- <img
+ <div className="w-14 h-14 relative rounded-lg bg-white border border-slate-100 shrink-0 overflow-hidden">
+ <Image
  src={product.image_url}
  alt=""
- className="w-14 h-14 object-contain rounded-lg bg-white border border-slate-100 shrink-0"
- loading="lazy"
+ fill
+ sizes="56px"
+ className="object-contain"
  />
+ </div>
  ) : (
  <div className="w-14 h-14 bg-slate-100 rounded-lg flex items-center justify-center shrink-0">
  <Package className="w-5 h-5 text-slate-300" />
@@ -1616,12 +1622,15 @@ export default function AdminProductsPage() {
  <td className="px-4 py-3">
  <div className="flex items-center gap-3">
  {product.image_url ? (
- <img
+ <div className="w-10 h-10 relative rounded bg-white border border-slate-100 shrink-0 overflow-hidden">
+ <Image
  src={product.image_url}
  alt=""
- className="w-10 h-10 object-contain rounded bg-white border border-slate-100"
- loading="lazy"
+ fill
+ sizes="40px"
+ className="object-contain"
  />
+ </div>
  ) : (
  <div className="w-10 h-10 bg-slate-100 rounded flex items-center justify-center shrink-0">
  <span className="text-[10px] text-slate-400">Sin img</span>
@@ -1639,7 +1648,7 @@ export default function AdminProductsPage() {
  )}
  <Link href={`/producto/${product.slug}`} target="_blank" className="font-medium text-slate-900 truncate max-w-[200px] hover:text-emerald-600 hover:underline">{product.name}</Link>
  {(product as any).prescription_type === 'prescription' && (
- <span className="flex-shrink-0 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded" title="Receta Medica">
+ <span className="flex-shrink-0 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded" title="Receta Médica">
  RX
  </span>
  )}

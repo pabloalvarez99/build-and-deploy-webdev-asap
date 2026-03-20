@@ -6,6 +6,7 @@ import { productApi, ProductWithCategory } from '@/lib/api';
 import { useCartStore } from '@/store/cart';
 import { ShoppingCart, Minus, Plus, Package, Truck, ShieldCheck, ArrowLeft, Check } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { formatPrice } from '@/lib/format';
 
 export default function ProductPage() {
@@ -100,10 +101,13 @@ export default function ProductPage() {
           {/* Product Image */}
           <div className="aspect-square relative bg-slate-50 rounded-2xl border-2 border-slate-100 overflow-hidden flex items-center justify-center">
             {product.image_url ? (
-              <img
+              <Image
                 src={product.image_url}
                 alt={product.name}
-                className="w-full h-full object-contain p-3 sm:p-6"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-contain p-3 sm:p-6"
+                priority
               />
             ) : (
               <Package className="w-24 h-24 text-slate-200" />
@@ -138,7 +142,7 @@ export default function ProductPage() {
                 )}
                 {product.prescription_type === 'prescription' && (
                   <span className="inline-flex items-center px-4 py-2 rounded-2xl text-base font-semibold bg-yellow-100 text-yellow-800">
-                    Receta Medica
+                    Receta Médica
                   </span>
                 )}
                 {product.prescription_type === 'retained' && (
@@ -207,7 +211,7 @@ export default function ProductPage() {
                 <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600">
                   <ShieldCheck className="w-6 h-6" />
                 </div>
-                <span className="text-slate-700 font-medium">Compra segura y garantia de calidad</span>
+                <span className="text-slate-700 font-medium">Compra segura y garantía de calidad</span>
               </div>
             </div>
 

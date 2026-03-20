@@ -20,7 +20,7 @@ function CheckoutFailureContent() {
       </h1>
 
       <p className="text-slate-600 mb-2">
-        Tu pago no pudo ser procesado. No se ha realizado ningun cargo.
+        Tu pago no pudo ser procesado. No se ha realizado ningún cargo.
       </p>
 
       {orderId && (

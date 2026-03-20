@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { productApi, PaginatedProducts, Category, Product } from '@/lib/api';
 import { Search, ShoppingCart, Check, X, ChevronUp, Package, ChevronDown, Pill, Heart, Droplets, Apple, Stethoscope, Brain, Wind, Sparkles, Eye, Flower2, Shield, Droplet, Baby, Users, Activity, Leaf } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCartStore } from '@/store/cart';
 import { formatPrice, discountedPrice } from '@/lib/format';
 import { ReactNode } from 'react';
@@ -86,6 +87,7 @@ function HomeContent() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [discountedProducts, setDiscountedProducts] = useState<Product[]>([]);
+  const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
   const searchInputRef = useRef<HTMLInputElement>(null);
   const ITEMS_PER_PAGE = 20;
 
@@ -258,7 +260,7 @@ function HomeContent() {
               <button
                 onClick={() => { setSearchInput(''); setSearchTerm(''); searchInputRef.current?.focus(); }}
                 className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 transition-colors"
-                aria-label="Limpiar busqueda"
+                aria-label="Limpiar búsqueda"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -288,12 +290,14 @@ function HomeContent() {
                   >
                     <Link href={`/producto/${product.slug}`} className="block relative">
                       <div className="aspect-square bg-slate-50 relative overflow-hidden">
-                        {product.image_url ? (
-                          <img
+                        {product.image_url && !brokenImages.has(product.id) ? (
+                          <Image
                             src={product.image_url}
                             alt={product.name}
-                            loading="lazy"
-                            className="w-full h-full object-contain p-2"
+                            fill
+                            sizes="(max-width: 640px) 144px, 176px"
+                            className="object-contain p-2"
+                            onError={() => setBrokenImages(prev => new Set(prev).add(product.id))}
                           />
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center text-slate-300">
@@ -408,21 +412,20 @@ function HomeContent() {
                   {/* Image */}
                   <Link href={`/producto/${product.slug}`} className="block">
                     <div className="aspect-square bg-slate-50 relative overflow-hidden">
-                      {product.image_url ? (
-                        <img
+                      {product.image_url && !brokenImages.has(product.id) ? (
+                        <Image
                           src={product.image_url}
                           alt={product.name}
-                          loading="lazy"
-                          className="w-full h-full object-contain p-2"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                          }}
+                          fill
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                          className="object-contain p-2"
+                          onError={() => setBrokenImages(prev => new Set(prev).add(product.id))}
                         />
-                      ) : null}
-                      <div className={`absolute inset-0 flex items-center justify-center text-slate-300 ${product.image_url ? 'hidden' : ''}`}>
-                        <Package className="w-12 h-12" />
-                      </div>
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center text-slate-300">
+                          <Package className="w-12 h-12" />
+                        </div>
+                      )}
                       {product.discount_percent && (
                         <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-black px-2 py-1 rounded-lg">
                           -{product.discount_percent}% OFF
@@ -503,7 +506,7 @@ function HomeContent() {
                   disabled={isLoadingMore}
                   className="w-full sm:w-auto px-8 py-4 bg-white border-2 border-emerald-300 text-emerald-700 rounded-2xl font-bold text-lg hover:bg-emerald-50 transition-all min-h-[56px] disabled:opacity-50"
                 >
-                  {isLoadingMore ? 'Cargando...' : 'Cargar mas productos'}
+                  {isLoadingMore ? 'Cargando...' : 'Cargar más productos'}
                 </button>
               </div>
             )}

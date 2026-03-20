@@ -107,17 +107,17 @@ export default function RootLayout({
                 </a>
               </div>
               <div className="text-center">
-                <p className="font-semibold text-slate-700 mb-2">Navegacion</p>
+                <p className="font-semibold text-slate-700 mb-2">Navegación</p>
                 <nav aria-label="Footer" className="flex flex-col gap-1.5">
-                  <a href="/" className="text-slate-500 hover:text-emerald-600 transition-colors">Catalogo</a>
+                  <a href="/" className="text-slate-500 hover:text-emerald-600 transition-colors">Catálogo</a>
                   <a href="/carrito" className="text-slate-500 hover:text-emerald-600 transition-colors">Carrito</a>
                   <a href="/mis-pedidos" className="text-slate-500 hover:text-emerald-600 transition-colors">Mis Pedidos</a>
                 </nav>
               </div>
               <div className="text-center sm:text-right">
-                <p className="font-semibold text-slate-700 mb-2">Horario de atencion</p>
+                <p className="font-semibold text-slate-700 mb-2">Horario de atención</p>
                 <p className="text-slate-500">Lunes a Viernes: 9:00 - 19:00</p>
-                <p className="text-slate-500">Sabado: 10:00 - 14:00</p>
+                <p className="text-slate-500">Sábado: 10:00 - 14:00</p>
               </div>
             </div>
             <div className="border-t border-slate-200 mt-8 pt-6 text-center">
