@@ -4,6 +4,32 @@
 
 ---
 
+## COMPLETADO: UX y Rendimiento (Marzo 20, 2026)
+
+### Mejoras implementadas
+
+**Detalle de pedido del cliente (`/mis-pedidos/[id]`)**:
+- Timeline visual de estado del pedido (similar al admin pero orientado al cliente)
+- Soporte para flujo de retiro en tienda y envío a domicilio
+- Botón de imprimir pedido
+- Enlace de WhatsApp para consultas sobre el pedido
+- Etiqueta correcta "Retiro en tienda" vs "Envío" en resumen
+- Fecha de expiración visible para reservas pendientes
+- Conteo de productos en resumen
+
+**Página de producto (`/producto/[slug]`)**:
+- Sección de descripción del producto visible para el cliente
+
+**Panel admin - Rendimiento**:
+- Optimización de carga de stats: reemplazado fetch de 1000+ productos por queries con `stock_filter` (4 queries livianas en paralelo)
+- Eliminado polling de localStorage cada 500ms; reemplazado por CustomEvent `sidebar-collapse` para comunicación sidebar-layout
+
+**SEO y accesibilidad**:
+- `robots.txt` con reglas de crawling (bloquea admin, api, auth, checkout)
+- Corrección de acentos en página de error ("salió", "Ocurrió")
+
+---
+
 ## COMPLETADO: Sistema de Descuentos (Marzo 4, 2026)
 
 ### Funcionalidad

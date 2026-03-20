@@ -56,6 +56,7 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
     const newState = !isCollapsed;
     setIsCollapsed(newState);
     localStorage.setItem('admin-sidebar-collapsed', String(newState));
+    window.dispatchEvent(new CustomEvent('sidebar-collapse', { detail: newState }));
   };
 
   const isActive = (href: string, exact = false) => {

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /checkout/
+
+Sitemap: https://tu-farmacia.cl/sitemap.xml

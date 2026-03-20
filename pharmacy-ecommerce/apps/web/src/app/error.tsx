@@ -24,9 +24,9 @@ export default function Error({
         <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
           <AlertTriangle className="w-10 h-10 text-red-500" />
         </div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-3">Algo salio mal</h1>
+        <h1 className="text-3xl font-bold text-slate-900 mb-3">Algo salió mal</h1>
         <p className="text-lg text-slate-500 mb-8">
-          Ocurrio un error inesperado. Por favor intenta nuevamente.
+          Ocurrió un error inesperado. Por favor intenta nuevamente.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button

@@ -315,6 +315,16 @@ export default function ProductPage() {
           </div>
         </div>
 
+        {/* Product Description */}
+        {product.description && (
+          <div className="mt-8 sm:mt-10 card p-5 sm:p-6">
+            <h2 className="text-xl font-bold text-slate-900 mb-3">Descripción</h2>
+            <div className="text-slate-600 leading-relaxed whitespace-pre-line">
+              {product.description}
+            </div>
+          </div>
+        )}
+
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <div className="mt-8 sm:mt-12">

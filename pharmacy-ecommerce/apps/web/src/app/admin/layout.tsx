@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { productApi, orderApi } from '@/lib/api';
@@ -42,13 +42,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
  const stored = localStorage.getItem('admin-sidebar-collapsed');
  setSidebarCollapsed(stored === 'true');
  };
+ const handleSidebarEvent = (e: Event) => {
+ setSidebarCollapsed((e as CustomEvent).detail);
+ };
  window.addEventListener('storage', handleStorageChange);
-
- // Also check periodically for same-tab changes
- const interval = setInterval(handleStorageChange, 500);
+ window.addEventListener('sidebar-collapse', handleSidebarEvent);
  return () => {
  window.removeEventListener('storage', handleStorageChange);
- clearInterval(interval);
+ window.removeEventListener('sidebar-collapse', handleSidebarEvent);
  };
  }, []);
 
@@ -69,14 +70,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
  const loadStats = async () => {
  try {
- const [orders, reservations, products] = await Promise.all([
+ const [orders, reservations, lowStock, outStock] = await Promise.all([
  orderApi.list({ status: 'pending', limit: 1 }),
  orderApi.listAll({ status: 'reserved', limit: 1 }),
- productApi.list({ limit: 1000, active_only: true }),
+ productApi.list({ limit: 1, active_only: true, stock_filter: 'low' }),
+ productApi.list({ limit: 1, active_only: true, stock_filter: 'out' }),
  ]);
  setPendingOrders(orders.total);
  setPendingReservations(reservations.total);
- setCriticalStock(products.products.filter((p) => p.stock <= 10).length);
+ setCriticalStock(lowStock.total + outStock.total);
  } catch (error) {
  console.error('Error loading admin stats:', error);
  }
