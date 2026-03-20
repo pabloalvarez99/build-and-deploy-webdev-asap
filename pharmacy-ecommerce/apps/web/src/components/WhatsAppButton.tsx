@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { useCartStore } from '@/store/cart';
 
-const WHATSAPP_NUMBER = '56971074806';
+const WHATSAPP_NUMBER = '56993649604';
 const WHATSAPP_MESSAGE = 'Hola! Tengo una consulta sobre Tu Farmacia';
 
 export function WhatsAppButton() {

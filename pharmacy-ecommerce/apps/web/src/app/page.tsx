@@ -88,13 +88,16 @@ function HomeContent() {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [discountedProducts, setDiscountedProducts] = useState<Product[]>([]);
   const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
+  const [showDiscountOnly, setShowDiscountOnly] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const ITEMS_PER_PAGE = 20;
 
-  // Read category from URL on mount
+  // Read category and discount from URL on mount
   useEffect(() => {
     const cat = searchParams.get('category');
     if (cat) setSelectedCategory(cat);
+    const discount = searchParams.get('discount');
+    if (discount === 'true') setShowDiscountOnly(true);
   }, [searchParams]);
 
   // Scroll listener
@@ -124,7 +127,7 @@ function HomeContent() {
   // Load products when filters change
   useEffect(() => {
     loadProducts(1, true);
-  }, [selectedCategory, searchTerm]);
+  }, [selectedCategory, searchTerm, showDiscountOnly]);
 
   const loadCategories = async () => {
     try {
@@ -165,6 +168,7 @@ function HomeContent() {
         limit: ITEMS_PER_PAGE,
         sort_by: 'name',
         in_stock: true,
+        has_discount: showDiscountOnly || undefined,
       });
 
       if (reset) {
@@ -338,16 +342,27 @@ function HomeContent() {
           </div>
         )}
 
-        {/* Selected Category Chip */}
-        {selectedCategory && selectedCategoryName && (
-          <div className="mb-4">
-            <button
-              onClick={() => handleCategoryChange('')}
-              className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-100 text-emerald-800 rounded-xl font-semibold border-2 border-emerald-300 text-base"
-            >
-              {selectedCategoryName}
-              <X className="w-5 h-5" />
-            </button>
+        {/* Active Filter Chips */}
+        {(selectedCategory || showDiscountOnly) && (
+          <div className="mb-4 flex flex-wrap gap-2">
+            {selectedCategory && selectedCategoryName && (
+              <button
+                onClick={() => handleCategoryChange('')}
+                className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-100 text-emerald-800 rounded-xl font-semibold border-2 border-emerald-300 text-base"
+              >
+                {selectedCategoryName}
+                <X className="w-5 h-5" />
+              </button>
+            )}
+            {showDiscountOnly && (
+              <button
+                onClick={() => { setShowDiscountOnly(false); setAllProducts([]); window.history.replaceState({}, '', '/'); }}
+                className="inline-flex items-center gap-2 px-5 py-3 bg-red-100 text-red-800 rounded-xl font-semibold border-2 border-red-300 text-base"
+              >
+                Ofertas
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
         )}
 
@@ -383,7 +398,7 @@ function HomeContent() {
         {products && (
           <div className="mb-4 flex items-center justify-between">
             <p className="text-base text-slate-500 font-medium">
-              {searchTerm ? `Resultados para "${searchTerm}"` : selectedCategoryName || 'Todos los productos'}
+              {searchTerm ? `Resultados para "${searchTerm}"` : showDiscountOnly ? 'Ofertas' : selectedCategoryName || 'Todos los productos'}
             </p>
             <span className="text-base text-slate-400">{products.total} productos</span>
           </div>
