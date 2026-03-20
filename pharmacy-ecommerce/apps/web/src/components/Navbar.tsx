@@ -80,7 +80,7 @@ export function Navbar() {
                   className="flex items-center gap-2 p-2.5 rounded-xl hover:bg-slate-50 transition-colors min-h-[56px] min-w-[56px] justify-center"
                   aria-expanded={isMenuOpen}
                   aria-haspopup="true"
-                  aria-label="Menu de usuario"
+                  aria-label="Menú de usuario"
                 >
                   <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
                     {user.name ? user.name[0].toUpperCase() : 'U'}

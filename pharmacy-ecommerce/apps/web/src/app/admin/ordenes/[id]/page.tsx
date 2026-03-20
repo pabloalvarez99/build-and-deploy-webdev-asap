@@ -144,7 +144,7 @@ export default function AdminOrderDetailPage() {
 
  const handleApproveReservation = async () => {
  if (!order) return;
- if (!confirm('Aprobar esta reserva? El stock de los productos se reducira.')) return;
+ if (!confirm('¿Aprobar esta reserva? El stock de los productos se reducirá.')) return;
  setIsProcessing(true);
  try {
  await orderApi.approveReservation(order.id);
@@ -159,7 +159,7 @@ export default function AdminOrderDetailPage() {
 
  const handleRejectReservation = async () => {
  if (!order) return;
- if (!confirm('Rechazar esta reserva? La orden sera cancelada.')) return;
+ if (!confirm('¿Rechazar esta reserva? La orden será cancelada.')) return;
  setIsProcessing(true);
  try {
  await orderApi.rejectReservation(order.id);
@@ -196,7 +196,7 @@ export default function AdminOrderDetailPage() {
  <div className="max-w-4xl mx-auto text-center py-12">
  <h1 className="text-2xl font-bold text-slate-900 mb-4">Orden no encontrada</h1>
  <Link href="/admin/ordenes" className="btn btn-primary">
- Volver a ordenes
+ Volver a órdenes
  </Link>
  </div>
  );

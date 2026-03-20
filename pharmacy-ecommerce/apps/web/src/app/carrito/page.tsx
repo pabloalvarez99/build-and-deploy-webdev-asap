@@ -83,9 +83,17 @@ export default function CartPage() {
                         >
                           {item.product_name}
                         </Link>
-                        <p className="text-sm sm:text-base text-slate-500 mt-1">
-                          {formatPrice(parseFloat(item.price))} c/u
-                        </p>
+                        {item.discount_percent && item.original_price ? (
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="text-sm text-slate-400 line-through">{formatPrice(parseFloat(item.original_price))}</span>
+                            <span className="text-sm sm:text-base text-emerald-600 font-semibold">{formatPrice(parseFloat(item.price))} c/u</span>
+                            <span className="text-xs font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded">-{item.discount_percent}%</span>
+                          </div>
+                        ) : (
+                          <p className="text-sm sm:text-base text-slate-500 mt-1">
+                            {formatPrice(parseFloat(item.price))} c/u
+                          </p>
+                        )}
                       </div>
 
                       {/* Price */}

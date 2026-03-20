@@ -21,8 +21,8 @@ export function WhatsAppButton() {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Contactanos por WhatsApp"
-      title="Contactanos por WhatsApp"
+      aria-label="Contáctanos por WhatsApp"
+      title="Contáctanos por WhatsApp"
       className={`fixed right-4 z-50 w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 opacity-90 hover:opacity-100 ${
         hasCartItems ? 'bottom-[7.5rem]' : 'bottom-6'
       }`}

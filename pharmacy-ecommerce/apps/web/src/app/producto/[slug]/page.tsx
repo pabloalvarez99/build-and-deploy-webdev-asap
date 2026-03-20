@@ -7,7 +7,7 @@ import { useCartStore } from '@/store/cart';
 import { ShoppingCart, Minus, Plus, Package, Truck, ShieldCheck, ArrowLeft, Check } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { formatPrice } from '@/lib/format';
+import { formatPrice, discountedPrice } from '@/lib/format';
 
 export default function ProductPage() {
   const params = useParams();
@@ -112,6 +112,11 @@ export default function ProductPage() {
             ) : (
               <Package className="w-24 h-24 text-slate-200" />
             )}
+            {product.discount_percent && product.stock > 0 && (
+              <div className="absolute top-3 left-3 bg-red-500 text-white text-sm font-black px-3 py-1.5 rounded-xl shadow-lg">
+                -{product.discount_percent}% OFF
+              </div>
+            )}
             {product.stock <= 0 && (
               <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
                 <span className="text-red-600 font-bold border-3 border-red-500 px-6 py-3 rounded-xl text-xl -rotate-6 bg-white">
@@ -166,9 +171,25 @@ export default function ProductPage() {
               </div>
 
               {/* Price - Extra large */}
-              <span className="text-4xl font-black text-emerald-700 block">
-                {formatPrice(parseFloat(product.price))}
-              </span>
+              {product.discount_percent ? (
+                <div>
+                  <span className="text-xl text-slate-400 line-through block mb-1">
+                    {formatPrice(parseFloat(product.price))}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-4xl font-black text-emerald-700">
+                      {formatPrice(discountedPrice(parseFloat(product.price), product.discount_percent))}
+                    </span>
+                    <span className="bg-red-500 text-white text-sm font-black px-3 py-1.5 rounded-xl">
+                      -{product.discount_percent}% OFF
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <span className="text-4xl font-black text-emerald-700 block">
+                  {formatPrice(parseFloat(product.price))}
+                </span>
+              )}
             </div>
 
             {/* Product info table - Larger text */}

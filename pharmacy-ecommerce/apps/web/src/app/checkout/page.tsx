@@ -109,7 +109,7 @@ export default function CheckoutPage() {
       } else if (raw.includes('stock') || raw.includes('Stock')) {
         setError('Algunos productos no tienen suficiente stock disponible.');
       } else if (raw.includes('not found')) {
-        setError('Uno de los productos ya no esta disponible. Revisa tu carrito.');
+        setError('Uno de los productos ya no está disponible. Revisa tu carrito.');
       } else {
         setError(raw);
       }
@@ -290,7 +290,7 @@ export default function CheckoutPage() {
               autoComplete="tel"
             />
             <p className="text-slate-500 mt-2">
-              Te contactaremos cuando tu pedido este listo
+              Te contactaremos cuando tu pedido esté listo
             </p>
           </div>
         )}

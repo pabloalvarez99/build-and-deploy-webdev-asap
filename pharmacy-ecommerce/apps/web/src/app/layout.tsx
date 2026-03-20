@@ -98,12 +98,12 @@ export default function RootLayout({
                 <p className="font-bold text-slate-800 text-lg mb-2">Tu Farmacia</p>
                 <p className="text-slate-500">Coquimbo, Chile</p>
                 <a
-                  href="https://wa.me/56971074806"
+                  href="https://wa.me/56993649604"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-emerald-600 font-medium hover:underline mt-1 inline-block"
                 >
-                  +56 9 7107 4806
+                  +56 9 9364 9604
                 </a>
               </div>
               <div className="text-center">
