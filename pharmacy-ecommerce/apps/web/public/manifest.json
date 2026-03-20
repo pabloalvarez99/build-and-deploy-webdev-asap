@@ -1,0 +1,16 @@
+{
+  "name": "Tu Farmacia",
+  "short_name": "Tu Farmacia",
+  "description": "Farmacia online en Coquimbo, Chile",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#059669",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

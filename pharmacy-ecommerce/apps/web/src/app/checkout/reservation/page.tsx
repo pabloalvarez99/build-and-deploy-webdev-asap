@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Store, Clock, Copy, CheckCircle } from 'lucide-react';
+import { Store, Clock, Copy, CheckCircle, Printer } from 'lucide-react';
 import { Suspense, useState } from 'react';
 import { formatPrice } from '@/lib/format';
 
@@ -124,9 +124,18 @@ function ReservationContent() {
         </ol>
       </div>
 
-      <Link href="/" className="btn btn-primary block text-center text-lg w-full min-h-[56px]">
-        Seguir comprando
-      </Link>
+      <div className="space-y-3">
+        <button
+          onClick={() => window.print()}
+          className="btn btn-secondary w-full text-lg flex items-center justify-center gap-2"
+        >
+          <Printer className="w-5 h-5" />
+          Imprimir comprobante
+        </button>
+        <Link href="/" className="btn btn-primary block text-center text-lg w-full min-h-[56px]">
+          Seguir comprando
+        </Link>
+      </div>
     </div>
   );
 }

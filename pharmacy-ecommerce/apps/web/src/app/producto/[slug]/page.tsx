@@ -27,6 +27,14 @@ export default function ProductPage() {
     loadProduct();
   }, [slug]);
 
+  // Dynamic page title
+  useEffect(() => {
+    if (product) {
+      document.title = `${product.name} | Tu Farmacia`;
+    }
+    return () => { document.title = 'Tu Farmacia - Farmacia online en Coquimbo, Chile'; };
+  }, [product]);
+
   const loadProduct = async () => {
     try {
       const data = await productApi.get(slug);

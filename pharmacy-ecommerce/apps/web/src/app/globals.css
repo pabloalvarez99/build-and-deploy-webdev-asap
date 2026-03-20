@@ -77,6 +77,14 @@ html {
   border-radius: 8px;
 }
 
+/* Print styles for reservation/order pages */
+@media print {
+  nav, footer, .fixed, .sticky { display: none !important; }
+  body { font-size: 14px; }
+  .card { border: 1px solid #e2e8f0; box-shadow: none; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
 /* Reduced motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
