@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cart';
 import { orderApi } from '@/lib/api';
-import { MapPin, FileText, Mail, Loader2, ShieldCheck, Store, CreditCard, Phone, Clock, ShoppingCart, ClipboardList, Check } from 'lucide-react';
+import { MapPin, FileText, Mail, Loader2, ShieldCheck, Store, CreditCard, Phone, Clock, ShoppingCart, ClipboardList, Check, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 type PaymentMethod = 'mercadopago' | 'store';
@@ -22,6 +22,11 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('store');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [createAccount, setCreateAccount] = useState(false);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [accountMessage, setAccountMessage] = useState('');
 
   useEffect(() => {
     fetchCart();
@@ -71,8 +76,37 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (createAccount) {
+      if (password.length < 6) {
+        setError('La contraseña debe tener al menos 6 caracteres');
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError('Las contraseñas no coinciden');
+        return;
+      }
+    }
+
     setIsProcessing(true);
     setError('');
+    setAccountMessage('');
+
+    // Create account if requested (non-blocking — order proceeds regardless)
+    if (createAccount && password) {
+      try {
+        const regRes = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: trimmedEmail, password, name: trimmedName, surname: trimmedSurname, phone: trimmedPhone || undefined }),
+        });
+        const regData = await regRes.json();
+        if (!regRes.ok) {
+          setAccountMessage(regData.error || 'No se pudo crear la cuenta, pero tu pedido continuará.');
+        }
+      } catch {
+        setAccountMessage('No se pudo crear la cuenta, pero tu pedido continuará.');
+      }
+    }
 
     try {
       const items = cart.items.map(item => ({
@@ -202,7 +236,7 @@ export default function CheckoutPage() {
               <div className="flex items-start gap-3">
                 <Clock className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="text-amber-800">
-                  <p className="font-bold">Tu reserva será válida por 4 horas</p>
+                  <p className="font-bold">Tu reserva será válida por 24 horas</p>
                   <p>Recibirás un código de retiro por email</p>
                 </div>
               </div>
@@ -319,6 +353,67 @@ export default function CheckoutPage() {
           </div>
         )}
 
+        {/* Create Account (optional) */}
+        <div className={`rounded-2xl border-2 p-5 transition-colors ${createAccount ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-100'}`}>
+          <button
+            type="button"
+            onClick={() => setCreateAccount(!createAccount)}
+            className="flex items-center gap-3 w-full text-left"
+          >
+            <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${createAccount ? 'bg-emerald-600 border-emerald-600' : 'border-slate-300 bg-white'}`}>
+              {createAccount && <Check className="w-4 h-4 text-white" />}
+            </div>
+            <div className="flex items-center gap-2">
+              <UserPlus className={`w-5 h-5 ${createAccount ? 'text-emerald-600' : 'text-slate-400'}`} />
+              <div>
+                <p className={`font-bold ${createAccount ? 'text-emerald-800' : 'text-slate-700'}`}>
+                  Crear cuenta gratuita
+                </p>
+                <p className="text-sm text-slate-500">Guarda tus datos y revisa tus pedidos en línea</p>
+              </div>
+            </div>
+          </button>
+
+          {createAccount && (
+            <div className="mt-4 space-y-3">
+              <div className="relative">
+                <label className="block font-semibold text-slate-700 mb-2">Contraseña *</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    className="input pr-12"
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-700 mb-2">Confirmar contraseña *</label>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repite tu contraseña"
+                  className="input"
+                  autoComplete="new-password"
+                />
+              </div>
+              <p className="text-sm text-emerald-700">
+                ✓ Tu cuenta se creará con el email <strong>{email || 'que ingresaste arriba'}</strong>
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Notes */}
         <div className="bg-white rounded-2xl border-2 border-slate-100 p-5">
           <div className="flex items-center gap-3 mb-4">
@@ -392,6 +487,12 @@ export default function CheckoutPage() {
             <span className="text-3xl font-black text-emerald-700">{formatPrice(cart.total)}</span>
           </div>
 
+          {accountMessage && (
+            <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 mb-4">
+              <p className="text-amber-700 text-sm">{accountMessage}</p>
+            </div>
+          )}
+
           {error && (
             <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-4">
               <p className="text-red-600 font-semibold">{error}</p>
@@ -427,7 +528,7 @@ export default function CheckoutPage() {
             <span className="text-base">
               {paymentMethod === 'mercadopago'
                 ? 'Pago seguro con MercadoPago'
-                : 'Reserva garantizada por 4 horas'
+                : 'Reserva garantizada por 24 horas'
               }
             </span>
           </div>
