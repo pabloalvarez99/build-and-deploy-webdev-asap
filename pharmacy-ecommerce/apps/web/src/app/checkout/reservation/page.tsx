@@ -15,6 +15,7 @@ function ReservationContent() {
   const expires = searchParams.get('expires');
   const total = searchParams.get('total');
   const [copied, setCopied] = useState(false);
+  const [whatsappSent, setWhatsappSent] = useState(false);
 
   const whatsappMessage = encodeURIComponent(
     `¡Hola! Quisiera confirmar mi reserva en Tu Farmacia.\n\n` +
@@ -136,27 +137,55 @@ function ReservationContent() {
       </div>
 
       <div className="space-y-3">
-        {/* WhatsApp - Primary CTA */}
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-3 w-full min-h-[56px] rounded-2xl bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold text-lg transition-colors"
-        >
-          <MessageCircle className="w-6 h-6" />
-          Confirmar reserva por WhatsApp
-        </a>
-
-        <button
-          onClick={() => window.print()}
-          className="btn btn-secondary w-full text-lg flex items-center justify-center gap-2"
-        >
-          <Printer className="w-5 h-5" />
-          Imprimir comprobante
-        </button>
-        <Link href="/" className="btn btn-primary block text-center text-lg w-full min-h-[56px]">
-          Seguir comprando
-        </Link>
+        {!whatsappSent ? (
+          <>
+            {/* Mandatory WhatsApp step */}
+            <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 text-center mb-1">
+              <p className="text-amber-800 font-semibold text-base">
+                ⚠️ Debes confirmar tu reserva por WhatsApp para continuar
+              </p>
+            </div>
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setWhatsappSent(true)}
+              className="flex items-center justify-center gap-3 w-full min-h-[56px] rounded-2xl bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold text-lg transition-colors"
+            >
+              <MessageCircle className="w-6 h-6" />
+              Confirmar reserva por WhatsApp
+            </a>
+            <button
+              onClick={() => setWhatsappSent(true)}
+              className="w-full text-center text-slate-400 text-sm underline py-2"
+            >
+              Ya envié el mensaje por WhatsApp
+            </button>
+          </>
+        ) : (
+          <>
+            {/* Confirmed state */}
+            <div className="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-4 text-center">
+              <CheckCircle className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
+              <p className="text-emerald-800 font-semibold text-base">
+                ¡Reserva confirmada por WhatsApp!
+              </p>
+              <p className="text-emerald-700 text-sm mt-1">
+                La farmacia revisará tu reserva a la brevedad.
+              </p>
+            </div>
+            <button
+              onClick={() => window.print()}
+              className="btn btn-secondary w-full text-lg flex items-center justify-center gap-2"
+            >
+              <Printer className="w-5 h-5" />
+              Imprimir comprobante
+            </button>
+            <Link href="/" className="btn btn-primary block text-center text-lg w-full min-h-[56px]">
+              Seguir comprando
+            </Link>
+          </>
+        )}
       </div>
     </div>
   );
