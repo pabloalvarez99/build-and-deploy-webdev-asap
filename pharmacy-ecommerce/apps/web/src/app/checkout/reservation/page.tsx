@@ -2,9 +2,11 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Store, Clock, Copy, CheckCircle, Printer } from 'lucide-react';
+import { Store, Clock, Copy, CheckCircle, Printer, MessageCircle } from 'lucide-react';
 import { Suspense, useState } from 'react';
 import { formatPrice } from '@/lib/format';
+
+const WHATSAPP_NUMBER = '56993649604';
 
 function ReservationContent() {
   const searchParams = useSearchParams();
@@ -13,6 +15,15 @@ function ReservationContent() {
   const expires = searchParams.get('expires');
   const total = searchParams.get('total');
   const [copied, setCopied] = useState(false);
+
+  const whatsappMessage = encodeURIComponent(
+    `¡Hola! Quisiera confirmar mi reserva en Tu Farmacia.\n\n` +
+    `📋 Código de retiro: *${code}*\n` +
+    (orderId ? `🔖 N° de orden: ${orderId.substring(0, 8)}\n` : '') +
+    (total ? `💰 Total a pagar: ${formatPrice(total)}\n` : '') +
+    `\nQuedo a la espera de la confirmación. ¡Gracias!`
+  );
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`;
 
   const expiresDate = expires ? new Date(expires) : null;
   const formattedExpires = expiresDate
@@ -117,7 +128,7 @@ function ReservationContent() {
         <h3 className="font-bold text-blue-900 mb-3 text-lg">Instrucciones de retiro</h3>
         <ol className="text-blue-800 space-y-3 list-decimal list-inside">
           <li>Espera la confirmación de la farmacia</li>
-          <li>Acércate a la farmacia dentro de las próximas <strong>4 horas</strong></li>
+          <li>Acércate a la farmacia dentro de las próximas <strong>24 horas</strong></li>
           <li>Indica tu código de retiro <strong>{code}</strong> al personal</li>
           <li>Realiza el pago en tienda (efectivo, tarjeta o transferencia)</li>
           <li>Retira tus productos</li>
@@ -125,6 +136,17 @@ function ReservationContent() {
       </div>
 
       <div className="space-y-3">
+        {/* WhatsApp - Primary CTA */}
+        <a
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-3 w-full min-h-[56px] rounded-2xl bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold text-lg transition-colors"
+        >
+          <MessageCircle className="w-6 h-6" />
+          Confirmar reserva por WhatsApp
+        </a>
+
         <button
           onClick={() => window.print()}
           className="btn btn-secondary w-full text-lg flex items-center justify-center gap-2"
