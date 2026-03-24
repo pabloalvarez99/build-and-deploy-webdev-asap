@@ -307,12 +307,6 @@ export default function OrderDetailPage() {
               <span className="text-emerald-600">{formatPrice(total)}</span>
             </div>
 
-            {order.mercadopago_payment_id && (
-              <p className="text-sm text-slate-500 mb-4">
-                ID de pago: {order.mercadopago_payment_id}
-              </p>
-            )}
-
             {/* WhatsApp Support */}
             <a
               href={`https://wa.me/56993649604?text=${encodeURIComponent(`Hola, tengo una consulta sobre mi pedido #${order.id.slice(0, 8)} en Tu Farmacia`)}`}

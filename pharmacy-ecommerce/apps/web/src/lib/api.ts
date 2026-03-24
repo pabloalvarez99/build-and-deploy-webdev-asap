@@ -249,19 +249,6 @@ export const productApi = {
 // Order API (reads via Supabase, writes via API routes)
 // ============================================
 export const orderApi = {
-  checkout: (data: { shipping_address?: string; notes?: string }) =>
-    apiRequest<CheckoutResponse>('/api/checkout', { body: data }),
-
-  guestCheckout: (data: {
-    items: { product_id: string; quantity: number }[];
-    name: string;
-    surname: string;
-    email: string;
-    shipping_address?: string;
-    notes?: string;
-    session_id: string;
-  }) => apiRequest<CheckoutResponse>('/api/guest-checkout', { body: data }),
-
   storePickup: (data: {
     items: { product_id: string; quantity: number }[];
     name: string;
@@ -461,12 +448,6 @@ export interface CartResponse {
   item_count: number;
 }
 
-export interface CheckoutResponse {
-  order_id: string;
-  init_point: string;
-  preference_id: string;
-}
-
 export interface StorePickupResponse {
   order_id: string;
   pickup_code: string;
@@ -479,8 +460,6 @@ export interface Order {
   user_id: string | null;
   status: string;
   total: string;
-  mercadopago_preference_id: string | null;
-  mercadopago_payment_id: string | null;
   shipping_address: string | null;
   notes: string | null;
   created_at: string;

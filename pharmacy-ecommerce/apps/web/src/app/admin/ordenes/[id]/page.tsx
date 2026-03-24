@@ -436,23 +436,6 @@ export default function AdminOrderDetailPage() {
  <span className="text-emerald-600">{formatPrice(total)}</span>
  </div>
 
- {/* Payment Info */}
- {order.mercadopago_preference_id && (
- <div className="bg-slate-50 rounded-lg p-3 text-xs space-y-2 mb-6">
- <p className="font-medium text-slate-700 mb-2">Info de Pago</p>
- <div className="flex items-center justify-between">
- <span className="text-slate-500">Preference ID:</span>
- <span className="font-mono text-slate-700">{order.mercadopago_preference_id.slice(0, 12)}...</span>
- </div>
- {order.mercadopago_payment_id && (
- <div className="flex items-center justify-between">
- <span className="text-slate-500">Payment ID:</span>
- <span className="font-mono text-slate-700">{order.mercadopago_payment_id}</span>
- </div>
- )}
- </div>
- )}
-
  {/* Quick Actions */}
  <div className="pt-4 border-t border-slate-100 space-y-2">
  <p className="text-xs font-medium text-slate-500 uppercase mb-3">Acciones rápidas</p>

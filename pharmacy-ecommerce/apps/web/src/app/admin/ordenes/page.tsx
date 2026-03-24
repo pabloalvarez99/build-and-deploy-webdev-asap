@@ -22,7 +22,6 @@ import {
   ShoppingBag,
   Clock,
   Store,
-  CreditCard,
   TrendingUp,
   User,
   Mail,
@@ -200,7 +199,7 @@ export default function AdminOrdersPage() {
       getCustomerEmail(o),
       o.customer_phone || '',
       STATUS_CONFIG[o.status]?.label || o.status,
-      o.payment_provider === 'mercadopago' ? 'MercadoPago' : o.pickup_code ? 'Retiro en tienda' : '',
+      o.pickup_code ? 'Retiro en tienda' : '',
       o.total,
       o.pickup_code || '',
       o.shipping_address || '',
@@ -420,13 +419,9 @@ export default function AdminOrdersPage() {
                   <div className="flex items-center justify-between mb-3 text-sm">
                     <span className="text-slate-400">{date}</span>
                     <div className="flex items-center gap-2">
-                      {isPickup ? (
+                      {isPickup && (
                         <span className="flex items-center gap-1 text-amber-600 text-xs font-medium">
                           <Store className="w-3.5 h-3.5" /> Retiro
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-blue-600 text-xs font-medium">
-                          <CreditCard className="w-3.5 h-3.5" /> MercadoPago
                         </span>
                       )}
                       <span className="font-bold text-slate-900">{formatPrice(order.total)}</span>
@@ -523,15 +518,9 @@ export default function AdminOrdersPage() {
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">{date}</td>
                       <td className="px-4 py-3">
-                        {isPickup ? (
-                          <span className="flex items-center gap-1 text-amber-700 text-xs font-medium bg-amber-50 px-2 py-1 rounded-full w-fit">
+                        <span className="flex items-center gap-1 text-amber-700 text-xs font-medium bg-amber-50 px-2 py-1 rounded-full w-fit">
                             <Store className="w-3.5 h-3.5" /> Retiro
                           </span>
-                        ) : (
-                          <span className="flex items-center gap-1 text-blue-700 text-xs font-medium bg-blue-50 px-2 py-1 rounded-full w-fit">
-                            <CreditCard className="w-3.5 h-3.5" /> MercadoPago
-                          </span>
-                        )}
                       </td>
                       <td className="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">
                         {formatPrice(order.total)}

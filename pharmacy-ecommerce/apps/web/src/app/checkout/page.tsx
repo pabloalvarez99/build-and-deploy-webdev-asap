@@ -4,10 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cart';
 import { orderApi } from '@/lib/api';
-import { MapPin, FileText, Mail, Loader2, ShieldCheck, Store, CreditCard, Phone, Clock, ShoppingCart, ClipboardList, Check, UserPlus, Eye, EyeOff, Lock } from 'lucide-react';
+import { FileText, Mail, Loader2, ShieldCheck, Store, Phone, Clock, Check, UserPlus, Eye, EyeOff, Lock } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
-
-type PaymentMethod = 'mercadopago' | 'store';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -17,9 +15,7 @@ export default function CheckoutPage() {
   const [surname, setSurname] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [shippingAddress, setShippingAddress] = useState('');
   const [notes, setNotes] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('store');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [password, setPassword] = useState('');
@@ -65,13 +61,8 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (paymentMethod === 'store' && !validatePhone(trimmedPhone)) {
+    if (!validatePhone(trimmedPhone)) {
       setError('Por favor ingresa un teléfono válido (ejemplo: 9 1234 5678)');
-      return;
-    }
-
-    if (paymentMethod === 'mercadopago' && !shippingAddress.trim()) {
-      setError('Por favor ingresa tu dirección de envío');
       return;
     }
 
@@ -113,38 +104,21 @@ export default function CheckoutPage() {
         quantity: item.quantity,
       }));
 
-      if (paymentMethod === 'mercadopago') {
-        const response = await orderApi.guestCheckout({
-          items,
-          name: name.trim(),
-          surname: surname.trim(),
-          email,
-          shipping_address: shippingAddress || undefined,
-          notes: notes || undefined,
-          session_id: getSessionId(),
-        });
+      const response = await orderApi.storePickup({
+        items,
+        name: name.trim(),
+        surname: surname.trim(),
+        email,
+        phone: phone.trim(),
+        notes: notes || undefined,
+        session_id: getSessionId(),
+      });
 
-        clearCart();
-        window.location.href = response.init_point;
-      } else {
-        const response = await orderApi.storePickup({
-          items,
-          name: name.trim(),
-          surname: surname.trim(),
-          email,
-          phone: phone.trim(),
-          notes: notes || undefined,
-          session_id: getSessionId(),
-        });
-
-        clearCart();
-        router.push(`/checkout/reservation?order_id=${response.order_id}&code=${response.pickup_code}&expires=${encodeURIComponent(response.expires_at)}&total=${response.total}`);
-      }
+      clearCart();
+      router.push(`/checkout/reservation?order_id=${response.order_id}&code=${response.pickup_code}&expires=${encodeURIComponent(response.expires_at)}&total=${response.total}`);
     } catch (err) {
       const raw = err instanceof Error ? err.message : 'Error al procesar el pedido';
-      if (raw.includes('MercadoPago') || raw.includes('back_urls') || raw.includes('preference')) {
-        setError('Error al conectar con MercadoPago. Por favor intenta nuevamente.');
-      } else if (raw.includes('stock') || raw.includes('Stock')) {
+      if (raw.includes('stock') || raw.includes('Stock')) {
         setError('Algunos productos no tienen suficiente stock disponible.');
       } else if (raw.includes('not found')) {
         setError('Uno de los productos ya no está disponible. Revisa tu carrito.');
@@ -192,55 +166,24 @@ export default function CheckoutPage() {
       </div>
 
       <div className="space-y-4">
-        {/* Payment Method Selection - Large cards */}
-        <div className="bg-white rounded-2xl border-2 border-slate-100 p-5">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">
-            Método de pago
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div
-              className="p-5 rounded-2xl border-2 border-slate-200 text-left min-h-[80px] opacity-50 cursor-not-allowed relative"
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <CreditCard className="w-7 h-7 text-slate-400" />
-                <span className="font-bold text-slate-900 text-lg">Pagar ahora</span>
-                <span className="ml-auto text-xs font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Próximamente</span>
-              </div>
-              <p className="text-slate-500">
-                Tarjeta o transferencia vía Webpay Plus
-              </p>
+        {/* Método: solo retiro en tienda */}
+        <div className="bg-white rounded-2xl border-2 border-emerald-200 p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <Store className="w-7 h-7 text-emerald-600" />
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Pagar en tienda</h2>
+              <p className="text-slate-500">Reserva y paga cuando retires tus productos</p>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setPaymentMethod('store')}
-              className={`p-5 rounded-2xl border-2 transition-all text-left min-h-[80px] ${
-                paymentMethod === 'store'
-                  ? 'border-emerald-500 bg-emerald-50'
-                  : 'border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <Store className={`w-7 h-7 ${paymentMethod === 'store' ? 'text-emerald-600' : 'text-slate-400'}`} />
-                <span className="font-bold text-slate-900 text-lg">Pagar en tienda</span>
-              </div>
-              <p className="text-slate-500">
-                Reserva y paga cuando retires tus productos
-              </p>
-            </button>
           </div>
-
-          {paymentMethod === 'store' && (
-            <div className="mt-4 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl">
-              <div className="flex items-start gap-3">
-                <Clock className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div className="text-amber-800">
-                  <p className="font-bold">Tu reserva será válida por 24 horas</p>
-                  <p>Recibirás un código de retiro por email</p>
-                </div>
+          <div className="p-4 bg-amber-50 border-2 border-amber-200 rounded-xl">
+            <div className="flex items-start gap-3">
+              <Clock className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="text-amber-800">
+                <p className="font-bold">Tu reserva será válida por 24 horas</p>
+                <p>Recibirás un código de retiro por email</p>
               </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Personal Info */}
@@ -308,9 +251,8 @@ export default function CheckoutPage() {
           </p>
         </div>
 
-        {/* Phone (for store pickup) */}
-        {paymentMethod === 'store' && (
-          <div className="bg-white rounded-2xl border-2 border-slate-100 p-5">
+        {/* Phone */}
+        <div className="bg-white rounded-2xl border-2 border-slate-100 p-5">
             <div className="flex items-center gap-3 mb-4">
               <Phone className="w-6 h-6 text-emerald-600" />
               <h2 className="text-lg font-bold text-slate-900">
@@ -331,26 +273,6 @@ export default function CheckoutPage() {
               Te contactaremos cuando tu pedido esté listo
             </p>
           </div>
-        )}
-
-        {/* Shipping Address (only for MercadoPago) */}
-        {paymentMethod === 'mercadopago' && (
-          <div className="bg-white rounded-2xl border-2 border-slate-100 p-5">
-            <div className="flex items-center gap-3 mb-4">
-              <MapPin className="w-6 h-6 text-emerald-600" />
-              <h2 className="text-lg font-bold text-slate-900">
-                Dirección de envío <span className="text-red-500">*</span>
-              </h2>
-            </div>
-            <textarea
-              value={shippingAddress}
-              onChange={(e) => setShippingAddress(e.target.value)}
-              placeholder="Calle, número, departamento, ciudad..."
-              className="input min-h-[100px]"
-              required
-            />
-          </div>
-        )}
 
         {/* Create Account (required) */}
         <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-5">
@@ -431,10 +353,7 @@ export default function CheckoutPage() {
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder={paymentMethod === 'store'
-              ? "Horario preferido de retiro, consultas, etc."
-              : "Instrucciones especiales, horarios de entrega, etc."
-            }
+            placeholder="Horario preferido de retiro, consultas, etc."
             className="input min-h-[80px]"
           />
         </div>
@@ -483,7 +402,7 @@ export default function CheckoutPage() {
               ) : null;
             })()}
             <div className="flex justify-between text-slate-500">
-              <span>{paymentMethod === 'store' ? 'Retiro' : 'Envío'}</span>
+              <span>Retiro</span>
               <span className="text-emerald-600 font-semibold">Gratis</span>
             </div>
           </div>
@@ -501,20 +420,14 @@ export default function CheckoutPage() {
 
           <button
             onClick={handleCheckout}
-            disabled={isProcessing || !email || !name || !surname || (paymentMethod === 'store' && !phone) || !password || !confirmPassword}
-            className={`w-full py-4 px-4 font-bold text-lg rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-colors min-h-[64px] ${
-              paymentMethod === 'mercadopago'
-                ? 'bg-[#009ee3] hover:bg-[#0080c3] text-white shadow-lg shadow-blue-500/20'
-                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20'
-            }`}
+            disabled={isProcessing || !email || !name || !surname || !phone || !password || !confirmPassword}
+            className="w-full py-4 px-4 font-bold text-lg rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-colors min-h-[64px] bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20"
           >
             {isProcessing ? (
               <>
                 <Loader2 className="w-6 h-6 animate-spin" />
                 Procesando...
               </>
-            ) : paymentMethod === 'mercadopago' ? (
-              'Pagar con MercadoPago'
             ) : (
               <>
                 <Store className="w-6 h-6" />
@@ -525,12 +438,7 @@ export default function CheckoutPage() {
 
           <div className="flex items-center justify-center gap-2 mt-4 text-slate-400">
             <ShieldCheck className="w-5 h-5" />
-            <span className="text-base">
-              {paymentMethod === 'mercadopago'
-                ? 'Pago seguro con MercadoPago'
-                : 'Reserva garantizada por 24 horas'
-              }
-            </span>
+            <span className="text-base">Reserva garantizada por 24 horas</span>
           </div>
 
           <div className="mt-4 text-center">
