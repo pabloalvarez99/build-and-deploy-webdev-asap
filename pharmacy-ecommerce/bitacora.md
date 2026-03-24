@@ -4,6 +4,23 @@
 
 ---
 
+## COMPLETADO: Setup entorno + verificación estado (Marzo 24, 2026)
+
+### Resumen
+- Instaladas dependencias `npm install` en `apps/web` (176 paquetes: resend, recharts, xlsx, etc.)
+- Creado `.env.local` con `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- Verificado via Supabase CLI (`supabase link --project-ref jvagvjwrjiekaafpjbit` + `db query --linked`) que **todas las migraciones ya están aplicadas**: tablas `stock_movements`, `admin_settings` (con seed data), columna `discount_percent` en `products`
+- Confirmado que todos los planes de `docs/plans/` están **100% implementados** en código:
+  - Stock management + historial + badge sidebar ✅
+  - Reportes con Recharts + CSV export ✅
+  - Alertas email con Resend ✅
+  - Sistema de descuentos (homepage ofertas, badges, checkout, admin) ✅
+  - Fix import Excel no-destructivo (UPSERT por external_id) ✅
+  - Fix script Python imágenes (fallback queries, progress file, rate limit) ✅
+- Build exitoso con `NODE_OPTIONS=--max-old-space-size=6144` (máquina requiere 6GB para build)
+
+---
+
 ## COMPLETADO: Fixes de calidad y seguridad (Marzo 20, 2026)
 
 ### Mejoras implementadas
