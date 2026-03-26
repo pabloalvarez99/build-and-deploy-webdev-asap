@@ -91,7 +91,7 @@ async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
     }
 
     return NextResponse.redirect(
-      `${BASE_URL}/checkout/webpay/success?order_id=${order.id}&total=${order.total}&name=${encodeURIComponent(order.guest_name || '')}`,
+      `${BASE_URL}/checkout/webpay/success?order_id=${order.id}&total=${order.total}&name=${encodeURIComponent(order.guest_name || '')}&token=${tokenWs}`,
       { status: 303 }
     );
   } catch (error) {

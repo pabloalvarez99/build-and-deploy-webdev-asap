@@ -11,6 +11,7 @@ function SuccessContent() {
   const orderId = searchParams.get('order_id');
   const total = searchParams.get('total');
   const name = searchParams.get('name');
+  const token = searchParams.get('token');
 
   return (
     <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -59,6 +60,13 @@ function SuccessContent() {
           </span>
         </div>
       </div>
+
+      {token && (
+        <div className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-5 mb-5">
+          <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Token Transbank (para validación)</p>
+          <p className="font-mono text-xs text-slate-700 break-all select-all">{token}</p>
+        </div>
+      )}
 
       <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-5 mb-8">
         <h3 className="font-bold text-blue-900 mb-3 text-lg">¿Qué sigue?</h3>
