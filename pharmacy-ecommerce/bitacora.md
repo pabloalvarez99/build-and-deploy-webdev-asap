@@ -4,6 +4,40 @@
 
 ---
 
+## COMPLETADO: Integración Webpay Plus (Marzo 26, 2026)
+
+### Resumen
+- Reemplazó MercadoPago como método de pago online
+- Instalado `transbank-sdk` npm
+- Creado cliente singleton en `src/lib/transbank.ts` (integration/production por env vars)
+- **Nuevas rutas API:**
+  - `POST /api/webpay/create` — crea orden `pending` + transacción Transbank
+  - `GET|POST /api/webpay/return` — maneja callback de Transbank, hace commit, descuenta stock
+- **Nuevas páginas:**
+  - `/checkout/webpay/success` — muestra comprobante + token para validación
+  - `/checkout/webpay/error` — muestra error/cancelación + token para validación
+- Checkout actualizado con selector de método de pago: Webpay Plus (default) o Pagar en tienda
+- Todos los edge cases manejados: cancelación (TBK_TOKEN), rechazo, timeout, error de formulario
+- Credenciales integración: commerce `597055555532`, api key `579B532A...`
+- Credenciales producción: commerce `597053071648`, api key pendiente (enviado formulario validación a Transbank)
+- **Validación Transbank enviada** — API key de producción llega en ~24h hábiles
+
+### Env vars Vercel (producción)
+- `TRANSBANK_ENVIRONMENT=integration` (cambiar a `production` cuando llegue API key)
+- `TRANSBANK_COMMERCE_CODE` (agregar cuando sea producción)
+- `TRANSBANK_API_KEY` (agregar cuando llegue de Transbank)
+- `NEXT_PUBLIC_BASE_URL=https://tu-farmacia.cl`
+
+### Activar producción (cuando llegue API key)
+```bash
+vercel env add TRANSBANK_ENVIRONMENT production --value production --force
+vercel env add TRANSBANK_COMMERCE_CODE production --value 597053071648 --force
+vercel env add TRANSBANK_API_KEY production --value <KEY> --force
+git push origin main  # auto-deploy
+```
+
+---
+
 ## COMPLETADO: Setup entorno + verificación estado (Marzo 24, 2026)
 
 ### Resumen
