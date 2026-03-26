@@ -41,7 +41,7 @@ async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
     // response_code 0 = approved
     if (result.response_code !== 0) {
       return NextResponse.redirect(
-        `${BASE_URL}/checkout/webpay/error?reason=rejected&code=${result.response_code}`,
+        `${BASE_URL}/checkout/webpay/error?reason=rejected&code=${result.response_code}&token=${tokenWs}`,
         { status: 303 }
       );
     }

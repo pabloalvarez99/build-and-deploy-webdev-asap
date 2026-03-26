@@ -17,6 +17,7 @@ function ErrorContent() {
   const searchParams = useSearchParams();
   const reason = searchParams.get('reason') || 'internal';
   const message = REASON_MESSAGES[reason] || REASON_MESSAGES.internal;
+  const token = searchParams.get('token');
 
   return (
     <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -29,6 +30,13 @@ function ErrorContent() {
         </h1>
         <p className="text-slate-500 text-lg">{message}</p>
       </div>
+
+      {token && (
+        <div className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-5 mb-5">
+          <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Token Transbank (para validación)</p>
+          <p className="font-mono text-xs text-slate-700 break-all select-all">{token}</p>
+        </div>
+      )}
 
       <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 mb-8">
         <p className="text-amber-800 font-medium text-center">
