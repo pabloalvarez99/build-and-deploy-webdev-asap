@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cart';
 import { orderApi } from '@/lib/api';
-import { FileText, Mail, Loader2, ShieldCheck, Store, Phone, Clock, Check, UserPlus, Eye, EyeOff, Lock } from 'lucide-react';
+import { FileText, Mail, Loader2, ShieldCheck, Store, Phone, Clock, Check, UserPlus, Eye, EyeOff, Lock, CreditCard } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 export default function CheckoutPage() {
@@ -18,6 +18,7 @@ export default function CheckoutPage() {
   const [notes, setNotes] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'webpay' | 'store'>('webpay');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -104,7 +105,7 @@ export default function CheckoutPage() {
         quantity: item.quantity,
       }));
 
-      const response = await orderApi.storePickup({
+      const payload = {
         items,
         name: name.trim(),
         surname: surname.trim(),
@@ -112,7 +113,33 @@ export default function CheckoutPage() {
         phone: phone.trim(),
         notes: notes || undefined,
         session_id: getSessionId(),
-      });
+      };
+
+      if (paymentMethod === 'webpay') {
+        const res = await fetch('/api/webpay/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error al iniciar pago');
+
+        clearCart();
+        // Submit form POST to Transbank (required by their protocol)
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = data.url;
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'token_ws';
+        input.value = data.token;
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+        return;
+      }
+
+      const response = await orderApi.storePickup(payload);
 
       clearCart();
       router.push(`/checkout/reservation?order_id=${response.order_id}&code=${response.pickup_code}&expires=${encodeURIComponent(response.expires_at)}&total=${response.total}`);
@@ -166,24 +193,58 @@ export default function CheckoutPage() {
       </div>
 
       <div className="space-y-4">
-        {/* Método: solo retiro en tienda */}
-        <div className="bg-white rounded-2xl border-2 border-emerald-200 p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <Store className="w-7 h-7 text-emerald-600" />
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">Pagar en tienda</h2>
-              <p className="text-slate-500">Reserva y paga cuando retires tus productos</p>
-            </div>
+        {/* Método de pago */}
+        <div className="bg-white rounded-2xl border-2 border-slate-100 p-5">
+          <h2 className="text-lg font-bold text-slate-900 mb-4">Método de pago</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Webpay Plus */}
+            <button
+              type="button"
+              onClick={() => setPaymentMethod('webpay')}
+              className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-colors ${
+                paymentMethod === 'webpay'
+                  ? 'border-emerald-500 bg-emerald-50'
+                  : 'border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              <CreditCard className={`w-6 h-6 flex-shrink-0 mt-0.5 ${paymentMethod === 'webpay' ? 'text-emerald-600' : 'text-slate-400'}`} />
+              <div>
+                <p className="font-bold text-slate-900">Pagar online</p>
+                <p className="text-sm text-slate-500">Webpay Plus — tarjeta débito o crédito</p>
+              </div>
+              {paymentMethod === 'webpay' && <Check className="w-5 h-5 text-emerald-600 ml-auto flex-shrink-0" />}
+            </button>
+
+            {/* Pagar en tienda */}
+            <button
+              type="button"
+              onClick={() => setPaymentMethod('store')}
+              className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-colors ${
+                paymentMethod === 'store'
+                  ? 'border-emerald-500 bg-emerald-50'
+                  : 'border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              <Store className={`w-6 h-6 flex-shrink-0 mt-0.5 ${paymentMethod === 'store' ? 'text-emerald-600' : 'text-slate-400'}`} />
+              <div>
+                <p className="font-bold text-slate-900">Pagar en tienda</p>
+                <p className="text-sm text-slate-500">Reserva y paga al retirar</p>
+              </div>
+              {paymentMethod === 'store' && <Check className="w-5 h-5 text-emerald-600 ml-auto flex-shrink-0" />}
+            </button>
           </div>
-          <div className="p-4 bg-amber-50 border-2 border-amber-200 rounded-xl">
-            <div className="flex items-start gap-3">
-              <Clock className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div className="text-amber-800">
-                <p className="font-bold">Tu reserva será válida por 24 horas</p>
-                <p>Recibirás un código de retiro por email</p>
+
+          {paymentMethod === 'store' && (
+            <div className="mt-3 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl">
+              <div className="flex items-start gap-3">
+                <Clock className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="text-amber-800">
+                  <p className="font-bold">Tu reserva será válida por 24 horas</p>
+                  <p>Recibirás un código de retiro por email</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Personal Info */}
@@ -428,6 +489,11 @@ export default function CheckoutPage() {
                 <Loader2 className="w-6 h-6 animate-spin" />
                 Procesando...
               </>
+            ) : paymentMethod === 'webpay' ? (
+              <>
+                <CreditCard className="w-6 h-6" />
+                Pagar con Webpay
+              </>
             ) : (
               <>
                 <Store className="w-6 h-6" />
@@ -438,7 +504,9 @@ export default function CheckoutPage() {
 
           <div className="flex items-center justify-center gap-2 mt-4 text-slate-400">
             <ShieldCheck className="w-5 h-5" />
-            <span className="text-base">Reserva garantizada por 24 horas</span>
+            <span className="text-base">
+              {paymentMethod === 'webpay' ? 'Pago seguro con Webpay Plus' : 'Reserva garantizada por 24 horas'}
+            </span>
           </div>
 
           <div className="mt-4 text-center">
