@@ -4,11 +4,27 @@ import { webpayTransaction } from '@/lib/transbank';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL!;
 
+// Transbank may redirect via GET (token in query params) or POST (token in form body)
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const tokenWs = searchParams.get('token_ws');
+  const tbkToken = searchParams.get('TBK_TOKEN');
+  return handleReturn(tokenWs, tbkToken);
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const tokenWs = formData.get('token_ws') as string | null;
     const tbkToken = formData.get('TBK_TOKEN') as string | null;
+    return handleReturn(tokenWs, tbkToken);
+  } catch {
+    return NextResponse.redirect(`${BASE_URL}/checkout/webpay/error?reason=internal`, { status: 303 });
+  }
+}
+
+async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
+  try {
 
     // User cancelled payment
     if (tbkToken && !tokenWs) {
