@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/api-helpers';
 import { webpayTransaction } from '@/lib/transbank';
+import { sendWebpayConfirmation } from '@/lib/email';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL!;
 
@@ -83,7 +84,7 @@ async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
     // Deduct stock for each order item
     const { data: orderItems } = await supabase
       .from('order_items')
-      .select('product_id, quantity')
+      .select('product_id, product_name, quantity, price_at_purchase')
       .eq('order_id', order.id);
 
     if (orderItems) {
@@ -93,6 +94,21 @@ async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
           p_quantity: item.quantity,
         });
       }
+    }
+
+    // Send confirmation email (non-blocking)
+    if (order.guest_email) {
+      sendWebpayConfirmation({
+        to: order.guest_email,
+        name: order.guest_name || 'Cliente',
+        orderId: order.id,
+        total: Number(order.total),
+        items: (orderItems || []).map((i: { product_name: string; quantity: number; price_at_purchase: string }) => ({
+          product_name: i.product_name,
+          quantity: i.quantity,
+          price_at_purchase: i.price_at_purchase,
+        })),
+      }).catch(() => {});
     }
 
     return NextResponse.redirect(

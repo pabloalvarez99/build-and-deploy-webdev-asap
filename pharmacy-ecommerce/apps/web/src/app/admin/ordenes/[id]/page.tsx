@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { orderApi, OrderWithItems } from '@/lib/api';
-import { ArrowLeft, Package, MapPin, FileText, User, Mail, Printer, Check, Clock, Truck, CheckCircle, XCircle, Store, Phone } from 'lucide-react';
+import { ArrowLeft, Package, MapPin, FileText, User, Mail, Printer, Check, Clock, Truck, CheckCircle, XCircle, Store, Phone, CreditCard } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 const statusOptions = [
@@ -22,11 +22,19 @@ const statusOptions = [
 const deliveryFlow = ['pending', 'paid', 'processing', 'shipped', 'delivered'];
 // Flujo para retiro en tienda (sin "Enviado")
 const pickupFlow = ['reserved', 'processing', 'delivered'];
+// Flujo para Webpay (pago online, sin "pending" ni "shipped")
+const webpayFlow = ['paid', 'processing', 'delivered'];
 
 const pickupLabels: Record<string, string> = {
  reserved: 'Reservado',
  processing: 'Preparando',
  delivered: 'Retirado',
+};
+
+const webpayLabels: Record<string, string> = {
+ paid: 'Pagado',
+ processing: 'Preparando',
+ delivered: 'Entregado',
 };
 
 const statusIcons: Record<string, React.ReactNode> = {
@@ -39,10 +47,16 @@ const statusIcons: Record<string, React.ReactNode> = {
  cancelled: <XCircle className="w-5 h-5" />,
 };
 
-function OrderTimeline({ currentStatus, isPickup }: { currentStatus: string; isPickup: boolean }) {
+function OrderTimeline({ currentStatus, isPickup, isWebpay }: { currentStatus: string; isPickup: boolean; isWebpay: boolean }) {
  const isCancelled = currentStatus === 'cancelled';
- const flow = isPickup ? pickupFlow : deliveryFlow;
+ const flow = isPickup ? pickupFlow : isWebpay ? webpayFlow : deliveryFlow;
  const currentIndex = flow.indexOf(currentStatus);
+
+ const getLabel = (status: string) => {
+  if (isPickup) return pickupLabels[status] ?? statusOptions.find((s) => s.value === status)?.label;
+  if (isWebpay) return webpayLabels[status] ?? statusOptions.find((s) => s.value === status)?.label;
+  return statusOptions.find((s) => s.value === status)?.label;
+ };
 
  return (
  <div className="card p-6 mb-6">
@@ -68,9 +82,7 @@ function OrderTimeline({ currentStatus, isPickup }: { currentStatus: string; isP
  {flow.map((status, index) => {
  const isCompleted = index <= currentIndex;
  const isCurrent = index === currentIndex;
- const label = isPickup
-  ? (pickupLabels[status] ?? statusOptions.find((s) => s.value === status)?.label)
-  : statusOptions.find((s) => s.value === status)?.label;
+ const label = getLabel(status);
 
  return (
  <div key={status} className="flex flex-col items-center">
@@ -203,6 +215,7 @@ export default function AdminOrderDetailPage() {
  }
 
  const isPickup = !!order.pickup_code;
+ const isWebpay = order.payment_provider === 'webpay';
  const currentStatus = statusOptions.find((s) => s.value === order.status);
  const total = parseFloat(order.total);
  const date = new Date(order.created_at).toLocaleDateString('es-CL', {
@@ -309,8 +322,28 @@ export default function AdminOrderDetailPage() {
  </div>
  )}
 
+ {/* Webpay paid — action card */}
+ {isWebpay && order.status === 'paid' && (
+ <div className="card border-2 border-blue-300 bg-blue-50 p-6 mb-6">
+ <div className="flex items-center gap-3 mb-3">
+ <CreditCard className="w-6 h-6 text-blue-600" />
+ <h2 className="text-lg font-bold text-blue-900">Pago Webpay confirmado</h2>
+ </div>
+ <p className="text-blue-700 mb-4">
+ El cliente pagó online. Prepara el pedido y márcalo en procesamiento cuando esté listo para entregar.
+ </p>
+ <button
+ onClick={() => handleStatusChange('processing')}
+ className="flex items-center gap-2 px-6 py-3 min-h-[56px] rounded-xl text-lg font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+ >
+ <Package className="w-5 h-5" />
+ Marcar en preparación
+ </button>
+ </div>
+ )}
+
  {/* Status Timeline */}
- <OrderTimeline currentStatus={order.status} isPickup={isPickup} />
+ <OrderTimeline currentStatus={order.status} isPickup={isPickup} isWebpay={isWebpay} />
 
  <div className="grid lg:grid-cols-3 gap-6">
  <div className="lg:col-span-2 space-y-6">
@@ -426,7 +459,7 @@ export default function AdminOrderDetailPage() {
  <span>{formatPrice(total)}</span>
  </div>
  <div className="flex justify-between text-slate-600">
- <span>{isPickup ? 'Retiro en tienda' : 'Envío'}</span>
+ <span>{isPickup ? 'Retiro en tienda' : isWebpay ? 'Pago Webpay' : 'Envío'}</span>
  <span className="text-green-600">Gratis</span>
  </div>
  </div>
@@ -441,7 +474,11 @@ export default function AdminOrderDetailPage() {
  <p className="text-xs font-medium text-slate-500 uppercase mb-3">Acciones rápidas</p>
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
  {statusOptions
-  .filter((opt) => !isPickup || opt.value !== 'shipped')
+  .filter((opt) => {
+    if (isPickup && opt.value === 'shipped') return false;
+    if (isWebpay && ['shipped', 'pending', 'reserved'].includes(opt.value)) return false;
+    return true;
+   })
   .map((opt) => {
    const displayLabel = isPickup && opt.value === 'delivered' ? 'Retirado' :
     isPickup && opt.value === 'processing' ? 'Preparando' : opt.label;

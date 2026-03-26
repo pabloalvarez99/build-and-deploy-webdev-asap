@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { errorResponse, getServiceClient } from '@/lib/supabase/api-helpers';
+import { sendPickupReservationEmail } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   try {
@@ -71,6 +72,21 @@ export async function POST(request: NextRequest) {
         price_at_purchase: item.price,
       }))
     );
+
+    // Send reservation email (non-blocking)
+    sendPickupReservationEmail({
+      to: email,
+      name: name || 'Cliente',
+      orderId: order.id,
+      pickupCode,
+      total,
+      expiresAt,
+      items: orderItems.map(i => ({
+        product_name: i.product_name,
+        quantity: i.quantity,
+        price_at_purchase: String(i.price),
+      })),
+    }).catch(() => {});
 
     return NextResponse.json({
       order_id: order.id,

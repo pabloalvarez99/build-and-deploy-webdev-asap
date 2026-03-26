@@ -22,11 +22,19 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.R
 const deliveryFlow = ['pending', 'paid', 'processing', 'shipped', 'delivered'];
 // Store pickup flow (no "shipped")
 const pickupFlow = ['reserved', 'processing', 'delivered'];
+// Webpay online payment flow
+const webpayFlow = ['paid', 'processing', 'delivered'];
 
 const pickupLabels: Record<string, string> = {
   reserved: 'Reservado',
   processing: 'Preparando',
   delivered: 'Retirado',
+};
+
+const webpayLabels: Record<string, string> = {
+  paid: 'Pagado',
+  processing: 'Preparando',
+  delivered: 'Entregado',
 };
 
 const statusIcons: Record<string, React.ReactNode> = {
@@ -39,10 +47,16 @@ const statusIcons: Record<string, React.ReactNode> = {
   cancelled: <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />,
 };
 
-function OrderTimeline({ currentStatus, isPickup }: { currentStatus: string; isPickup: boolean }) {
+function OrderTimeline({ currentStatus, isPickup, isWebpay }: { currentStatus: string; isPickup: boolean; isWebpay: boolean }) {
   const isCancelled = currentStatus === 'cancelled';
-  const flow = isPickup ? pickupFlow : deliveryFlow;
+  const flow = isPickup ? pickupFlow : isWebpay ? webpayFlow : deliveryFlow;
   const currentIndex = flow.indexOf(currentStatus);
+
+  const getLabel = (status: string) => {
+    if (isPickup) return pickupLabels[status] ?? statusConfig[status]?.label;
+    if (isWebpay) return webpayLabels[status] ?? statusConfig[status]?.label;
+    return statusConfig[status]?.label;
+  };
 
   return (
     <div className="card p-5 sm:p-6 mb-6">
@@ -68,9 +82,7 @@ function OrderTimeline({ currentStatus, isPickup }: { currentStatus: string; isP
             {flow.map((status, index) => {
               const isCompleted = index <= currentIndex;
               const isCurrent = index === currentIndex;
-              const label = isPickup
-                ? (pickupLabels[status] ?? statusConfig[status]?.label)
-                : statusConfig[status]?.label;
+              const label = getLabel(status);
 
               return (
                 <div key={status} className="flex flex-col items-center">
@@ -156,6 +168,7 @@ export default function OrderDetailPage() {
   }
 
   const isStorePickup = order.payment_provider === 'store';
+  const isWebpay = order.payment_provider === 'webpay';
   let status = statusConfig[order.status] || statusConfig.pending;
 
   if (isStorePickup && order.status === 'reserved') {
@@ -197,7 +210,7 @@ export default function OrderDetailPage() {
       </div>
 
       {/* Status Timeline */}
-      <OrderTimeline currentStatus={order.status} isPickup={isStorePickup} />
+      <OrderTimeline currentStatus={order.status} isPickup={isStorePickup} isWebpay={isWebpay} />
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -297,7 +310,7 @@ export default function OrderDetailPage() {
                 <span>{formatPrice(total)}</span>
               </div>
               <div className="flex justify-between text-slate-600">
-                <span>{isStorePickup ? 'Retiro en tienda' : 'Envío'}</span>
+                <span>{isStorePickup ? 'Retiro en tienda' : isWebpay ? 'Pago Webpay' : 'Envío'}</span>
                 <span className="text-emerald-600">Gratis</span>
               </div>
             </div>
