@@ -31,6 +31,11 @@ async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
       return NextResponse.redirect(`${BASE_URL}/checkout/webpay/error?reason=cancelled&token=${tbkToken}`, { status: 303 });
     }
 
+    // Form error (browser closed/recovered) — both tokens present, do NOT commit
+    if (tbkToken && tokenWs) {
+      return NextResponse.redirect(`${BASE_URL}/checkout/webpay/error?reason=cancelled&token=${tbkToken}`, { status: 303 });
+    }
+
     if (!tokenWs) {
       return NextResponse.redirect(`${BASE_URL}/checkout/webpay/error?reason=no_token`, { status: 303 });
     }
