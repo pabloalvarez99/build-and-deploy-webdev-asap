@@ -26,9 +26,9 @@ export async function POST(request: NextRequest) {
 async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
   try {
 
-    // User cancelled payment
+    // User cancelled payment — Transbank sends TBK_TOKEN instead of token_ws
     if (tbkToken && !tokenWs) {
-      return NextResponse.redirect(`${BASE_URL}/checkout/webpay/error?reason=cancelled`, { status: 303 });
+      return NextResponse.redirect(`${BASE_URL}/checkout/webpay/error?reason=cancelled&token=${tbkToken}`, { status: 303 });
     }
 
     if (!tokenWs) {
