@@ -26,6 +26,7 @@ import {
   User,
   Mail,
   Package,
+  CreditCard,
 } from 'lucide-react';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
@@ -62,6 +63,7 @@ export default function AdminOrdersPage() {
   // Filters
   const [showFilters, setShowFilters] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
+  const [filterProvider, setFilterProvider] = useState<string>('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [minAmount, setMinAmount] = useState('');
@@ -100,6 +102,7 @@ export default function AdminOrdersPage() {
   const filteredOrders = useMemo(() => {
     return allOrders.filter((order) => {
       if (filterStatus.length > 0 && !filterStatus.includes(order.status)) return false;
+      if (filterProvider && order.payment_provider !== filterProvider) return false;
       if (dateFrom && new Date(order.created_at) < new Date(dateFrom)) return false;
       if (dateTo) {
         const to = new Date(dateTo);
@@ -130,8 +133,9 @@ export default function AdminOrdersPage() {
       .reduce((sum, o) => sum + parseFloat(o.total), 0);
     const pending = allOrders.filter((o) => o.status === 'pending').length;
     const reserved = allOrders.filter((o) => o.status === 'reserved').length;
+    const webpayPaid = allOrders.filter((o) => o.payment_provider === 'webpay' && o.status === 'paid').length;
     const total = allOrders.length;
-    return { revenue, pending, reserved, total };
+    return { revenue, pending, reserved, webpayPaid, total };
   }, [allOrders]);
 
   // Pagination on filtered results
@@ -141,7 +145,7 @@ export default function AdminOrdersPage() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus, dateFrom, dateTo, minAmount, maxAmount, searchQuery]);
+  }, [filterStatus, filterProvider, dateFrom, dateTo, minAmount, maxAmount, searchQuery]);
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
@@ -174,6 +178,7 @@ export default function AdminOrdersPage() {
 
   const clearFilters = () => {
     setFilterStatus([]);
+    setFilterProvider('');
     setDateFrom('');
     setDateTo('');
     setMinAmount('');
@@ -188,7 +193,7 @@ export default function AdminOrdersPage() {
     );
   };
 
-  const hasActiveFilters = filterStatus.length > 0 || dateFrom || dateTo || minAmount || maxAmount || searchQuery;
+  const hasActiveFilters = filterStatus.length > 0 || filterProvider || dateFrom || dateTo || minAmount || maxAmount || searchQuery;
 
   const exportToCSV = () => {
     const headers = ['ID', 'Fecha', 'Cliente', 'Email', 'Teléfono', 'Estado', 'Pago', 'Total', 'Código Retiro', 'Dirección', 'Notas'];
@@ -199,7 +204,7 @@ export default function AdminOrdersPage() {
       getCustomerEmail(o),
       o.customer_phone || '',
       STATUS_CONFIG[o.status]?.label || o.status,
-      o.pickup_code ? 'Retiro en tienda' : '',
+      o.payment_provider === 'webpay' ? 'Webpay Plus' : o.payment_provider === 'store' ? 'Retiro en tienda' : o.payment_provider || '',
       o.total,
       o.pickup_code || '',
       o.shipping_address || '',
@@ -255,7 +260,7 @@ export default function AdminOrdersPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <div className="card p-4 flex items-center gap-3">
           <div className="p-2 bg-emerald-100 rounded-xl">
             <TrendingUp className="w-5 h-5 text-emerald-600" />
@@ -296,6 +301,18 @@ export default function AdminOrdersPage() {
           <div>
             <p className="text-xs text-slate-500">Reservas</p>
             <p className="font-bold text-slate-900 text-sm">{stats.reserved}</p>
+          </div>
+        </button>
+        <button
+          onClick={() => setFilterProvider(filterProvider === 'webpay' ? '' : 'webpay')}
+          className={`card p-4 flex items-center gap-3 text-left w-full hover:shadow-md transition-shadow ${filterProvider === 'webpay' ? 'ring-2 ring-blue-400' : ''}`}
+        >
+          <div className="p-2 bg-blue-100 rounded-xl">
+            <CreditCard className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <p className="text-xs text-slate-500">Webpay a preparar</p>
+            <p className="font-bold text-slate-900 text-sm">{stats.webpayPaid}</p>
           </div>
         </button>
       </div>
@@ -357,6 +374,30 @@ export default function AdminOrdersPage() {
             </div>
           </div>
 
+          {/* Payment provider chips */}
+          <div className="mb-4">
+            <p className="text-sm font-medium text-slate-700 mb-2">Método de pago</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: 'webpay', label: 'Webpay Plus', icon: <CreditCard className="w-3.5 h-3.5" />, activeClass: 'bg-blue-100 text-blue-800' },
+                { value: 'store', label: 'Retiro en tienda', icon: <Store className="w-3.5 h-3.5" />, activeClass: 'bg-amber-100 text-amber-800' },
+              ].map(({ value, label, icon, activeClass }) => (
+                <button
+                  key={value}
+                  onClick={() => setFilterProvider(filterProvider === value ? '' : value)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    filterProvider === value
+                      ? activeClass + ' ring-2 ring-offset-1 ring-current'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {icon}
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Desde</label>
@@ -398,7 +439,8 @@ export default function AdminOrdersPage() {
               const date = new Date(order.created_at).toLocaleDateString('es-CL', {
                 day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
               });
-              const isPickup = !!order.pickup_code;
+              const isPickup = order.payment_provider === 'store';
+              const isWebpay = order.payment_provider === 'webpay';
               const customerName = getCustomerName(order);
               const customerEmail = getCustomerEmail(order);
 
@@ -422,6 +464,11 @@ export default function AdminOrdersPage() {
                       {isPickup && (
                         <span className="flex items-center gap-1 text-amber-600 text-xs font-medium">
                           <Store className="w-3.5 h-3.5" /> Retiro
+                        </span>
+                      )}
+                      {isWebpay && (
+                        <span className="flex items-center gap-1 text-blue-600 text-xs font-medium">
+                          <CreditCard className="w-3.5 h-3.5" /> Webpay
                         </span>
                       )}
                       <span className="font-bold text-slate-900">{formatPrice(order.total)}</span>
@@ -487,7 +534,8 @@ export default function AdminOrdersPage() {
                     day: 'numeric', month: 'short', year: 'numeric',
                     hour: '2-digit', minute: '2-digit',
                   });
-                  const isPickup = !!order.pickup_code;
+                  const isPickup = order.payment_provider === 'store';
+                  const isWebpay = order.payment_provider === 'webpay';
                   const customerName = getCustomerName(order);
                   const customerEmail = getCustomerEmail(order);
                   const isGuest = !order.user_id;
@@ -518,9 +566,17 @@ export default function AdminOrdersPage() {
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">{date}</td>
                       <td className="px-4 py-3">
-                        <span className="flex items-center gap-1 text-amber-700 text-xs font-medium bg-amber-50 px-2 py-1 rounded-full w-fit">
+                        {isPickup ? (
+                          <span className="flex items-center gap-1 text-amber-700 text-xs font-medium bg-amber-50 px-2 py-1 rounded-full w-fit">
                             <Store className="w-3.5 h-3.5" /> Retiro
                           </span>
+                        ) : isWebpay ? (
+                          <span className="flex items-center gap-1 text-blue-700 text-xs font-medium bg-blue-50 px-2 py-1 rounded-full w-fit">
+                            <CreditCard className="w-3.5 h-3.5" /> Webpay
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-400">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">
                         {formatPrice(order.total)}

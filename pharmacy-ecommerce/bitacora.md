@@ -4,6 +4,20 @@
 
 ---
 
+## COMPLETADO: Mejoras post-Webpay (Marzo 27, 2026)
+
+### Resumen
+- **Timeline órdenes Webpay**: Admin `/ordenes/[id]` y `/mis-pedidos/[id]` ahora usan `webpayFlow = ['paid','processing','delivered']` detectado via `payment_provider === 'webpay'`. Ya no muestra el paso "Enviado" irrelevante.
+- **Tarjeta acción admin**: Órdenes Webpay con `status='paid'` muestran card azul "Pago Webpay confirmado — Preparar pedido".
+- **Admin lista órdenes — bug fix**: Columna "Pago" estaba hardcodeada a "Retiro" para todos. Ahora muestra "Webpay" (badge azul) o "Retiro" (badge ámbar) según `payment_provider`.
+- **Filtro por método de pago**: Panel de filtros avanzados + chip de stat clickeable "Webpay a preparar".
+- **Cron limpieza**: `GET /api/cron/cleanup-orders` cancela órdenes Webpay pendientes > 30 min y reservas de retiro expiradas. Configurado en `vercel.json` cada 30 min.
+- **Fix Resend build**: Inicialización lazy del cliente Resend (evita error en build sin `RESEND_API_KEY`).
+- **Emails**: `sendWebpayConfirmation()` y `sendPickupReservationEmail()` con templates HTML branded.
+- **CRON_SECRET**: Agregar a Vercel env vars (cualquier string seguro, ej: `openssl rand -hex 32`).
+
+---
+
 ## COMPLETADO: Integración Webpay Plus (Marzo 26, 2026)
 
 ### Resumen
