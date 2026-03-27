@@ -80,7 +80,7 @@ export default function CheckoutPage() {
     setError('');
     setAccountError('');
 
-    // Create account (required — blocks checkout if email already exists)
+    // Create account, or sign in if it already exists (retry after failed Webpay)
     try {
       const regRes = await fetch('/api/auth/register', {
         method: 'POST',
@@ -89,9 +89,22 @@ export default function CheckoutPage() {
       });
       const regData = await regRes.json();
       if (!regRes.ok) {
-        setAccountError(regData.error || 'Error al crear la cuenta');
-        setIsProcessing(false);
-        return;
+        if (regData.error?.includes('Ya existe')) {
+          // Account exists from a previous attempt — sign in with provided credentials
+          const { createClient } = await import('@/lib/supabase/client');
+          const supabase = createClient();
+          const { error: signInError } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });
+          if (signInError) {
+            setAccountError('Ya existe una cuenta con este email. Inicia sesión para continuar.');
+            setIsProcessing(false);
+            return;
+          }
+          // Sign-in succeeded — proceed with checkout
+        } else {
+          setAccountError(regData.error || 'Error al crear la cuenta');
+          setIsProcessing(false);
+          return;
+        }
       }
     } catch {
       setAccountError('Error al crear la cuenta. Por favor intenta nuevamente.');
