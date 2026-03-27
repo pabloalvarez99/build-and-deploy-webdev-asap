@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Package, ShoppingBag, AlertTriangle, X, Check, Store } from 'lucide-react';
+import { Bell, Package, ShoppingBag, AlertTriangle, X, Check, Store, CreditCard } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import { productApi, orderApi } from '@/lib/api';
 import { formatPrice } from '@/lib/format';
@@ -9,7 +9,7 @@ import Link from 'next/link';
 
 interface Notification {
  id: string;
- type: 'order' | 'stock' | 'critical' | 'reservation';
+ type: 'order' | 'stock' | 'critical' | 'reservation' | 'webpay';
  title: string;
  message: string;
  timestamp: Date;
@@ -43,24 +43,21 @@ export function NotificationBell() {
  try {
  const newNotifications: Notification[] = [];
 
- // Check for pending orders
- const pendingOrders = await orderApi.list({ status: 'pending', limit: 5 });
- if (pendingOrders.total > 0) {
- pendingOrders.orders.forEach((order) => {
- const orderDate = new Date(order.created_at);
- if (orderDate > lastCheck) {
- newNotifications.push({
- id: `order-${order.id}`,
- type: 'order',
- title: 'Nueva orden recibida',
- message: `Orden #${order.id.slice(0, 8)} por ${formatPrice(order.total)}`,
- timestamp: orderDate,
- read: false,
- link: `/admin/ordenes/${order.id}`,
+ // Check for Webpay paid orders needing preparation
+ const webpayPaidOrders = await orderApi.listAll({ status: 'paid', limit: 10 });
+ webpayPaidOrders.orders
+  .filter((o) => o.payment_provider === 'webpay')
+  .forEach((order) => {
+  newNotifications.push({
+  id: `webpay-${order.id}`,
+  type: 'webpay',
+  title: 'Pago Webpay — preparar pedido',
+  message: `Orden #${order.id.slice(0, 8)} · ${formatPrice(order.total)}`,
+  timestamp: new Date(order.created_at),
+  read: false,
+  link: `/admin/ordenes/${order.id}`,
+  });
  });
- }
- });
- }
 
  // Check for reserved orders (store pickup pending approval)
  const reservedOrders = await orderApi.listAll({ status: 'reserved', limit: 10 });
@@ -155,6 +152,8 @@ export function NotificationBell() {
  return <ShoppingBag className="w-4 h-4 text-emerald-500" />;
  case 'reservation':
  return <Store className="w-4 h-4 text-amber-500" />;
+ case 'webpay':
+ return <CreditCard className="w-4 h-4 text-blue-500" />;
  case 'stock':
  return <Package className="w-4 h-4 text-orange-500" />;
  case 'critical':
