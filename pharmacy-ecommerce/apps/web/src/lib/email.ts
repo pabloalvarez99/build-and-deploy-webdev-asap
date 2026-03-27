@@ -165,11 +165,6 @@ export async function sendPickupReservationEmail(opts: {
   });
 }
 
-interface LowStockProduct {
-  name: string;
-  stock: number;
-}
-
 export async function sendLowStockAlert(
   toEmail: string,
   products: LowStockProduct[],
@@ -191,7 +186,7 @@ export async function sendLowStockAlert(
       productList,
       '',
       'Ingresa al panel admin para gestionar el stock:',
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'https://tu-farmacia.cl'}/admin/productos`,
+      `${BASE}/admin/productos`,
     ].join('\n'),
   });
 }
