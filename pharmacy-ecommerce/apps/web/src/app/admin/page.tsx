@@ -122,7 +122,7 @@ export default function AdminPage() {
 
  const loadRecentOrders = async () => {
  try {
- const orders = await orderApi.list({ limit: 5 });
+ const orders = await orderApi.listAll({ limit: 5 });
  setRecentOrders(orders.orders);
  } catch (error) {
  console.error('Error loading orders:', error);
@@ -135,8 +135,8 @@ export default function AdminPage() {
  const [allProducts, categories, allOrders, pendingOrders, productsForStats] = await Promise.all([
  productApi.list({ limit: 1, active_only: false }),
  productApi.listCategories(),
- orderApi.list({ limit: 1000 }),
- orderApi.list({ status: 'pending', limit: 1 }),
+ orderApi.listAll({ limit: 1000 }),
+ orderApi.listAll({ status: 'pending', limit: 1 }),
  productApi.list({ limit: 1000, active_only: false }),
  ]);
 
