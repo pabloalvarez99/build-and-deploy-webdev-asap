@@ -124,7 +124,8 @@ export default function CheckoutPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Error al iniciar pago');
 
-        clearCart();
+        // Don't clear cart here — clear it on the success page so cancelled/rejected
+        // payments allow the user to retry with their cart intact.
         // Submit form POST to Transbank (required by their protocol)
         const form = document.createElement('form');
         form.method = 'POST';

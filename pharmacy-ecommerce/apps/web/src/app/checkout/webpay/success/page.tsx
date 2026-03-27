@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle, Printer } from 'lucide-react';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { formatPrice } from '@/lib/format';
+import { useCartStore } from '@/store/cart';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -12,6 +13,12 @@ function SuccessContent() {
   const total = searchParams.get('total');
   const name = searchParams.get('name');
   const token = searchParams.get('token');
+  const { clearCart } = useCartStore();
+
+  // Clear cart now that payment is confirmed
+  useEffect(() => {
+    clearCart();
+  }, [clearCart]);
 
   return (
     <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
