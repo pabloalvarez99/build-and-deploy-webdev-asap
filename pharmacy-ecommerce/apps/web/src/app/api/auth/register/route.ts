@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
   try {
     const { email, password, name, surname, phone } = await request.json();
 
-    if (!email || !password || !name || !surname) {
+    if (!email || !password || !name) {
       return errorResponse('Faltan datos requeridos');
     }
 
