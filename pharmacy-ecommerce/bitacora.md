@@ -561,6 +561,15 @@ productos-naturales, otros
 
 ## Historial completado
 
+### 2026-04-01: Webpay Plus deshabilitado en checkout (COMPLETADA)
+
+- Checkout simplificado: solo retiro en tienda habilitado
+- Webpay Plus visible como opción pero desactivada con badge "Próximamente"
+- Todo el código Transbank/Webpay intacto (APIs, lib/transbank.ts) — listo para activar
+- `transbank-sdk` instalado en node_modules para que compile
+- 32 productos sin imagen → 0 (búsqueda automática DuckDuckGo + manual)
+- Total productos activos con imagen: 1.453/1.453 (100%)
+
 ### 2026-02-08: Migración Railway → Supabase (COMPLETADA)
 
 **Antes**: 3 microservicios Rust en Railway + PostgreSQL + Redis
