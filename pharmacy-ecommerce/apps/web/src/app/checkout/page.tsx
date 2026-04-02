@@ -4,13 +4,16 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cart';
 import { orderApi } from '@/lib/api';
-import { Loader2, ShieldCheck, Store, Phone, User, Mail, Lock, Eye, EyeOff, CreditCard } from 'lucide-react';
+import { Loader2, ShieldCheck, Store, Phone, User, Mail, Lock, Eye, EyeOff, CreditCard, Check } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
+
+type PaymentMethod = 'store' | 'webpay';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, fetchCart, clearCart, getSessionId } = useCartStore();
 
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('store');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -23,45 +26,74 @@ export default function CheckoutPage() {
     fetchCart();
   }, [fetchCart]);
 
-  const handleReserve = async () => {
-    if (!cart || cart.items.length === 0) return;
-
+  const validate = () => {
     const trimmedName = name.trim();
     const trimmedPhone = phone.replace(/[\s\-\(\)]/g, '');
     const trimmedEmail = email.trim();
 
-    if (!trimmedName || trimmedName.length < 2) {
-      setError('Ingresa tu nombre');
-      return;
-    }
-    if (!/^\+?\d{8,12}$/.test(trimmedPhone)) {
-      setError('Ingresa un teléfono válido (ej: 912345678)');
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      setError('Ingresa un email válido');
-      return;
-    }
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
-      return;
-    }
+    if (!trimmedName || trimmedName.length < 2) return 'Ingresa tu nombre';
+    if (!/^\+?\d{8,12}$/.test(trimmedPhone)) return 'Teléfono inválido (ej: 912345678)';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) return 'Email inválido';
+    if (paymentMethod === 'store' && password.length < 6) return 'Contraseña mínimo 6 caracteres';
+    return null;
+  };
+
+  const handleSubmit = async () => {
+    if (!cart || cart.items.length === 0) return;
+    const validationError = validate();
+    if (validationError) { setError(validationError); return; }
 
     setIsProcessing(true);
     setError('');
 
-    // 1. Create account (or sign in if exists from previous attempt)
+    const trimmedName = name.trim();
+    const trimmedPhone = phone.replace(/[\s\-\(\)]/g, '');
+    const trimmedEmail = email.trim();
+    const items = cart.items.map(item => ({ product_id: item.product_id, quantity: item.quantity }));
+
+    if (paymentMethod === 'webpay') {
+      // Webpay Plus — redirect to Transbank
+      try {
+        const res = await fetch('/api/webpay/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items,
+            name: trimmedName,
+            surname: '',
+            email: trimmedEmail,
+            phone: trimmedPhone,
+            session_id: getSessionId(),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) { setError(data.error || 'Error al iniciar pago'); setIsProcessing(false); return; }
+
+        clearCart();
+        // POST redirect to Transbank
+        const form = document.createElement('form');
+        form.action = data.url;
+        form.method = 'POST';
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'token_ws';
+        input.value = data.token;
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+      } catch {
+        setError('Error al conectar con Webpay');
+        setIsProcessing(false);
+      }
+      return;
+    }
+
+    // Store pickup — create account + reservation
     try {
       const regRes = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: trimmedEmail,
-          password,
-          name: trimmedName,
-          surname: '',
-          phone: trimmedPhone,
-        }),
+        body: JSON.stringify({ email: trimmedEmail, password, name: trimmedName, surname: '', phone: trimmedPhone }),
       });
       const regData = await regRes.json();
       if (!regRes.ok) {
@@ -70,7 +102,7 @@ export default function CheckoutPage() {
           const supabase = createClient();
           const { error: signInError } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });
           if (signInError) {
-            setError('Ya existe una cuenta con este email. Verifica tu contraseña o inicia sesión.');
+            setError('Ya existe una cuenta con este email. Verifica tu contraseña.');
             setIsProcessing(false);
             return;
           }
@@ -81,18 +113,12 @@ export default function CheckoutPage() {
         }
       }
     } catch {
-      setError('Error al crear la cuenta. Intenta nuevamente.');
+      setError('Error al crear la cuenta');
       setIsProcessing(false);
       return;
     }
 
-    // 2. Create store-pickup reservation
     try {
-      const items = cart.items.map(item => ({
-        product_id: item.product_id,
-        quantity: item.quantity,
-      }));
-
       const response = await orderApi.storePickup({
         items,
         name: trimmedName,
@@ -101,20 +127,11 @@ export default function CheckoutPage() {
         phone: trimmedPhone,
         session_id: getSessionId(),
       });
-
       clearCart();
-      router.push(
-        `/checkout/reservation?order_id=${response.order_id}&code=${response.pickup_code}&expires=${encodeURIComponent(response.expires_at)}&total=${response.total}`
-      );
+      router.push(`/checkout/reservation?order_id=${response.order_id}&code=${response.pickup_code}&expires=${encodeURIComponent(response.expires_at)}&total=${response.total}`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error al procesar el pedido';
-      if (msg.includes('stock') || msg.includes('Stock')) {
-        setError('Algunos productos no tienen suficiente stock.');
-      } else if (msg.includes('not found')) {
-        setError('Uno de los productos ya no está disponible.');
-      } else {
-        setError(msg);
-      }
+      setError(msg.includes('stock') ? 'Algunos productos no tienen suficiente stock.' : msg);
       setIsProcessing(false);
     }
   };
@@ -124,27 +141,22 @@ export default function CheckoutPage() {
       <div className="max-w-md mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold text-slate-900 mb-4">Carrito vacío</h1>
         <p className="text-slate-500 text-lg mb-6">Agrega productos antes de continuar</p>
-        <button onClick={() => router.push('/')} className="btn btn-primary text-lg">
-          Ver productos
-        </button>
+        <button onClick={() => router.push('/')} className="btn btn-primary text-lg">Ver productos</button>
       </div>
     );
   }
 
   const itemCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+  const canSubmit = name && phone && email && (paymentMethod === 'webpay' || password.length >= 6);
 
   return (
     <div className="max-w-lg mx-auto px-4 sm:px-6 py-4 sm:py-6">
       {/* Header */}
       <div className="text-center mb-5">
-        <div className="bg-emerald-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
-          <Store className="w-8 h-8 text-emerald-600" />
-        </div>
-        <h1 className="text-2xl font-bold text-slate-900">Reservar pedido</h1>
-        <p className="text-slate-500 mt-1">Retira y paga en tienda</p>
+        <h1 className="text-2xl font-bold text-slate-900">Finalizar pedido</h1>
       </div>
 
-      {/* Order summary - compact */}
+      {/* Order summary */}
       <div className="bg-slate-50 rounded-2xl border-2 border-slate-100 p-4 mb-4">
         <div className="flex justify-between items-center">
           <span className="text-slate-600 font-medium">{itemCount} producto{itemCount > 1 ? 's' : ''}</span>
@@ -166,108 +178,103 @@ export default function CheckoutPage() {
       <div className="mb-4">
         <h2 className="text-base font-semibold text-slate-700 mb-3">Método de pago</h2>
         <div className="grid grid-cols-2 gap-3">
-          {/* Store pickup — active */}
-          <div className="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50 cursor-default">
-            <Store className="w-7 h-7 text-emerald-600" />
-            <span className="text-sm font-semibold text-emerald-700 text-center leading-tight">Retiro en tienda</span>
-            <span className="text-xs text-emerald-600 font-medium">Pagas al retirar</span>
-          </div>
-          {/* Webpay — disabled */}
-          <div className="relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed select-none">
-            <CreditCard className="w-7 h-7 text-slate-400" />
-            <span className="text-sm font-semibold text-slate-400 text-center leading-tight">Webpay Plus</span>
-            <span className="text-xs font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">Próximamente</span>
-          </div>
+          {/* Store pickup */}
+          <button
+            type="button"
+            onClick={() => setPaymentMethod('store')}
+            className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all text-left ${
+              paymentMethod === 'store'
+                ? 'border-emerald-500 bg-emerald-50'
+                : 'border-slate-200 bg-white hover:border-slate-300'
+            }`}
+          >
+            <Store className={`w-7 h-7 ${paymentMethod === 'store' ? 'text-emerald-600' : 'text-slate-400'}`} />
+            <div className="text-center">
+              <p className={`text-sm font-semibold leading-tight ${paymentMethod === 'store' ? 'text-emerald-700' : 'text-slate-700'}`}>
+                Retiro en tienda
+              </p>
+              <p className={`text-xs mt-0.5 ${paymentMethod === 'store' ? 'text-emerald-600' : 'text-slate-400'}`}>
+                Pagas al retirar
+              </p>
+            </div>
+            {paymentMethod === 'store' && <Check className="w-4 h-4 text-emerald-600" />}
+          </button>
+
+          {/* Webpay Plus */}
+          <button
+            type="button"
+            onClick={() => setPaymentMethod('webpay')}
+            className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all text-left ${
+              paymentMethod === 'webpay'
+                ? 'border-emerald-500 bg-emerald-50'
+                : 'border-slate-200 bg-white hover:border-slate-300'
+            }`}
+          >
+            <CreditCard className={`w-7 h-7 ${paymentMethod === 'webpay' ? 'text-emerald-600' : 'text-slate-400'}`} />
+            <div className="text-center">
+              <p className={`text-sm font-semibold leading-tight ${paymentMethod === 'webpay' ? 'text-emerald-700' : 'text-slate-700'}`}>
+                Webpay Plus
+              </p>
+              <p className={`text-xs mt-0.5 ${paymentMethod === 'webpay' ? 'text-emerald-600' : 'text-slate-400'}`}>
+                Débito o crédito
+              </p>
+            </div>
+            {paymentMethod === 'webpay' && <Check className="w-4 h-4 text-emerald-600" />}
+          </button>
         </div>
       </div>
 
-      {/* Single form card */}
+      {/* Form */}
       <div className="bg-white rounded-2xl border-2 border-slate-100 p-5 space-y-4">
-
-        {/* Name */}
         <div>
           <label htmlFor="ck-name" className="flex items-center gap-2 font-semibold text-slate-700 mb-2">
             <User className="w-5 h-5 text-emerald-600" />
             Nombre completo
           </label>
-          <input
-            id="ck-name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Juan Pérez"
-            className="input"
-            autoComplete="name"
-          />
+          <input id="ck-name" type="text" value={name} onChange={(e) => setName(e.target.value)}
+            placeholder="Juan Pérez" className="input" autoComplete="name" />
         </div>
 
-        {/* Phone */}
         <div>
           <label htmlFor="ck-phone" className="flex items-center gap-2 font-semibold text-slate-700 mb-2">
             <Phone className="w-5 h-5 text-emerald-600" />
             Teléfono
           </label>
-          <input
-            id="ck-phone"
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="9 1234 5678"
-            className="input"
-            autoComplete="tel"
-          />
-          <p className="text-sm text-slate-400 mt-1">Te avisamos cuando tu pedido esté listo</p>
+          <input id="ck-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+            placeholder="9 1234 5678" className="input" autoComplete="tel" />
         </div>
 
-        {/* Email */}
         <div>
           <label htmlFor="ck-email" className="flex items-center gap-2 font-semibold text-slate-700 mb-2">
             <Mail className="w-5 h-5 text-emerald-600" />
             Email
           </label>
-          <input
-            id="ck-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="tu@email.com"
-            className="input"
-            autoComplete="email"
-          />
+          <input id="ck-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+            placeholder="tu@email.com" className="input" autoComplete="email" />
         </div>
 
-        {/* Password */}
-        <div>
-          <label htmlFor="ck-pass" className="flex items-center gap-2 font-semibold text-slate-700 mb-2">
-            <Lock className="w-5 h-5 text-emerald-600" />
-            Contraseña
-          </label>
-          <div className="relative">
-            <input
-              id="ck-pass"
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mínimo 6 caracteres"
-              className="input pr-12"
-              autoComplete="new-password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
-            >
-              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-            </button>
+        {paymentMethod === 'store' && (
+          <div>
+            <label htmlFor="ck-pass" className="flex items-center gap-2 font-semibold text-slate-700 mb-2">
+              <Lock className="w-5 h-5 text-emerald-600" />
+              Contraseña
+            </label>
+            <div className="relative">
+              <input id="ck-pass" type={showPassword ? 'text' : 'password'} value={password}
+                onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres"
+                className="input pr-12" autoComplete="new-password" />
+              <button type="button" onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+            <p className="text-sm text-slate-400 mt-1">Para ver tus pedidos después</p>
           </div>
-          <p className="text-sm text-slate-400 mt-1">Para ver tus pedidos después</p>
-        </div>
+        )}
 
         <p className="text-sm text-slate-500 text-center">
           ¿Ya tienes cuenta?{' '}
-          <a href="/auth/login" className="text-emerald-700 font-semibold hover:underline">
-            Inicia sesión
-          </a>
+          <a href="/auth/login" className="text-emerald-700 font-semibold hover:underline">Inicia sesión</a>
         </p>
       </div>
 
@@ -275,43 +282,33 @@ export default function CheckoutPage() {
       {error && (
         <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mt-4">
           <p className="text-red-600 font-semibold text-center">{error}</p>
-          {error.includes('Ya existe') && (
-            <a href="/auth/login" className="block text-center text-emerald-700 font-semibold underline text-sm mt-2">
-              Ir a iniciar sesión
-            </a>
-          )}
         </div>
       )}
 
-      {/* Submit button */}
+      {/* Submit */}
       <button
-        onClick={handleReserve}
-        disabled={isProcessing || !name || !phone || !email || !password}
+        onClick={handleSubmit}
+        disabled={isProcessing || !canSubmit}
         className="w-full mt-4 py-4 px-4 font-bold text-lg rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-colors min-h-[64px] bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20"
       >
         {isProcessing ? (
-          <>
-            <Loader2 className="w-6 h-6 animate-spin" />
-            Reservando...
-          </>
+          <><Loader2 className="w-6 h-6 animate-spin" />Procesando...</>
+        ) : paymentMethod === 'webpay' ? (
+          <><CreditCard className="w-6 h-6" />Pagar con Webpay</>
         ) : (
-          <>
-            <Store className="w-6 h-6" />
-            Reservar pedido
-          </>
+          <><Store className="w-6 h-6" />Reservar pedido</>
         )}
       </button>
 
       <div className="flex items-center justify-center gap-2 mt-3 text-slate-400">
         <ShieldCheck className="w-5 h-5" />
-        <span className="text-sm">Reserva válida por 24 horas — pagas al retirar</span>
+        <span className="text-sm">
+          {paymentMethod === 'webpay' ? 'Pago seguro con Webpay Plus' : 'Reserva válida por 24 horas — pagas al retirar'}
+        </span>
       </div>
 
       <div className="mt-3 text-center">
-        <button
-          onClick={() => router.push('/carrito')}
-          className="text-emerald-600 font-semibold hover:underline text-base"
-        >
+        <button onClick={() => router.push('/carrito')} className="text-emerald-600 font-semibold hover:underline text-base">
           Volver al carrito
         </button>
       </div>
