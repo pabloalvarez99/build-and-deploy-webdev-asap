@@ -114,7 +114,7 @@ export default function ProductPage() {
 
         <div className="grid md:grid-cols-2 gap-6 lg:gap-12 items-start">
           {/* Product Image */}
-          <div className="aspect-square relative bg-slate-50 rounded-2xl border-2 border-slate-100 overflow-hidden flex items-center justify-center">
+          <div className="aspect-square relative bg-slate-50 dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden flex items-center justify-center">
             {product.image_url ? (
               <Image
                 src={product.image_url}
@@ -125,7 +125,7 @@ export default function ProductPage() {
                 priority
               />
             ) : (
-              <Package className="w-24 h-24 text-slate-200" />
+              <Package className="w-24 h-24 text-slate-300 dark:text-slate-600" />
             )}
             {product.discount_percent && product.stock > 0 && (
               <div className="absolute top-3 left-3 bg-red-500 text-white text-sm font-black px-3 py-1.5 rounded-xl shadow-lg">
@@ -133,8 +133,8 @@ export default function ProductPage() {
               </div>
             )}
             {product.stock <= 0 && (
-              <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                <span className="text-red-600 font-bold border-3 border-red-500 px-6 py-3 rounded-xl text-xl -rotate-6 bg-white">
+              <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 flex items-center justify-center">
+                <span className="text-red-600 dark:text-red-400 font-bold border-2 border-red-500 dark:border-red-400 px-6 py-3 rounded-xl text-xl -rotate-6 bg-white dark:bg-slate-900">
                   AGOTADO
                 </span>
               </div>
@@ -145,54 +145,54 @@ export default function ProductPage() {
           <div className="flex flex-col">
             <div className="mb-4">
               {product.laboratory && (
-                <span className="text-emerald-600 font-semibold tracking-wide text-base mb-2 block">
+                <span className="text-emerald-600 dark:text-emerald-400 font-semibold tracking-wide text-base mb-2 block">
                   {product.laboratory}
                 </span>
               )}
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight mb-3">
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 leading-tight mb-3">
                 {product.name}
               </h1>
 
-              {/* Badges - Larger for elderly */}
+              {/* Badges */}
               <div className="flex flex-wrap gap-2 mb-4">
                 {product.prescription_type === 'direct' && (
-                  <span className="inline-flex items-center px-4 py-2 rounded-2xl text-base font-semibold bg-green-100 text-green-800">
+                  <span className="inline-flex items-center px-4 py-2 rounded-2xl text-base font-semibold bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300">
                     Venta Directa
                   </span>
                 )}
                 {product.prescription_type === 'prescription' && (
-                  <span className="inline-flex items-center px-4 py-2 rounded-2xl text-base font-semibold bg-yellow-100 text-yellow-800">
+                  <span className="inline-flex items-center px-4 py-2 rounded-2xl text-base font-semibold bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300">
                     Receta Médica
                   </span>
                 )}
                 {product.prescription_type === 'retained' && (
-                  <span className="inline-flex items-center px-4 py-2 rounded-2xl text-base font-semibold bg-red-100 text-red-800">
+                  <span className="inline-flex items-center px-4 py-2 rounded-2xl text-base font-semibold bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300">
                     Receta Retenida
                   </span>
                 )}
                 {product.description && /Bioequivalente:\s*S[ií]/i.test(product.description) && (
-                  <span className="inline-flex items-center px-4 py-2 rounded-2xl text-base font-semibold bg-blue-100 text-blue-800">
+                  <span className="inline-flex items-center px-4 py-2 rounded-2xl text-base font-semibold bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300">
                     Bioequivalente
                   </span>
                 )}
                 {product.category_name && product.category_slug && (
                   <Link
                     href={`/?category=${product.category_slug}`}
-                    className="inline-flex items-center px-4 py-2 rounded-2xl text-base font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                    className="inline-flex items-center px-4 py-2 rounded-2xl text-base font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
                   >
                     {product.category_name}
                   </Link>
                 )}
               </div>
 
-              {/* Price - Extra large */}
+              {/* Price */}
               {product.discount_percent ? (
                 <div>
-                  <span className="text-xl text-slate-400 line-through block mb-1">
+                  <span className="text-xl text-slate-400 dark:text-slate-500 line-through block mb-1">
                     {formatPrice(parseFloat(product.price))}
                   </span>
                   <div className="flex items-center gap-3">
-                    <span className="text-4xl font-black text-emerald-700">
+                    <span className="text-4xl font-black text-emerald-700 dark:text-emerald-400">
                       {formatPrice(discountedPrice(parseFloat(product.price), product.discount_percent))}
                     </span>
                     <span className="bg-red-500 text-white text-sm font-black px-3 py-1.5 rounded-xl">
@@ -201,33 +201,33 @@ export default function ProductPage() {
                   </div>
                 </div>
               ) : (
-                <span className="text-4xl font-black text-emerald-700 block">
+                <span className="text-4xl font-black text-emerald-700 dark:text-emerald-400 block">
                   {formatPrice(parseFloat(product.price))}
                 </span>
               )}
             </div>
 
-            {/* Product info table - Larger text */}
+            {/* Product info table */}
             {(product.active_ingredient || product.presentation || product.therapeutic_action) && (
-              <div className="mb-5 rounded-2xl border-2 border-slate-200 overflow-hidden">
+              <div className="mb-5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 overflow-hidden">
                 <table className="w-full">
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                     {product.active_ingredient && (
                       <tr>
-                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 font-semibold text-slate-500 bg-slate-50 w-28 sm:w-40 text-sm sm:text-base align-top">Principio Activo</td>
-                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 text-slate-900 text-sm sm:text-base">{product.active_ingredient}</td>
+                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 font-semibold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 w-28 sm:w-40 text-sm sm:text-base align-top">Principio Activo</td>
+                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800/50 text-sm sm:text-base">{product.active_ingredient}</td>
                       </tr>
                     )}
                     {product.presentation && (
                       <tr>
-                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 font-semibold text-slate-500 bg-slate-50 w-28 sm:w-40 text-sm sm:text-base align-top">Presentación</td>
-                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 text-slate-900 text-sm sm:text-base">{product.presentation}</td>
+                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 font-semibold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 w-28 sm:w-40 text-sm sm:text-base align-top">Presentación</td>
+                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800/50 text-sm sm:text-base">{product.presentation}</td>
                       </tr>
                     )}
                     {product.therapeutic_action && (
                       <tr>
-                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 font-semibold text-slate-500 bg-slate-50 w-28 sm:w-40 text-sm sm:text-base align-top">Acción Terapéutica</td>
-                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 text-slate-900 text-sm sm:text-base">{product.therapeutic_action}</td>
+                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 font-semibold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 w-28 sm:w-40 text-sm sm:text-base align-top">Acción Terapéutica</td>
+                        <td className="px-3 py-2.5 sm:px-4 sm:py-3 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800/50 text-sm sm:text-base">{product.therapeutic_action}</td>
                       </tr>
                     )}
                   </tbody>
@@ -235,30 +235,30 @@ export default function ProductPage() {
               </div>
             )}
 
-            {/* Shipping & security info - Larger text */}
-            <div className="border-t-2 border-b-2 border-slate-100 py-5 mb-6 space-y-4">
+            {/* Shipping & security info */}
+            <div className="border-t-2 border-b-2 border-slate-100 dark:border-slate-700 py-5 mb-6 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-emerald-50 rounded-xl text-emerald-600">
+                <div className="p-2.5 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl text-emerald-600 dark:text-emerald-400">
                   <Truck className="w-6 h-6" />
                 </div>
-                <span className="text-slate-700 font-medium">Envío disponible a todo Chile</span>
+                <span className="text-slate-700 dark:text-slate-300 font-medium">Envío disponible a todo Chile</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600">
+                <div className="p-2.5 bg-blue-50 dark:bg-blue-900/30 rounded-xl text-blue-600 dark:text-blue-400">
                   <ShieldCheck className="w-6 h-6" />
                 </div>
-                <span className="text-slate-700 font-medium">Compra segura y garantía de calidad</span>
+                <span className="text-slate-700 dark:text-slate-300 font-medium">Compra segura y garantía de calidad</span>
               </div>
             </div>
 
             {(product.prescription_type === 'retained' || product.prescription_type === 'prescription') ? (
               /* Prescription products: contact via WhatsApp */
               <div className="space-y-4">
-                <div className="rounded-2xl border-2 border-amber-200 bg-amber-50 p-4">
-                  <p className="font-bold text-amber-800 text-lg mb-1">
+                <div className="rounded-2xl border-2 border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-4">
+                  <p className="font-bold text-amber-800 dark:text-amber-300 text-lg mb-1">
                     {product.prescription_type === 'retained' ? 'Requiere receta retenida' : 'Requiere receta médica'}
                   </p>
-                  <p className="text-amber-700 text-base">
+                  <p className="text-amber-700 dark:text-amber-400 text-base">
                     Este producto solo puede adquirirse presentando receta al momento de retiro. Contáctenos por WhatsApp para coordinar la compra y confirmar disponibilidad.
                   </p>
                 </div>
@@ -274,36 +274,36 @@ export default function ProductPage() {
               </div>
             ) : product.stock > 0 ? (
               <div className="space-y-5">
-                {/* Quantity selector - Large buttons */}
+                {/* Quantity selector */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
-                    <span className="text-slate-700 font-semibold text-lg">Cantidad:</span>
-                    <div className="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden" role="group" aria-label="Selector de cantidad">
+                    <span className="text-slate-700 dark:text-slate-300 font-semibold text-lg">Cantidad:</span>
+                    <div className="flex items-center border-2 border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800" role="group" aria-label="Selector de cantidad">
                       <button
                         onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                        className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center hover:bg-slate-50 transition-colors disabled:opacity-30"
+                        className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-30"
                         disabled={quantity <= 1}
                         aria-label="Reducir cantidad"
                       >
-                        <Minus className="w-5 h-5 text-slate-600" />
+                        <Minus className="w-5 h-5 text-slate-600 dark:text-slate-300" />
                       </button>
-                      <span className="w-12 sm:w-16 text-center font-bold text-xl text-slate-900" aria-live="polite">{quantity}</span>
+                      <span className="w-12 sm:w-16 text-center font-bold text-xl text-slate-900 dark:text-slate-100" aria-live="polite">{quantity}</span>
                       <button
                         onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
-                        className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center hover:bg-slate-50 transition-colors disabled:opacity-30"
+                        className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-30"
                         disabled={quantity >= product.stock}
                         aria-label="Aumentar cantidad"
                       >
-                        <Plus className="w-5 h-5 text-slate-600" />
+                        <Plus className="w-5 h-5 text-slate-600 dark:text-slate-300" />
                       </button>
                     </div>
                   </div>
-                  <span className={`text-sm sm:text-base font-semibold ${product.stock <= 10 ? 'text-orange-600' : 'text-slate-400'}`}>
+                  <span className={`text-sm sm:text-base font-semibold ${product.stock <= 10 ? 'text-orange-600 dark:text-orange-400' : 'text-slate-400 dark:text-slate-500'}`}>
                     {product.stock <= 10 ? `Quedan ${product.stock}` : `${product.stock} disponibles`}
                   </span>
                 </div>
 
-                {/* Add to cart - Extra large button */}
+                {/* Add to cart */}
                 <button
                   onClick={handleAddToCart}
                   disabled={isAdding || added}
@@ -329,7 +329,7 @@ export default function ProductPage() {
                 </button>
               </div>
             ) : (
-              <div className="w-full py-5 px-8 rounded-2xl bg-slate-100 text-slate-400 text-center font-bold text-xl min-h-[64px] flex items-center justify-center">
+              <div className="w-full py-5 px-8 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-center font-bold text-xl min-h-[64px] flex items-center justify-center">
                 No disponible
               </div>
             )}
@@ -339,8 +339,8 @@ export default function ProductPage() {
         {/* Product Description */}
         {product.description && (
           <div className="mt-8 sm:mt-10 card p-5 sm:p-6">
-            <h2 className="text-xl font-bold text-slate-900 mb-3">Descripción</h2>
-            <div className="text-slate-600 leading-relaxed whitespace-pre-line">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-3">Descripción</h2>
+            <div className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
               {product.description}
             </div>
           </div>
@@ -349,15 +349,15 @@ export default function ProductPage() {
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <div className="mt-8 sm:mt-12">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Productos relacionados</h2>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Productos relacionados</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {relatedProducts.map((rp) => (
                 <Link
                   key={rp.id}
                   href={`/producto/${rp.slug}`}
-                  className="bg-slate-50 rounded-2xl border-2 border-slate-100 overflow-hidden hover:border-emerald-200 hover:shadow-md transition-all flex flex-col"
+                  className="bg-slate-50 dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden hover:border-emerald-200 dark:hover:border-emerald-600 hover:shadow-md transition-all flex flex-col"
                 >
-                  <div className="aspect-square relative bg-white overflow-hidden">
+                  <div className="aspect-square relative bg-white dark:bg-slate-700 overflow-hidden">
                     {rp.image_url ? (
                       <Image
                         src={rp.image_url}
@@ -367,7 +367,7 @@ export default function ProductPage() {
                         className="object-contain p-2"
                       />
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center text-slate-300">
+                      <div className="absolute inset-0 flex items-center justify-center text-slate-300 dark:text-slate-600">
                         <Package className="w-10 h-10" />
                       </div>
                     )}
@@ -378,14 +378,14 @@ export default function ProductPage() {
                     )}
                   </div>
                   <div className="p-2.5">
-                    <h3 className="font-bold text-slate-800 text-sm leading-snug line-clamp-2 min-h-[2.5rem]">{rp.name}</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm leading-snug line-clamp-2 min-h-[2.5rem]">{rp.name}</h3>
                     {rp.discount_percent ? (
                       <div className="mt-1">
-                        <span className="text-xs text-slate-400 line-through">{formatPrice(rp.price)}</span>
-                        <span className="text-base font-black text-emerald-700 block">{formatPrice(discountedPrice(Number(rp.price), rp.discount_percent))}</span>
+                        <span className="text-xs text-slate-400 dark:text-slate-500 line-through">{formatPrice(rp.price)}</span>
+                        <span className="text-base font-black text-emerald-700 dark:text-emerald-400 block">{formatPrice(discountedPrice(Number(rp.price), rp.discount_percent))}</span>
                       </div>
                     ) : (
-                      <span className="text-base font-black text-emerald-700 block mt-1">{formatPrice(rp.price)}</span>
+                      <span className="text-base font-black text-emerald-700 dark:text-emerald-400 block mt-1">{formatPrice(rp.price)}</span>
                     )}
                   </div>
                 </Link>
