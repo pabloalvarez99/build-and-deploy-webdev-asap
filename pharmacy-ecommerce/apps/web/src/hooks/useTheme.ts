@@ -10,7 +10,7 @@ export function useTheme() {
 
   useEffect(() => {
     setMounted(true);
-    const stored = localStorage.getItem('admin-theme') as Theme | null;
+    const stored = localStorage.getItem('theme') as Theme | null;
     if (stored) {
       setTheme(stored);
       document.documentElement.classList.toggle('dark', stored === 'dark');
@@ -23,7 +23,7 @@ export function useTheme() {
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
-    localStorage.setItem('admin-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
 

@@ -3,10 +3,10 @@
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
-import { ShoppingCart, Package, LogOut, User as UserIcon, Loader2 } from 'lucide-react';
-// Package kept for admin menu item below
+import { ShoppingCart, Package, LogOut, User as UserIcon, Loader2, Sun, Moon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { useTheme } from '@/hooks/useTheme';
 import { formatPrice } from '@/lib/format';
 
 export function Navbar() {
@@ -15,6 +15,7 @@ export function Navbar() {
   const { user, logout, checkAuth, isLoading } = useAuthStore();
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { theme, toggleTheme, mounted } = useTheme();
 
   useEffect(() => {
     fetchCart();
@@ -43,7 +44,7 @@ export function Navbar() {
   const itemCount = cart?.item_count || 0;
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b-2 border-slate-100 shadow-sm" role="navigation" aria-label="Principal">
+    <nav className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b-2 border-slate-100 dark:border-slate-700 shadow-sm" role="navigation" aria-label="Principal">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-[72px]">
           {/* Logo */}
@@ -69,7 +70,7 @@ export function Navbar() {
           </Link>
 
           {/* Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {/* Auth */}
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
