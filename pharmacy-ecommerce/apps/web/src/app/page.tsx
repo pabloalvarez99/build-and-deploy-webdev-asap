@@ -375,7 +375,7 @@ function HomeContent() {
                 <button
                   key={cat.id}
                   onClick={() => handleCategoryChange(cat.slug)}
-                  className="flex items-center gap-2.5 justify-center text-center px-3 py-3.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-600 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-300 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all min-h-[56px] leading-tight"
+                  className="flex items-center gap-2 sm:gap-2.5 justify-center text-center px-2 sm:px-3 py-3 sm:py-3.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-600 rounded-2xl text-sm sm:text-base font-semibold text-slate-700 dark:text-slate-300 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all min-h-[52px] sm:min-h-[56px] leading-tight"
                 >
                   <span className="text-emerald-600 flex-shrink-0">{categoryIcons[cat.slug] || <Package className="w-5 h-5" />}</span>
                   <span>{cat.name}</span>

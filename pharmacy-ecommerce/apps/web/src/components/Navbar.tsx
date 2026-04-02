@@ -48,20 +48,16 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-[72px]">
           {/* Logo */}
-          <Link href="/" className="flex items-center" aria-label="Tu Farmacia">
-            {/* CSS div so the teal background auto-sizes to content (no empty space on any font/device) */}
-            <div className="flex items-center gap-2 bg-[#0a8c8c] px-3 py-2 rounded-xl">
-              {/* Circle + cross icon */}
-              <svg width="34" height="34" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <Link href="/" className="flex items-center flex-shrink-0" aria-label="Tu Farmacia">
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0a8c8c] px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl">
+              {/* Circle + cross icon — smaller on xs */}
+              <svg className="w-7 h-7 sm:w-[34px] sm:h-[34px] flex-shrink-0" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <circle cx="18" cy="18" r="16" fill="none" stroke="white" strokeWidth="2.5" />
-                {/* Vertical bar 19×5 centered at (18,18) */}
                 <rect x="15.5" y="8.5" width="5" height="19" rx="1.5" fill="white" />
-                {/* Horizontal bar 19×5 centered at (18,18) */}
                 <rect x="8.5" y="15.5" width="19" height="5" rx="1.5" fill="white" />
               </svg>
-              {/* Brand text — native CSS font, width adapts to actual rendered text */}
               <span
-                className="text-white font-black text-lg tracking-wide leading-none whitespace-nowrap"
+                className="text-white font-black text-sm sm:text-lg tracking-wide leading-none whitespace-nowrap"
                 style={{ fontFamily: "'Arial Black', Arial, sans-serif" }}
               >
                 TU FARMACIA
@@ -70,7 +66,7 @@ export function Navbar() {
           </Link>
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
 
             {/* Theme toggle */}
             {mounted && (
@@ -160,17 +156,17 @@ export function Navbar() {
             <Link
               href="/carrito"
               aria-label={`Carrito${itemCount > 0 ? `, ${itemCount} producto${itemCount > 1 ? 's' : ''}` : ''}`}
-              className={`relative flex items-center gap-2 px-4 py-3 rounded-2xl transition-all font-bold min-h-[56px] ${
+              className={`relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl transition-all font-bold min-h-[48px] sm:min-h-[56px] ${
                 pathname === '/carrito'
                   ? 'bg-emerald-600 text-white'
                   : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
               }`}
             >
-              <ShoppingCart className="w-5 h-5" />
+              <ShoppingCart className="w-5 h-5 flex-shrink-0" />
               {itemCount > 0 ? (
-                <span className="text-base">{itemCount}</span>
+                <span className="text-sm sm:text-base">{itemCount}</span>
               ) : (
-                <span className="text-base hidden sm:inline">Carrito</span>
+                <span className="text-sm sm:text-base hidden sm:inline">Carrito</span>
               )}
               {itemCount > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white dark:border-slate-900">

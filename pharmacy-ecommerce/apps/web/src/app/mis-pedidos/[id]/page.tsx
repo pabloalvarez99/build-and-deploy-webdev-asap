@@ -9,13 +9,13 @@ import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck, MapPin, Store, 
 import { formatPrice } from '@/lib/format';
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  pending: { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800', icon: <Clock className="w-5 h-5" /> },
-  reserved: { label: 'Reservado', color: 'bg-amber-100 text-amber-800', icon: <Store className="w-5 h-5" /> },
-  paid: { label: 'Pagado', color: 'bg-green-100 text-green-800', icon: <CheckCircle className="w-5 h-5" /> },
-  processing: { label: 'Procesando', color: 'bg-blue-100 text-blue-800', icon: <Package className="w-5 h-5" /> },
-  shipped: { label: 'Enviado', color: 'bg-purple-100 text-purple-800', icon: <Truck className="w-5 h-5" /> },
-  delivered: { label: 'Entregado', color: 'bg-green-100 text-green-800', icon: <CheckCircle className="w-5 h-5" /> },
-  cancelled: { label: 'Cancelado', color: 'bg-red-100 text-red-800', icon: <XCircle className="w-5 h-5" /> },
+  pending: { label: 'Pendiente', color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300', icon: <Clock className="w-5 h-5" /> },
+  reserved: { label: 'Reservado', color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300', icon: <Store className="w-5 h-5" /> },
+  paid: { label: 'Pagado', color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300', icon: <CheckCircle className="w-5 h-5" /> },
+  processing: { label: 'Procesando', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300', icon: <Package className="w-5 h-5" /> },
+  shipped: { label: 'Enviado', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300', icon: <Truck className="w-5 h-5" /> },
+  delivered: { label: 'Entregado', color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300', icon: <CheckCircle className="w-5 h-5" /> },
+  cancelled: { label: 'Cancelado', color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300', icon: <XCircle className="w-5 h-5" /> },
 };
 
 // Delivery flow
@@ -172,9 +172,9 @@ export default function OrderDetailPage() {
   let status = statusConfig[order.status] || statusConfig.pending;
 
   if (isStorePickup && order.status === 'reserved') {
-    status = { label: 'Pendiente aprobación', color: 'bg-amber-100 text-amber-800', icon: <Clock className="w-5 h-5" /> };
+    status = { label: 'Pendiente aprobación', color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300', icon: <Clock className="w-5 h-5" /> };
   } else if (isStorePickup && order.status === 'processing') {
-    status = { label: 'Aprobado - Listo para retiro', color: 'bg-emerald-100 text-emerald-800', icon: <CheckCircle className="w-5 h-5" /> };
+    status = { label: 'Listo para retiro', color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300', icon: <CheckCircle className="w-5 h-5" /> };
   }
 
   const total = parseFloat(order.total);
@@ -196,14 +196,14 @@ export default function OrderDetailPage() {
         Volver a mis pedidos
       </Link>
 
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
             Pedido #{order.id.slice(0, 8)}
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">{date}</p>
+          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1">{date}</p>
         </div>
-        <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${status.color}`}>
+        <span className={`inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium flex-shrink-0 whitespace-nowrap ${status.color}`}>
           {status.icon}
           {status.label}
         </span>
@@ -223,14 +223,14 @@ export default function OrderDetailPage() {
                 const subtotal = price * item.quantity;
 
                 return (
-                  <div key={item.id} className="flex justify-between items-center py-3 border-b border-slate-100 dark:border-slate-700 last:border-0">
-                    <div>
-                      <p className="font-medium text-slate-900 dark:text-slate-100">{item.product_name}</p>
-                      <p className="text-base text-slate-500 dark:text-slate-400">
-                        {formatPrice(price)} x {item.quantity}
+                  <div key={item.id} className="flex justify-between items-start gap-3 py-3 border-b border-slate-100 dark:border-slate-700 last:border-0">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-slate-900 dark:text-slate-100 leading-snug">{item.product_name}</p>
+                      <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-0.5">
+                        {formatPrice(price)} × {item.quantity}
                       </p>
                     </div>
-                    <p className="font-semibold text-slate-900 dark:text-slate-100">
+                    <p className="font-semibold text-slate-900 dark:text-slate-100 flex-shrink-0">
                       {formatPrice(subtotal)}
                     </p>
                   </div>
@@ -261,7 +261,7 @@ export default function OrderDetailPage() {
               </div>
               <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800 rounded-2xl p-4 text-center">
                 <p className="text-amber-700 dark:text-amber-400 font-medium mb-2">Código de retiro</p>
-                <p className="text-4xl font-mono font-black tracking-[0.3em] text-amber-900 dark:text-amber-300">{order.pickup_code}</p>
+                <p className="text-3xl sm:text-4xl font-mono font-black tracking-widest sm:tracking-[0.3em] text-amber-900 dark:text-amber-300">{order.pickup_code}</p>
               </div>
               {order.status === 'reserved' && (
                 <p className="text-amber-700 dark:text-amber-400 text-center mt-3">Tu reserva está pendiente de aprobación por la farmacia.</p>
@@ -317,7 +317,7 @@ export default function OrderDetailPage() {
 
             <div className="flex justify-between text-xl font-bold text-slate-900 dark:text-slate-100 mb-6">
               <span>Total</span>
-              <span className="text-emerald-600">{formatPrice(total)}</span>
+              <span className="text-emerald-600 dark:text-emerald-400">{formatPrice(total)}</span>
             </div>
 
             {/* WhatsApp Support */}

@@ -65,8 +65,8 @@ function ReservationContent() {
           <p className="font-semibold text-emerald-700 dark:text-emerald-400 mb-2 text-lg">
             Tu código de retiro
           </p>
-          <div className="flex items-center justify-center gap-3">
-            <span className="text-5xl font-mono font-black tracking-[0.3em] text-emerald-800 dark:text-emerald-300">
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <span className="text-3xl sm:text-5xl font-mono font-black tracking-widest sm:tracking-[0.3em] text-emerald-800 dark:text-emerald-300">
               {code}
             </span>
             <button
