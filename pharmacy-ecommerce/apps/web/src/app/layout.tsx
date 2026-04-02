@@ -119,8 +119,7 @@ export default function RootLayout({
               </div>
               <div className="text-center sm:text-right">
                 <p className="font-semibold text-slate-700 dark:text-slate-300 mb-2">Horario de atención</p>
-                <p className="text-slate-500 dark:text-slate-400">Lunes a Viernes: 9:00 - 19:00</p>
-                <p className="text-slate-500 dark:text-slate-400">Sábado: 10:00 - 14:00</p>
+                <p className="text-slate-500 dark:text-slate-400">Lunes a Domingo: 9:00 - 20:00</p>
               </div>
             </div>
             <div className="border-t border-slate-200 dark:border-slate-700 mt-8 pt-6 text-center">

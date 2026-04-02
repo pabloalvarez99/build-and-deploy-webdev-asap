@@ -71,6 +71,21 @@ export function Navbar() {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+
+            {/* Theme toggle */}
+            {mounted && (
+              <button
+                onClick={toggleTheme}
+                aria-label={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                {theme === 'dark'
+                  ? <Sun className="w-5 h-5" />
+                  : <Moon className="w-5 h-5" />
+                }
+              </button>
+            )}
+
             {/* Auth */}
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
@@ -78,12 +93,12 @@ export function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="flex items-center gap-2 p-2.5 rounded-xl hover:bg-slate-50 transition-colors min-h-[56px] min-w-[56px] justify-center"
+                  className="flex items-center gap-2 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[56px] min-w-[56px] justify-center"
                   aria-expanded={isMenuOpen}
                   aria-haspopup="true"
                   aria-label="Menú de usuario"
                 >
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold">
                     {user.name ? user.name[0].toUpperCase() : 'U'}
                   </div>
                 </button>
@@ -91,17 +106,17 @@ export function Navbar() {
                 {isMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
-                    <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-1rem)] bg-white rounded-2xl shadow-2xl border-2 border-slate-100 py-2 z-50">
-                      <div className="px-4 py-3 border-b border-slate-100">
-                        <p className="font-bold text-slate-900">{user.name}</p>
-                        <p className="text-base text-slate-500">{user.email}</p>
+                    <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-1rem)] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border-2 border-slate-100 dark:border-slate-700 py-2 z-50">
+                      <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+                        <p className="font-bold text-slate-900 dark:text-slate-100">{user.name}</p>
+                        <p className="text-base text-slate-500 dark:text-slate-400">{user.email}</p>
                       </div>
 
                       {user.role === 'admin' && (
                         <Link
                           href="/admin/productos"
                           onClick={() => setIsMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-3.5 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors min-h-[56px]"
+                          className="flex items-center gap-3 px-4 py-3.5 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors min-h-[56px]"
                         >
                           <Package className="w-5 h-5" />
                           Panel Admin
@@ -111,16 +126,16 @@ export function Navbar() {
                       <Link
                         href="/mis-pedidos"
                         onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3.5 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors min-h-[56px]"
+                        className="flex items-center gap-3 px-4 py-3.5 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors min-h-[56px]"
                       >
                         <UserIcon className="w-5 h-5" />
                         Mis Pedidos
                       </Link>
 
-                      <div className="border-t border-slate-100 mt-1 pt-1">
+                      <div className="border-t border-slate-100 dark:border-slate-700 mt-1 pt-1">
                         <button
                           onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-3.5 text-red-600 hover:bg-red-50 text-left transition-colors min-h-[56px]"
+                          className="w-full flex items-center gap-3 px-4 py-3.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-left transition-colors min-h-[56px]"
                         >
                           <LogOut className="w-5 h-5" />
                           Cerrar Sesión
@@ -133,9 +148,9 @@ export function Navbar() {
             ) : (
               <Link
                 href="/auth/login"
-                className="flex items-center gap-2 p-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors min-h-[56px] min-w-[56px] justify-center"
+                className="flex items-center gap-2 p-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[56px] min-w-[56px] justify-center"
               >
-                <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center">
                   <UserIcon className="w-5 h-5" />
                 </div>
               </Link>
@@ -148,7 +163,7 @@ export function Navbar() {
               className={`relative flex items-center gap-2 px-4 py-3 rounded-2xl transition-all font-bold min-h-[56px] ${
                 pathname === '/carrito'
                   ? 'bg-emerald-600 text-white'
-                  : 'bg-emerald-50 text-emerald-700 border-2 border-emerald-200 hover:bg-emerald-100'
+                  : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
               }`}
             >
               <ShoppingCart className="w-5 h-5" />
@@ -158,7 +173,7 @@ export function Navbar() {
                 <span className="text-base hidden sm:inline">Carrito</span>
               )}
               {itemCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white dark:border-slate-900">
                   {itemCount}
                 </span>
               )}

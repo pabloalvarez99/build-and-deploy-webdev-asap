@@ -63,7 +63,7 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-50" />}>
+    <Suspense fallback={<div className="min-h-screen bg-slate-50 dark:bg-slate-800" />}>
       <HomeContent />
     </Suspense>
   );
@@ -226,7 +226,7 @@ function HomeContent() {
   const visibleCategories = showAllCategories ? sortedCategories : sortedCategories.slice(0, 6);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-800">
       {/* Toast */}
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
 
@@ -243,12 +243,12 @@ function HomeContent() {
       )}
 
       {/* Search Bar - Siempre visible, grande */}
-      <div className="bg-white px-4 py-3 border-b border-slate-100">
+      <div className="bg-white dark:bg-slate-900 px-4 py-3 border-b border-slate-100 dark:border-slate-700">
         <div className="max-w-7xl mx-auto">
           <div className="relative" role="search">
             <label htmlFor="search-products" className="sr-only">Buscar medicamentos</label>
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-slate-400" aria-hidden="true" />
+              <Search className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden="true" />
             </div>
             <input
               ref={searchInputRef}
@@ -257,13 +257,13 @@ function HomeContent() {
               placeholder="Buscar medicamentos..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="block w-full pl-12 pr-12 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-2xl text-lg focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-400 transition-all"
+              className="block w-full pl-12 pr-12 py-3.5 bg-slate-50 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 rounded-2xl text-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-400 transition-all"
               autoComplete="off"
             />
             {searchInput && (
               <button
                 onClick={() => { setSearchInput(''); setSearchTerm(''); searchInputRef.current?.focus(); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors"
                 aria-label="Limpiar búsqueda"
               >
                 <X className="w-5 h-5" />
@@ -279,8 +279,8 @@ function HomeContent() {
         {discountedProducts.length > 0 && !selectedCategory && !searchTerm && !showDiscountOnly && (
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xl font-bold text-slate-800">🔥 Ofertas</h2>
-              <Link href="/?discount=true" className="text-emerald-600 font-semibold text-base hover:underline">
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">🔥 Ofertas</h2>
+              <Link href="/?discount=true" className="text-emerald-600 dark:text-emerald-400 font-semibold text-base hover:underline">
                 Ver todas →
               </Link>
             </div>
@@ -290,10 +290,10 @@ function HomeContent() {
                 return (
                   <div
                     key={product.id}
-                    className="flex-shrink-0 w-36 sm:w-44 bg-white rounded-2xl border-2 border-red-200 shadow-md overflow-hidden flex flex-col"
+                    className="flex-shrink-0 w-36 sm:w-44 bg-white dark:bg-slate-900 rounded-2xl border-2 border-red-200 dark:border-red-800 shadow-md overflow-hidden flex flex-col"
                   >
                     <Link href={`/producto/${product.slug}`} className="block relative">
-                      <div className="aspect-square bg-slate-50 relative overflow-hidden">
+                      <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                         {product.image_url && !brokenImages.has(product.id) ? (
                           <Image
                             src={product.image_url}
@@ -315,13 +315,13 @@ function HomeContent() {
                     </Link>
                     <div className="p-2.5 flex flex-col flex-1">
                       <Link href={`/producto/${product.slug}`}>
-                        <h3 className="font-bold text-slate-800 text-sm leading-snug line-clamp-2 mb-1 min-h-[2.5rem]">
+                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-snug line-clamp-2 mb-1 min-h-[2.5rem]">
                           {product.name}
                         </h3>
                       </Link>
                       <div className="mt-auto">
-                        <span className="text-xs text-slate-400 line-through block">{formatPrice(product.price)}</span>
-                        <span className="text-base font-black text-emerald-700 block mb-2">{formatPrice(finalPrice)}</span>
+                        <span className="text-xs text-slate-400 dark:text-slate-500 line-through block">{formatPrice(product.price)}</span>
+                        <span className="text-base font-black text-emerald-700 dark:text-emerald-400 block mb-2">{formatPrice(finalPrice)}</span>
                         <button
                           onClick={() => handleAddToCart(product)}
                           disabled={addingId === product.id}
@@ -348,7 +348,7 @@ function HomeContent() {
             {selectedCategory && selectedCategoryName && (
               <button
                 onClick={() => handleCategoryChange('')}
-                className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-100 text-emerald-800 rounded-xl font-semibold border-2 border-emerald-300 text-base"
+                className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 rounded-xl font-semibold border-2 border-emerald-300 dark:border-emerald-700 text-base"
               >
                 {selectedCategoryName}
                 <X className="w-5 h-5" />
@@ -357,7 +357,7 @@ function HomeContent() {
             {showDiscountOnly && (
               <button
                 onClick={() => { setShowDiscountOnly(false); setAllProducts([]); window.history.replaceState({}, '', '/'); }}
-                className="inline-flex items-center gap-2 px-5 py-3 bg-red-100 text-red-800 rounded-xl font-semibold border-2 border-red-300 text-base"
+                className="inline-flex items-center gap-2 px-5 py-3 bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400 rounded-xl font-semibold border-2 border-red-300 dark:border-red-800 text-base"
               >
                 Ofertas
                 <X className="w-5 h-5" />
@@ -369,13 +369,13 @@ function HomeContent() {
         {/* Categories Grid - Solo cuando NO hay categoría seleccionada y NO hay búsqueda */}
         {!selectedCategory && !searchTerm && (
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-slate-800 mb-3">Categorías</h2>
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-3">Categorías</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
               {visibleCategories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => handleCategoryChange(cat.slug)}
-                  className="flex items-center gap-2.5 justify-center text-center px-3 py-3.5 bg-white border-2 border-slate-200 rounded-2xl text-base font-semibold text-slate-700 hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700 transition-all min-h-[56px] leading-tight"
+                  className="flex items-center gap-2.5 justify-center text-center px-3 py-3.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-600 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-300 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all min-h-[56px] leading-tight"
                 >
                   <span className="text-emerald-600 flex-shrink-0">{categoryIcons[cat.slug] || <Package className="w-5 h-5" />}</span>
                   <span>{cat.name}</span>
@@ -385,7 +385,7 @@ function HomeContent() {
             {sortedCategories.length > 6 && (
               <button
                 onClick={() => setShowAllCategories(!showAllCategories)}
-                className="mt-3 flex items-center gap-1.5 text-emerald-600 font-semibold text-base mx-auto min-h-[48px] px-3"
+                className="mt-3 flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-base mx-auto min-h-[48px] px-3"
               >
                 {showAllCategories ? 'Ver menos' : `Ver todas (${sortedCategories.length})`}
                 <ChevronDown className={`w-5 h-5 transition-transform ${showAllCategories ? 'rotate-180' : ''}`} />
@@ -397,10 +397,10 @@ function HomeContent() {
         {/* Product Count */}
         {products && (
           <div className="mb-4 flex items-center justify-between">
-            <p className="text-base text-slate-500 font-medium">
+            <p className="text-base text-slate-500 dark:text-slate-400 font-medium">
               {searchTerm ? `Resultados para "${searchTerm}"` : showDiscountOnly ? 'Ofertas' : selectedCategoryName || 'Todos los productos'}
             </p>
-            <span className="text-base text-slate-400">{products.total} productos</span>
+            <span className="text-base text-slate-400 dark:text-slate-500">{products.total} productos</span>
           </div>
         )}
 
@@ -408,11 +408,11 @@ function HomeContent() {
         {isLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border-2 border-slate-100 p-3 animate-pulse">
-                <div className="aspect-square bg-slate-100 rounded-xl mb-3" />
-                <div className="h-4 bg-slate-100 rounded w-3/4 mb-2" />
-                <div className="h-6 bg-slate-100 rounded w-1/2 mb-3" />
-                <div className="h-11 bg-slate-100 rounded-xl" />
+              <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-3 animate-pulse">
+                <div className="aspect-square bg-slate-100 dark:bg-slate-700 rounded-xl mb-3" />
+                <div className="h-4 bg-slate-100 dark:bg-slate-700 rounded w-3/4 mb-2" />
+                <div className="h-6 bg-slate-100 dark:bg-slate-700 rounded w-1/2 mb-3" />
+                <div className="h-11 bg-slate-100 dark:bg-slate-700 rounded-xl" />
               </div>
             ))}
           </div>
@@ -422,11 +422,11 @@ function HomeContent() {
               {allProducts.map((product) => (
                 <div
                   key={product.id}
-                  className="bg-white rounded-2xl border-2 border-slate-100 overflow-hidden flex flex-col hover:border-emerald-200 hover:shadow-md transition-all"
+                  className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-md transition-all"
                 >
                   {/* Image */}
                   <Link href={`/producto/${product.slug}`} className="block">
-                    <div className="aspect-square bg-slate-50 relative overflow-hidden">
+                    <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                       {product.image_url && !brokenImages.has(product.id) ? (
                         <Image
                           src={product.image_url}
@@ -447,8 +447,8 @@ function HomeContent() {
                         </div>
                       )}
                       {product.stock <= 0 && (
-                        <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                          <span className="text-red-600 font-bold text-base border-2 border-red-500 px-3 py-1.5 rounded-2xl -rotate-6 bg-white">
+                        <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 flex items-center justify-center">
+                          <span className="text-red-600 dark:text-red-400 font-bold text-base border-2 border-red-500 dark:border-red-700 px-3 py-1.5 rounded-2xl -rotate-6 bg-white dark:bg-slate-900">
                             AGOTADO
                           </span>
                         </div>
@@ -459,25 +459,25 @@ function HomeContent() {
                   {/* Info */}
                   <div className="p-3 flex flex-col flex-1">
                     <Link href={`/producto/${product.slug}`}>
-                      <h3 className="font-bold text-slate-800 text-base leading-snug line-clamp-2 mb-1 min-h-[2.5rem]">
+                      <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base leading-snug line-clamp-2 mb-1 min-h-[2.5rem]">
                         {product.name}
                       </h3>
                     </Link>
                     {product.laboratory && (
-                      <span className="text-sm text-slate-500 mb-2 truncate">{product.laboratory}</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400 mb-2 truncate">{product.laboratory}</span>
                     )}
 
                     {/* Price */}
                     <div className="mt-auto">
                       {product.discount_percent ? (
                         <>
-                          <span className="text-sm text-slate-400 line-through block">{formatPrice(product.price)}</span>
-                          <span className="text-xl font-black text-emerald-700 block mb-2">
+                          <span className="text-sm text-slate-400 dark:text-slate-500 line-through block">{formatPrice(product.price)}</span>
+                          <span className="text-xl font-black text-emerald-700 dark:text-emerald-400 block mb-2">
                             {formatPrice(discountedPrice(Number(product.price), product.discount_percent))}
                           </span>
                         </>
                       ) : (
-                        <span className="text-xl font-black text-emerald-700 block mb-2">
+                        <span className="text-xl font-black text-emerald-700 dark:text-emerald-400 block mb-2">
                           {formatPrice(product.price)}
                         </span>
                       )}
@@ -504,7 +504,7 @@ function HomeContent() {
                           )}
                         </button>
                       ) : (
-                        <div className="w-full py-3.5 rounded-2xl bg-slate-100 text-slate-400 text-center font-semibold text-base min-h-[56px] flex items-center justify-center">
+                        <div className="w-full py-3.5 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 text-center font-semibold text-base min-h-[56px] flex items-center justify-center">
                           Sin stock
                         </div>
                       )}
@@ -520,7 +520,7 @@ function HomeContent() {
                 <button
                   onClick={handleLoadMore}
                   disabled={isLoadingMore}
-                  className="w-full sm:w-auto px-8 py-4 bg-white border-2 border-emerald-300 text-emerald-700 rounded-2xl font-bold text-lg hover:bg-emerald-50 transition-all min-h-[56px] disabled:opacity-50"
+                  className="w-full sm:w-auto px-8 py-4 bg-white dark:bg-slate-900 border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 rounded-2xl font-bold text-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all min-h-[56px] disabled:opacity-50"
                 >
                   {isLoadingMore ? 'Cargando...' : 'Cargar más productos'}
                 </button>
@@ -528,13 +528,13 @@ function HomeContent() {
             )}
           </>
         ) : (
-          <div className="bg-white rounded-2xl border-2 border-slate-100 py-16 text-center">
-            <Search className="w-10 h-10 text-slate-300 mx-auto mb-4" />
-            <p className="text-xl text-slate-500 font-medium">No se encontraron productos</p>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-700 py-16 text-center">
+            <Search className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+            <p className="text-xl text-slate-500 dark:text-slate-400 font-medium">No se encontraron productos</p>
             {(selectedCategory || searchTerm) && (
               <button
                 onClick={() => { handleCategoryChange(''); setSearchInput(''); setSearchTerm(''); }}
-                className="mt-4 text-emerald-600 font-bold hover:underline text-lg"
+                className="mt-4 text-emerald-600 dark:text-emerald-400 font-bold hover:underline text-lg"
               >
                 Ver todos los productos
               </button>
@@ -545,7 +545,7 @@ function HomeContent() {
 
       {/* Mobile Bottom Cart Bar - Grande y siempre visible */}
       {cart && cart.item_count > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-slate-200 p-3 pb-safe z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t-2 border-slate-200 dark:border-slate-700 p-3 pb-safe z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
           <Link
             href="/carrito"
             className="flex items-center justify-between bg-emerald-600 text-white rounded-2xl px-5 py-4 shadow-lg"

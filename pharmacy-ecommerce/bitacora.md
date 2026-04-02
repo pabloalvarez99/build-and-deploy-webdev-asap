@@ -1,6 +1,30 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: PRODUCCIÓN (Marzo 2026)
+## Estado actual: PRODUCCIÓN (Abril 2026)
+
+---
+
+## COMPLETADO: Dark mode + recetas WhatsApp + horario (Abril 2, 2026)
+
+### Resumen
+- **Dark mode completo**: Todas las páginas (homepage, producto, carrito, checkout, mis-pedidos, auth, resultados Webpay) ahora tienen soporte completo dark mode con `dark:` variants de Tailwind.
+- **Toggle dark mode en Navbar**: Botón Sol/Luna en la barra superior. Persiste preferencia en localStorage (`theme`). Anti-flash script en `<head>` evita parpadeo al cargar.
+- **Checkout WhatsApp (Webpay)**: Al seleccionar pago Webpay y confirmar, aparece modal para contactar por WhatsApp antes de proceder al pago, evitando problemas de stock.
+- **Productos con receta → solo WhatsApp**: Productos `prescription_type === 'retained'` (Receta Retenida) o `prescription_type === 'prescription'` (Receta Médica) ya no muestran botón "Agregar al carrito". En su lugar muestran aviso amarillo explicativo + botón verde "Consultar por WhatsApp" con mensaje pre-llenado del producto.
+- **Horario de atención actualizado**: Footer ahora muestra "Lunes a Domingo: 9:00 - 20:00" (antes era L-V 9-19 + Sáb 10-14).
+
+### Archivos modificados
+- `src/app/layout.tsx` — horario footer, dark mode footer, anti-flash script
+- `src/app/page.tsx` — dark mode homepage
+- `src/app/producto/[slug]/page.tsx` — dark mode + lógica WhatsApp para recetas
+- `src/app/carrito/page.tsx` — dark mode
+- `src/app/checkout/page.tsx` — dark mode + modal WhatsApp pre-Webpay
+- `src/app/checkout/webpay/success/page.tsx` — dark mode
+- `src/app/mis-pedidos/page.tsx` — dark mode
+- `src/app/mis-pedidos/[id]/page.tsx` — dark mode
+- `src/components/Navbar.tsx` — toggle Sol/Luna
+- `src/hooks/useTheme.ts` — localStorage key `theme` (app-wide)
+- `tailwind.config.js` — `darkMode: 'class'`
 
 ---
 

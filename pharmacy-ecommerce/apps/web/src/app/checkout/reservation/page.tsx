@@ -48,30 +48,30 @@ function ReservationContent() {
     <div className="max-w-lg mx-auto px-4 sm:px-6 py-8 sm:py-12">
       {/* Success header */}
       <div className="text-center mb-6">
-        <div className="bg-emerald-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="w-10 h-10 text-emerald-600" />
+        <div className="bg-emerald-100 dark:bg-emerald-900/30 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <CheckCircle className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-1">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-1">
           Reserva creada
         </h1>
-        <p className="text-slate-500 text-lg">
+        <p className="text-slate-500 dark:text-slate-400 text-lg">
           Confirma por WhatsApp para que preparen tu pedido
         </p>
       </div>
 
       {/* Pickup Code - Extra large */}
       {code && (
-        <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-6 mb-5 text-center">
-          <p className="font-semibold text-emerald-700 mb-2 text-lg">
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800 rounded-2xl p-6 mb-5 text-center">
+          <p className="font-semibold text-emerald-700 dark:text-emerald-400 mb-2 text-lg">
             Tu código de retiro
           </p>
           <div className="flex items-center justify-center gap-3">
-            <span className="text-5xl font-mono font-black tracking-[0.3em] text-emerald-800">
+            <span className="text-5xl font-mono font-black tracking-[0.3em] text-emerald-800 dark:text-emerald-300">
               {code}
             </span>
             <button
               onClick={handleCopy}
-              className="p-3 rounded-xl hover:bg-emerald-100 transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center"
+              className="p-3 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center"
               title="Copiar código"
             >
               {copied ? (
@@ -85,37 +85,37 @@ function ReservationContent() {
       )}
 
       {/* Order info - compact */}
-      <div className="bg-white rounded-2xl border-2 border-slate-100 p-5 mb-5 space-y-3">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-5 mb-5 space-y-3">
         {total && (
           <div className="flex justify-between items-center">
-            <span className="text-slate-500">Total a pagar en tienda</span>
-            <span className="font-bold text-xl text-slate-900">{formatPrice(total)}</span>
+            <span className="text-slate-500 dark:text-slate-400">Total a pagar en tienda</span>
+            <span className="font-bold text-xl text-slate-900 dark:text-slate-100">{formatPrice(total)}</span>
           </div>
         )}
         {formattedExpires && (
           <div className="flex justify-between items-start gap-2">
-            <span className="text-slate-500 flex items-center gap-1.5">
+            <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
               <Clock className="w-4 h-4" /> Válida hasta
             </span>
-            <span className="text-slate-900 text-right">{formattedExpires}</span>
+            <span className="text-slate-900 dark:text-slate-100 text-right">{formattedExpires}</span>
           </div>
         )}
       </div>
 
       {/* Steps - simple and big */}
-      <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-5 mb-5">
-        <h3 className="font-bold text-blue-900 mb-3 text-lg">Pasos para retirar</h3>
-        <ol className="text-blue-800 space-y-3 text-base">
+      <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-2xl p-5 mb-5">
+        <h3 className="font-bold text-blue-900 dark:text-blue-200 mb-3 text-lg">Pasos para retirar</h3>
+        <ol className="text-blue-800 dark:text-blue-300 space-y-3 text-base">
           <li className="flex gap-3">
-            <span className="bg-blue-200 text-blue-900 w-7 h-7 rounded-full flex items-center justify-center font-bold flex-shrink-0">1</span>
+            <span className="bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-200 w-7 h-7 rounded-full flex items-center justify-center font-bold flex-shrink-0">1</span>
             <span>Confirma tu reserva por <strong>WhatsApp</strong> (botón abajo)</span>
           </li>
           <li className="flex gap-3">
-            <span className="bg-blue-200 text-blue-900 w-7 h-7 rounded-full flex items-center justify-center font-bold flex-shrink-0">2</span>
+            <span className="bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-200 w-7 h-7 rounded-full flex items-center justify-center font-bold flex-shrink-0">2</span>
             <span>La farmacia prepara tu pedido y te avisa</span>
           </li>
           <li className="flex gap-3">
-            <span className="bg-blue-200 text-blue-900 w-7 h-7 rounded-full flex items-center justify-center font-bold flex-shrink-0">3</span>
+            <span className="bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-200 w-7 h-7 rounded-full flex items-center justify-center font-bold flex-shrink-0">3</span>
             <span>Retira y paga en tienda (efectivo, tarjeta o transferencia)</span>
           </li>
         </ol>
@@ -144,7 +144,7 @@ function ReservationContent() {
 
 export default function ReservationPage() {
   return (
-    <Suspense fallback={<div className="text-center py-16 text-lg text-slate-400">Cargando...</div>}>
+    <Suspense fallback={<div className="text-center py-16 text-lg text-slate-400 dark:text-slate-500">Cargando...</div>}>
       <ReservationContent />
     </Suspense>
   );

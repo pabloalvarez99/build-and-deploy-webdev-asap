@@ -60,17 +60,17 @@ function OrderTimeline({ currentStatus, isPickup, isWebpay }: { currentStatus: s
 
   return (
     <div className="card p-5 sm:p-6 mb-6">
-      <h2 className="text-lg font-semibold text-slate-900 mb-6">Estado del pedido</h2>
+      <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-6">Estado del pedido</h2>
 
       {isCancelled ? (
-        <div className="flex items-center justify-center gap-3 py-4 bg-red-50 rounded-xl">
-          <XCircle className="w-6 h-6 text-red-500" />
-          <span className="text-lg font-medium text-red-700">Orden cancelada</span>
+        <div className="flex items-center justify-center gap-3 py-4 bg-red-50 dark:bg-red-900/20 rounded-xl">
+          <XCircle className="w-6 h-6 text-red-500 dark:text-red-400" />
+          <span className="text-lg font-medium text-red-700 dark:text-red-400">Orden cancelada</span>
         </div>
       ) : (
         <div className="relative">
           {/* Progress bar */}
-          <div className="absolute top-4 sm:top-5 left-0 right-0 h-1 bg-slate-200 rounded">
+          <div className="absolute top-4 sm:top-5 left-0 right-0 h-1 bg-slate-200 dark:bg-slate-700 rounded">
             <div
               className="absolute h-full bg-emerald-500 rounded transition-all duration-500"
               style={{ width: `${(currentIndex / (flow.length - 1)) * 100}%` }}
@@ -90,14 +90,14 @@ function OrderTimeline({ currentStatus, isPickup, isWebpay }: { currentStatus: s
                     className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center z-10 transition-all ${
                       isCompleted
                         ? 'bg-emerald-500 text-white'
-                        : 'bg-slate-200 text-slate-400'
-                    } ${isCurrent ? 'ring-4 ring-emerald-200' : ''}`}
+                        : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500'
+                    } ${isCurrent ? 'ring-4 ring-emerald-200 dark:ring-emerald-800' : ''}`}
                   >
                     {statusIcons[status]}
                   </div>
                   <span
                     className={`mt-2 text-[11px] sm:text-xs font-medium text-center ${
-                      isCompleted ? 'text-emerald-600' : 'text-slate-400'
+                      isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'
                     }`}
                   >
                     {label}
@@ -145,11 +145,11 @@ export default function OrderDetailPage() {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-slate-200 rounded w-32" />
+          <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-32" />
           <div className="card p-6 space-y-4">
-            <div className="h-6 bg-slate-200 rounded w-1/3" />
-            <div className="h-4 bg-slate-200 rounded w-1/4" />
-            <div className="h-24 bg-slate-200 rounded" />
+            <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
+            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/4" />
+            <div className="h-24 bg-slate-200 dark:bg-slate-700 rounded" />
           </div>
         </div>
       </div>
@@ -159,7 +159,7 @@ export default function OrderDetailPage() {
   if (!order) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
-        <h1 className="text-2xl font-bold text-slate-900 mb-4">Pedido no encontrado</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">Pedido no encontrado</h1>
         <Link href="/mis-pedidos" className="btn btn-primary">
           Volver a mis pedidos
         </Link>
@@ -190,7 +190,7 @@ export default function OrderDetailPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <Link
         href="/mis-pedidos"
-        className="inline-flex items-center text-slate-600 hover:text-emerald-600 mb-6 min-h-[48px]"
+        className="inline-flex items-center text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 mb-6 min-h-[48px]"
       >
         <ArrowLeft className="w-5 h-5 mr-2" />
         Volver a mis pedidos
@@ -198,10 +198,10 @@ export default function OrderDetailPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
             Pedido #{order.id.slice(0, 8)}
           </h1>
-          <p className="text-slate-500 mt-1">{date}</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">{date}</p>
         </div>
         <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${status.color}`}>
           {status.icon}
@@ -216,21 +216,21 @@ export default function OrderDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Order Items */}
           <div className="card p-5 sm:p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Productos</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">Productos</h2>
             <div className="space-y-4">
               {order.items.map((item) => {
                 const price = parseFloat(item.price_at_purchase);
                 const subtotal = price * item.quantity;
 
                 return (
-                  <div key={item.id} className="flex justify-between items-center py-3 border-b border-slate-100 last:border-0">
+                  <div key={item.id} className="flex justify-between items-center py-3 border-b border-slate-100 dark:border-slate-700 last:border-0">
                     <div>
-                      <p className="font-medium text-slate-900">{item.product_name}</p>
-                      <p className="text-base text-slate-500">
+                      <p className="font-medium text-slate-900 dark:text-slate-100">{item.product_name}</p>
+                      <p className="text-base text-slate-500 dark:text-slate-400">
                         {formatPrice(price)} x {item.quantity}
                       </p>
                     </div>
-                    <p className="font-semibold text-slate-900">
+                    <p className="font-semibold text-slate-900 dark:text-slate-100">
                       {formatPrice(subtotal)}
                     </p>
                   </div>
@@ -243,12 +243,12 @@ export default function OrderDetailPage() {
           {order.shipping_address && (
             <div className="card p-5 sm:p-6">
               <div className="flex items-center gap-3 mb-3">
-                <MapPin className="w-5 h-5 text-emerald-600" />
-                <h2 className="text-lg font-semibold text-slate-900">
+                <MapPin className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                   Dirección de envío
                 </h2>
               </div>
-              <p className="text-slate-600">{order.shipping_address}</p>
+              <p className="text-slate-600 dark:text-slate-400">{order.shipping_address}</p>
             </div>
           )}
 
@@ -256,21 +256,21 @@ export default function OrderDetailPage() {
           {isStorePickup && order.pickup_code && (
             <div className="card p-5 sm:p-6">
               <div className="flex items-center gap-3 mb-3">
-                <Store className="w-5 h-5 text-amber-600" />
-                <h2 className="text-lg font-semibold text-slate-900">Retiro en tienda</h2>
+                <Store className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Retiro en tienda</h2>
               </div>
-              <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 text-center">
-                <p className="text-amber-700 font-medium mb-2">Código de retiro</p>
-                <p className="text-4xl font-mono font-black tracking-[0.3em] text-amber-900">{order.pickup_code}</p>
+              <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800 rounded-2xl p-4 text-center">
+                <p className="text-amber-700 dark:text-amber-400 font-medium mb-2">Código de retiro</p>
+                <p className="text-4xl font-mono font-black tracking-[0.3em] text-amber-900 dark:text-amber-300">{order.pickup_code}</p>
               </div>
               {order.status === 'reserved' && (
-                <p className="text-amber-700 text-center mt-3">Tu reserva está pendiente de aprobación por la farmacia.</p>
+                <p className="text-amber-700 dark:text-amber-400 text-center mt-3">Tu reserva está pendiente de aprobación por la farmacia.</p>
               )}
               {order.status === 'processing' && (
-                <p className="text-emerald-700 text-center mt-3 font-medium">Reserva aprobada. Acércate a la farmacia para retirar y pagar.</p>
+                <p className="text-emerald-700 dark:text-emerald-400 text-center mt-3 font-medium">Reserva aprobada. Acércate a la farmacia para retirar y pagar.</p>
               )}
               {order.reservation_expires_at && order.status === 'reserved' && (
-                <p className="text-sm text-amber-600 text-center mt-2">
+                <p className="text-sm text-amber-600 dark:text-amber-400 text-center mt-2">
                   Válida hasta: {new Date(order.reservation_expires_at).toLocaleDateString('es-CL', {
                     weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'
                   })}
@@ -282,10 +282,10 @@ export default function OrderDetailPage() {
           {/* Notes */}
           {order.notes && (
             <div className="card p-5 sm:p-6">
-              <h2 className="text-lg font-semibold text-slate-900 mb-3">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3">
                 Notas
               </h2>
-              <p className="text-slate-600">{order.notes}</p>
+              <p className="text-slate-600 dark:text-slate-400">{order.notes}</p>
             </div>
           )}
         </div>
@@ -294,28 +294,28 @@ export default function OrderDetailPage() {
         <div className="lg:col-span-1">
           <div className="card p-5 sm:p-6 sticky top-24">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-900">Resumen</h2>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Resumen</h2>
               <button
                 onClick={() => window.print()}
-                className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center"
+                className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center"
                 title="Imprimir pedido"
               >
                 <Printer className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-3 border-b border-slate-100 pb-4 mb-4">
-              <div className="flex justify-between text-slate-600">
+            <div className="space-y-3 border-b border-slate-100 dark:border-slate-700 pb-4 mb-4">
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>Subtotal ({order.items.length} {order.items.length === 1 ? 'producto' : 'productos'})</span>
                 <span>{formatPrice(total)}</span>
               </div>
-              <div className="flex justify-between text-slate-600">
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>{isStorePickup ? 'Retiro en tienda' : isWebpay ? 'Pago Webpay' : 'Envío'}</span>
-                <span className="text-emerald-600">Gratis</span>
+                <span className="text-emerald-600 dark:text-emerald-400">Gratis</span>
               </div>
             </div>
 
-            <div className="flex justify-between text-xl font-bold text-slate-900 mb-6">
+            <div className="flex justify-between text-xl font-bold text-slate-900 dark:text-slate-100 mb-6">
               <span>Total</span>
               <span className="text-emerald-600">{formatPrice(total)}</span>
             </div>
@@ -325,7 +325,7 @@ export default function OrderDetailPage() {
               href={`https://wa.me/56993649604?text=${encodeURIComponent(`Hola, tengo una consulta sobre mi pedido #${order.id.slice(0, 8)} en Tu Farmacia`)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition-colors font-medium min-h-[48px]"
+              className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl border-2 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors font-medium min-h-[48px]"
             >
               <MessageCircle className="w-5 h-5" />
               ¿Consultas? Escríbenos

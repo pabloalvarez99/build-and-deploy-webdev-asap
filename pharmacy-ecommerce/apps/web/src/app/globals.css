@@ -65,6 +65,13 @@
   }
 }
 
+/* Smooth dark mode transitions */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
 /* Smooth scroll for the whole page */
 html {
   scroll-behavior: smooth;

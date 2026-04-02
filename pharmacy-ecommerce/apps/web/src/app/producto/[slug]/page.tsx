@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { productApi, ProductWithCategory, Product } from '@/lib/api';
 import { useCartStore } from '@/store/cart';
-import { ShoppingCart, Minus, Plus, Package, Truck, ShieldCheck, ArrowLeft, Check } from 'lucide-react';
+import { ShoppingCart, Minus, Plus, Package, Truck, ShieldCheck, ArrowLeft, Check, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatPrice, discountedPrice } from '@/lib/format';
@@ -71,15 +71,15 @@ export default function ProductPage() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-slate-100 rounded-xl w-32 mb-6" />
+          <div className="h-8 bg-slate-100 dark:bg-slate-700 rounded-xl w-32 mb-6" />
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="aspect-square bg-slate-100 rounded-2xl" />
+            <div className="aspect-square bg-slate-100 dark:bg-slate-700 rounded-2xl" />
             <div className="space-y-4">
-              <div className="h-5 bg-slate-100 rounded w-32" />
-              <div className="h-8 bg-slate-100 rounded w-3/4" />
-              <div className="h-10 bg-slate-100 rounded w-1/3" />
-              <div className="h-24 bg-slate-100 rounded-xl" />
-              <div className="h-16 bg-slate-100 rounded-xl" />
+              <div className="h-5 bg-slate-100 dark:bg-slate-700 rounded w-32" />
+              <div className="h-8 bg-slate-100 dark:bg-slate-700 rounded w-3/4" />
+              <div className="h-10 bg-slate-100 dark:bg-slate-700 rounded w-1/3" />
+              <div className="h-24 bg-slate-100 dark:bg-slate-700 rounded-xl" />
+              <div className="h-16 bg-slate-100 dark:bg-slate-700 rounded-xl" />
             </div>
           </div>
         </div>
@@ -90,9 +90,9 @@ export default function ProductPage() {
   if (!product) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-        <Package className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-slate-900 mb-3">Producto no encontrado</h1>
-        <p className="text-slate-500 mb-6 text-lg">El producto que buscas no existe o fue eliminado.</p>
+        <Package className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3">Producto no encontrado</h1>
+        <p className="text-slate-500 dark:text-slate-400 mb-6 text-lg">El producto que buscas no existe o fue eliminado.</p>
         <Link href="/" className="btn btn-primary text-lg">
           Volver al catálogo
         </Link>
@@ -101,12 +101,12 @@ export default function ProductPage() {
   }
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white dark:bg-slate-900 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* Back button */}
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-slate-500 hover:text-emerald-600 font-semibold mb-4 min-h-[56px] px-1"
+          className="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 font-semibold mb-4 min-h-[56px] px-1"
         >
           <ArrowLeft className="w-5 h-5" />
           <span>Volver</span>
@@ -251,7 +251,28 @@ export default function ProductPage() {
               </div>
             </div>
 
-            {product.stock > 0 ? (
+            {(product.prescription_type === 'retained' || product.prescription_type === 'prescription') ? (
+              /* Prescription products: contact via WhatsApp */
+              <div className="space-y-4">
+                <div className="rounded-2xl border-2 border-amber-200 bg-amber-50 p-4">
+                  <p className="font-bold text-amber-800 text-lg mb-1">
+                    {product.prescription_type === 'retained' ? 'Requiere receta retenida' : 'Requiere receta médica'}
+                  </p>
+                  <p className="text-amber-700 text-base">
+                    Este producto solo puede adquirirse presentando receta al momento de retiro. Contáctenos por WhatsApp para coordinar la compra y confirmar disponibilidad.
+                  </p>
+                </div>
+                <a
+                  href={`https://wa.me/56993649604?text=${encodeURIComponent(`Hola! Me interesa el producto: ${product.name}${product.presentation ? ` (${product.presentation})` : ''}. Precio: ${formatPrice(parseFloat(product.price))}. ¿Está disponible y cómo procedo con la receta?`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-5 px-8 rounded-2xl font-bold text-xl flex items-center justify-center gap-3 min-h-[64px] bg-[#25D366] text-white hover:bg-[#1ebe5d] shadow-lg shadow-green-600/25 active:scale-[0.98] transition-all"
+                >
+                  <MessageCircle className="w-6 h-6" />
+                  Consultar por WhatsApp
+                </a>
+              </div>
+            ) : product.stock > 0 ? (
               <div className="space-y-5">
                 {/* Quantity selector - Large buttons */}
                 <div className="space-y-2">
