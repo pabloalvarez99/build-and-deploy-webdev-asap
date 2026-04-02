@@ -561,6 +561,16 @@ productos-naturales, otros
 
 ## Historial completado
 
+### 2026-04-02: Webpay Plus producción activado (COMPLETADA)
+
+- Credenciales productivas configuradas en Vercel: `TRANSBANK_COMMERCE_CODE`, `TRANSBANK_API_KEY`, `TRANSBANK_ENVIRONMENT=production`
+- Bug CRLF en env vars corregido (Windows echo → printf para evitar `\r`)
+- Checkout habilitado: dos opciones — Retiro en tienda + Webpay Plus (tarjeta real)
+- Cron cleanup-orders cambiado de `*/30 * * * *` → `0 3 * * *` (límite Hobby plan)
+- Deploy directo vía Vercel CLI (repo desconectado de GitHub en Vercel)
+- Fix `.vercel/project.json` en raíz del repo para deploy correcto
+- URL producción: https://tu-farmacia.cl
+
 ### 2026-04-01: Webpay Plus deshabilitado en checkout (COMPLETADA)
 
 - Checkout simplificado: solo retiro en tienda habilitado
