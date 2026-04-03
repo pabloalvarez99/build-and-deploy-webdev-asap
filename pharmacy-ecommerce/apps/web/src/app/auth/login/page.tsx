@@ -1,29 +1,35 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
-  const { login, isLoading, error, clearError } = useAuthStore();
+  const searchParams = useSearchParams();
+  const rawRedirect = searchParams.get('redirect') || '/';
+  const redirect = rawRedirect.startsWith('/') ? rawRedirect : '/';
 
+  const { login, isLoading, error, clearError } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
-
     try {
       await login(email, password);
-      router.push('/');
+      router.push(redirect);
     } catch {
       // Error is handled in store
     }
   };
+
+  const registerHref = redirect !== '/'
+    ? `/auth/register?redirect=${encodeURIComponent(redirect)}`
+    : '/auth/register';
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
@@ -57,14 +63,23 @@ export default function LoginPage() {
                 className="input pl-10"
                 placeholder="tu@email.com"
                 required
+                autoComplete="email"
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-base font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Contraseña
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label htmlFor="password" className="block text-base font-medium text-slate-700 dark:text-slate-300">
+                Contraseña
+              </label>
+              <Link
+                href="/auth/forgot-password"
+                className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500" />
               <input
@@ -75,6 +90,7 @@ export default function LoginPage() {
                 className="input pl-10"
                 placeholder="********"
                 required
+                autoComplete="current-password"
               />
             </div>
           </div>
@@ -90,12 +106,19 @@ export default function LoginPage() {
 
         <p className="text-center text-slate-500 dark:text-slate-400 mt-6">
           ¿No tienes cuenta?{' '}
-          <Link href="/auth/register" className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium">
+          <Link href={registerHref} className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium">
             Regístrate
           </Link>
         </p>
-
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[80vh]" />}>
+      <LoginContent />
+    </Suspense>
   );
 }
