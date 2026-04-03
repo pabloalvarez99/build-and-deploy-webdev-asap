@@ -105,3 +105,42 @@ html {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ─── Elegant dark mode palette ────────────────────────────────────────
+   Replaces Tailwind's blue-tinted slate-* with a warm-neutral dark palette
+   (similar to GitHub Dark, Linear, Vercel dark UI).
+   These rules are placed after @tailwind utilities so same-specificity
+   rules override the Tailwind-generated values via CSS cascade order.
+   #13131a  ← base/page  (very dark, slight purple-neutral undertone)
+   #1e1e27  ← surface    (cards, navbar, footer — subtly elevated)
+   #2a2a35  ← elevated   (inputs, dropdowns)
+   #363640  ← interactive (button hover, active states)
+   ──────────────────────────────────────────────────────────────────── */
+
+/* Body background override (set via @apply in @layer base, uses .dark body) */
+.dark body { background-color: #13131a; }
+
+/* Background layers */
+.dark .dark\:bg-slate-900 { background-color: #13131a; }  /* base */
+.dark .dark\:bg-slate-800 { background-color: #1e1e27; }  /* surface */
+.dark .dark\:bg-slate-700 { background-color: #2a2a35; }  /* elevated */
+.dark .dark\:bg-slate-600 { background-color: #363640; }  /* interactive */
+
+/* Borders — near-invisible lines instead of heavy dark outlines */
+.dark .dark\:border-slate-700 { border-color: rgba(255, 255, 255, 0.07); }
+.dark .dark\:border-slate-600 { border-color: rgba(255, 255, 255, 0.11); }
+
+/* Dividers inside lists */
+.dark .dark\:divide-slate-700 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Hover backgrounds used in buttons/links */
+.dark .dark\:hover\:bg-slate-800:hover { background-color: #252532; }
+.dark .dark\:hover\:bg-slate-700:hover { background-color: #313140; }
+.dark .dark\:hover\:bg-slate-500:hover { background-color: #3a3a48; }
+
+/* Semi-transparent variants (with opacity modifier) */
+.dark .dark\:bg-slate-900\/80 { background-color: rgba(19, 19, 26, 0.80); }
+.dark .dark\:bg-slate-800\/50 { background-color: rgba(30, 30, 39, 0.50); }
+.dark .dark\:bg-slate-700\/50 { background-color: rgba(42, 42, 53, 0.50); }
