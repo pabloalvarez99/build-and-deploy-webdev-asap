@@ -95,8 +95,8 @@ export default function AdminReportesPage() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Reportes</h1>
-          <p className="text-slate-500 mt-1">Ventas reales · solo órdenes pagadas/procesadas/enviadas/entregadas</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Reportes</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Ventas reales · solo órdenes pagadas/procesadas/enviadas/entregadas</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {PERIODS.map(p => (
@@ -106,7 +106,7 @@ export default function AdminReportesPage() {
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
                 period === p.days
                   ? 'bg-emerald-600 text-white'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
               }`}
             >
               {p.label}
@@ -138,8 +138,8 @@ export default function AdminReportesPage() {
                 <div className={`w-10 h-10 ${kpi.bg} rounded-xl flex items-center justify-center mb-3`}>
                   <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
                 </div>
-                <p className="text-sm text-slate-500">{kpi.label}</p>
-                <p className="text-2xl font-bold text-slate-900 mt-0.5">{kpi.value}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{kpi.label}</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-0.5">{kpi.value}</p>
               </div>
             ))}
           </div>
@@ -148,9 +148,9 @@ export default function AdminReportesPage() {
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Sales by day line chart */}
             <div className="card p-6">
-              <h3 className="font-semibold text-slate-900 mb-4">Ventas por día</h3>
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Ventas por día</h3>
               {data.salesByDay.length === 0 ? (
-                <p className="text-slate-400 text-sm py-10 text-center">Sin datos para este período</p>
+                <p className="text-slate-400 dark:text-slate-500 text-sm py-10 text-center">Sin datos para este período</p>
               ) : (
                 <div className="h-56">
                   <ResponsiveContainer width="100%" height="100%">
@@ -184,9 +184,9 @@ export default function AdminReportesPage() {
 
             {/* By category pie */}
             <div className="card p-6">
-              <h3 className="font-semibold text-slate-900 mb-4">Revenue por categoría</h3>
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Revenue por categoría</h3>
               {data.byCategory.length === 0 ? (
-                <p className="text-slate-400 text-sm py-10 text-center">Sin datos para este período</p>
+                <p className="text-slate-400 dark:text-slate-500 text-sm py-10 text-center">Sin datos para este período</p>
               ) : (
                 <div className="h-56">
                   <ResponsiveContainer width="100%" height="100%">
@@ -246,29 +246,29 @@ export default function AdminReportesPage() {
 
           {/* Detail table */}
           <div className="card overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-              <h3 className="font-semibold text-slate-900">Detalle por producto</h3>
-              <span className="text-sm text-slate-400">{data.topProducts.length} productos</span>
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100">Detalle por producto</h3>
+              <span className="text-sm text-slate-400 dark:text-slate-500">{data.topProducts.length} productos</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50">
+                <thead className="bg-slate-50 dark:bg-slate-700/50">
                   <tr>
                     {['#', 'Producto', 'Categoría', 'Unidades', 'Revenue'].map(h => (
-                      <th key={h} className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wide">
+                      <th key={h} className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                   {data.topProducts.map((p, i) => (
-                    <tr key={i} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 text-sm text-slate-400 font-mono">{i + 1}</td>
-                      <td className="px-4 py-3 text-sm font-medium text-slate-900">{p.name}</td>
-                      <td className="px-4 py-3 text-sm text-slate-500">{p.category}</td>
-                      <td className="px-4 py-3 text-sm font-mono text-slate-700">{p.units}</td>
-                      <td className="px-4 py-3 text-sm font-semibold text-emerald-700">{formatPrice(p.revenue)}</td>
+                    <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                      <td className="px-4 py-3 text-sm text-slate-400 dark:text-slate-500 font-mono">{i + 1}</td>
+                      <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">{p.name}</td>
+                      <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{p.category}</td>
+                      <td className="px-4 py-3 text-sm font-mono text-slate-700 dark:text-slate-300">{p.units}</td>
+                      <td className="px-4 py-3 text-sm font-semibold text-emerald-700 dark:text-emerald-400">{formatPrice(p.revenue)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -277,7 +277,7 @@ export default function AdminReportesPage() {
           </div>
         </>
       ) : (
-        <div className="card p-12 text-center text-slate-400">
+        <div className="card p-12 text-center text-slate-400 dark:text-slate-500">
           No hay datos para el período seleccionado
         </div>
       )}
