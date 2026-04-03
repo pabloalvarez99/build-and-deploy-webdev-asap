@@ -69,12 +69,14 @@ export const useCartStore = create<CartState>((set, get) => ({
       const productMap = new Map(products.map(p => [p.id, p]));
 
       const validItems: CartResponse['items'] = [];
+      const syncedLocalItems: LocalCartItem[] = [];
       for (const item of localItems) {
         const product = productMap.get(item.product_id);
         if (!product) continue;
         const rawPrice = parseFloat(product.price);
         const disc = product.discount_percent;
         const effectivePrice = disc ? discountedPrice(rawPrice, disc) : rawPrice;
+        const quantity = Math.min(item.quantity, product.stock);
         validItems.push({
           product_id: item.product_id,
           product_name: product.name,
@@ -82,9 +84,15 @@ export const useCartStore = create<CartState>((set, get) => ({
           product_image: product.image_url,
           price: effectivePrice.toString(),
           ...(disc ? { original_price: product.price, discount_percent: disc } : {}),
-          quantity: item.quantity,
-          subtotal: (effectivePrice * item.quantity).toString(),
+          quantity,
+          subtotal: (effectivePrice * quantity).toString(),
+          stock: product.stock,
         });
+        syncedLocalItems.push({ product_id: item.product_id, quantity });
+      }
+      // Sync capped quantities back to localStorage
+      if (syncedLocalItems.some((s, i) => s.quantity !== localItems[i]?.quantity)) {
+        saveLocalCart(syncedLocalItems);
       }
 
       const total = validItems.reduce((sum, item) => sum + parseFloat(item.subtotal), 0);

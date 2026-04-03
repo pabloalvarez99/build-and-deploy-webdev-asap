@@ -165,6 +165,100 @@ export async function sendPickupReservationEmail(opts: {
   });
 }
 
+export async function sendPickupApprovalEmail(opts: {
+  to: string;
+  name: string;
+  orderId: string;
+  pickupCode: string;
+  total: number;
+  items: OrderEmailItem[];
+}) {
+  if (!process.env.RESEND_API_KEY) return;
+  const shortId = opts.orderId.substring(0, 8).toUpperCase();
+
+  const html = emailWrapper(`
+    <p style="margin:0 0 8px;font-size:28px;">✅</p>
+    <h1 style="margin:0 0 8px;font-size:22px;color:#0f172a;">¡Tu reserva fue aprobada!</h1>
+    <p style="margin:0 0 24px;color:#64748b;">Hola <strong>${opts.name}</strong>, tu reserva ha sido aprobada. Ya puedes venir a retirar tu pedido.</p>
+
+    <div style="text-align:center;background:#f0fdf4;border:2px solid #86efac;border-radius:16px;padding:24px;margin-bottom:24px;">
+      <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#166534;text-transform:uppercase;letter-spacing:0.1em;">Código de retiro</p>
+      <p style="margin:0;font-family:monospace;font-size:40px;font-weight:900;letter-spacing:0.3em;color:#166534;">${opts.pickupCode}</p>
+    </div>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:12px;margin-bottom:24px;overflow:hidden;">
+      <thead><tr style="background:#f8fafc;">
+        <th style="padding:10px 12px;text-align:left;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Producto</th>
+        <th style="padding:10px 12px;text-align:center;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Cant.</th>
+        <th style="padding:10px 12px;text-align:right;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Subtotal</th>
+      </tr></thead>
+      <tbody>${itemsTable(opts.items)}</tbody>
+      <tfoot><tr style="background:#fffbeb;">
+        <td colspan="2" style="padding:12px;font-weight:700;color:#0f172a;">Total a pagar en tienda</td>
+        <td style="padding:12px;text-align:right;font-weight:800;font-size:18px;color:#d97706;">${formatCLP(opts.total)}</td>
+      </tr></tfoot>
+    </table>
+
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:16px;margin-bottom:24px;">
+      <p style="margin:0 0 8px;font-weight:700;color:#166534;">¿Qué sigue?</p>
+      <ol style="margin:0;padding-left:20px;color:#166534;line-height:1.8;">
+        <li>Acércate a nuestra farmacia cuando puedas</li>
+        <li>Muestra tu código <strong>${opts.pickupCode}</strong> al personal</li>
+        <li>Paga ${formatCLP(opts.total)} en tienda y retira tus productos</li>
+      </ol>
+    </div>
+
+    <div style="background:#f8fafc;border-radius:8px;padding:12px;margin-bottom:24px;">
+      <p style="margin:0;font-size:12px;color:#94a3b8;">N° de orden</p>
+      <p style="margin:4px 0 0;font-family:monospace;font-size:14px;color:#334155;">${shortId}...</p>
+    </div>
+
+    <a href="${BASE}/mis-pedidos" style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;">Ver mis pedidos →</a>
+  `);
+
+  await getResend().emails.send({
+    from: FROM,
+    to: opts.to,
+    subject: `✅ Reserva aprobada — Código ${opts.pickupCode} · Tu Farmacia`,
+    html,
+  });
+}
+
+export async function sendPickupRejectionEmail(opts: {
+  to: string;
+  name: string;
+  orderId: string;
+}) {
+  if (!process.env.RESEND_API_KEY) return;
+  const shortId = opts.orderId.substring(0, 8).toUpperCase();
+
+  const html = emailWrapper(`
+    <p style="margin:0 0 8px;font-size:28px;">❌</p>
+    <h1 style="margin:0 0 8px;font-size:22px;color:#0f172a;">Tu reserva no pudo ser aprobada</h1>
+    <p style="margin:0 0 24px;color:#64748b;">Hola <strong>${opts.name}</strong>, lamentamos informarte que tu reserva no pudo ser procesada en esta ocasión.</p>
+
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;margin-bottom:24px;">
+      <p style="margin:0;color:#991b1b;">No se realizó ningún cargo ni se descontó stock. Puedes volver a intentarlo o comunicarte con nosotros.</p>
+    </div>
+
+    <div style="background:#f8fafc;border-radius:8px;padding:12px;margin-bottom:24px;">
+      <p style="margin:0;font-size:12px;color:#94a3b8;">N° de orden</p>
+      <p style="margin:4px 0 0;font-family:monospace;font-size:14px;color:#334155;">${shortId}...</p>
+    </div>
+
+    <p style="margin:0 0 16px;color:#64748b;">Si tienes dudas, contáctanos por WhatsApp o visítanos en nuestra farmacia en Coquimbo.</p>
+
+    <a href="${BASE}" style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;">Volver a la tienda →</a>
+  `);
+
+  await getResend().emails.send({
+    from: FROM,
+    to: opts.to,
+    subject: `❌ Reserva cancelada — Pedido #${shortId} · Tu Farmacia`,
+    html,
+  });
+}
+
 export async function sendLowStockAlert(
   toEmail: string,
   products: LowStockProduct[],

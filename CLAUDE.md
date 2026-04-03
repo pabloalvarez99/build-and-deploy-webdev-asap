@@ -8,63 +8,104 @@ E-commerce de farmacia para adultos mayores en Coquimbo, Chile.
 - **Web app**: `pharmacy-ecommerce/apps/web`
 
 ## Stack
-- Next.js 14.1.0 + Tailwind CSS + TypeScript
+- Next.js 14.2.35 + Tailwind CSS 3 + TypeScript
 - Supabase (PostgreSQL + Auth + RLS) - project `jvagvjwrjiekaafpjbit`
-- MercadoPago (pagos CLP - pesos chilenos)
+- Transbank Webpay Plus (`transbank-sdk`) para pagos online con tarjeta
+- Resend para emails transaccionales
 - Zustand (cart en localStorage, auth con Supabase)
+- Recharts para graficos en el dashboard admin
 - Vercel (deploy automatico via `git push origin main`)
 
 ## Build & Deploy
-- **IMPORTANTE**: Usar `./node_modules/.bin/next build` desde `apps/web/`, NUNCA `npx next build` (npx trae Next.js 16 del cache, el proyecto usa 14.1.0)
-- **Bash paths**: Usar Unix `/c/Users/Pablo/...` no Windows `C:\Users\Pablo\...`
+- **IMPORTANTE**: Usar `./node_modules/.bin/next build` desde `apps/web/`, NUNCA `npx next build` (npx trae Next.js 16 del cache)
+- **Memoria**: `NODE_OPTIONS=--max-old-space-size=6144` requerido en esta máquina para evitar OOM durante build
+- **Bash paths**: Usar Unix `/c/Users/Admin/...` no Windows `C:\Users\Admin\...`
 - **Vercel root dir**: `pharmacy-ecommerce/apps/web`
 - **Deploy**: `git push origin main` → auto-deploy en Vercel
 
 ## Database (Supabase)
 - 1189 productos, 17 categorias
 - RLS habilitado en todas las tablas
-- Tablas: products, categories, orders, order_items, profiles, therapeutic_category_mapping
-- Campos producto: name, slug, price, stock, category_id, image_url, laboratory, therapeutic_action, active_ingredient, prescription_type, presentation
-- Ordenes guest: user_id = NULL, usan guest_email, guest_name, guest_surname
-- Store pickup: status='reserved', pickup_code (6 digitos), reservation_expires_at (48h)
+- Tablas: products, categories, orders, order_items, profiles, therapeutic_category_mapping, admin_settings
+- Campos producto: name, slug, price, stock, category_id, image_url, laboratory, therapeutic_action, active_ingredient, prescription_type, presentation, discount_percent
+- Ordenes guest: user_id = NULL, usan guest_email, guest_name, guest_surname, customer_phone
+- Ordenes de usuarios autenticados: user_id = auth.uid(), aparecen en /mis-pedidos
+- Store pickup: status='reserved', pickup_code (6 digitos), reservation_expires_at (24h)
+- Stock: se descuenta con RPC `decrement_stock(p_product_id, p_quantity)` al aprobar retiro o completar Webpay
+- admin_settings: tabla con key/value para alert_email y low_stock_threshold (default 10)
 
 ## Arquitectura de paginas
 ```
-/ (homepage)          → Grid categorias + productos + busqueda + "cargar mas"
-/producto/[slug]      → Detalle producto + agregar al carrito
-/carrito              → Carrito (localStorage)
-/checkout             → Formulario + metodo pago (MercadoPago o retiro tienda)
-/checkout/success     → Confirmacion MercadoPago
-/checkout/failure     → Error MercadoPago
-/checkout/pending     → Pago pendiente
-/checkout/reservation → Codigo retiro tienda
-/mis-pedidos          → Ordenes del usuario (requiere auth)
-/admin/*              → Panel admin (requiere rol admin)
+/ (homepage)                  → Grid categorias + productos + busqueda + "cargar mas"
+/producto/[slug]              → Detalle producto + agregar al carrito
+/carrito                      → Carrito (localStorage) + control de stock
+/checkout                     → Formulario + metodo pago (Webpay Plus o retiro tienda)
+/checkout/webpay/success      → Confirmacion Webpay Plus
+/checkout/webpay/error        → Error/cancelacion Webpay
+/checkout/reservation         → Codigo retiro tienda
+/auth/login                   → Inicio de sesion (preserva ?redirect=)
+/auth/register                → Registro (preserva ?redirect=, Suspense boundary)
+/auth/forgot-password         → Recuperar contraseña (envia email)
+/auth/reset-password          → Nueva contraseña (desde link de email)
+/mis-pedidos                  → Ordenes del usuario (requiere auth)
+/mis-pedidos/[id]             → Detalle de orden + timeline de estado
+/admin/*                      → Panel admin (requiere rol admin)
 ```
 
 ## API Routes
 ```
-POST /api/guest-checkout    → Crea orden + preferencia MercadoPago
-POST /api/store-pickup      → Crea orden con pickup_code
-POST /api/webhook/mercadopago → Webhook de pago
-GET  /api/admin/orders      → Lista ordenes (service role, ve todas)
-PUT  /api/admin/orders/[id] → Actualiza estado orden
-CRUD /api/admin/products    → Admin productos
-CRUD /api/admin/categories  → Admin categorias
+POST     /api/webpay/create                        → Crea orden pending + transaccion Transbank
+GET|POST /api/webpay/return                        → Callback de Transbank, commit, actualiza a paid
+POST     /api/store-pickup                         → Crea orden reserved con pickup_code (24h expiry)
+GET      /api/cron/cleanup-orders                  → Cancela ordenes expiradas (cron cada 30min, requiere CRON_SECRET)
+GET      /api/admin/orders                         → Lista ordenes (service role, ve todas)
+PUT      /api/admin/orders/[id]                    → Actualiza estado orden + restaura stock si cancela
+PUT      /api/admin/orders/[id] {action:approve}   → Aprueba retiro: descuenta stock, envia email, alerta stock bajo
+PUT      /api/admin/orders/[id] {action:reject}    → Rechaza retiro: cancela orden, envia email
+GET      /api/admin/reportes                       → KPIs, ventas por dia, top productos, por categoria
+CRUD     /api/admin/products                       → Admin productos (con import Excel)
+CRUD     /api/admin/categories                     → Admin categorias
+GET|PATCH /api/admin/settings                      → Configuracion (email alertas, umbral stock)
+GET      /api/admin/clientes                       → Lista clientes registrados + guests
+GET|PUT|DELETE /api/admin/clientes/[id]            → Detalle, editar o eliminar cliente registrado
+GET      /api/admin/clientes/guest?email=xxx       → Detalle + historial cliente guest
+POST     /api/auth/register                        → Registro via service role (auto-confirma email)
 ```
 
 ## Gotchas conocidos
 - Supabase `.eq('tabla_join.campo', valor)` NO funciona como inner join. Siempre buscar el ID primero y filtrar por FK directo.
 - `orderApi.list()` filtra por user_id (usuario). `orderApi.listAll()` usa service role (admin, ve guest orders).
-- MercadoPago usa `Math.ceil(price)` porque CLP no tiene decimales.
-- Las imagenes pueden tener `http://` - `sanitizeImageUrl()` en api.ts convierte a `https://`.
+- Webpay buyOrder max 26 chars: UUID sin guiones truncado a 26 chars.
+- CLP no tiene decimales: usar `Math.round()` al pasar montos a Transbank.
+- Las imagenes pueden tener `http://` — `sanitizeImageUrl()` en api.ts convierte a `https://`.
+- `getAuthenticatedUser()` en api-helpers.ts lee sesion desde cookies (server-side). Usar en API routes para asociar user_id.
+- `isPickup` siempre usar `payment_provider === 'store'`, NO `!!order.pickup_code`.
+- `fetch` no lanza error en 4xx/5xx — siempre chequear `res.ok` antes de mostrar exito.
+- Cart items tienen campo `stock: number` — el boton "+" esta deshabilitado si `quantity >= stock`.
+- `fetchCart` en cart.ts capea quantity a `Math.min(item.quantity, product.stock)` y sincroniza localStorage.
 
-## Principios de diseno
+## Diseño y UI
 - Mobile-first para adultos mayores
 - Font base 18px, touch targets 48px+, alto contraste
 - Colores: emerald-600 primario, slate para texto
 - Cards: rounded-2xl, border-2
 - Sin filtros complejos: solo categorias (grid) + busqueda
+- Dark mode: soportado en todas las paginas con clases `dark:*`
+- Admin mobile: barra de navegacion inferior fija (bottom nav) con los 7 items, badges con contadores
+- Admin desktop: sidebar lateral colapsable (64px / 256px)
+- overflow-x: hidden en html y body para evitar scroll horizontal en movil
+
+## Variables de entorno requeridas (Vercel + .env.local)
+```
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
+TRANSBANK_ENVIRONMENT=integration   # cambiar a 'production' cuando lleguen credenciales
+TRANSBANK_COMMERCE_CODE
+TRANSBANK_API_KEY
+RESEND_API_KEY
+CRON_SECRET                         # generar con: openssl rand -hex 32
+```
 
 ## Bitacora
 Despues de cada cambio significativo, actualizar `pharmacy-ecommerce/bitacora.md` con los cambios realizados.

@@ -131,78 +131,81 @@ export default function AdminPage() {
 
  const loadStats = async () => {
  try {
- // Load all data in parallel for faster dashboard load
- const [allProducts, categories, allOrders, pendingOrders, productsForStats] = await Promise.all([
+ // Build reportes URL (30 days)
+ const from30d = new Date();
+ from30d.setDate(from30d.getDate() - 30);
+ const fromStr = from30d.toISOString().split('T')[0];
+ const toStr = new Date().toISOString().split('T')[0];
+ const reportesPromise = fetch(`/api/admin/reportes?from=${fromStr}&to=${toStr}`)
+  .then((r) => r.json()).catch(() => null);
+
+ // Run all queries in parallel — count-only (limit:1) for accurate totals
+ const [allProducts, activeProducts, categories, allOrders, pendingOrders, reservedOrders, outOfStockCount, lowStockCount, outOfStockDisplay] = await Promise.all([
  productApi.list({ limit: 1, active_only: false }),
+ productApi.list({ limit: 1, active_only: true }),
  productApi.listCategories(),
  orderApi.listAll({ limit: 1000 }),
  orderApi.listAll({ status: 'pending', limit: 1 }),
- productApi.list({ limit: 1000, active_only: false }),
+ orderApi.listAll({ status: 'reserved', limit: 1 }),
+ productApi.list({ limit: 1, active_only: true, stock_filter: 'out' }),
+ productApi.list({ limit: 1, active_only: true, stock_filter: 'low' }),
+ // Fetch up to 10 out-of-stock products for display list (shown first)
+ productApi.list({ limit: 10, active_only: true, stock_filter: 'out', sort_by: 'stock_asc' }),
  ]);
 
- let lowStock = 0;
- let outOfStock = 0;
- let inventoryValue = 0;
- const lowStockList: LowStockProduct[] = [];
+ // Fill remaining display slots (up to 10 total) with low-stock products
+ const outOfStockShown = outOfStockDisplay.products.length;
+ const lowStockSlots = Math.max(0, 10 - outOfStockShown);
+ const lowStockDisplayItems = lowStockSlots > 0
+ ? await productApi.list({ limit: lowStockSlots, active_only: true, stock_filter: 'low', sort_by: 'stock_asc' }).catch(() => ({ products: [] as typeof outOfStockDisplay.products }))
+ : { products: [] as typeof outOfStockDisplay.products };
 
- let activeCount = 0;
- productsForStats.products.forEach((p) => {
- const price = parseFloat(p.price);
- inventoryValue += p.stock * price;
- if (p.active !== false) activeCount++;
- if (p.stock === 0) {
- outOfStock++;
- lowStockList.push({ id: p.id, name: p.name, stock: p.stock, slug: p.slug });
- } else if (p.stock <= 10) {
- lowStock++;
- lowStockList.push({ id: p.id, name: p.name, stock: p.stock, slug: p.slug });
+ const lowStockList: LowStockProduct[] = [
+ ...outOfStockDisplay.products.map(p => ({ id: p.id, name: p.name, stock: p.stock, slug: p.slug })),
+ ...lowStockDisplayItems.products.map(p => ({ id: p.id, name: p.name, stock: p.stock, slug: p.slug })),
+ ].slice(0, 10);
+ setLowStockProducts(lowStockList);
+
+ // Await the reportes API (already running in parallel since promise was created earlier)
+ const reportData = await reportesPromise;
+
+ // Revenue and top products from accurate server-side reports API (no 1000-order limit)
+ const totalRevenue = reportData?.kpis?.totalRevenue ?? 0;
+
+ // Top products
+ const topProductsList: TopProduct[] = (reportData?.topProducts || []).slice(0, 5).map(
+  (p: { name: string; units: number }) => ({
+   name: p.name.length > 20 ? p.name.slice(0, 20) + '...' : p.name,
+   cantidad: p.units,
+  })
+ );
+ setTopProducts(topProductsList);
+
+ // 7-day sales chart from reportes salesByDay (last 7 days from 30-day data)
+ if (reportData?.salesByDay?.length > 0) {
+  const last7 = reportData.salesByDay.slice(-7);
+  const salesChartData: SalesData[] = last7.map((d: { date: string; ventas: number; ordenes: number }) => ({
+   date: new Date(d.date + 'T12:00:00').toLocaleDateString('es-CL', { day: '2-digit', month: 'short' }),
+   ventas: Math.round(d.ventas),
+   ordenes: d.ordenes,
+  }));
+  setSalesData(salesChartData);
+ } else {
+  // Fallback: compute from allOrders if reportes fails
+  setSalesData(generateSalesData(allOrders.orders));
  }
- });
-
- // Sort by stock ascending and take top 10
- lowStockList.sort((a, b) => a.stock - b.stock);
- setLowStockProducts(lowStockList.slice(0, 10));
-
- // Calculate total revenue
- const totalRevenue = allOrders.orders
- .filter((o) => o.status !== 'cancelled' && o.status !== 'pending')
- .reduce((sum, o) => sum + parseFloat(o.total), 0);
 
  setStats({
  totalProducts: allProducts.total,
- activeProducts: activeCount,
- lowStockProducts: lowStock,
- outOfStockProducts: outOfStock,
+ activeProducts: activeProducts.total,
+ lowStockProducts: lowStockCount.total,
+ outOfStockProducts: outOfStockCount.total,
  totalCategories: categories.length,
- inventoryValue,
- pendingOrders: pendingOrders.total,
+ inventoryValue: 0,
+ pendingOrders: pendingOrders.total + reservedOrders.total,
  totalOrders: allOrders.total,
  totalRevenue,
  });
-
- // Calculate sales data for last 7 days
- const last7Days = generateSalesData(allOrders.orders);
- setSalesData(last7Days);
-
- // Real top products from order_items via reports API
- try {
-  const from30d = new Date();
-  from30d.setDate(from30d.getDate() - 30);
-  const fromStr = from30d.toISOString().split('T')[0];
-  const toStr = new Date().toISOString().split('T')[0];
-  const reportRes = await fetch(`/api/admin/reportes?from=${fromStr}&to=${toStr}`);
-  const reportData = await reportRes.json();
-  const topProductsList: TopProduct[] = (reportData.topProducts || []).slice(0, 5).map(
-   (p: { name: string; units: number }) => ({
-    name: p.name.length > 20 ? p.name.slice(0, 20) + '...' : p.name,
-    cantidad: p.units,
-   })
-  );
-  setTopProducts(topProductsList);
- } catch {
-  // Fallback to empty if reports fail
-  setTopProducts([]);
- }
 
  // Calculate status distribution
  const statusDistribution = calculateStatusDistribution(allOrders.orders);
@@ -234,7 +237,7 @@ export default function AdminPage() {
  });
 
  const ventas = dayOrders
- .filter((o) => o.status !== 'cancelled' && o.status !== 'pending')
+ .filter((o) => ['paid', 'processing', 'shipped', 'delivered'].includes(o.status))
  .reduce((sum, o) => sum + parseFloat(o.total), 0);
 
  data.push({
@@ -282,14 +285,14 @@ export default function AdminPage() {
  textColor: 'text-purple-600',
  },
  {
- title: 'Ventas Totales',
+ title: 'Ventas (30 días)',
  value: formatPrice(stats.totalRevenue),
  icon: <DollarSign className="w-6 h-6" />,
  color: 'bg-green-500',
  textColor: 'text-green-600',
  },
  {
- title: 'Órdenes Pendientes',
+ title: 'Por atender',
  value: stats.pendingOrders.toLocaleString('es-CL'),
  icon: <Clock className="w-6 h-6" />,
  color: 'bg-yellow-500',

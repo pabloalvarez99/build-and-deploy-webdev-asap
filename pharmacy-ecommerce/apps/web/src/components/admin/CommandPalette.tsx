@@ -158,7 +158,7 @@ export function CommandPalette({ isOpen, onClose, onNewProduct }: CommandPalette
  // Search orders by ID
  if (searchQuery.length >= 4) {
  try {
- const orderResults = await orderApi.list({ limit: 5 });
+ const orderResults = await orderApi.listAll({ limit: 20 });
  orderResults.orders
  .filter((o) => o.id.toLowerCase().includes(searchQuery.toLowerCase()))
  .forEach((order) => {

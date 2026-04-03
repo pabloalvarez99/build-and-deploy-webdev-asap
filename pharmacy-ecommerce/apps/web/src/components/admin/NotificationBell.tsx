@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Bell, Package, ShoppingBag, AlertTriangle, X, Check, Store, CreditCard } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import { productApi, orderApi } from '@/lib/api';
@@ -21,7 +21,6 @@ export function NotificationBell() {
  const { user } = useAuthStore();
  const [notifications, setNotifications] = useState<Notification[]>([]);
  const [isOpen, setIsOpen] = useState(false);
- const [lastCheck, setLastCheck] = useState<Date>(new Date());
  const dropdownRef = useRef<HTMLDivElement>(null);
 
  // Close dropdown when clicking outside
@@ -35,11 +34,8 @@ export function NotificationBell() {
  return () => document.removeEventListener('mousedown', handleClickOutside);
  }, []);
 
- // Poll for notifications
- useEffect(() => {
+ const checkNotifications = useCallback(async () => {
  if (!user) return;
-
- const checkNotifications = async () => {
  try {
  const newNotifications: Notification[] = [];
 
@@ -61,7 +57,6 @@ export function NotificationBell() {
 
  // Check for reserved orders (store pickup pending approval)
  const reservedOrders = await orderApi.listAll({ status: 'reserved', limit: 10 });
- if (reservedOrders.total > 0) {
  reservedOrders.orders.forEach((order) => {
  newNotifications.push({
  id: `reservation-${order.id}`,
@@ -73,7 +68,6 @@ export function NotificationBell() {
  link: `/admin/ordenes/${order.id}`,
  });
  });
- }
 
  // Check for critical stock using lightweight count queries
  const [outOfStock, lowStock] = await Promise.all([
@@ -83,7 +77,7 @@ export function NotificationBell() {
 
  if (outOfStock.total > 0) {
  newNotifications.push({
- id: `critical-${Date.now()}`,
+ id: `critical-stock`,
  type: 'critical',
  title: 'Productos agotados',
  message: `${outOfStock.total} producto${outOfStock.total > 1 ? 's' : ''} sin stock`,
@@ -95,7 +89,7 @@ export function NotificationBell() {
 
  if (lowStock.total > 0) {
  newNotifications.push({
- id: `low-${Date.now()}`,
+ id: `low-stock`,
  type: 'stock',
  title: 'Stock bajo',
  message: `${lowStock.total} producto${lowStock.total > 1 ? 's' : ''} con stock bajo`,
@@ -105,30 +99,25 @@ export function NotificationBell() {
  });
  }
 
- if (newNotifications.length > 0) {
  setNotifications((prev) => {
- // Merge and dedupe
- const merged = [...newNotifications, ...prev];
- const unique = merged.filter(
- (n, i, arr) => arr.findIndex((m) => m.id === n.id) === i
- );
- return unique.slice(0, 20);
+ if (newNotifications.length === 0) return prev;
+ // Merge: new items replace old items with same id, then keep remaining old ones
+ const newIds = new Set(newNotifications.map((n) => n.id));
+ const oldUnique = prev.filter((n) => !newIds.has(n.id));
+ return [...newNotifications, ...oldUnique].slice(0, 20);
  });
- }
-
- setLastCheck(new Date());
  } catch (error) {
  console.error('Error checking notifications:', error);
  }
- };
+ }, [user]);
 
- // Initial check
+ // Poll for notifications every 30 seconds
+ useEffect(() => {
+ if (!user) return;
  checkNotifications();
-
- // Poll every 30 seconds
  const interval = setInterval(checkNotifications, 30000);
  return () => clearInterval(interval);
- }, [user, lastCheck]);
+ }, [user, checkNotifications]);
 
  const unreadCount = notifications.filter((n) => !n.read).length;
 

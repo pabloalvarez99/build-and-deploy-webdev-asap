@@ -440,6 +440,7 @@ export interface CartItem {
   discount_percent?: number;
   quantity: number;
   subtotal: string;
+  stock: number;
 }
 
 export interface CartResponse {

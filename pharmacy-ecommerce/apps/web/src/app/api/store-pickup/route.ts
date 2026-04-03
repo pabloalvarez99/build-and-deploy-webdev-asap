@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { errorResponse, getServiceClient } from '@/lib/supabase/api-helpers';
+import { errorResponse, getServiceClient, getAuthenticatedUser } from '@/lib/supabase/api-helpers';
 import { sendPickupReservationEmail } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
@@ -10,7 +10,11 @@ export async function POST(request: NextRequest) {
     if (!items || items.length === 0) return errorResponse('Cart is empty');
     if (!email || !phone) return errorResponse('Email and phone are required');
 
-    const supabase = getServiceClient();
+    const [supabase, authenticatedUser] = await Promise.all([
+      Promise.resolve(getServiceClient()),
+      getAuthenticatedUser(),
+    ]);
+    const userId = authenticatedUser?.id ?? null;
 
     // Validate products and calculate total
     let total = 0;
@@ -44,7 +48,7 @@ export async function POST(request: NextRequest) {
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
-        user_id: null,
+        user_id: userId,
         status: 'reserved',
         total,
         notes,

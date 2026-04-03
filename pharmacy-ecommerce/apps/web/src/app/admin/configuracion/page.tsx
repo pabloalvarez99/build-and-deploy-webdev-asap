@@ -30,13 +30,15 @@ export default function AdminConfigPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await fetch('/api/admin/settings', {
+      const res = await fetch('/api/admin/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ alert_email: alertEmail, low_stock_threshold: threshold }),
       });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      }
     } finally {
       setSaving(false);
     }

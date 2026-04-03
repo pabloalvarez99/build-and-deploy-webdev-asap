@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/api-helpers';
+import { sendPickupRejectionEmail } from '@/lib/email';
 
 // Cleans up:
 // 1. Abandoned Webpay "pending" orders older than 30 minutes
@@ -28,6 +29,14 @@ export async function GET(request: NextRequest) {
   }
 
   // 2. Cancel expired store pickup reservations
+  // First fetch orders to get customer emails for notification
+  const { data: expiredPickupsRaw } = await supabase
+    .from('orders')
+    .select('id, guest_email, guest_name')
+    .eq('status', 'reserved')
+    .eq('payment_provider', 'store')
+    .lt('reservation_expires_at', now);
+
   const { data: expiredPickups, error: pickupError } = await supabase
     .from('orders')
     .update({ status: 'cancelled' })
@@ -38,6 +47,19 @@ export async function GET(request: NextRequest) {
 
   if (pickupError) {
     console.error('Cleanup pickup error:', pickupError.message);
+  }
+
+  // Notify customers whose reservations expired (non-blocking)
+  if (expiredPickupsRaw && expiredPickupsRaw.length > 0) {
+    for (const order of expiredPickupsRaw) {
+      if (order.guest_email) {
+        sendPickupRejectionEmail({
+          to: order.guest_email,
+          name: order.guest_name || 'Cliente',
+          orderId: order.id,
+        }).catch(() => {});
+      }
+    }
   }
 
   const result = {

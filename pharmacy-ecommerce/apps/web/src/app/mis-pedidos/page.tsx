@@ -28,7 +28,7 @@ export default function MyOrdersPage() {
 
   useEffect(() => {
     if (!user) {
-      router.push('/auth/login');
+      router.push('/auth/login?redirect=/mis-pedidos');
       return;
     }
     loadOrders();

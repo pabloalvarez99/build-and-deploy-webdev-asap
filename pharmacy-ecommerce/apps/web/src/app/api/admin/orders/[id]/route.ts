@@ -77,7 +77,7 @@ async function approveReservation(supabase: ReturnType<typeof getServiceClient>,
   // 1. Verify order exists and is in 'reserved' status
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .select('id, status')
+    .select('id, status, total, guest_email, guest_name, guest_surname, pickup_code')
     .eq('id', orderId)
     .single();
 
@@ -89,7 +89,7 @@ async function approveReservation(supabase: ReturnType<typeof getServiceClient>,
   // 2. Get order items
   const { data: items, error: itemsError } = await supabase
     .from('order_items')
-    .select('product_id, quantity')
+    .select('product_id, product_name, quantity, price_at_purchase')
     .eq('order_id', orderId);
 
   if (itemsError) return errorResponse(itemsError.message, 500);
@@ -116,6 +116,23 @@ async function approveReservation(supabase: ReturnType<typeof getServiceClient>,
     .single();
 
   if (error) return errorResponse(error.message, 500);
+
+  // Send approval email to customer (non-blocking)
+  if (order.guest_email && order.pickup_code) {
+    const { sendPickupApprovalEmail } = await import('@/lib/email');
+    sendPickupApprovalEmail({
+      to: order.guest_email,
+      name: order.guest_name || 'Cliente',
+      orderId: order.id,
+      pickupCode: order.pickup_code,
+      total: Number(order.total),
+      items: (items || []).map((i: { product_name: string; quantity: number; price_at_purchase: string }) => ({
+        product_name: i.product_name,
+        quantity: i.quantity,
+        price_at_purchase: i.price_at_purchase,
+      })),
+    }).catch(() => {});
+  }
 
   // Trigger low-stock email alert (non-blocking, best-effort)
   const productIds = (items || []).map((i: { product_id: string | null }) => i.product_id).filter(Boolean) as string[];
@@ -151,7 +168,7 @@ async function rejectReservation(supabase: ReturnType<typeof getServiceClient>, 
   // 1. Verify order exists and is in 'reserved' status
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .select('id, status')
+    .select('id, status, guest_email, guest_name')
     .eq('id', orderId)
     .single();
 
@@ -169,5 +186,16 @@ async function rejectReservation(supabase: ReturnType<typeof getServiceClient>, 
     .single();
 
   if (error) return errorResponse(error.message, 500);
+
+  // Notify customer (non-blocking)
+  if (order.guest_email) {
+    const { sendPickupRejectionEmail } = await import('@/lib/email');
+    sendPickupRejectionEmail({
+      to: order.guest_email,
+      name: order.guest_name || 'Cliente',
+      orderId: order.id,
+    }).catch(() => {});
+  }
+
   return NextResponse.json(data);
 }

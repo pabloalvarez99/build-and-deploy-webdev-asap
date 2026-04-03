@@ -57,6 +57,52 @@
 
 ---
 
+## COMPLETADO: Correcciones UX y calidad de código (Marzo 27, 2026 — sesión 5)
+
+### Resumen
+- **isPickup consistente en admin detalle de orden**: `admin/ordenes/[id]/page.tsx` usaba `!!order.pickup_code` para detectar retiro, mientras el resto del código usa `payment_provider === 'store'`. Unificado a `payment_provider === 'store'`.
+- **Feedback de guardado en Configuración**: `handleSave` en admin/configuracion mostraba "Guardado" incluso si el PATCH devolvía un HTTP error. Corregido: ahora solo muestra éxito si `res.ok`.
+- **Redirect chain en registro**: Si un usuario llegaba a login con `?redirect=/mis-pedidos` y luego hacía clic en "Regístrate", perdía el contexto y al registrarse volvía al home. Corregido: login page pasa el `?redirect=` al link de registro, y la página de registro ahora acepta y usa ese parámetro con Suspense boundary.
+- **Cart stock cap**: La página de carrito no limitaba la cantidad al stock disponible. Un usuario podía agregar más unidades de las disponibles y solo descubrirlo al hacer checkout. Corregido: `CartItem` ahora incluye `stock`, `fetchCart` lo popula desde los datos del producto y automáticamente ajusta cantidades que excedan el stock (también sincroniza localStorage). El botón "+" en el carrito se deshabilita al alcanzar el stock. Se muestra indicador visual "Quedan N" o "Máximo disponible" cuando stock ≤ 10.
+
+---
+
+## COMPLETADO: Correcciones checkout y UX (Marzo 27, 2026 — sesión 4)
+
+### Resumen
+- **Bug crítico: botón checkout deshabilitado para usuarios autenticados**: La condición `disabled` del botón incluía `!password || !confirmPassword`, pero para usuarios con sesión activa esos campos no se renderizan y su estado permanece como `''`. Resultado: usuarios logueados nunca podían completar una compra. Corregido: condición cambiada a `(!user && (!password || !confirmPassword))`.
+- **Email no trimmeado en payload de checkout**: `email` no se le aplicaba `.trim()` en el payload enviado a `/api/webpay/create` y `/api/store-pickup`, a diferencia de `name`, `surname`, `phone`. Corregido.
+- **Race condition en webpay/return**: El flujo SELECT + UPDATE no era atómico. Dos callbacks concurrentes de Transbank podían ambos encontrar la orden en estado `pending` y deducir el stock dos veces. Corregido: el UPDATE ahora incluye `.eq('status', 'pending')` (compare-and-swap). Si el UPDATE no afecta filas, el request es idempotente y redirige a éxito.
+- **Login redirect post-checkout**: Al hacer clic en "Inicia sesión" desde `/checkout`, el usuario era redirigido al home después del login, perdiendo el carrito/formulario. Corregido: login page acepta `?redirect=` query param. Links en checkout apuntan a `/auth/login?redirect=/checkout`. También corregido en `/mis-pedidos` → `/auth/login?redirect=/mis-pedidos`.
+
+---
+
+## COMPLETADO: Correcciones y mejoras (Marzo 27, 2026 — sesión 3)
+
+### Resumen
+- **Bug crítico: user_id en órdenes**: `/api/webpay/create` y `/api/store-pickup` siempre creaban órdenes con `user_id: null`. Los usuarios autenticados no veían sus órdenes en `/mis-pedidos`. Corregido: ambas rutas ahora llaman `getAuthenticatedUser()` y asignan `user_id` si hay sesión activa.
+- **NotificationBell loop infinito**: `lastCheck` estaba en deps de `useEffect`, causando que `setLastCheck(new Date())` al final de `checkNotifications` re-disparara el efecto inmediatamente (bucle cerrado sin pausa de 30s). Corregido: eliminado `lastCheck`, `checkNotifications` envuelto en `useCallback([user])`.
+- **Admin dashboard revenue**: Ingresos calculados con el endpoint `/api/admin/reportes` (server-side, sin límite de 1000 órdenes). La llamada se inicia en paralelo antes del `Promise.all` para no bloquear carga.
+- **Admin dashboard "Por atender"**: Ahora incluye `pending + reserved` (retiros de tienda también necesitan atención).
+- **Páginas de recuperación de contraseña**: Nuevas páginas `/auth/forgot-password` y `/auth/reset-password` con flujo completo de Supabase `resetPasswordForEmail` + `onAuthStateChange('PASSWORD_RECOVERY')`.
+- **Show/hide contraseña**: Toggle Eye/EyeOff agregado a campos de contraseña en `/auth/login` y `/auth/register`.
+- **Cron + emails reservas expiradas**: `cleanup-orders` ahora consulta emails antes del UPDATE y llama `sendPickupRejectionEmail` (no-blocking) para cada reserva cancelada por expiración.
+
+---
+
+## COMPLETADO: Correcciones y mejoras adicionales (Marzo 27, 2026 — sesión 2)
+
+### Resumen
+- **Admin sidebar badge fix**: `layout.tsx` usaba `orderApi.list()` (filtraba por user_id). Cambiado a `orderApi.listAll()` — ahora muestra el conteo real de órdenes pendientes de clientes.
+- **Admin CommandPalette fix**: Búsqueda de órdenes usaba `orderApi.list({ limit: 5 })`. Cambiado a `orderApi.listAll({ limit: 20 })` — ahora encuentra órdenes de cualquier cliente.
+- **Admin clientes — bug fix**: `STATUS_LABELS` no incluía el estado `'paid'`. Órdenes Webpay en estado "Pagado" no mostraban badge. Agregado.
+- **Revenue bug fix**: Cálculo de ingresos en dashboard incluía órdenes `reserved` (retiros sin pagar). Corregido para solo sumar estados `['paid','processing','shipped','delivered']`.
+- **filteredOrders memo bug**: `filterProvider` estaba ausente del array de dependencias del `useMemo` en `/admin/ordenes`. El filtro por proveedor de pago no se aplicaba. Corregido.
+- **Email aprobación de reserva**: Nueva función `sendPickupApprovalEmail()` en `email.ts`. Cuando admin aprueba una reserva de retiro, el cliente recibe email con su código y el total a pagar en tienda.
+- **approveReservation API**: Expandido `select` para obtener `guest_email`, `guest_name`, `guest_surname`, `pickup_code`, `total`, y campos de items. Llama `sendPickupApprovalEmail` de forma no-bloqueante tras aprobar.
+
+---
+
 ## COMPLETADO: Mejoras post-Webpay (Marzo 27, 2026)
 
 ### Resumen

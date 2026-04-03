@@ -124,7 +124,7 @@ export default function OrderDetailPage() {
 
   useEffect(() => {
     if (!user) {
-      router.push('/auth/login');
+      router.push(`/auth/login?redirect=/mis-pedidos/${orderId}`);
       return;
     }
     loadOrder();

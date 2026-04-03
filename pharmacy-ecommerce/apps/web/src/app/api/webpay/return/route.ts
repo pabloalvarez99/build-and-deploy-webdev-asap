@@ -75,11 +75,22 @@ async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
       return NextResponse.redirect(`${BASE_URL}/checkout/webpay/error?reason=order_not_found`, { status: 303 });
     }
 
-    // Update order to paid
-    await supabase
+    // Atomic compare-and-swap: only update if still 'pending' to prevent double-commit
+    const { data: updatedOrders } = await supabase
       .from('orders')
       .update({ status: 'paid' })
-      .eq('id', order.id);
+      .eq('id', order.id)
+      .eq('status', 'pending')
+      .select('id');
+
+    // If nothing updated, another request already committed this transaction — redirect to success
+    if (!updatedOrders || updatedOrders.length === 0) {
+      const fullName = [order.guest_name, order.guest_surname].filter(Boolean).join(' ');
+      return NextResponse.redirect(
+        `${BASE_URL}/checkout/webpay/success?order_id=${order.id}&total=${order.total}&name=${encodeURIComponent(fullName)}&token=${tokenWs}`,
+        { status: 303 }
+      );
+    }
 
     // Deduct stock for each order item
     const { data: orderItems } = await supabase

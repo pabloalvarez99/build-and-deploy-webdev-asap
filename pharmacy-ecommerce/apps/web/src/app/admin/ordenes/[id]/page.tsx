@@ -214,7 +214,7 @@ export default function AdminOrderDetailPage() {
  );
  }
 
- const isPickup = !!order.pickup_code;
+ const isPickup = order.payment_provider === 'store';
  const isWebpay = order.payment_provider === 'webpay';
  const currentStatus = statusOptions.find((s) => s.value === order.status);
  const total = parseFloat(order.total);
@@ -338,6 +338,26 @@ export default function AdminOrderDetailPage() {
  >
  <Package className="w-5 h-5" />
  Marcar en preparación
+ </button>
+ </div>
+ )}
+
+ {/* Webpay processing — mark as delivered */}
+ {isWebpay && order.status === 'processing' && (
+ <div className="card border-2 border-emerald-300 bg-emerald-50 p-6 mb-6">
+ <div className="flex items-center gap-3 mb-3">
+ <Package className="w-6 h-6 text-emerald-600" />
+ <h2 className="text-lg font-bold text-emerald-900">Pedido en preparación</h2>
+ </div>
+ <p className="text-emerald-700 mb-4">
+ Cuando el cliente retire su pedido, márcalo como entregado.
+ </p>
+ <button
+ onClick={() => handleStatusChange('delivered')}
+ className="flex items-center gap-2 px-6 py-3 min-h-[56px] rounded-xl text-lg font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+ >
+ <CheckCircle className="w-5 h-5" />
+ Marcar como entregado
  </button>
  </div>
  )}

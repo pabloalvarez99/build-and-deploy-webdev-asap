@@ -124,7 +124,7 @@ export default function AdminOrdersPage() {
       }
       return true;
     });
-  }, [allOrders, filterStatus, dateFrom, dateTo, minAmount, maxAmount, searchQuery]);
+  }, [allOrders, filterStatus, filterProvider, dateFrom, dateTo, minAmount, maxAmount, searchQuery]);
 
   // Stats computed from all orders (not filtered)
   const stats = useMemo(() => {

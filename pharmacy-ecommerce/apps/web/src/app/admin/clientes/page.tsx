@@ -47,6 +47,7 @@ interface CustomerDetail {
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   pending:    { label: 'Pendiente',     color: 'bg-amber-100 text-amber-700' },
   reserved:   { label: 'Reservado',     color: 'bg-amber-100 text-amber-700' },
+  paid:       { label: 'Pagado',        color: 'bg-green-100 text-green-700' },
   processing: { label: 'En proceso',    color: 'bg-blue-100 text-blue-700' },
   shipped:    { label: 'Enviado',       color: 'bg-purple-100 text-purple-700' },
   delivered:  { label: 'Entregado',     color: 'bg-emerald-100 text-emerald-700' },
