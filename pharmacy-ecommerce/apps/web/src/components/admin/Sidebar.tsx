@@ -62,18 +62,18 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
   const sidebarContent = (
     <>
       {/* Logo / Header */}
-      <div className="flex items-center justify-between h-16 px-4 border-b border-slate-200">
+      <div className="flex items-center justify-between h-16 px-4 border-b border-slate-200 dark:border-slate-700">
         {!isCollapsed && (
           <Link href="/admin" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
               <Package className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-slate-900">Admin</span>
+            <span className="font-bold text-slate-900 dark:text-slate-100">Admin</span>
           </Link>
         )}
         <button
           onClick={handleCollapse}
-          className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hidden lg:flex"
+          className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hidden lg:flex"
         >
           <ChevronLeft className={`w-5 h-5 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} />
         </button>
@@ -84,10 +84,10 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
         <div className="px-3 py-3">
           <button
             onClick={onOpenCommandPalette}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-500 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
           >
             <span className="flex-1 text-left">Buscar...</span>
-            <kbd className="px-1.5 py-0.5 text-xs bg-white rounded border border-slate-300">
+            <kbd className="px-1.5 py-0.5 text-xs bg-white dark:bg-slate-800 rounded border border-slate-300 dark:border-slate-600">
               ⌘K
             </kbd>
           </button>
@@ -108,8 +108,8 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
                 active
-                  ? 'bg-emerald-50 text-emerald-700 font-medium'
-                  : 'text-slate-600 hover:bg-slate-100'
+                  ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 font-medium'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
               } ${isCollapsed ? 'justify-center' : ''}`}
               title={isCollapsed ? item.label : undefined}
             >
@@ -144,18 +144,18 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-slate-200 p-3 space-y-2">
+      <div className="border-t border-slate-200 dark:border-slate-700 p-3 space-y-2">
         {/* User info */}
         {user && !isCollapsed && (
-          <div className="flex items-center gap-3 px-3 py-2 bg-slate-50 rounded-xl">
-            <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-emerald-600" />
+          <div className="flex items-center gap-3 px-3 py-2 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+            <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
+              <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">
+              <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
                 {user.name || 'Admin'}
               </p>
-              <p className="text-xs text-slate-500 truncate">{user.email}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
             </div>
           </div>
         )}
@@ -178,7 +178,7 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
   return (
     <>
       {/* Mobile bottom navigation bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t-2 border-slate-200 flex items-stretch h-16">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-800 border-t-2 border-slate-200 dark:border-slate-700 flex items-stretch h-16">
         {navItems.map((item) => {
           const active = isActive(item.href, item.exact);
           const hasBadge =
@@ -196,7 +196,7 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
               key={item.href}
               href={item.href}
               className={`flex flex-col items-center justify-center flex-1 gap-0.5 relative transition-colors ${
-                active ? 'text-emerald-600' : 'text-slate-500 hover:text-slate-700'
+                active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
               }`}
             >
               {active && (
@@ -210,7 +210,7 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
                   </span>
                 )}
               </div>
-              <span className={`text-[10px] font-medium leading-tight ${active ? 'text-emerald-600' : ''}`}>
+              <span className={`text-[10px] font-medium leading-tight ${active ? 'text-emerald-600 dark:text-emerald-400' : ''}`}>
                 {item.label}
               </span>
             </Link>
@@ -220,7 +220,7 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
 
       {/* Desktop sidebar */}
       <aside
-        className={`hidden lg:flex flex-col fixed inset-y-0 left-0 z-30 bg-white border-r border-slate-200 transition-all duration-300 ${
+        className={`hidden lg:flex flex-col fixed inset-y-0 left-0 z-30 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transition-all duration-300 ${
           isCollapsed ? 'w-16' : 'w-64'
         }`}
       >

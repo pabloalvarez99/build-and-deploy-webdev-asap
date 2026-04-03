@@ -94,14 +94,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
  // Don't render until auth is confirmed
  if (!user || user.role !== 'admin') {
  return (
- <div className="min-h-screen flex items-center justify-center bg-slate-50">
+ <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
  <div className="animate-spin w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full" />
  </div>
  );
  }
 
  return (
- <div className="min-h-screen bg-slate-50">
+ <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
  {/* Sidebar */}
  <Sidebar
  pendingOrders={pendingOrders}
@@ -117,7 +117,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
  }`}
  >
  {/* Top bar */}
- <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl border-b border-slate-200">
+ <header className="sticky top-0 z-20 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700">
  <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
  {/* Left side - breadcrumbs */}
  <div className="flex-1">
@@ -128,10 +128,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
  <div className="flex items-center gap-2">
  <button
  onClick={() => setIsCommandPaletteOpen(true)}
- className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-slate-500 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+ className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
  >
  <span>Buscar...</span>
- <kbd className="px-1.5 py-0.5 text-xs bg-white rounded border border-slate-300">
+ <kbd className="px-1.5 py-0.5 text-xs bg-white dark:bg-slate-800 rounded border border-slate-300 dark:border-slate-600">
  ⌘K
  </kbd>
  </button>
