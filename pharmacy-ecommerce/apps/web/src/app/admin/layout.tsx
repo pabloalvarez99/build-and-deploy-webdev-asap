@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { productApi, orderApi } from '@/lib/api';
 import { useAdminShortcuts } from '@/hooks/useAdminShortcuts';
@@ -13,6 +13,7 @@ import { ShortcutsHelp } from '@/components/admin/ShortcutsHelp';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
  const router = useRouter();
+ const pathname = usePathname();
  const { user } = useAuthStore();
  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
  const [isShortcutsHelpOpen, setIsShortcutsHelpOpen] = useState(false);
@@ -56,13 +57,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
  // Auth check
  useEffect(() => {
  if (!user) {
- router.push('/auth/login');
+ router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
  return;
  }
  if (user.role !== 'admin') {
  router.push('/');
  }
- }, [user, router]);
+ }, [user, router, pathname]);
 
  // Load stats for badges
  useEffect(() => {
@@ -71,7 +72,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
  const loadStats = async () => {
  try {
  const [orders, reservations, lowStock, outStock] = await Promise.all([
- orderApi.list({ status: 'pending', limit: 1 }),
+ orderApi.listAll({ status: 'pending', limit: 1 }),
  orderApi.listAll({ status: 'reserved', limit: 1 }),
  productApi.list({ limit: 1, active_only: true, stock_filter: 'low' }),
  productApi.list({ limit: 1, active_only: true, stock_filter: 'out' }),
@@ -111,15 +112,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
  {/* Main content */}
  <main
- className={`min-h-screen transition-all duration-300 ${
+ className={`min-h-screen transition-all duration-300 pb-16 lg:pb-0 ${
  sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'
  }`}
  >
  {/* Top bar */}
  <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl border-b border-slate-200">
  <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
- {/* Left side - breadcrumbs on larger screens */}
- <div className="flex-1 pl-12 lg:pl-0">
+ {/* Left side - breadcrumbs */}
+ <div className="flex-1">
  <Breadcrumbs />
  </div>
 

@@ -9,8 +9,6 @@ import {
   Package,
   ShoppingBag,
   Tags,
-  Menu,
-  X,
   LogOut,
   User,
   ChevronLeft,
@@ -41,11 +39,6 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-
-  useEffect(() => {
-    setIsMobileOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     const stored = localStorage.getItem('admin-sidebar-collapsed');
@@ -184,36 +177,46 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
 
   return (
     <>
-      {/* Mobile menu button */}
-      <button
-        onClick={() => setIsMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-40 p-3 bg-white rounded-lg shadow-lg border border-slate-200"
-      >
-        <Menu className="w-5 h-5 text-slate-600" />
-      </button>
+      {/* Mobile bottom navigation bar */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t-2 border-slate-200 flex items-stretch h-16">
+        {navItems.map((item) => {
+          const active = isActive(item.href, item.exact);
+          const hasBadge =
+            (item.href === '/admin/ordenes' && (pendingOrders > 0 || pendingReservations > 0)) ||
+            (item.href === '/admin/productos' && criticalStock > 0);
+          const badgeCount =
+            item.href === '/admin/ordenes'
+              ? pendingOrders + pendingReservations
+              : item.href === '/admin/productos'
+              ? criticalStock
+              : 0;
 
-      {/* Mobile overlay */}
-      {isMobileOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
-          onClick={() => setIsMobileOpen(false)}
-        />
-      )}
-
-      {/* Mobile sidebar */}
-      <aside
-        className={`lg:hidden fixed inset-y-0 left-0 z-50 w-64 max-w-[85vw] bg-white transform transition-transform ${
-          isMobileOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <button
-          onClick={() => setIsMobileOpen(false)}
-          className="absolute top-4 right-4 p-2 rounded-lg hover:bg-slate-100"
-        >
-          <X className="w-5 h-5 text-slate-500" />
-        </button>
-        <div className="h-full flex flex-col">{sidebarContent}</div>
-      </aside>
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col items-center justify-center flex-1 gap-0.5 relative transition-colors ${
+                active ? 'text-emerald-600' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {active && (
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-emerald-500 rounded-b-full" />
+              )}
+              <div className="relative">
+                <item.icon className="w-5 h-5" />
+                {hasBadge && (
+                  <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5">
+                    {badgeCount > 9 ? '9+' : badgeCount}
+                  </span>
+                )}
+              </div>
+              <span className={`text-[10px] font-medium leading-tight ${active ? 'text-emerald-600' : ''}`}>
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
 
       {/* Desktop sidebar */}
       <aside
