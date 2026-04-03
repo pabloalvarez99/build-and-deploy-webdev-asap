@@ -4,6 +4,31 @@
 
 ---
 
+## COMPLETADO: Bugfixes, dark mode admin, categorías inactivas (Abril 3, 2026)
+
+### Resumen
+- **res.ok en reportes**: `loadData` en reportes ahora verifica `res.ok` antes de `setData`. Sin esto, un 401/403 ponía `{ error: '...' }` en `data` y crasheaba el render en `data.kpis.totalRevenue`.
+- **Crash en clientes**: Panel de detalle de cliente hacía `data.customer.name` sin verificar `res.ok`. Si la API fallaba (e.g. 404), crasheaba. Corregido con early return.
+- **Register redirect**: Página de registro ignoraba `?redirect=` del query. Al registrarse desde checkout, el usuario volvía al home perdiendo el carrito. Corregido con Suspense + `useSearchParams`, igual que login page. También preserva el redirect en el link "Inicia sesión".
+- **Cart botón + sin deshabilitar**: El botón de incrementar cantidad en carrito no tenía `disabled` cuando `quantity >= stock`. El usuario podía hacer click indefinidamente (cartStore lo capaba en fetchCart, pero sin feedback visual). Corregido: `disabled={item.quantity >= item.stock}`.
+- **Categorías inactivas invisibles (bug crítico)**: `productApi.listCategories()` filtraba `active = true`. Si el admin desactivaba una categoría, desaparecía del panel de admin sin poder reactivarla. Corregido: `listCategories` acepta `activeOnly` param (default: `true` para público, `false` para admin). Admin categorías y dashboard usan `false`.
+- **Dark mode NotificationBell dropdown**: Fondo, bordes, textos y highlight de no-leído actualizados.
+- **Dark mode CommandPalette**: Dialog, input, resultados, footer con teclas de acceso, búsquedas recientes.
+- **Dark mode admin/reportes**: Header, botones de período, KPI cards, headers de charts, tabla de productos, empty states.
+
+### Archivos modificados
+- `src/lib/api.ts` — listCategories acepta activeOnly param
+- `src/app/admin/categorias/page.tsx` — usa listCategories(false) + dark mode completo
+- `src/app/admin/page.tsx` — usa listCategories(false) para conteo correcto
+- `src/app/admin/reportes/page.tsx` — res.ok check + dark mode completo
+- `src/app/admin/clientes/page.tsx` — res.ok check antes de acceder a data.customer
+- `src/app/auth/register/page.tsx` — Suspense + useSearchParams + redirect chain
+- `src/app/carrito/page.tsx` — botón + disabled cuando quantity >= stock
+- `src/components/admin/NotificationBell.tsx` — dark mode dropdown
+- `src/components/admin/CommandPalette.tsx` — dark mode dialog completo
+
+---
+
 ## COMPLETADO: Dark mode elegante + responsividad móvil (Abril 3, 2026)
 
 ### Resumen
