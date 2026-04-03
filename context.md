@@ -31,8 +31,8 @@
 | `docker` | 29.2.1 | Contenedores |
 | `curl` | MinGW64 | HTTP requests |
 
-**No disponibles en bash:**
-- `gh` (GitHub CLI) — no instalado
+**Requieren path completo desde bash (no en PATH automáticamente):**
+- `gh` v2.89.0 — instalado en `/c/Program Files/GitHub CLI/gh.exe`. Autenticado como pabloalvarez99. Agregar al PATH: `echo 'export PATH="$PATH:/c/Program Files/GitHub CLI"' >> ~/.bashrc`
 - `flyctl` — no instalado
 - `python` — no disponible en PATH
 
