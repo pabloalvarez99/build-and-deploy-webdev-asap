@@ -35,7 +35,7 @@ export default function AdminCategoriesPage() {
  const loadCategories = async () => {
  setIsLoading(true);
  try {
- const data = await productApi.listCategories();
+ const data = await productApi.listCategories(false);
  setCategories(data);
 
  // Load product counts for each category

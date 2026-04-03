@@ -214,13 +214,11 @@ export const productApi = {
       '/api/admin/products/import', { body: data }
     ),
 
-  listCategories: async (): Promise<Category[]> => {
+  listCategories: async (activeOnly = true): Promise<Category[]> => {
     const supabase = getSupabase();
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('active', true)
-      .order('name');
+    let query = supabase.from('categories').select('*').order('name');
+    if (activeOnly) query = query.eq('active', true);
+    const { data, error } = await query;
     if (error) throw new Error(error.message);
     return data || [];
   },

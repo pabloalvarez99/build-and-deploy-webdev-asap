@@ -143,7 +143,7 @@ export default function AdminPage() {
  const [allProducts, activeProducts, categories, allOrders, pendingOrders, reservedOrders, outOfStockCount, lowStockCount, outOfStockDisplay] = await Promise.all([
  productApi.list({ limit: 1, active_only: false }),
  productApi.list({ limit: 1, active_only: true }),
- productApi.listCategories(),
+ productApi.listCategories(false),
  orderApi.listAll({ limit: 1000 }),
  orderApi.listAll({ status: 'pending', limit: 1 }),
  orderApi.listAll({ status: 'reserved', limit: 1 }),
