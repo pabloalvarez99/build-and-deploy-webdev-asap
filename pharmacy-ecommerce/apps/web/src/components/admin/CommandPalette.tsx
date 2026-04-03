@@ -271,10 +271,10 @@ export function CommandPalette({ isOpen, onClose, onNewProduct }: CommandPalette
 
  {/* Dialog */}
  <div className="relative min-h-full flex items-start justify-center pt-[15vh] pb-20 px-4">
- <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden">
+ <div className="relative w-full max-w-xl bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden">
  {/* Search input */}
- <div className="flex items-center gap-3 px-4 border-b border-slate-200">
- <Search className="w-5 h-5 text-slate-400" />
+ <div className="flex items-center gap-3 px-4 border-b border-slate-200 dark:border-slate-700">
+ <Search className="w-5 h-5 text-slate-400 dark:text-slate-500" />
  <input
  ref={inputRef}
  type="text"
@@ -282,14 +282,14 @@ export function CommandPalette({ isOpen, onClose, onNewProduct }: CommandPalette
  onChange={(e) => setQuery(e.target.value)}
  onKeyDown={handleKeyDown}
  placeholder="Buscar productos, órdenes, acciones..."
- className="flex-1 py-4 bg-transparent text-slate-900 placeholder:text-slate-400 focus:outline-none"
+ className="flex-1 py-4 bg-transparent text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
  />
  {query && (
- <button onClick={() => setQuery('')} className="p-1 hover:bg-slate-100 rounded">
- <X className="w-4 h-4 text-slate-400" />
+ <button onClick={() => setQuery('')} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded">
+ <X className="w-4 h-4 text-slate-400 dark:text-slate-500" />
  </button>
  )}
- <kbd className="hidden sm:inline-flex px-2 py-1 text-xs bg-slate-100 text-slate-500 rounded border border-slate-200">
+ <kbd className="hidden sm:inline-flex px-2 py-1 text-xs bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded border border-slate-200 dark:border-slate-600">
  ESC
  </kbd>
  </div>
@@ -297,7 +297,7 @@ export function CommandPalette({ isOpen, onClose, onNewProduct }: CommandPalette
  {/* Results */}
  <div className="max-h-[50vh] sm:max-h-[400px] overflow-y-auto py-2">
  {isSearching ? (
- <div className="px-4 py-8 text-center text-slate-500">
+ <div className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
  <div className="animate-spin w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-2" />
  Buscando...
  </div>
@@ -317,7 +317,7 @@ export function CommandPalette({ isOpen, onClose, onNewProduct }: CommandPalette
 
  return (
  <div key={type}>
- <div className="px-4 py-2 text-xs font-medium text-slate-500 uppercase">
+ <div className="px-4 py-2 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
  {typeLabels[type]}
  </div>
  {typeResults.map((result) => {
@@ -331,19 +331,19 @@ export function CommandPalette({ isOpen, onClose, onNewProduct }: CommandPalette
  onMouseEnter={() => setSelectedIndex(globalIndex)}
  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
  isSelected
- ? 'bg-emerald-50'
- : 'hover:bg-slate-50'
+ ? 'bg-emerald-50 dark:bg-emerald-900/20'
+ : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'
  }`}
  >
- <div className={`${isSelected ? 'text-emerald-600' : 'text-slate-400'}`}>
+ <div className={`${isSelected ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`}>
  {result.icon}
  </div>
  <div className="flex-1 min-w-0">
- <div className={`font-medium ${isSelected ? 'text-emerald-700' : 'text-slate-900'}`}>
+ <div className={`font-medium ${isSelected ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-900 dark:text-slate-100'}`}>
  {result.title}
  </div>
  {result.subtitle && (
- <div className="text-sm text-slate-500 truncate">
+ <div className="text-sm text-slate-500 dark:text-slate-400 truncate">
  {result.subtitle}
  </div>
  )}
@@ -359,22 +359,22 @@ export function CommandPalette({ isOpen, onClose, onNewProduct }: CommandPalette
  })}
  </>
  ) : (
- <div className="px-4 py-8 text-center text-slate-500">
- No se encontraron resultados para "{query}"
+ <div className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+ No se encontraron resultados para &quot;{query}&quot;
  </div>
  )}
 
  {/* Recent searches */}
  {!query && recentSearches.length > 0 && (
- <div className="border-t border-slate-200 mt-2 pt-2">
- <div className="px-4 py-2 text-xs font-medium text-slate-500 uppercase">
+ <div className="border-t border-slate-200 dark:border-slate-700 mt-2 pt-2">
+ <div className="px-4 py-2 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
  Búsquedas recientes
  </div>
  {recentSearches.map((search, i) => (
  <button
  key={i}
  onClick={() => setQuery(search)}
- className="w-full flex items-center gap-3 px-4 py-2 text-left text-slate-600 hover:bg-slate-50"
+ className="w-full flex items-center gap-3 px-4 py-2 text-left text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50"
  >
  <Clock className="w-4 h-4" />
  {search}
@@ -385,14 +385,14 @@ export function CommandPalette({ isOpen, onClose, onNewProduct }: CommandPalette
  </div>
 
  {/* Footer */}
- <div className="px-4 py-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+ <div className="px-4 py-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
  <div className="flex items-center gap-4">
  <span className="flex items-center gap-1">
- <kbd className="px-1.5 py-0.5 bg-slate-100 rounded">↑↓</kbd>
+ <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded">↑↓</kbd>
  navegar
  </span>
  <span className="flex items-center gap-1">
- <kbd className="px-1.5 py-0.5 bg-slate-100 rounded">↵</kbd>
+ <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded">↵</kbd>
  seleccionar
  </span>
  </div>

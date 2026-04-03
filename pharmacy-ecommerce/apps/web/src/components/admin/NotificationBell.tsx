@@ -166,9 +166,9 @@ export function NotificationBell() {
  <div className="relative" ref={dropdownRef}>
  <button
  onClick={() => setIsOpen(!isOpen)}
- className="relative p-2 rounded-lg hover:bg-slate-100 transition-colors"
+ className="relative p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
  >
- <Bell className="w-5 h-5 text-slate-600" />
+ <Bell className="w-5 h-5 text-slate-600 dark:text-slate-300" />
  {unreadCount > 0 && (
  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
  {unreadCount > 9 ? '9+' : unreadCount}
@@ -177,15 +177,15 @@ export function NotificationBell() {
  </button>
 
  {isOpen && (
- <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50">
+ <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50">
  {/* Header */}
- <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
- <h3 className="font-semibold text-slate-900">Notificaciones</h3>
+ <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+ <h3 className="font-semibold text-slate-900 dark:text-slate-100">Notificaciones</h3>
  <div className="flex items-center gap-2">
  {unreadCount > 0 && (
  <button
  onClick={markAllAsRead}
- className="text-xs text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+ className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 flex items-center gap-1"
  >
  <Check className="w-3 h-3" />
  Marcar leídas
@@ -194,7 +194,7 @@ export function NotificationBell() {
  {notifications.length > 0 && (
  <button
  onClick={clearAll}
- className="text-xs text-slate-500 hover:text-slate-700"
+ className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
  >
  Limpiar
  </button>
@@ -213,32 +213,32 @@ export function NotificationBell() {
  markAsRead(notification.id);
  setIsOpen(false);
  }}
- className={`flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors ${
- !notification.read ? 'bg-emerald-50/50' : ''
+ className={`flex items-start gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${
+ !notification.read ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : ''
  }`}
  >
  <div className="mt-0.5">{getIcon(notification.type)}</div>
  <div className="flex-1 min-w-0">
  <div className="flex items-center justify-between gap-2">
- <p className={`text-sm ${!notification.read ? 'font-semibold' : 'font-medium'} text-slate-900`}>
+ <p className={`text-sm ${!notification.read ? 'font-semibold' : 'font-medium'} text-slate-900 dark:text-slate-100`}>
  {notification.title}
  </p>
  {!notification.read && (
  <span className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0" />
  )}
  </div>
- <p className="text-sm text-slate-500 truncate">
+ <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
  {notification.message}
  </p>
- <p className="text-xs text-slate-400 mt-1">
+ <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
  {formatTime(notification.timestamp)}
  </p>
  </div>
  </Link>
  ))
  ) : (
- <div className="px-4 py-8 text-center text-slate-500">
- <Bell className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+ <div className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+ <Bell className="w-8 h-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
  <p>No hay notificaciones</p>
  </div>
  )}
