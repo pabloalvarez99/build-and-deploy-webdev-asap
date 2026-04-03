@@ -4,6 +4,35 @@
 
 ---
 
+## COMPLETADO: Dark mode elegante + responsividad móvil (Abril 3, 2026)
+
+### Resumen
+- **Dark mode elegante**: Reemplazada paleta `slate-*` (azul-grisáceo `#0f172a`) por warm-neutral dark (`#13131a`, `#1e1e27`, `#2a2a35`). Un único bloque CSS en `globals.css` post-utilities override afecta todas las páginas sin tocar archivos individuales. Referencia visual: GitHub Dark, Linear, Vercel dark UI.
+- **Responsividad móvil 320-375px**: 6 bugs críticos corregidos:
+  - `overflow-x: hidden` en `html` y `body` — elimina scroll horizontal global
+  - Navbar logo: `text-sm sm:text-lg`, SVG `w-7 sm:w-[34px]`, gap reducido en xs
+  - Cart button navbar: `px-3 sm:px-4`, `min-h-48px` en xs
+  - Categorías home: `text-sm sm:text-base` en grid 2 columnas
+  - Mis-pedidos lista: badge de estado `flex-col` en móvil con `whitespace-nowrap`
+  - Mis-pedidos detalle: `min-w-0 flex-1` en nombres, pickup code `text-3xl sm:text-4xl`
+  - Reserva: pickup code `text-3xl sm:text-5xl` (era `text-5xl` fijo — desbordaba)
+- **Dark mode auth**: `auth/login` y `auth/register` — todos los elementos con `dark:` variants (register estaba completamente sin dark mode)
+- **Mis-pedidos detail statusConfig**: todos los badges de estado con `dark:bg-*/30 dark:text-*-300`
+- **context.md creado**: Documentación completa de herramientas, CLIs, plugins y estado del proyecto para retomar desde otro PC
+
+### Archivos modificados
+- `src/app/globals.css` — paleta dark mode elegant + overflow-x:hidden + overrides de slate-*
+- `src/components/Navbar.tsx` — logo compacto xs, cart button xs, gap reducido
+- `src/app/page.tsx` — categorías text-sm xs
+- `src/app/mis-pedidos/page.tsx` — badge estado layout móvil
+- `src/app/mis-pedidos/[id]/page.tsx` — statusConfig dark:, product min-w-0, pickup code size, header badge
+- `src/app/checkout/reservation/page.tsx` — pickup code size
+- `src/app/auth/login/page.tsx` — dark mode completo
+- `src/app/auth/register/page.tsx` — dark mode completo
+- `context.md` (raíz repo) — nuevo archivo de contexto
+
+---
+
 ## COMPLETADO: Dark mode + recetas WhatsApp + horario (Abril 2, 2026)
 
 ### Resumen
