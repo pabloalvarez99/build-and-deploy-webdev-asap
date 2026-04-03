@@ -108,6 +108,7 @@ export default function ClientesPage() {
         ? `/api/admin/clientes/guest?email=${encodeURIComponent(c.email)}`
         : `/api/admin/clientes/${c.id}`;
       const res = await fetch(url);
+      if (!res.ok) { setSelected(null); return; }
       const data = await res.json();
       setSelected(data);
       setEditName(data.customer.name);

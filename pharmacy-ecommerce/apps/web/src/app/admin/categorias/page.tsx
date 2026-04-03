@@ -134,8 +134,8 @@ export default function AdminCategoriesPage() {
  <div className="max-w-4xl mx-auto">
  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
  <div>
- <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Categorías</h1>
- <p className="text-slate-500 mt-1">
+ <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">Categorías</h1>
+ <p className="text-slate-500 dark:text-slate-400 mt-1">
  Gestiona las categorías de productos
  </p>
  </div>
@@ -155,9 +155,9 @@ export default function AdminCategoriesPage() {
  {/* Form Modal */}
  {showForm && (
  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
- <div className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
+ <div className="bg-white dark:bg-slate-800 rounded-xl p-4 sm:p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
  <div className="flex items-center justify-between mb-6">
- <h2 className="text-lg sm:text-xl font-bold text-slate-900">
+ <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">
  {editingCategory ? 'Editar Categoría' : 'Nueva Categoría'}
  </h2>
  <button
@@ -174,7 +174,7 @@ export default function AdminCategoriesPage() {
 
  <form onSubmit={handleSubmit} className="space-y-4">
  <div>
- <label className="block text-sm font-medium text-slate-700 mb-1">
+ <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
  Nombre
  </label>
  <input
@@ -193,7 +193,7 @@ export default function AdminCategoriesPage() {
  </div>
 
  <div>
- <label className="block text-sm font-medium text-slate-700 mb-1">
+ <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
  Slug
  </label>
  <input
@@ -203,11 +203,11 @@ export default function AdminCategoriesPage() {
  className="input"
  required
  />
- <p className="text-xs text-slate-500 mt-1">URL amigable: /categoria/{formData.slug}</p>
+ <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">URL amigable: /categoria/{formData.slug}</p>
  </div>
 
  <div>
- <label className="block text-sm font-medium text-slate-700 mb-1">
+ <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
  Descripción
  </label>
  <textarea
@@ -226,7 +226,7 @@ export default function AdminCategoriesPage() {
  onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
  className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
  />
- <label htmlFor="active" className="text-sm font-medium text-slate-700">
+ <label htmlFor="active" className="text-sm font-medium text-slate-700 dark:text-slate-300">
  Categoría activa (visible en tienda)
  </label>
  </div>
@@ -256,13 +256,13 @@ export default function AdminCategoriesPage() {
  {/* Delete Confirmation Modal */}
  {deleteConfirm && (
  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
- <div className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-sm shadow-xl">
- <div className="flex items-center gap-3 mb-4 text-red-600">
+ <div className="bg-white dark:bg-slate-800 rounded-xl p-4 sm:p-6 w-full max-w-sm shadow-xl">
+ <div className="flex items-center gap-3 mb-4 text-red-600 dark:text-red-400">
  <AlertTriangle className="w-6 h-6" />
  <h3 className="text-lg font-semibold">Eliminar Categoría</h3>
  </div>
 
- <p className="text-slate-600 mb-2">
+ <p className="text-slate-600 dark:text-slate-300 mb-2">
  ¿Estás seguro de eliminar la categoría <strong>{deleteConfirm.name}</strong>?
  </p>
 
@@ -310,7 +310,7 @@ export default function AdminCategoriesPage() {
  <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
  <div className="flex-1">
  <div className="flex items-center gap-3">
- <h3 className="font-semibold text-slate-900">{category.name}</h3>
+ <h3 className="font-semibold text-slate-900 dark:text-slate-100">{category.name}</h3>
  <span
  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
  category.active
@@ -321,11 +321,11 @@ export default function AdminCategoriesPage() {
  {category.active ? 'Activo' : 'Inactivo'}
  </span>
  </div>
- <p className="text-sm text-slate-500 mt-1">/{category.slug}</p>
+ <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">/{category.slug}</p>
  {category.description && (
- <p className="text-sm text-slate-600 mt-2">{category.description}</p>
+ <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">{category.description}</p>
  )}
- <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
+ <p className="text-xs text-slate-400 dark:text-slate-500 mt-2 flex items-center gap-1">
  <Package className="w-3 h-3" />
  {productCounts[category.id] || 0} productos
  </p>
@@ -354,7 +354,7 @@ export default function AdminCategoriesPage() {
  ) : (
  <div className="card p-12 text-center">
  <Package className="w-12 h-12 mx-auto text-slate-300 mb-4" />
- <p className="text-slate-500 mb-4">No hay categorías registradas</p>
+ <p className="text-slate-500 dark:text-slate-400 mb-4">No hay categorías registradas</p>
  <button
  onClick={() => {
  resetForm();

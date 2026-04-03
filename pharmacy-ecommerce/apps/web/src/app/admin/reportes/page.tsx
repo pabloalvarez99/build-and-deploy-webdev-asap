@@ -54,7 +54,7 @@ export default function AdminReportesPage() {
       const from = getFromDate(period);
       const to = new Date().toISOString().split('T')[0];
       const res = await fetch(`/api/admin/reportes?from=${from}&to=${to}`);
-      setData(await res.json());
+      if (res.ok) setData(await res.json());
     } catch {
       // Silently fail, show empty state
     } finally {

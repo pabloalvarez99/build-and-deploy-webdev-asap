@@ -1,13 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { Mail, Lock, User, AlertCircle } from 'lucide-react';
 
-export default function RegisterPage() {
+function RegisterContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const rawRedirect = searchParams.get('redirect') || '/';
+  const redirect = rawRedirect.startsWith('/') ? rawRedirect : '/';
+
   const { register, isLoading, error, clearError } = useAuthStore();
 
   const [name, setName] = useState('');
@@ -33,11 +37,15 @@ export default function RegisterPage() {
 
     try {
       await register(email, password, name || undefined);
-      router.push('/');
+      router.push(redirect);
     } catch {
       // Error is handled in store
     }
   };
+
+  const loginHref = redirect !== '/'
+    ? `/auth/login?redirect=${encodeURIComponent(redirect)}`
+    : '/auth/login';
 
   const displayError = validationError || error;
 
@@ -72,6 +80,7 @@ export default function RegisterPage() {
                 onChange={(e) => setName(e.target.value)}
                 className="input pl-10"
                 placeholder="Tu nombre"
+                autoComplete="given-name"
               />
             </div>
           </div>
@@ -90,6 +99,7 @@ export default function RegisterPage() {
                 className="input pl-10"
                 placeholder="tu@email.com"
                 required
+                autoComplete="email"
               />
             </div>
           </div>
@@ -108,6 +118,7 @@ export default function RegisterPage() {
                 className="input pl-10"
                 placeholder="Min. 6 caracteres"
                 required
+                autoComplete="new-password"
               />
             </div>
           </div>
@@ -126,6 +137,7 @@ export default function RegisterPage() {
                 className="input pl-10"
                 placeholder="Repite tu contraseña"
                 required
+                autoComplete="new-password"
               />
             </div>
           </div>
@@ -141,11 +153,19 @@ export default function RegisterPage() {
 
         <p className="text-center text-slate-500 dark:text-slate-400 mt-6">
           ¿Ya tienes cuenta?{' '}
-          <Link href="/auth/login" className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium">
+          <Link href={loginHref} className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium">
             Inicia sesión
           </Link>
         </p>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[80vh]" />}>
+      <RegisterContent />
+    </Suspense>
   );
 }

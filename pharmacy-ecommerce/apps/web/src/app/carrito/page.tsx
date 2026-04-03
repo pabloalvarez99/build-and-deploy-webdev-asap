@@ -118,7 +118,8 @@ export default function CartPage() {
                           </span>
                           <button
                             onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                            className="w-11 h-11 sm:w-14 sm:h-14 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                            className="w-11 h-11 sm:w-14 sm:h-14 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-30"
+                            disabled={item.quantity >= item.stock}
                             aria-label={`Aumentar cantidad de ${item.product_name}`}
                           >
                             <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
