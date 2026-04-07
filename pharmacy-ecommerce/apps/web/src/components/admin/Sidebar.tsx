@@ -113,22 +113,22 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
               } ${isCollapsed ? 'justify-center' : ''}`}
               title={isCollapsed ? item.label : undefined}
             >
-              <item.icon className={`w-5 h-5 ${active ? 'text-emerald-600' : ''}`} />
+              <item.icon className={`w-5 h-5 ${active ? 'text-emerald-600 dark:text-emerald-400' : ''}`} />
               {!isCollapsed && (
                 <>
                   <span className="flex-1">{item.label}</span>
                   {showReservationBadge && (
-                    <span className="px-2 py-0.5 text-xs font-bold bg-amber-100 text-amber-800 rounded-full">
+                    <span className="px-2 py-0.5 text-xs font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-full">
                       {pendingReservations}
                     </span>
                   )}
                   {showBadge && (
-                    <span className="px-2 py-0.5 text-xs font-bold bg-yellow-100 text-yellow-800 rounded-full">
+                    <span className="px-2 py-0.5 text-xs font-bold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded-full">
                       {pendingOrders}
                     </span>
                   )}
                   {showStockBadge && (
-                    <span className="px-2 py-0.5 text-xs font-bold bg-orange-100 text-orange-800 rounded-full flex items-center gap-1">
+                    <span className="px-2 py-0.5 text-xs font-bold bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded-full flex items-center gap-1">
                       <AlertTriangle className="w-3 h-3" />
                       {criticalStock}
                     </span>
@@ -163,7 +163,7 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
         {/* Logout */}
         <button
           onClick={logout}
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 transition-colors ${
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors ${
             isCollapsed ? 'justify-center' : ''
           }`}
           title={isCollapsed ? 'Cerrar sesión' : undefined}

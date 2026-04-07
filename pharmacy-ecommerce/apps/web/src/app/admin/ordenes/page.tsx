@@ -379,8 +379,8 @@ export default function AdminOrdersPage() {
             <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Método de pago</p>
             <div className="flex flex-wrap gap-2">
               {[
-                { value: 'webpay', label: 'Webpay Plus', icon: <CreditCard className="w-3.5 h-3.5" />, activeClass: 'bg-blue-100 text-blue-800' },
-                { value: 'store', label: 'Retiro en tienda', icon: <Store className="w-3.5 h-3.5" />, activeClass: 'bg-amber-100 text-amber-800' },
+                { value: 'webpay', label: 'Webpay Plus', icon: <CreditCard className="w-3.5 h-3.5" />, activeClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' },
+                { value: 'store', label: 'Retiro en tienda', icon: <Store className="w-3.5 h-3.5" />, activeClass: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300' },
               ].map(({ value, label, icon, activeClass }) => (
                 <button
                   key={value}
