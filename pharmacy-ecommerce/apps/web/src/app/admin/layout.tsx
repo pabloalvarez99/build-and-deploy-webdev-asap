@@ -5,6 +5,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { productApi, orderApi } from '@/lib/api';
 import { useAdminShortcuts } from '@/hooks/useAdminShortcuts';
+import { useTheme } from '@/hooks/useTheme';
+import { Sun, Moon } from 'lucide-react';
 import { Sidebar } from '@/components/admin/Sidebar';
 import { CommandPalette } from '@/components/admin/CommandPalette';
 import { NotificationBell } from '@/components/admin/NotificationBell';
@@ -21,6 +23,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
  const [pendingReservations, setPendingReservations] = useState(0);
  const [criticalStock, setCriticalStock] = useState(0);
  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+ const { theme, toggleTheme, mounted } = useTheme();
 
  // Keyboard shortcuts
  useAdminShortcuts({
@@ -135,6 +138,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
  ⌘K
  </kbd>
  </button>
+ {mounted && (
+ <button
+  onClick={toggleTheme}
+  aria-label={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
+  className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+ >
+  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+ </button>
+ )}
  <NotificationBell />
  </div>
  </div>

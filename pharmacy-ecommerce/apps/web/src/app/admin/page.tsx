@@ -102,6 +102,16 @@ export default function AdminPage() {
  const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
  const [statusData, setStatusData] = useState<StatusData[]>([]);
  const [isLoading, setIsLoading] = useState(true);
+ const [isDark, setIsDark] = useState(false);
+
+ // Track dark mode for Recharts SVG props (can't use Tailwind dark: on SVG attributes)
+ useEffect(() => {
+  const check = () => setIsDark(document.documentElement.classList.contains('dark'));
+  check();
+  const observer = new MutationObserver(check);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  return () => observer.disconnect();
+ }, []);
 
  useEffect(() => {
  if (!user) {
@@ -275,42 +285,42 @@ export default function AdminPage() {
  value: stats.totalProducts.toLocaleString('es-CL'),
  icon: <Package className="w-6 h-6" />,
  color: 'bg-blue-500',
- textColor: 'text-blue-600',
- },
- {
- title: 'Categorías',
- value: stats.totalCategories.toLocaleString('es-CL'),
- icon: <Tags className="w-6 h-6" />,
- color: 'bg-purple-500',
- textColor: 'text-purple-600',
- },
- {
- title: 'Ventas (30 días)',
- value: formatPrice(stats.totalRevenue),
- icon: <DollarSign className="w-6 h-6" />,
- color: 'bg-green-500',
- textColor: 'text-green-600',
- },
- {
- title: 'Por atender',
- value: stats.pendingOrders.toLocaleString('es-CL'),
- icon: <Clock className="w-6 h-6" />,
- color: 'bg-yellow-500',
- textColor: 'text-yellow-600',
- },
- {
- title: 'Stock Bajo (≤10)',
- value: stats.lowStockProducts.toLocaleString('es-CL'),
- icon: <AlertTriangle className="w-6 h-6" />,
- color: 'bg-orange-500',
- textColor: 'text-orange-600',
- },
- {
- title: 'Agotados',
- value: stats.outOfStockProducts.toLocaleString('es-CL'),
- icon: <XCircle className="w-6 h-6" />,
- color: 'bg-red-500',
- textColor: 'text-red-600',
+  textColor: 'text-blue-600 dark:text-blue-400',
+  },
+  {
+  title: 'Categorías',
+  value: stats.totalCategories.toLocaleString('es-CL'),
+  icon: <Tags className="w-6 h-6" />,
+  color: 'bg-purple-500',
+  textColor: 'text-purple-600 dark:text-purple-400',
+  },
+  {
+  title: 'Ventas (30 días)',
+  value: formatPrice(stats.totalRevenue),
+  icon: <DollarSign className="w-6 h-6" />,
+  color: 'bg-green-500',
+  textColor: 'text-green-600 dark:text-green-400',
+  },
+  {
+  title: 'Por atender',
+  value: stats.pendingOrders.toLocaleString('es-CL'),
+  icon: <Clock className="w-6 h-6" />,
+  color: 'bg-yellow-500',
+  textColor: 'text-yellow-600 dark:text-yellow-400',
+  },
+  {
+  title: 'Stock Bajo (≤10)',
+  value: stats.lowStockProducts.toLocaleString('es-CL'),
+  icon: <AlertTriangle className="w-6 h-6" />,
+  color: 'bg-orange-500',
+  textColor: 'text-orange-600 dark:text-orange-400',
+  },
+  {
+  title: 'Agotados',
+  value: stats.outOfStockProducts.toLocaleString('es-CL'),
+  icon: <XCircle className="w-6 h-6" />,
+  color: 'bg-red-500',
+  textColor: 'text-red-600 dark:text-red-400',
  },
  ]
  : [];
@@ -318,20 +328,20 @@ export default function AdminPage() {
  return (
  <div className="max-w-7xl mx-auto">
  <div className="mb-8">
- <h1 className="text-3xl font-bold text-slate-900">Panel de Administración</h1>
- <p className="text-slate-500 mt-2">Bienvenido, {user.name || user.email}</p>
+ <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Panel de Administración</h1>
+ <p className="text-slate-500 dark:text-slate-400 mt-2">Bienvenido, {user.name || user.email}</p>
  </div>
 
  {/* Statistics */}
  <div className="mb-8">
- <h2 className="text-xl font-semibold text-slate-900 mb-4">Resumen</h2>
+ <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-4">Resumen</h2>
  {isLoading ? (
  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
  {[...Array(6)].map((_, i) => (
  <div key={i} className="card p-4 animate-pulse">
- <div className="h-10 w-10 bg-slate-200 rounded-lg mb-3" />
- <div className="h-4 bg-slate-200 rounded w-20 mb-2" />
- <div className="h-6 bg-slate-200 rounded w-16" />
+ <div className="h-10 w-10 bg-slate-200 dark:bg-slate-700 rounded-lg mb-3" />
+ <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-20 mb-2" />
+ <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-16" />
  </div>
  ))}
  </div>
@@ -344,7 +354,7 @@ export default function AdminPage() {
  >
  {stat.icon}
  </div>
- <p className="text-sm text-slate-500">{stat.title}</p>
+ <p className="text-sm text-slate-500 dark:text-slate-400">{stat.title}</p>
  <p className={`text-xl font-bold ${stat.textColor}`}>{stat.value}</p>
  </div>
  ))}
@@ -357,13 +367,13 @@ export default function AdminPage() {
  <div className="grid lg:grid-cols-2 gap-6 mb-8">
  {/* Sales Line Chart */}
  <div className="card p-6">
- <h3 className="text-lg font-semibold text-slate-900 mb-4">Ventas Últimos 7 Días</h3>
+ <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">Ventas Últimos 7 Días</h3>
  <div className="h-64">
  <ResponsiveContainer width="100%" height="100%">
  <LineChart data={salesData}>
- <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
- <XAxis dataKey="date" stroke="#9CA3AF" fontSize={12} />
- <YAxis stroke="#9CA3AF" fontSize={12} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+ <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#E2E8F0'} />
+ <XAxis dataKey="date" stroke={isDark ? '#64748B' : '#94A3B8'} fontSize={12} />
+ <YAxis stroke={isDark ? '#64748B' : '#94A3B8'} fontSize={12} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
  <Tooltip
  contentStyle={{
  backgroundColor: '#1F2937',
@@ -388,7 +398,7 @@ export default function AdminPage() {
 
  {/* Orders by Status Pie Chart */}
  <div className="card p-6">
- <h3 className="text-lg font-semibold text-slate-900 mb-4">Órdenes por Estado</h3>
+ <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">Órdenes por Estado</h3>
  <div className="h-64">
  <ResponsiveContainer width="100%" height="100%">
  <PieChart>
@@ -422,13 +432,13 @@ export default function AdminPage() {
 
  {/* Top Products Bar Chart */}
  <div className="card p-6 lg:col-span-2">
- <h3 className="text-lg font-semibold text-slate-900 mb-4">Top Productos</h3>
+ <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">Top Productos</h3>
  <div className="h-64">
  <ResponsiveContainer width="100%" height="100%">
  <BarChart data={topProducts} layout="vertical">
- <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
- <XAxis type="number" stroke="#9CA3AF" fontSize={12} />
- <YAxis dataKey="name" type="category" width={150} stroke="#9CA3AF" fontSize={11} />
+ <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#E2E8F0'} />
+ <XAxis type="number" stroke={isDark ? '#64748B' : '#94A3B8'} fontSize={12} />
+ <YAxis dataKey="name" type="category" width={150} stroke={isDark ? '#64748B' : '#94A3B8'} fontSize={11} />
  <Tooltip
  contentStyle={{
  backgroundColor: '#1F2937',
@@ -463,26 +473,26 @@ export default function AdminPage() {
  </Link>
  </div>
  </div>
- <div className="divide-y divide-slate-100">
+ <div className="divide-y divide-slate-100 dark:divide-slate-700">
  {lowStockProducts.length > 0 ? (
  lowStockProducts.map((product) => (
- <div key={product.id} className="px-6 py-3 flex items-center justify-between hover:bg-slate-50">
+ <div key={product.id} className="px-6 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/30">
  <div className="flex-1 min-w-0">
- <p className="text-sm font-medium text-slate-900 truncate">{product.name}</p>
+ <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{product.name}</p>
  </div>
  <div className="flex items-center gap-3">
  <span
  className={`px-2.5 py-1 rounded-full text-xs font-bold ${
  product.stock === 0
- ? 'bg-red-100 text-red-700'
- : 'bg-orange-100 text-orange-700'
+ ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+ : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
  }`}
  >
  {product.stock === 0 ? 'AGOTADO' : `${product.stock} uds`}
  </span>
  <Link
  href={`/admin/productos?search=${encodeURIComponent(product.name)}`}
- className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+ className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
  >
  <ExternalLink className="w-4 h-4" />
  </Link>
@@ -490,8 +500,8 @@ export default function AdminPage() {
  </div>
  ))
  ) : (
- <div className="px-6 py-8 text-center text-slate-500">
- <Package className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+ <div className="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
+ <Package className="w-10 h-10 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
  <p>No hay productos con stock bajo</p>
  </div>
  )}
@@ -514,18 +524,18 @@ export default function AdminPage() {
  </Link>
  </div>
  </div>
- <div className="divide-y divide-slate-100">
+ <div className="divide-y divide-slate-100 dark:divide-slate-700">
  {recentOrders.length > 0 ? (
  recentOrders.map((order) => {
- const statusBadgeColors: Record<string, string> = {
- pending: 'bg-yellow-100 text-yellow-800',
- reserved: 'bg-amber-100 text-amber-800',
- paid: 'bg-green-100 text-green-800',
- processing: 'bg-blue-100 text-blue-800',
- shipped: 'bg-purple-100 text-purple-800',
- delivered: 'bg-green-100 text-green-800',
- cancelled: 'bg-red-100 text-red-800',
- };
+  const statusBadgeColors: Record<string, string> = {
+  pending: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
+  reserved: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300',
+  paid: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+  processing: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
+  shipped: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300',
+  delivered: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+  cancelled: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+  };
  const date = new Date(order.created_at).toLocaleDateString('es-CL', {
  day: '2-digit',
  month: 'short',
@@ -536,14 +546,14 @@ export default function AdminPage() {
  <Link
  key={order.id}
  href={`/admin/ordenes/${order.id}`}
- className="px-6 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
+ className="px-6 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
  >
  <div className="flex-1 min-w-0">
- <p className="text-sm font-mono text-slate-600">#{order.id.slice(0, 8)}</p>
- <p className="text-xs text-slate-400">{date}</p>
+ <p className="text-sm font-mono text-slate-600 dark:text-slate-300">#{order.id.slice(0, 8)}</p>
+ <p className="text-xs text-slate-400 dark:text-slate-500">{date}</p>
  </div>
  <div className="flex items-center gap-3">
- <span className="text-sm font-semibold text-slate-900">
+ <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
  {formatPrice(order.total)}
  </span>
  <span
@@ -556,8 +566,8 @@ export default function AdminPage() {
  );
  })
  ) : (
- <div className="px-6 py-8 text-center text-slate-500">
- <ShoppingBag className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+ <div className="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
+ <ShoppingBag className="w-10 h-10 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
  <p>No hay órdenes recientes</p>
  </div>
  )}

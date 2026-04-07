@@ -22,229 +22,238 @@ export function NotificationBell() {
  const [notifications, setNotifications] = useState<Notification[]>([]);
  const [isOpen, setIsOpen] = useState(false);
  const dropdownRef = useRef<HTMLDivElement>(null);
+ // Dismissed IDs persist across re-renders — cleared notifications won't return on next poll
+ const dismissedIds = useRef<Set<string>>(new Set());
 
- // Close dropdown when clicking outside
  useEffect(() => {
- const handleClickOutside = (event: MouseEvent) => {
- if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
- setIsOpen(false);
- }
- };
- document.addEventListener('mousedown', handleClickOutside);
- return () => document.removeEventListener('mousedown', handleClickOutside);
+  const handleClickOutside = (event: MouseEvent) => {
+   if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+    setIsOpen(false);
+   }
+  };
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => document.removeEventListener('mousedown', handleClickOutside);
  }, []);
 
  const checkNotifications = useCallback(async () => {
- if (!user) return;
- try {
- const newNotifications: Notification[] = [];
+  if (!user) return;
+  try {
+   const newNotifications: Notification[] = [];
 
- // Check for Webpay paid orders needing preparation
- const webpayPaidOrders = await orderApi.listAll({ status: 'paid', limit: 10 });
- webpayPaidOrders.orders
-  .filter((o) => o.payment_provider === 'webpay')
-  .forEach((order) => {
-  newNotifications.push({
-  id: `webpay-${order.id}`,
-  type: 'webpay',
-  title: 'Pago Webpay — preparar pedido',
-  message: `Orden #${order.id.slice(0, 8)} · ${formatPrice(order.total)}`,
-  timestamp: new Date(order.created_at),
-  read: false,
-  link: `/admin/ordenes/${order.id}`,
-  });
- });
+   const webpayPaidOrders = await orderApi.listAll({ status: 'paid', limit: 10 });
+   webpayPaidOrders.orders
+    .filter((o) => o.payment_provider === 'webpay')
+    .forEach((order) => {
+     newNotifications.push({
+      id: `webpay-${order.id}`,
+      type: 'webpay',
+      title: 'Pago Webpay — preparar pedido',
+      message: `Orden #${order.id.slice(0, 8)} · ${formatPrice(order.total)}`,
+      timestamp: new Date(order.created_at),
+      read: false,
+      link: `/admin/ordenes/${order.id}`,
+     });
+    });
 
- // Check for reserved orders (store pickup pending approval)
- const reservedOrders = await orderApi.listAll({ status: 'reserved', limit: 10 });
- reservedOrders.orders.forEach((order) => {
- newNotifications.push({
- id: `reservation-${order.id}`,
- type: 'reservation',
- title: 'Reserva pendiente de aprobación',
- message: `Reserva #${order.id.slice(0, 8)} por ${formatPrice(order.total)}`,
- timestamp: new Date(order.created_at),
- read: false,
- link: `/admin/ordenes/${order.id}`,
- });
- });
+   const reservedOrders = await orderApi.listAll({ status: 'reserved', limit: 10 });
+   reservedOrders.orders.forEach((order) => {
+    newNotifications.push({
+     id: `reservation-${order.id}`,
+     type: 'reservation',
+     title: 'Reserva pendiente de aprobación',
+     message: `Reserva #${order.id.slice(0, 8)} por ${formatPrice(order.total)}`,
+     timestamp: new Date(order.created_at),
+     read: false,
+     link: `/admin/ordenes/${order.id}`,
+    });
+   });
 
- // Check for critical stock using lightweight count queries
- const [outOfStock, lowStock] = await Promise.all([
- productApi.list({ limit: 1, active_only: true, stock_filter: 'out' }),
- productApi.list({ limit: 1, active_only: true, stock_filter: 'low' }),
- ]);
+   const [outOfStock, lowStock] = await Promise.all([
+    productApi.list({ limit: 1, active_only: true, stock_filter: 'out' }),
+    productApi.list({ limit: 1, active_only: true, stock_filter: 'low' }),
+   ]);
 
- if (outOfStock.total > 0) {
- newNotifications.push({
- id: `critical-stock`,
- type: 'critical',
- title: 'Productos agotados',
- message: `${outOfStock.total} producto${outOfStock.total > 1 ? 's' : ''} sin stock`,
- timestamp: new Date(),
- read: false,
- link: '/admin/productos?stock=out',
- });
- }
+   if (outOfStock.total > 0) {
+    newNotifications.push({
+     id: `critical-stock`,
+     type: 'critical',
+     title: 'Productos agotados',
+     message: `${outOfStock.total} producto${outOfStock.total > 1 ? 's' : ''} sin stock`,
+     timestamp: new Date(),
+     read: false,
+     link: '/admin/productos?stock=out',
+    });
+   }
 
- if (lowStock.total > 0) {
- newNotifications.push({
- id: `low-stock`,
- type: 'stock',
- title: 'Stock bajo',
- message: `${lowStock.total} producto${lowStock.total > 1 ? 's' : ''} con stock bajo`,
- timestamp: new Date(),
- read: false,
- link: '/admin/productos?stock=low',
- });
- }
+   if (lowStock.total > 0) {
+    newNotifications.push({
+     id: `low-stock`,
+     type: 'stock',
+     title: 'Stock bajo',
+     message: `${lowStock.total} producto${lowStock.total > 1 ? 's' : ''} con stock bajo`,
+     timestamp: new Date(),
+     read: false,
+     link: '/admin/productos?stock=low',
+    });
+   }
 
- setNotifications((prev) => {
- if (newNotifications.length === 0) return prev;
- // Merge: new items replace old items with same id, then keep remaining old ones
- const newIds = new Set(newNotifications.map((n) => n.id));
- const oldUnique = prev.filter((n) => !newIds.has(n.id));
- return [...newNotifications, ...oldUnique].slice(0, 20);
- });
- } catch (error) {
- console.error('Error checking notifications:', error);
- }
+   // Strip dismissed notifications before merging
+   const incoming = newNotifications.filter((n) => !dismissedIds.current.has(n.id));
+
+   setNotifications((prev) => {
+    // Preserve read state from existing notifications — fixes "mark as read" reverting on poll
+    const readStateMap = new Map(prev.map((n) => [n.id, n.read]));
+    const incomingIds = new Set(incoming.map((n) => n.id));
+    // Keep old non-dismissed items that aren't being replaced by incoming
+    const retained = prev.filter((n) => !incomingIds.has(n.id) && !dismissedIds.current.has(n.id));
+    const merged = incoming.map((n) => ({ ...n, read: readStateMap.get(n.id) ?? false }));
+    return [...merged, ...retained].slice(0, 20);
+   });
+  } catch (error) {
+   console.error('Error checking notifications:', error);
+  }
  }, [user]);
 
- // Poll for notifications every 30 seconds
  useEffect(() => {
- if (!user) return;
- checkNotifications();
- const interval = setInterval(checkNotifications, 30000);
- return () => clearInterval(interval);
+  if (!user) return;
+  checkNotifications();
+  const interval = setInterval(checkNotifications, 30000);
+  return () => clearInterval(interval);
  }, [user, checkNotifications]);
 
  const unreadCount = notifications.filter((n) => !n.read).length;
 
  const markAsRead = (id: string) => {
- setNotifications((prev) =>
- prev.map((n) => (n.id === id ? { ...n, read: true } : n))
- );
+  setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
  };
 
  const markAllAsRead = () => {
- setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+ };
+
+ const dismiss = (id: string, e?: React.MouseEvent) => {
+  e?.preventDefault();
+  e?.stopPropagation();
+  dismissedIds.current.add(id);
+  setNotifications((prev) => prev.filter((n) => n.id !== id));
  };
 
  const clearAll = () => {
- setNotifications([]);
+  // Register all current IDs as dismissed so the next poll won't restore them
+  notifications.forEach((n) => dismissedIds.current.add(n.id));
+  setNotifications([]);
  };
 
  const getIcon = (type: Notification['type']) => {
- switch (type) {
- case 'order':
- return <ShoppingBag className="w-4 h-4 text-emerald-500" />;
- case 'reservation':
- return <Store className="w-4 h-4 text-amber-500" />;
- case 'webpay':
- return <CreditCard className="w-4 h-4 text-blue-500" />;
- case 'stock':
- return <Package className="w-4 h-4 text-orange-500" />;
- case 'critical':
- return <AlertTriangle className="w-4 h-4 text-red-500" />;
- }
+  switch (type) {
+   case 'order': return <ShoppingBag className="w-4 h-4 text-emerald-500" />;
+   case 'reservation': return <Store className="w-4 h-4 text-amber-500" />;
+   case 'webpay': return <CreditCard className="w-4 h-4 text-blue-500" />;
+   case 'stock': return <Package className="w-4 h-4 text-orange-500" />;
+   case 'critical': return <AlertTriangle className="w-4 h-4 text-red-500" />;
+  }
  };
 
  const formatTime = (date: Date) => {
- const now = new Date();
- const diff = now.getTime() - date.getTime();
- const minutes = Math.floor(diff / 60000);
- const hours = Math.floor(diff / 3600000);
-
- if (minutes < 1) return 'Ahora';
- if (minutes < 60) return `Hace ${minutes}m`;
- if (hours < 24) return `Hace ${hours}h`;
- return date.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' });
+  const diff = Date.now() - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  if (minutes < 1) return 'Ahora';
+  if (minutes < 60) return `Hace ${minutes}m`;
+  if (hours < 24) return `Hace ${hours}h`;
+  return date.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' });
  };
 
  return (
- <div className="relative" ref={dropdownRef}>
- <button
- onClick={() => setIsOpen(!isOpen)}
- className="relative p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
- >
- <Bell className="w-5 h-5 text-slate-600 dark:text-slate-300" />
- {unreadCount > 0 && (
- <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
- {unreadCount > 9 ? '9+' : unreadCount}
- </span>
- )}
- </button>
+  <div className="relative" ref={dropdownRef}>
+   <button
+    onClick={() => setIsOpen(!isOpen)}
+    className="relative p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+   >
+    <Bell className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+    {unreadCount > 0 && (
+     <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+      {unreadCount > 9 ? '9+' : unreadCount}
+     </span>
+    )}
+   </button>
 
- {isOpen && (
- <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50">
- {/* Header */}
- <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
- <h3 className="font-semibold text-slate-900 dark:text-slate-100">Notificaciones</h3>
- <div className="flex items-center gap-2">
- {unreadCount > 0 && (
- <button
- onClick={markAllAsRead}
- className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 flex items-center gap-1"
- >
- <Check className="w-3 h-3" />
- Marcar leídas
- </button>
- )}
- {notifications.length > 0 && (
- <button
- onClick={clearAll}
- className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
- >
- Limpiar
- </button>
- )}
- </div>
- </div>
+   {isOpen && (
+    <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50">
+     {/* Header */}
+     <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+      <h3 className="font-semibold text-slate-900 dark:text-slate-100">Notificaciones</h3>
+      <div className="flex items-center gap-3">
+       {unreadCount > 0 && (
+        <button
+         onClick={markAllAsRead}
+         className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1"
+        >
+         <Check className="w-3 h-3" />
+         Marcar leídas
+        </button>
+       )}
+       {notifications.length > 0 && (
+        <button
+         onClick={clearAll}
+         className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+        >
+         Limpiar todo
+        </button>
+       )}
+      </div>
+     </div>
 
- {/* Notifications list */}
- <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto">
- {notifications.length > 0 ? (
- notifications.map((notification) => (
- <Link
- key={notification.id}
- href={notification.link || '#'}
- onClick={() => {
- markAsRead(notification.id);
- setIsOpen(false);
- }}
- className={`flex items-start gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${
- !notification.read ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : ''
- }`}
- >
- <div className="mt-0.5">{getIcon(notification.type)}</div>
- <div className="flex-1 min-w-0">
- <div className="flex items-center justify-between gap-2">
- <p className={`text-sm ${!notification.read ? 'font-semibold' : 'font-medium'} text-slate-900 dark:text-slate-100`}>
- {notification.title}
- </p>
- {!notification.read && (
- <span className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0" />
- )}
- </div>
- <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
- {notification.message}
- </p>
- <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
- {formatTime(notification.timestamp)}
- </p>
- </div>
- </Link>
- ))
- ) : (
- <div className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
- <Bell className="w-8 h-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
- <p>No hay notificaciones</p>
- </div>
- )}
- </div>
- </div>
- )}
- </div>
+     {/* List */}
+     <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50">
+      {notifications.length > 0 ? (
+       notifications.map((notification) => (
+        <div
+         key={notification.id}
+         className={`relative group flex items-start gap-3 transition-colors ${
+          !notification.read
+           ? 'bg-emerald-50/50 dark:bg-emerald-900/10'
+           : 'hover:bg-slate-50 dark:hover:bg-slate-700/30'
+         }`}
+        >
+         <Link
+          href={notification.link || '#'}
+          onClick={() => { markAsRead(notification.id); setIsOpen(false); }}
+          className="flex items-start gap-3 flex-1 min-w-0 px-4 py-3 pr-8"
+         >
+          <div className="mt-0.5 flex-shrink-0">{getIcon(notification.type)}</div>
+          <div className="flex-1 min-w-0">
+           <div className="flex items-center justify-between gap-2">
+            <p className={`text-sm ${!notification.read ? 'font-semibold' : 'font-medium'} text-slate-900 dark:text-slate-100`}>
+             {notification.title}
+            </p>
+            {!notification.read && (
+             <span className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0" />
+            )}
+           </div>
+           <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{notification.message}</p>
+           <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{formatTime(notification.timestamp)}</p>
+          </div>
+         </Link>
+         {/* Per-item dismiss — appears on hover */}
+         <button
+          onClick={(e) => dismiss(notification.id, e)}
+          title="Descartar"
+          className="absolute right-2 top-2.5 p-1 rounded text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 opacity-0 group-hover:opacity-100 transition-opacity"
+         >
+          <X className="w-3.5 h-3.5" />
+         </button>
+        </div>
+       ))
+      ) : (
+       <div className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+        <Bell className="w-8 h-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+        <p className="text-sm">Sin notificaciones pendientes</p>
+       </div>
+      )}
+     </div>
+    </div>
+   )}
+  </div>
  );
 }

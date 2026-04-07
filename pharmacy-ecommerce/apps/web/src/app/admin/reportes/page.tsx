@@ -47,6 +47,16 @@ export default function AdminReportesPage() {
   const [period, setPeriod] = useState(30);
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDark, setIsDark] = useState(false);
+
+  // Track dark mode for Recharts SVG props (can't use Tailwind dark: on SVG attributes)
+  useEffect(() => {
+    const check = () => setIsDark(document.documentElement.classList.contains('dark'));
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -84,10 +94,10 @@ export default function AdminReportesPage() {
   if (!user || user.role !== 'admin') return null;
 
   const kpiCards = data ? [
-    { label: 'Revenue total', value: formatPrice(data.kpis.totalRevenue), icon: TrendingUp, bg: 'bg-emerald-100', color: 'text-emerald-600' },
-    { label: 'Órdenes pagadas', value: String(data.kpis.totalOrders), icon: ShoppingBag, bg: 'bg-blue-100', color: 'text-blue-600' },
-    { label: 'Ticket promedio', value: formatPrice(data.kpis.avgTicket), icon: Calculator, bg: 'bg-purple-100', color: 'text-purple-600' },
-    { label: 'Productos distintos', value: String(data.topProducts.length), icon: Package, bg: 'bg-orange-100', color: 'text-orange-600' },
+    { label: 'Revenue total', value: formatPrice(data.kpis.totalRevenue), icon: TrendingUp, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400' },
+    { label: 'Órdenes pagadas', value: String(data.kpis.totalOrders), icon: ShoppingBag, bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
+    { label: 'Ticket promedio', value: formatPrice(data.kpis.avgTicket), icon: Calculator, bg: 'bg-purple-100 dark:bg-purple-900/30', color: 'text-purple-600 dark:text-purple-400' },
+    { label: 'Productos distintos', value: String(data.topProducts.length), icon: Package, bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-600 dark:text-orange-400' },
   ] : [];
 
   return (
@@ -126,7 +136,7 @@ export default function AdminReportesPage() {
       {loading ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="card p-6 animate-pulse h-24 bg-slate-200 rounded-2xl" />
+            <div key={i} className="card p-6 animate-pulse h-24 bg-slate-200 dark:bg-slate-700 rounded-2xl" />
           ))}
         </div>
       ) : data ? (
@@ -155,15 +165,15 @@ export default function AdminReportesPage() {
                 <div className="h-56">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data.salesByDay}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                      <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#E2E8F0'} />
                       <XAxis
                         dataKey="date"
-                        stroke="#94A3B8"
+                        stroke={isDark ? '#64748B' : '#94A3B8'}
                         fontSize={11}
                         tickFormatter={d => d.slice(5)}
                       />
                       <YAxis
-                        stroke="#94A3B8"
+                        stroke={isDark ? '#64748B' : '#94A3B8'}
                         fontSize={11}
                         tickFormatter={v => `$${(v / 1000).toFixed(0)}k`}
                       />
@@ -215,9 +225,9 @@ export default function AdminReportesPage() {
 
           {/* Top products horizontal bar */}
           <div className="card p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">Top 10 productos más vendidos (unidades)</h3>
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Top 10 productos más vendidos (unidades)</h3>
             {data.topProducts.length === 0 ? (
-              <p className="text-slate-400 text-sm py-10 text-center">Sin datos para este período</p>
+              <p className="text-slate-400 dark:text-slate-500 text-sm py-10 text-center">Sin datos para este período</p>
             ) : (
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
@@ -226,13 +236,13 @@ export default function AdminReportesPage() {
                     layout="vertical"
                     margin={{ left: 10, right: 20 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
-                    <XAxis type="number" stroke="#94A3B8" fontSize={11} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#E2E8F0'} horizontal={false} />
+                    <XAxis type="number" stroke={isDark ? '#64748B' : '#94A3B8'} fontSize={11} />
                     <YAxis
                       dataKey="name"
                       type="category"
                       width={200}
-                      stroke="#94A3B8"
+                      stroke={isDark ? '#64748B' : '#94A3B8'}
                       fontSize={10}
                       tickFormatter={n => n.length > 25 ? n.slice(0, 25) + '…' : n}
                     />

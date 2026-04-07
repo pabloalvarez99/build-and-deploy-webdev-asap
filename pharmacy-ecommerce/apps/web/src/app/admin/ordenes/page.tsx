@@ -30,13 +30,13 @@ import {
 } from 'lucide-react';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
-  pending:    { label: 'Pendiente',   color: 'bg-yellow-100 text-yellow-800',  dot: 'bg-yellow-400' },
-  reserved:   { label: 'Reservado',   color: 'bg-amber-100 text-amber-800',    dot: 'bg-amber-400' },
-  paid:       { label: 'Pagado',      color: 'bg-emerald-100 text-emerald-800', dot: 'bg-emerald-400' },
-  processing: { label: 'Procesando',  color: 'bg-blue-100 text-blue-800',      dot: 'bg-blue-400' },
-  shipped:    { label: 'Enviado',     color: 'bg-purple-100 text-purple-800',  dot: 'bg-purple-400' },
-  delivered:  { label: 'Entregado',   color: 'bg-green-100 text-green-800',    dot: 'bg-green-500' },
-  cancelled:  { label: 'Cancelado',   color: 'bg-red-100 text-red-800',        dot: 'bg-red-400' },
+  pending:    { label: 'Pendiente',   color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',   dot: 'bg-yellow-400' },
+  reserved:   { label: 'Reservado',   color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300',       dot: 'bg-amber-400' },
+  paid:       { label: 'Pagado',      color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300', dot: 'bg-emerald-400' },
+  processing: { label: 'Procesando',  color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',           dot: 'bg-blue-400' },
+  shipped:    { label: 'Enviado',     color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300',   dot: 'bg-purple-400' },
+  delivered:  { label: 'Entregado',   color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',       dot: 'bg-green-500' },
+  cancelled:  { label: 'Cancelado',   color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',               dot: 'bg-red-400' },
 };
 
 const PAGE_SIZE = 20;
@@ -231,8 +231,8 @@ export default function AdminOrdersPage() {
       {/* Header */}
       <div className="flex flex-wrap justify-between items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Órdenes</h1>
-          <p className="text-slate-500 mt-1">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Órdenes</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
             {isLoading ? 'Cargando...' : `${filteredOrders.length} de ${allOrders.length} órdenes`}
           </p>
         </div>
@@ -262,57 +262,57 @@ export default function AdminOrdersPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <div className="card p-4 flex items-center gap-3">
-          <div className="p-2 bg-emerald-100 rounded-xl">
-            <TrendingUp className="w-5 h-5 text-emerald-600" />
+          <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl">
+            <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <p className="text-xs text-slate-500">Ingresos</p>
-            <p className="font-bold text-slate-900 text-sm">{formatPrice(stats.revenue)}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Ingresos</p>
+            <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">{formatPrice(stats.revenue)}</p>
           </div>
         </div>
         <div className="card p-4 flex items-center gap-3">
-          <div className="p-2 bg-slate-100 rounded-xl">
-            <ShoppingBag className="w-5 h-5 text-slate-600" />
+          <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-xl">
+            <ShoppingBag className="w-5 h-5 text-slate-600 dark:text-slate-300" />
           </div>
           <div>
-            <p className="text-xs text-slate-500">Total órdenes</p>
-            <p className="font-bold text-slate-900 text-sm">{stats.total}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Total órdenes</p>
+            <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">{stats.total}</p>
           </div>
         </div>
         <button
           onClick={() => toggleStatusFilter('pending')}
           className={`card p-4 flex items-center gap-3 text-left w-full hover:shadow-md transition-shadow ${filterStatus.includes('pending') ? 'ring-2 ring-yellow-400' : ''}`}
         >
-          <div className="p-2 bg-yellow-100 rounded-xl">
-            <Clock className="w-5 h-5 text-yellow-600" />
+          <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl">
+            <Clock className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
           </div>
           <div>
-            <p className="text-xs text-slate-500">Pendientes</p>
-            <p className="font-bold text-slate-900 text-sm">{stats.pending}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Pendientes</p>
+            <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">{stats.pending}</p>
           </div>
         </button>
         <button
           onClick={() => toggleStatusFilter('reserved')}
           className={`card p-4 flex items-center gap-3 text-left w-full hover:shadow-md transition-shadow ${filterStatus.includes('reserved') ? 'ring-2 ring-amber-400' : ''}`}
         >
-          <div className="p-2 bg-amber-100 rounded-xl">
-            <Store className="w-5 h-5 text-amber-600" />
+          <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-xl">
+            <Store className="w-5 h-5 text-amber-600 dark:text-amber-400" />
           </div>
           <div>
-            <p className="text-xs text-slate-500">Reservas</p>
-            <p className="font-bold text-slate-900 text-sm">{stats.reserved}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Reservas</p>
+            <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">{stats.reserved}</p>
           </div>
         </button>
         <button
           onClick={() => setFilterProvider(filterProvider === 'webpay' ? '' : 'webpay')}
           className={`card p-4 flex items-center gap-3 text-left w-full hover:shadow-md transition-shadow ${filterProvider === 'webpay' ? 'ring-2 ring-blue-400' : ''}`}
         >
-          <div className="p-2 bg-blue-100 rounded-xl">
-            <CreditCard className="w-5 h-5 text-blue-600" />
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+            <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <p className="text-xs text-slate-500">Webpay a preparar</p>
-            <p className="font-bold text-slate-900 text-sm">{stats.webpayPaid}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Webpay a preparar</p>
+            <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">{stats.webpayPaid}</p>
           </div>
         </button>
       </div>
@@ -341,11 +341,11 @@ export default function AdminOrdersPage() {
       {showFilters && (
         <div className="card p-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-slate-900">Filtros avanzados</h3>
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100">Filtros avanzados</h3>
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1"
+                className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center gap-1"
               >
                 <X className="w-4 h-4" />
                 Limpiar todo
@@ -355,7 +355,7 @@ export default function AdminOrdersPage() {
 
           {/* Status chips */}
           <div className="mb-4">
-            <p className="text-sm font-medium text-slate-700 mb-2">Estado</p>
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Estado</p>
             <div className="flex flex-wrap gap-2">
               {Object.entries(STATUS_CONFIG).map(([value, cfg]) => (
                 <button
@@ -364,7 +364,7 @@ export default function AdminOrdersPage() {
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
                     filterStatus.includes(value)
                       ? cfg.color + ' ring-2 ring-offset-1 ring-current'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
@@ -376,7 +376,7 @@ export default function AdminOrdersPage() {
 
           {/* Payment provider chips */}
           <div className="mb-4">
-            <p className="text-sm font-medium text-slate-700 mb-2">Método de pago</p>
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Método de pago</p>
             <div className="flex flex-wrap gap-2">
               {[
                 { value: 'webpay', label: 'Webpay Plus', icon: <CreditCard className="w-3.5 h-3.5" />, activeClass: 'bg-blue-100 text-blue-800' },
@@ -388,7 +388,7 @@ export default function AdminOrdersPage() {
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
                     filterProvider === value
                       ? activeClass + ' ring-2 ring-offset-1 ring-current'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                   }`}
                 >
                   {icon}
@@ -400,21 +400,21 @@ export default function AdminOrdersPage() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Desde</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Desde</label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="input pl-10" />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Hasta</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Hasta</label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="input pl-10" />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Monto (CLP)</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Monto (CLP)</label>
               <div className="flex items-center gap-2">
                 <input type="number" value={minAmount} onChange={(e) => setMinAmount(e.target.value)} placeholder="Min" className="input" />
                 <span className="text-slate-400 shrink-0">—</span>
@@ -428,7 +428,7 @@ export default function AdminOrdersPage() {
       {/* Orders List */}
       {isLoading ? (
         <div className="card p-6 animate-pulse space-y-4">
-          {[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-slate-200 rounded" />)}
+          {[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-slate-200 dark:bg-slate-700 rounded" />)}
         </div>
       ) : pageOrders.length > 0 ? (
         <>
@@ -448,10 +448,10 @@ export default function AdminOrdersPage() {
                 <div key={order.id} className="card p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <span className="font-mono text-xs text-slate-400">#{order.id.slice(0, 8)}</span>
-                      <p className="font-medium text-slate-900 text-sm">{customerName}</p>
+                      <span className="font-mono text-xs text-slate-400 dark:text-slate-500">#{order.id.slice(0, 8)}</span>
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{customerName}</p>
                       {customerEmail && (
-                        <p className="text-xs text-slate-500">{customerEmail}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{customerEmail}</p>
                       )}
                     </div>
                     <span className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 ${cfg?.color || 'bg-slate-100 text-slate-800'}`}>
@@ -459,19 +459,19 @@ export default function AdminOrdersPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between mb-3 text-sm">
-                    <span className="text-slate-400">{date}</span>
+                    <span className="text-slate-400 dark:text-slate-500">{date}</span>
                     <div className="flex items-center gap-2">
                       {isPickup && (
-                        <span className="flex items-center gap-1 text-amber-600 text-xs font-medium">
+                        <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 text-xs font-medium">
                           <Store className="w-3.5 h-3.5" /> Retiro
                         </span>
                       )}
                       {isWebpay && (
-                        <span className="flex items-center gap-1 text-blue-600 text-xs font-medium">
+                        <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400 text-xs font-medium">
                           <CreditCard className="w-3.5 h-3.5" /> Webpay
                         </span>
                       )}
-                      <span className="font-bold text-slate-900">{formatPrice(order.total)}</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-100">{formatPrice(order.total)}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -479,13 +479,13 @@ export default function AdminOrdersPage() {
                       <>
                         <button
                           onClick={() => handleApproveReservation(order.id)}
-                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-emerald-100 text-emerald-800 hover:bg-emerald-200 min-h-[44px]"
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 min-h-[44px]"
                         >
                           <CheckCircle className="w-4 h-4" /> Aprobar
                         </button>
                         <button
                           onClick={() => handleRejectReservation(order.id)}
-                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-red-100 text-red-800 hover:bg-red-200 min-h-[44px]"
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 min-h-[44px]"
                         >
                           <XCircle className="w-4 h-4" /> Rechazar
                         </button>
@@ -503,7 +503,7 @@ export default function AdminOrdersPage() {
                     )}
                     <Link
                       href={`/admin/ordenes/${order.id}`}
-                      className="p-2.5 text-slate-600 hover:text-emerald-600 rounded-xl hover:bg-slate-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      className="p-2.5 text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 min-h-[44px] min-w-[44px] flex items-center justify-center"
                     >
                       <Eye className="w-5 h-5" />
                     </Link>
@@ -516,18 +516,18 @@ export default function AdminOrdersPage() {
           {/* Desktop: Table layout */}
           <div className="hidden md:block card overflow-hidden">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wide">Orden</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wide">Cliente</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wide">Fecha</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wide">Pago</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wide">Total</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wide">Estado</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wide">Ver</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Orden</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Cliente</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Fecha</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Pago</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Total</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Estado</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Ver</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                 {pageOrders.map((order) => {
                   const cfg = STATUS_CONFIG[order.status];
                   const date = new Date(order.created_at).toLocaleDateString('es-CL', {
@@ -541,22 +541,22 @@ export default function AdminOrdersPage() {
                   const isGuest = !order.user_id;
 
                   return (
-                    <tr key={order.id} className="hover:bg-slate-50 transition-colors">
+                    <tr key={order.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                       <td className="px-4 py-3">
-                        <span className="font-mono text-sm text-slate-500">#{order.id.slice(0, 8)}</span>
+                        <span className="font-mono text-sm text-slate-500 dark:text-slate-400">#{order.id.slice(0, 8)}</span>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2 min-w-0">
-                          <div className={`p-1.5 rounded-full shrink-0 ${isGuest ? 'bg-slate-100' : 'bg-emerald-100'}`}>
+                          <div className={`p-1.5 rounded-full shrink-0 ${isGuest ? 'bg-slate-100 dark:bg-slate-700' : 'bg-emerald-100 dark:bg-emerald-900/30'}`}>
                             {isGuest
-                              ? <User className="w-3.5 h-3.5 text-slate-500" />
-                              : <Package className="w-3.5 h-3.5 text-emerald-600" />
+                              ? <User className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                              : <Package className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                             }
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-medium text-slate-900 truncate">{customerName}</p>
+                            <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{customerName}</p>
                             {customerEmail && (
-                              <p className="text-xs text-slate-400 truncate flex items-center gap-1">
+                              <p className="text-xs text-slate-400 dark:text-slate-500 truncate flex items-center gap-1">
                                 <Mail className="w-3 h-3 shrink-0" />
                                 {customerEmail}
                               </p>
@@ -564,21 +564,21 @@ export default function AdminOrdersPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">{date}</td>
+                      <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">{date}</td>
                       <td className="px-4 py-3">
                         {isPickup ? (
-                          <span className="flex items-center gap-1 text-amber-700 text-xs font-medium bg-amber-50 px-2 py-1 rounded-full w-fit">
+                          <span className="flex items-center gap-1 text-amber-700 dark:text-amber-400 text-xs font-medium bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-full w-fit">
                             <Store className="w-3.5 h-3.5" /> Retiro
                           </span>
                         ) : isWebpay ? (
-                          <span className="flex items-center gap-1 text-blue-700 text-xs font-medium bg-blue-50 px-2 py-1 rounded-full w-fit">
+                          <span className="flex items-center gap-1 text-blue-700 dark:text-blue-400 text-xs font-medium bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-full w-fit">
                             <CreditCard className="w-3.5 h-3.5" /> Webpay
                           </span>
                         ) : (
-                          <span className="text-xs text-slate-400">—</span>
+                          <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">
+                      <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
                         {formatPrice(order.total)}
                       </td>
                       <td className="px-4 py-3">
@@ -586,13 +586,13 @@ export default function AdminOrdersPage() {
                           <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => handleApproveReservation(order.id)}
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition-colors"
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors"
                             >
                               <CheckCircle className="w-3.5 h-3.5" /> Aprobar
                             </button>
                             <button
                               onClick={() => handleRejectReservation(order.id)}
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 transition-colors"
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
                             >
                               <XCircle className="w-3.5 h-3.5" /> Rechazar
                             </button>
@@ -615,7 +615,7 @@ export default function AdminOrdersPage() {
                       <td className="px-4 py-3 text-right">
                         <Link
                           href={`/admin/ordenes/${order.id}`}
-                          className="p-2 text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-slate-100 inline-flex items-center transition-colors"
+                          className="p-2 text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 inline-flex items-center transition-colors"
                           title="Ver detalle"
                         >
                           <Eye className="w-4 h-4" />
@@ -631,14 +631,14 @@ export default function AdminOrdersPage() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex justify-between items-center gap-2">
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredOrders.length)} de {filteredOrders.length}
               </p>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="p-2 rounded-lg border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
+                  className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -651,7 +651,7 @@ export default function AdminOrdersPage() {
                       className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
                         currentPage === page
                           ? 'bg-emerald-600 text-white'
-                          : 'border border-slate-200 hover:bg-slate-50 text-slate-600'
+                          : 'border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
                       }`}
                     >
                       {page}
@@ -659,13 +659,13 @@ export default function AdminOrdersPage() {
                   );
                 })}
                 {totalPages > 7 && currentPage < totalPages - 3 && (
-                  <span className="text-slate-400 px-1">...</span>
+                  <span className="text-slate-400 dark:text-slate-500 px-1">...</span>
                 )}
                 {totalPages > 7 && (
                   <button
                     onClick={() => setCurrentPage(totalPages)}
-                    className={`w-9 h-9 rounded-lg text-sm font-medium border border-slate-200 hover:bg-slate-50 transition-colors ${
-                      currentPage === totalPages ? 'bg-emerald-600 text-white border-emerald-600' : 'text-slate-600'
+                    className={`w-9 h-9 rounded-lg text-sm font-medium border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${
+                      currentPage === totalPages ? 'bg-emerald-600 text-white border-emerald-600' : 'text-slate-600 dark:text-slate-300'
                     }`}
                   >
                     {totalPages}
@@ -674,7 +674,7 @@ export default function AdminOrdersPage() {
                 <button
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
+                  className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -684,8 +684,8 @@ export default function AdminOrdersPage() {
         </>
       ) : (
         <div className="card p-12 text-center">
-          <ShoppingBag className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500 font-medium">
+          <ShoppingBag className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+          <p className="text-slate-500 dark:text-slate-400 font-medium">
             {hasActiveFilters ? 'Sin órdenes con los filtros actuales' : 'No hay órdenes registradas'}
           </p>
           {hasActiveFilters && (

@@ -71,40 +71,40 @@ export function StockModal({ productId, productName, currentStock, onClose, onSt
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200 shrink-0">
+        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700 shrink-0">
           <div>
-            <h2 className="font-bold text-slate-900">Ajustar Stock</h2>
-            <p className="text-sm text-slate-500 truncate max-w-[300px]">{productName}</p>
+            <h2 className="font-bold text-slate-900 dark:text-slate-100">Ajustar Stock</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 truncate max-w-[300px]">{productName}</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl text-slate-500">
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-slate-500 dark:text-slate-400">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Current stock */}
-        <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 shrink-0">
-          <p className="text-sm text-slate-500">Stock actual</p>
-          <p className={`text-3xl font-bold ${currentStock === 0 ? 'text-red-600' : currentStock <= 10 ? 'text-orange-600' : 'text-slate-900'}`}>
-            {currentStock} <span className="text-base font-normal text-slate-400">unidades</span>
+        <div className="px-6 py-4 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 shrink-0">
+          <p className="text-sm text-slate-500 dark:text-slate-400">Stock actual</p>
+          <p className={`text-3xl font-bold ${currentStock === 0 ? 'text-red-600 dark:text-red-400' : currentStock <= 10 ? 'text-orange-600 dark:text-orange-400' : 'text-slate-900 dark:text-slate-100'}`}>
+            {currentStock} <span className="text-base font-normal text-slate-400 dark:text-slate-500">unidades</span>
           </p>
         </div>
 
         {/* Adjust form */}
-        <form onSubmit={handleSubmit} className="p-6 border-b border-slate-200 shrink-0 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 border-b border-slate-200 dark:border-slate-700 shrink-0 space-y-4">
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => setAdjustType('add')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium text-sm transition-colors ${adjustType === 'add' ? 'bg-emerald-100 text-emerald-700 ring-2 ring-emerald-400' : 'bg-slate-100 text-slate-600'}`}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium text-sm transition-colors ${adjustType === 'add' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 ring-2 ring-emerald-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}
             >
               <TrendingUp className="w-4 h-4" /> Agregar
             </button>
             <button
               type="button"
               onClick={() => setAdjustType('subtract')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium text-sm transition-colors ${adjustType === 'subtract' ? 'bg-red-100 text-red-700 ring-2 ring-red-400' : 'bg-slate-100 text-slate-600'}`}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium text-sm transition-colors ${adjustType === 'subtract' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 ring-2 ring-red-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}
             >
               <TrendingDown className="w-4 h-4" /> Restar
             </button>
@@ -137,25 +137,25 @@ export function StockModal({ productId, productName, currentStock, onClose, onSt
 
         {/* History */}
         <div className="flex-1 overflow-y-auto">
-          <div className="px-6 py-3 sticky top-0 bg-white border-b border-slate-100">
-            <p className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
+          <div className="px-6 py-3 sticky top-0 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
               <Clock className="w-4 h-4" /> Historial de movimientos
             </p>
           </div>
           {loadingHistory ? (
-            <div className="p-6 text-center text-slate-400 text-sm">Cargando...</div>
+            <div className="p-6 text-center text-slate-400 dark:text-slate-500 text-sm">Cargando...</div>
           ) : movements.length === 0 ? (
-            <div className="p-6 text-center text-slate-400 text-sm">Sin movimientos registrados</div>
+            <div className="p-6 text-center text-slate-400 dark:text-slate-500 text-sm">Sin movimientos registrados</div>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-slate-100 dark:divide-slate-700">
               {movements.map((m) => (
                 <div key={m.id} className="px-6 py-3 flex items-center gap-3">
-                  <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-bold ${m.delta > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                  <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-bold ${m.delta > 0 ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'}`}>
                     {m.delta > 0 ? '+' : ''}{m.delta}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-slate-700">{REASONS.find(r => r.value === m.reason)?.label || m.reason}</p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-sm text-slate-700 dark:text-slate-200">{REASONS.find(r => r.value === m.reason)?.label || m.reason}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">
                       {m.profiles?.name || m.profiles?.email || 'Admin'} · {new Date(m.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>

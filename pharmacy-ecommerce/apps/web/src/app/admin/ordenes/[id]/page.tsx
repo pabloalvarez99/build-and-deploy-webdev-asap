@@ -9,13 +9,13 @@ import { ArrowLeft, Package, MapPin, FileText, User, Mail, Printer, Check, Clock
 import { formatPrice } from '@/lib/format';
 
 const statusOptions = [
- { value: 'pending', label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800' },
- { value: 'reserved', label: 'Reservado', color: 'bg-amber-100 text-amber-800' },
- { value: 'paid', label: 'Pagado', color: 'bg-green-100 text-green-800' },
- { value: 'processing', label: 'Procesando', color: 'bg-blue-100 text-blue-800' },
- { value: 'shipped', label: 'Enviado', color: 'bg-purple-100 text-purple-800' },
- { value: 'delivered', label: 'Entregado', color: 'bg-green-100 text-green-800' },
- { value: 'cancelled', label: 'Cancelado', color: 'bg-red-100 text-red-800' },
+ { value: 'pending',    label: 'Pendiente',  color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' },
+ { value: 'reserved',   label: 'Reservado',  color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300' },
+ { value: 'paid',       label: 'Pagado',     color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' },
+ { value: 'processing', label: 'Procesando', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' },
+ { value: 'shipped',    label: 'Enviado',    color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300' },
+ { value: 'delivered',  label: 'Entregado',  color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' },
+ { value: 'cancelled',  label: 'Cancelado',  color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' },
 ];
 
 // Flujo para despacho a domicilio
@@ -60,17 +60,17 @@ function OrderTimeline({ currentStatus, isPickup, isWebpay }: { currentStatus: s
 
  return (
  <div className="card p-6 mb-6">
- <h2 className="text-lg font-semibold text-slate-900 mb-6">Estado del Pedido</h2>
+ <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-6">Estado del Pedido</h2>
 
  {isCancelled ? (
- <div className="flex items-center justify-center gap-3 py-4 bg-red-50 rounded-lg">
- <XCircle className="w-6 h-6 text-red-500" />
- <span className="text-lg font-medium text-red-700">Orden Cancelada</span>
+ <div className="flex items-center justify-center gap-3 py-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+ <XCircle className="w-6 h-6 text-red-500 dark:text-red-400" />
+ <span className="text-lg font-medium text-red-700 dark:text-red-300">Orden Cancelada</span>
  </div>
  ) : (
  <div className="relative">
  {/* Progress bar */}
- <div className="absolute top-5 left-0 right-0 h-1 bg-slate-200 rounded">
+ <div className="absolute top-5 left-0 right-0 h-1 bg-slate-200 dark:bg-slate-700 rounded">
  <div
  className="absolute h-full bg-emerald-500 rounded transition-all duration-500"
  style={{ width: `${(currentIndex / (flow.length - 1)) * 100}%` }}
@@ -90,14 +90,14 @@ function OrderTimeline({ currentStatus, isPickup, isWebpay }: { currentStatus: s
  className={`w-10 h-10 rounded-full flex items-center justify-center z-10 transition-all ${
  isCompleted
  ? 'bg-emerald-500 text-white'
- : 'bg-slate-200 text-slate-400'
- } ${isCurrent ? 'ring-4 ring-emerald-200' : ''}`}
+ : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500'
+ } ${isCurrent ? 'ring-4 ring-emerald-200 dark:ring-emerald-800' : ''}`}
  >
  {statusIcons[status]}
  </div>
  <span
  className={`mt-2 text-xs font-medium ${
- isCompleted ? 'text-emerald-600' : 'text-slate-400'
+ isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'
  }`}
  >
  {label}
@@ -192,11 +192,11 @@ export default function AdminOrderDetailPage() {
  return (
  <div className="max-w-4xl mx-auto">
  <div className="animate-pulse space-y-6">
- <div className="h-8 bg-slate-200 rounded w-32" />
+ <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-32" />
  <div className="card p-6 space-y-4">
- <div className="h-6 bg-slate-200 rounded w-1/3" />
- <div className="h-4 bg-slate-200 rounded w-1/4" />
- <div className="h-24 bg-slate-200 rounded" />
+ <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
+ <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/4" />
+ <div className="h-24 bg-slate-200 dark:bg-slate-700 rounded" />
  </div>
  </div>
  </div>
@@ -206,7 +206,7 @@ export default function AdminOrderDetailPage() {
  if (!order) {
  return (
  <div className="max-w-4xl mx-auto text-center py-12">
- <h1 className="text-2xl font-bold text-slate-900 mb-4">Orden no encontrada</h1>
+ <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">Orden no encontrada</h1>
  <Link href="/admin/ordenes" className="btn btn-primary">
  Volver a órdenes
  </Link>
@@ -230,10 +230,10 @@ export default function AdminOrderDetailPage() {
  <div className="max-w-4xl mx-auto">
  <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
  <div>
- <h1 className="text-2xl font-bold text-slate-900">
+ <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
  Orden #{order.id.slice(0, 8)}
  </h1>
- <p className="text-slate-500 mt-1">{date}</p>
+ <p className="text-slate-500 dark:text-slate-400 mt-1">{date}</p>
  </div>
 
  {order.status !== 'reserved' && (
@@ -258,10 +258,10 @@ export default function AdminOrderDetailPage() {
 
  {/* Reservation Approval Section */}
  {order.status === 'reserved' && (
- <div className="card border-2 border-amber-300 bg-amber-50 p-6 mb-6">
+ <div className="card border-2 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-6 mb-6">
  <div className="flex items-center gap-3 mb-4">
- <Store className="w-6 h-6 text-amber-600" />
- <h2 className="text-lg font-bold text-amber-900">
+ <Store className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+ <h2 className="text-lg font-bold text-amber-900 dark:text-amber-200">
  Reserva pendiente de aprobación
  </h2>
  </div>
@@ -282,7 +282,7 @@ export default function AdminOrderDetailPage() {
  {order.guest_email && (
  <div className="flex items-center gap-2">
  <Mail className="w-4 h-4 text-amber-600" />
- <a href={`mailto:${order.guest_email}`} className="text-amber-800 hover:underline">{order.guest_email}</a>
+ <a href={`mailto:${order.guest_email}`} className="text-amber-800 dark:text-amber-300 hover:underline">{order.guest_email}</a>
  </div>
  )}
  {order.pickup_code && (
@@ -324,12 +324,12 @@ export default function AdminOrderDetailPage() {
 
  {/* Webpay paid — action card */}
  {isWebpay && order.status === 'paid' && (
- <div className="card border-2 border-blue-300 bg-blue-50 p-6 mb-6">
+ <div className="card border-2 border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 p-6 mb-6">
  <div className="flex items-center gap-3 mb-3">
- <CreditCard className="w-6 h-6 text-blue-600" />
- <h2 className="text-lg font-bold text-blue-900">Pago Webpay confirmado</h2>
+ <CreditCard className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+ <h2 className="text-lg font-bold text-blue-900 dark:text-blue-200">Pago Webpay confirmado</h2>
  </div>
- <p className="text-blue-700 mb-4">
+ <p className="text-blue-700 dark:text-blue-300 mb-4">
  El cliente pagó online. Prepara el pedido y márcalo en procesamiento cuando esté listo para entregar.
  </p>
  <button
@@ -344,12 +344,12 @@ export default function AdminOrderDetailPage() {
 
  {/* Webpay processing — mark as delivered */}
  {isWebpay && order.status === 'processing' && (
- <div className="card border-2 border-emerald-300 bg-emerald-50 p-6 mb-6">
+ <div className="card border-2 border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 p-6 mb-6">
  <div className="flex items-center gap-3 mb-3">
- <Package className="w-6 h-6 text-emerald-600" />
- <h2 className="text-lg font-bold text-emerald-900">Pedido en preparación</h2>
+ <Package className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+ <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-200">Pedido en preparación</h2>
  </div>
- <p className="text-emerald-700 mb-4">
+ <p className="text-emerald-700 dark:text-emerald-300 mb-4">
  Cuando el cliente retire su pedido, márcalo como entregado.
  </p>
  <button
@@ -371,7 +371,7 @@ export default function AdminOrderDetailPage() {
  <div className="card p-6">
  <div className="flex items-center gap-3 mb-4">
  <Package className="w-5 h-5 text-emerald-600" />
- <h2 className="text-lg font-semibold text-slate-900">Productos</h2>
+ <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Productos</h2>
  </div>
  <div className="space-y-3">
  {order.items.map((item) => {
@@ -379,14 +379,14 @@ export default function AdminOrderDetailPage() {
  const subtotal = price * item.quantity;
 
  return (
- <div key={item.id} className="flex justify-between items-center py-3 border-b border-slate-100 last:border-0">
+ <div key={item.id} className="flex justify-between items-center py-3 border-b border-slate-100 dark:border-slate-700 last:border-0">
  <div className="flex-1">
- <p className="font-medium text-slate-900">{item.product_name}</p>
- <p className="text-sm text-slate-500">
+ <p className="font-medium text-slate-900 dark:text-slate-100">{item.product_name}</p>
+ <p className="text-sm text-slate-500 dark:text-slate-400">
  {formatPrice(price)} x {item.quantity}
  </p>
  </div>
- <p className="font-semibold text-slate-900">
+ <p className="font-semibold text-slate-900 dark:text-slate-100">
  {formatPrice(subtotal)}
  </p>
  </div>
@@ -399,9 +399,9 @@ export default function AdminOrderDetailPage() {
  <div className="card p-6">
  <div className="flex items-center gap-3 mb-4">
  <User className="w-5 h-5 text-emerald-600" />
- <h2 className="text-lg font-semibold text-slate-900">Cliente</h2>
+ <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Cliente</h2>
  {!order.user_id && (order.guest_name || order.guest_email) && (
- <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+ <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full">
  Invitado
  </span>
  )}
@@ -409,27 +409,27 @@ export default function AdminOrderDetailPage() {
  <div className="space-y-3">
  {(order.guest_name || order.guest_surname) && (
  <div className="flex items-center gap-3">
- <User className="w-4 h-4 text-slate-400" />
- <span className="text-slate-900 font-medium">
+ <User className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+ <span className="text-slate-900 dark:text-slate-100 font-medium">
  {order.guest_name} {order.guest_surname}
  </span>
  </div>
  )}
  {order.guest_email && (
  <div className="flex items-center gap-3">
- <Mail className="w-4 h-4 text-slate-400" />
- <a href={`mailto:${order.guest_email}`} className="text-emerald-600 hover:underline">
+ <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+ <a href={`mailto:${order.guest_email}`} className="text-emerald-600 dark:text-emerald-400 hover:underline">
  {order.guest_email}
  </a>
  </div>
  )}
  {order.user_id && (
- <p className="text-slate-500 text-sm">
+ <p className="text-slate-500 dark:text-slate-400 text-sm">
  ID Usuario: <span className="font-mono">{order.user_id.slice(0, 8)}...</span>
  </p>
  )}
  {!order.user_id && !order.guest_name && !order.guest_email && (
- <p className="text-slate-500 italic">Sin información de cliente</p>
+ <p className="text-slate-500 dark:text-slate-400 italic">Sin información de cliente</p>
  )}
  </div>
  </div>
@@ -439,11 +439,11 @@ export default function AdminOrderDetailPage() {
  <div className="card p-6">
  <div className="flex items-center gap-3 mb-4">
  <MapPin className="w-5 h-5 text-emerald-600" />
- <h2 className="text-lg font-semibold text-slate-900">
+ <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
  Dirección de envío
  </h2>
  </div>
- <p className="text-slate-600">{order.shipping_address}</p>
+ <p className="text-slate-600 dark:text-slate-300">{order.shipping_address}</p>
  </div>
  )}
 
@@ -452,9 +452,9 @@ export default function AdminOrderDetailPage() {
  <div className="card p-6">
  <div className="flex items-center gap-3 mb-4">
  <FileText className="w-5 h-5 text-emerald-600" />
- <h2 className="text-lg font-semibold text-slate-900">Notas</h2>
+ <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Notas</h2>
  </div>
- <p className="text-slate-600">{order.notes}</p>
+ <p className="text-slate-600 dark:text-slate-300">{order.notes}</p>
  </div>
  )}
  </div>
@@ -463,35 +463,35 @@ export default function AdminOrderDetailPage() {
  <div className="lg:col-span-1">
  <div className="card p-4 sm:p-6 sticky top-20 lg:top-24">
  <div className="flex items-center justify-between mb-4">
- <h2 className="text-lg font-semibold text-slate-900">Resumen</h2>
+ <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Resumen</h2>
  <button
  onClick={() => window.print()}
- className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg"
+ className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
  title="Imprimir orden"
  >
  <Printer className="w-5 h-5" />
  </button>
  </div>
 
- <div className="space-y-3 border-b border-slate-100 pb-4 mb-4">
- <div className="flex justify-between text-slate-600">
+ <div className="space-y-3 border-b border-slate-100 dark:border-slate-700 pb-4 mb-4">
+ <div className="flex justify-between text-slate-600 dark:text-slate-300">
  <span>Subtotal ({order.items.length} productos)</span>
  <span>{formatPrice(total)}</span>
  </div>
- <div className="flex justify-between text-slate-600">
+ <div className="flex justify-between text-slate-600 dark:text-slate-300">
  <span>{isPickup ? 'Retiro en tienda' : isWebpay ? 'Pago Webpay' : 'Envío'}</span>
- <span className="text-green-600">Gratis</span>
+ <span className="text-green-600 dark:text-green-400">Gratis</span>
  </div>
  </div>
 
- <div className="flex justify-between text-xl font-bold text-slate-900 mb-6">
+ <div className="flex justify-between text-xl font-bold text-slate-900 dark:text-slate-100 mb-6">
  <span>Total</span>
- <span className="text-emerald-600">{formatPrice(total)}</span>
+ <span className="text-emerald-600 dark:text-emerald-400">{formatPrice(total)}</span>
  </div>
 
  {/* Quick Actions */}
- <div className="pt-4 border-t border-slate-100 space-y-2">
- <p className="text-xs font-medium text-slate-500 uppercase mb-3">Acciones rápidas</p>
+ <div className="pt-4 border-t border-slate-100 dark:border-slate-700 space-y-2">
+ <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-3">Acciones rápidas</p>
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
  {statusOptions
   .filter((opt) => {
@@ -509,7 +509,7 @@ export default function AdminOrderDetailPage() {
  disabled={order.status === opt.value}
  className={`px-3 py-2.5 rounded-lg text-xs font-medium transition-colors min-h-[44px] ${
  order.status === opt.value
- ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+ ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
  : `${opt.color} hover:opacity-80`
  }`}
  >

@@ -34,25 +34,25 @@ export function Breadcrumbs() {
  });
 
  return (
- <nav className="flex items-center gap-2 text-sm text-slate-500 mb-4">
+ <nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-4">
  <Link
  href="/admin"
- className="hover:text-emerald-600 transition-colors"
+ className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
  >
  <Home className="w-4 h-4" />
  </Link>
 
  {breadcrumbs.slice(1).map((crumb, index) => (
  <div key={crumb.href} className="flex items-center gap-2">
- <ChevronRight className="w-4 h-4 text-slate-300" />
+ <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600" />
  {crumb.isLast ? (
- <span className="font-medium text-slate-900">
+ <span className="font-medium text-slate-900 dark:text-slate-100">
  {crumb.label}
  </span>
  ) : (
  <Link
  href={crumb.href}
- className="hover:text-emerald-600 transition-colors"
+ className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
  >
  {crumb.label}
  </Link>

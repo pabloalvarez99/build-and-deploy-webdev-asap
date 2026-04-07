@@ -166,7 +166,7 @@ export default function AdminCategoriesPage() {
  setEditingCategory(null);
  resetForm();
  }}
- className="p-2.5 hover:bg-slate-100 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center"
+ className="p-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center"
  >
  <X className="w-5 h-5 text-slate-500" />
  </button>
@@ -267,8 +267,8 @@ export default function AdminCategoriesPage() {
  </p>
 
  {(productCounts[deleteConfirm.id] || 0) > 0 && (
- <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
- <p className="text-sm text-yellow-800 flex items-center gap-2">
+ <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3 mb-4">
+ <p className="text-sm text-yellow-800 dark:text-yellow-300 flex items-center gap-2">
  <Package className="w-4 h-4" />
  Esta categoría tiene {productCounts[deleteConfirm.id]} productos asociados. No se puede eliminar.
  </p>
@@ -299,7 +299,7 @@ export default function AdminCategoriesPage() {
  <div className="grid gap-4">
  {[...Array(4)].map((_, i) => (
  <div key={i} className="card p-4 animate-pulse">
- <div className="h-6 bg-slate-200 rounded w-1/3" />
+ <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
  </div>
  ))}
  </div>
@@ -311,13 +311,13 @@ export default function AdminCategoriesPage() {
  <div className="flex-1">
  <div className="flex items-center gap-3">
  <h3 className="font-semibold text-slate-900 dark:text-slate-100">{category.name}</h3>
- <span
- className={`px-2 py-0.5 rounded-full text-xs font-medium ${
- category.active
- ? 'bg-green-100 text-green-800'
- : 'bg-slate-100 text-slate-800'
- }`}
- >
+  <span
+  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+  category.active
+  ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+  : 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-300'
+  }`}
+  >
  {category.active ? 'Activo' : 'Inactivo'}
  </span>
  </div>
@@ -334,14 +334,14 @@ export default function AdminCategoriesPage() {
  <div className="flex items-center gap-1 shrink-0">
  <button
  onClick={() => handleEdit(category)}
- className="p-2.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+ className="p-2.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
  title="Editar"
  >
  <Edit className="w-4 h-4" />
  </button>
  <button
  onClick={() => setDeleteConfirm(category)}
- className="p-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+ className="p-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
  title="Eliminar"
  >
  <Trash2 className="w-4 h-4" />

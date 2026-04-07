@@ -30,8 +30,8 @@ export function useAdminShortcuts(config: ShortcutConfig = {}) {
       return;
     }
 
-    // ? - Show help
-    if (e.key === '?' && !e.shiftKey && !cmdOrCtrl) {
+    // ? - Show help (key is '?' when Shift+/ is pressed, so don't check shiftKey)
+    if (e.key === '?' && !cmdOrCtrl) {
       e.preventDefault();
       config.onShowHelp?.();
       return;

@@ -4,6 +4,98 @@
 
 ---
 
+## COMPLETADO: Fix dark mode admin - badges, modales, tablas, globales (Abril 6, 2026)
+
+### Resumen
+- **Dark mode badges de estado (dashboard)**: Los `textColor` de los stat cards en `admin/page.tsx` no tenían `dark:` variants. Fix: `dark:text-{color}-400` en todos los 6 stat cards.
+- **Dark mode status badges (dashboard)**: `statusBadgeColors` en `admin/page.tsx` sin variantes dark. Fix: `dark:bg-{color}-900/30 dark:text-{color}-300` en los 7 estados.
+- **Dark mode bulk actions bar (productos)**: Barra de selección masiva sin dark variants. Fix: `dark:bg-emerald-900/20 dark:border-emerald-700 dark:text-emerald-300`.
+- **Dark mode import modal (productos)**: Todos los elementos del modal de importación Excel sin dark variants — summary cards, tabla preview (headers, rows, text), warning boxes, results section. Fix: dark variants completas en cada elemento.
+- **Dark mode product table (productos)**: Mobile cards (badges activo/inactivo, stock, precio), pagination buttons (borders, text, hover), empty state (icon). Fix: `dark:` variants en todos.
+- **Dark mode product form (productos)**: Label "Producto activo" sin dark variant, precio final sin dark variant. Fix: `dark:text-slate-300` / `dark:text-emerald-400`.
+- **Dark mode categorias badges**: Badge "Activo" sin dark variant. Fix: `dark:bg-green-900/30 dark:text-green-300`.
+- **Dark mode clientes badges**: Type badges (Registrado/Invitado) sin dark variants, avatar backgrounds/icons sin dark variants, order count sin dark variant. Fix: `dark:bg-{color}-900/30 dark:text-{color}-300` en todos.
+- **Dark mode globals.css**: Agregadas overrides CSS para badges de colores en dark mode (green, yellow, amber, blue, red, orange, purple, pink) — backgrounds, text colors, borders, hover states. También overrides para slate text colors más precisos en dark mode.
+
+### Archivos modificados
+- `src/app/admin/page.tsx` — stat card textColors, statusBadgeColors con dark variants
+- `src/app/admin/productos/page.tsx` — bulk actions bar, import modal, product table, pagination, form labels
+- `src/app/admin/categorias/page.tsx` — active badge dark variant
+- `src/app/admin/clientes/page.tsx` — type badges, avatars, order count dark variants
+- `src/app/globals.css` — overrides CSS para colored badges, borders, backgrounds en dark mode
+
+---
+
+## COMPLETADO: Dark mode status badges + dark mode toggle en admin (Abril 4, 2026)
+
+### Resumen
+- **Dark mode STATUS_CONFIG / statusOptions**: Las listas de colores de estado en `admin/ordenes/page.tsx` y `admin/ordenes/[id]/page.tsx` no tenían variantes `dark:`. Como se usan concatenadas en `className`, los badges de estado aparecían con fondo claro intenso en dark mode. Fix: dark variants agregadas a todas las entradas (7 estados × 2 archivos).
+- **Dark mode botones aprobar/rechazar (ordenes)**: Los botones inline "Aprobar" / "Rechazar" en la lista de órdenes (mobile + desktop) usaban `bg-emerald-100 text-emerald-800` y `bg-red-100 text-red-800` sin variantes dark. Fix: `dark:bg-emerald-900/30 dark:text-emerald-300` y equivalente en rojo.
+- **Dark mode toggle en panel admin**: El header del admin no tenía toggle de tema claro/oscuro. Los admins debían volver a la Navbar pública para cambiarlo. Fix: botón Sol/Luna en el header del admin (junto a la notificación bell), usando el mismo `useTheme` hook que la Navbar pública.
+
+### Archivos modificados
+- `src/app/admin/ordenes/page.tsx` — STATUS_CONFIG con dark: variants, botones aprobar/rechazar con dark: variants
+- `src/app/admin/ordenes/[id]/page.tsx` — statusOptions con dark: variants, email link en sección amber
+- `src/app/admin/layout.tsx` — dark mode toggle (Sun/Moon) en header del admin
+- `src/app/not-found.tsx` — dark mode (ícono, título, descripción)
+- `src/app/error.tsx` — dark mode (ícono, título, descripción)
+- `src/app/admin/error.tsx` — dark mode (ícono, título, descripción)
+- `src/app/admin/loading.tsx` — dark mode en texto "Cargando panel..."
+- `src/hooks/useAdminShortcuts.ts` — fix bug: shortcut `?` nunca disparaba porque `e.key === '?'` requiere Shift presionado, pero la condición tenía `!e.shiftKey` que lo bloqueaba siempre. Fix: eliminar el chequeo `!e.shiftKey`
+
+---
+
+## COMPLETADO: URL params + charts dark mode + bugfixes admin (Abril 4, 2026)
+
+### Resumen
+- **Bug fix: URL params no se leían en admin/productos**: La página inicializaba `stockFilter=''` y `searchTerm=''` con `useState('')` sin importar la URL. Links desde NotificationBell (`?stock=out`, `?stock=low`), dashboard (`?stock=low`, `?search=productname`), y shortcut ⌘N (`?action=new`) eran ignorados. Fix: `useSearchParams` con lazy `useState` initializer — 0 re-renders extra, se aplica en mount.
+- **Charts dark mode (Recharts)**: Grid y axis de charts en `admin/page.tsx` y `admin/reportes/page.tsx` usaban `stroke="#374151"` / `"#E2E8F0"` hardcodeados. Recharts usa SVG props, no puede usar Tailwind `dark:`. Fix: `MutationObserver` en `document.documentElement` que detecta cambio de clase `dark` y actualiza `isDark` state. Grid usa `#334155` (dark) / `#E2E8F0` (light), axis usa `#64748B` / `#94A3B8`.
+
+### Archivos modificados
+- `src/app/admin/productos/page.tsx` — lee `?stock`, `?search`, `?action=new` desde URL en mount
+- `src/app/admin/page.tsx` — isDark state con MutationObserver para chart colors
+- `src/app/admin/reportes/page.tsx` — isDark state con MutationObserver para chart colors
+
+---
+
+## COMPLETADO: Fix notificaciones + dark mode total admin (Abril 4, 2026)
+
+### Resumen
+- **Fix crítico NotificationBell**: Dos bugs raíz corregidos: (1) cada poll sobreescribía `read: false` borrando el estado leído; (2) `clearAll` vaciaba el array pero el siguiente poll lo repoblaba completo. Fix: `dismissedIds` como `useRef<Set<string>>` — IDs descartadas persisten entre re-renders. Merge ahora preserva `read` state con `existingReadState` map. Agregado botón ✕ por notificación (hover).
+- **Dark mode admin/clientes**: Dark mode completo — tabla (header, rows, hover, selected), mobile cards, footer, side panel (container, header, botones), info de cliente, edit form labels/buttons, order stats, order history cards, items, badges.
+- **Dark mode admin/categorias**: Skeletons, badge "Inactivo", warning box de eliminación, hover buttons.
+- **Dark mode admin/reportes**: Loading skeleton, KPI icon backgrounds (dark tints), chart title faltante.
+- **Dark mode admin/productos (completo)**: Todos los inputs/selects del filter bar (search, categoría, stock, sort), filter toggle button, stats pill, active filter chips (todos los colores), advanced filters panel (labels, lab search, lab list, prescription buttons, price inputs, quick filters, summary box, clear button).
+
+### Archivos modificados
+- `src/components/admin/NotificationBell.tsx` — fix dismiss persistente + preservar read state + botón ✕ por item
+- `src/app/admin/clientes/page.tsx` — dark mode completo
+- `src/app/admin/categorias/page.tsx` — dark mode completo
+- `src/app/admin/reportes/page.tsx` — dark mode completado
+- `src/app/admin/productos/page.tsx` — dark mode completado (filter bar + advanced filters)
+
+---
+
+## COMPLETADO: Dark mode completo en todas las páginas admin (Abril 3, 2026 - continuación)
+
+### Resumen
+- **Dark mode StockModal**: Historia de movimientos (sticky header, dividers, badges de delta +/-).
+- **Dark mode admin/ordenes/[id]**: Timeline, loading skeleton, cards de acción (reserva, webpay), sección de productos, cliente, resumen, acciones rápidas.
+- **Dark mode admin/ordenes/page**: Header, stat cards, filtros, tabla desktop (thead, tbody, rows), mobile cards, paginación, empty state.
+- **Dark mode admin/configuracion**: Labels, placeholders, divisor, mensaje de guardado.
+- **Dark mode admin/page (dashboard)**: Header, skeletons, text de stat cards, chart headers, listas de stock crítico y órdenes recientes.
+- **Dark mode admin/productos**: Header, form modal bg, import modal bg, labels del form, tabla (thead, tbody, rows hover/selected, stock badges), loading skeleton.
+
+### Archivos modificados
+- `src/components/admin/StockModal.tsx` — historial de movimientos con dark mode
+- `src/app/admin/ordenes/[id]/page.tsx` — dark mode completo
+- `src/app/admin/ordenes/page.tsx` — dark mode completo
+- `src/app/admin/configuracion/page.tsx` — dark mode completo
+- `src/app/admin/page.tsx` — dark mode en dashboard
+- `src/app/admin/productos/page.tsx` — dark mode parcial (header, modals, tabla)
+
+---
+
 ## COMPLETADO: Bugfixes, dark mode admin, categorías inactivas (Abril 3, 2026)
 
 ### Resumen
