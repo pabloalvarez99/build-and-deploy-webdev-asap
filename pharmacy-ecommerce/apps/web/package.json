@@ -12,8 +12,6 @@
     "@google-cloud/cloud-sql-connector": "^1.9.2",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
-    "@supabase/ssr": "^0.8.0",
-    "@supabase/supabase-js": "^2.95.3",
     "clsx": "^2.1.0",
     "firebase": "^12.11.0",
     "firebase-admin": "^13.7.0",

@@ -52,3 +52,8 @@ coverage/
 # Railway
 .railway/
 .vercel
+
+# Google Cloud / Firebase service account keys (NUNCA subir al repo)
+*-service-account*.json
+*firebase-adminsdk*.json
+tu-farmacia-prod-*.json
