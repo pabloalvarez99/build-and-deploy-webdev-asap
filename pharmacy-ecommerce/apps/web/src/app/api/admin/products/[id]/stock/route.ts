@@ -15,11 +15,11 @@ export async function PATCH(
     const { delta, reason } = body as { delta: number; reason: string };
 
     if (typeof delta !== 'number' || delta === 0) {
-      return errorResponse('delta must be a non-zero number');
+      return errorResponse('delta must be a non-zero number', 400);
     }
     const validReasons = ['reposicion', 'correccion', 'merma', 'inventario'];
     if (!validReasons.includes(reason)) {
-      return errorResponse(`reason must be one of: ${validReasons.join(', ')}`);
+      return errorResponse(`reason must be one of: ${validReasons.join(', ')}`, 400);
     }
 
     const db = await getDb();

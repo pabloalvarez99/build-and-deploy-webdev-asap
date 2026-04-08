@@ -1,20 +1,15 @@
-import type { PrismaConfig } from 'prisma'
-import pg from 'pg'
-import { PrismaPg } from '@prisma/adapter-pg'
+import { defineConfig, env } from 'prisma/config'
 
-// prisma.config.ts is used by Prisma CLI (migrate, db pull, studio).
-// Runtime connections use the adapter in src/lib/db.ts (Cloud SQL connector).
-// This config handles LOCAL development via Cloud SQL Auth Proxy.
+// Used by Prisma CLI (db pull, migrate, studio) — requires DATABASE_URL.
+// Set DATABASE_URL to Cloud SQL Auth Proxy URL when running CLI commands locally.
+// Runtime connections use the Cloud SQL connector adapter in src/lib/db.ts.
 
-export default {
-  earlyAccess: true,
+export default defineConfig({
   schema: 'prisma/schema.prisma',
-  migrate: {
-    async adapter() {
-      const pool = new pg.Pool({
-        connectionString: process.env.DATABASE_URL,
-      })
-      return new PrismaPg(pool)
-    },
+  datasource: {
+    url: env('DATABASE_URL'),
   },
-} satisfies PrismaConfig
+  migrations: {
+    path: 'prisma/migrations',
+  },
+})

@@ -30,5 +30,11 @@ export function getStorageBucket() {
   return getStorage(getFirebaseAdmin()).bucket()
 }
 
-// Named export for modules that import adminAuth directly (middleware, api-helpers)
-export const adminAuth = getAdminAuth()
+// Lazy proxy — Firebase Admin initializes on first method call, not at module load.
+// This prevents build-time crashes when FIREBASE_* env vars aren't set.
+import type { Auth } from 'firebase-admin/auth'
+export const adminAuth = new Proxy({} as Auth, {
+  get(_, prop: string | symbol) {
+    return (getAdminAuth() as unknown as Record<string | symbol, unknown>)[prop]
+  },
+})

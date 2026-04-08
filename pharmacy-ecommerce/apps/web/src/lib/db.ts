@@ -4,7 +4,7 @@
  * without IP allowlisting. Limits pool to 5 connections (critical for serverless).
  */
 import { PrismaClient } from '@prisma/client'
-import { Connector } from '@google-cloud/cloud-sql-connector'
+import { Connector, IpAddressTypes, AuthTypes } from '@google-cloud/cloud-sql-connector'
 import pg from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
 
@@ -19,8 +19,8 @@ async function createPrismaClient(): Promise<PrismaClient> {
 
   const clientOpts = await connector.getOptions({
     instanceConnectionName: process.env.CLOUD_SQL_INSTANCE!, // project:region:instance
-    ipType: 'PUBLIC',
-    authType: 'PASSWORD',
+    ipType: IpAddressTypes.PUBLIC,
+    authType: AuthTypes.PASSWORD,
   })
 
   const pool = new pg.Pool({

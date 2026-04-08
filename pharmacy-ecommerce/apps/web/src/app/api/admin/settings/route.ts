@@ -30,7 +30,7 @@ export async function PATCH(request: NextRequest) {
       entries.map(({ key, value }) =>
         db.admin_settings.upsert({
           where: { key },
-          update: { value: String(value), updated_at: new Date() },
+          update: { value: String(value) },
           create: { key, value: String(value) },
         })
       )

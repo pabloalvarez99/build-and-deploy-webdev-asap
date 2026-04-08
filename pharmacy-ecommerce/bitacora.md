@@ -60,6 +60,15 @@ Migración completa del stack de datos de Supabase (Auth + PostgreSQL + RLS) a G
 - `scripts/migrate-users.ts` — One-time script para migrar usuarios Supabase CSV → Firebase
 - `database/cloud-sql-extra-tables.sql` — SQL para tablas extra (admin_settings, stock_movements, discount_percent)
 
+### Build status: ✅ `next build` pasa — 43/43 páginas, 0 errores TypeScript
+Bugs corregidos durante build:
+- `firebase/middleware.ts`: firebase-admin no corre en Edge Runtime. Reescrito con decodificación JWT sin verificar firma (solo UX redirects; seguridad real en API routes con firebase-admin).
+- `firebase/admin.ts`: `adminAuth` inicializaba en module load → crash build. Convertido a Proxy lazy.
+- `firebase/client.ts`: Firebase client SDK hacía llamadas HTTP durante SSR prerender → `auth/invalid-api-key`. Fix: solo inicializar en browser (`typeof window !== 'undefined'`).
+- `db.ts`: string literals `'PUBLIC'`/`'PASSWORD'` no compatibles con tipos del connector. Fix: `IpAddressTypes.PUBLIC` / `AuthTypes.PASSWORD`.
+- `admin/settings`: `updated_at` no existe en `admin_settings`. Removido.
+- `admin/products/[id]/stock`: `errorResponse` faltaba segundo argumento status. Agregado 400.
+
 ### BLOQUEADOR: Cloud SQL billing
 - Proyecto GCP `tu-farmacia-prod` tiene problema de billing en `timadapa@gmail.com`
 - Ir a console.cloud.google.com/billing → vincular cuenta de facturación válida

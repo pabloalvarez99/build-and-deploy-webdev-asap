@@ -18,5 +18,6 @@
       "mcp__claude_ai_Vercel__get_deployment_build_logs",
       "mcp__claude_ai_Vercel__web_fetch_vercel_url"
     ]
-  }
+  },
+  "spinnerTipsEnabled": true
 }
