@@ -1557,41 +1557,41 @@ export default function AdminProductsPage() {
  className="p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded"
  title="Seleccionar todos"
  >
- {products?.products.every(p => selectedProducts.has(p.id)) ? (
- <CheckSquare className="w-5 h-5 text-emerald-600" />
- ) : (
- <Square className="w-5 h-5 text-slate-400" />
- )}
+  {products?.products.every(p => selectedProducts.has(p.id)) ? (
+  <CheckSquare className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+  ) : (
+  <Square className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+  )}
  </button>
  </th>
  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-  <button onClick={() => handleColumnSort('name')} className="group flex items-center gap-1 hover:text-slate-800 transition-colors">
+   <button onClick={() => handleColumnSort('name')} className="group flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
    Producto {getSortIcon('name')}
   </button>
  </th>
  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-  <button onClick={() => handleColumnSort('laboratory')} className="group flex items-center gap-1 hover:text-slate-800 transition-colors">
+   <button onClick={() => handleColumnSort('laboratory')} className="group flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
    Laboratorio {getSortIcon('laboratory')}
   </button>
  </th>
  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-  <button onClick={() => handleColumnSort('price')} className="group flex items-center gap-1 hover:text-slate-800 transition-colors ml-auto">
+   <button onClick={() => handleColumnSort('price')} className="group flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-200 transition-colors ml-auto">
    Precio {getSortIcon('price')}
   </button>
  </th>
  <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-  <button onClick={() => handleColumnSort('discount')} className="group flex items-center gap-1 hover:text-slate-800 transition-colors mx-auto">
+   <button onClick={() => handleColumnSort('discount')} className="group flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-200 transition-colors mx-auto">
    Descuento {getSortIcon('discount')}
   </button>
  </th>
  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-  <button onClick={() => handleColumnSort('stock')} className="group flex items-center gap-1 hover:text-slate-800 transition-colors ml-auto">
+   <button onClick={() => handleColumnSort('stock')} className="group flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-200 transition-colors ml-auto">
    Stock {getSortIcon('stock')}
   </button>
  </th>
  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Categoría</th>
  <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-  <button onClick={() => handleColumnSort('active')} className="group flex items-center gap-1 hover:text-slate-800 transition-colors mx-auto">
+   <button onClick={() => handleColumnSort('active')} className="group flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-200 transition-colors mx-auto">
    Estado {getSortIcon('active')}
   </button>
  </th>
@@ -1615,11 +1615,11 @@ export default function AdminProductsPage() {
  onClick={() => toggleSelectProduct(product.id)}
  className="p-1 hover:bg-slate-200 rounded"
  >
- {selectedProducts.has(product.id) ? (
- <CheckSquare className="w-5 h-5 text-emerald-600" />
- ) : (
- <Square className="w-5 h-5 text-slate-400" />
- )}
+  {selectedProducts.has(product.id) ? (
+  <CheckSquare className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+  ) : (
+  <Square className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+  )}
  </button>
  </td>
  <td className="px-4 py-3">
@@ -1742,18 +1742,18 @@ export default function AdminProductsPage() {
  >
  <Copy className="w-4 h-4" />
  </button>
- <button
- onClick={() => handleEdit(product)}
- className="p-2 text-slate-600 hover:text-primary-600"
- title="Editar"
- >
- <Edit className="w-4 h-4" />
- </button>
- <button
- onClick={() => handleDelete(product.id)}
- className="p-2 text-slate-600 hover:text-red-600"
- title="Eliminar"
- >
+  <button
+  onClick={() => handleEdit(product)}
+  className="p-2 text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400"
+  title="Editar"
+  >
+  <Edit className="w-4 h-4" />
+  </button>
+  <button
+  onClick={() => handleDelete(product.id)}
+  className="p-2 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+  title="Eliminar"
+  >
  <Trash2 className="w-4 h-4" />
  </button>
  </td>
