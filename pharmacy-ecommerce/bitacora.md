@@ -1,6 +1,82 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: PRODUCCIÓN (Abril 2026)
+## Estado actual: EN MIGRACIÓN — Supabase → Firebase Auth + Cloud SQL (Abril 2026)
+
+---
+
+## EN PROGRESO: Migración Supabase → Firebase Auth + Cloud SQL PostgreSQL (Abril 7-8, 2026)
+
+### Resumen
+Migración completa del stack de datos de Supabase (Auth + PostgreSQL + RLS) a Google Cloud (Firebase Auth + Cloud SQL PostgreSQL 16) manteniendo Vercel como hosting.
+
+### Código completado (esperando Cloud SQL billing fix):
+- `src/lib/firebase/client.ts` — Firebase browser client singleton
+- `src/lib/firebase/admin.ts` — Firebase Admin SDK (Auth)
+- `src/lib/firebase/api-helpers.ts` — `getAuthenticatedUser`, `getAdminUser`, `errorResponse` (reemplaza lib/supabase/api-helpers.ts)
+- `src/lib/firebase/middleware.ts` — Session cookie verification para /admin y /mis-pedidos
+- `src/lib/db.ts` — Prisma client singleton con Cloud SQL connector
+- `src/middleware.ts` — Actualizado a Firebase middleware
+- `src/app/api/auth/session/route.ts` — POST/DELETE para crear/destruir session cookie Firebase
+- `src/app/api/auth/register/route.ts` — Firebase Admin createUser
+- `src/store/auth.ts` — Reescrito con Firebase Auth SDK
+- `src/app/auth/forgot-password/page.tsx` — Firebase sendPasswordResetEmail
+- `src/app/auth/reset-password/page.tsx` — Firebase confirmPasswordReset
+- `src/lib/api.ts` — Todas las llamadas Supabase → fetch a API routes
+- `src/app/api/products/route.ts` — Nueva, Prisma (reemplaza PostgREST)
+- `src/app/api/products/[slug]/route.ts` — Nueva, Prisma
+- `src/app/api/products/id/route.ts` — Nueva, Prisma
+- `src/app/api/products/batch/route.ts` — Nueva, Prisma
+- `src/app/api/products/filters/route.ts` — Nueva, Prisma
+- `src/app/api/categories/route.ts` — Nueva, Prisma
+- `src/app/api/categories/[id]/route.ts` — Nueva, Prisma
+- `src/app/api/orders/route.ts` — Nueva, Firebase auth + Prisma
+- `src/app/api/orders/[id]/route.ts` — Nueva, Firebase auth + Prisma
+- `src/app/api/webpay/create/route.ts` — Reescrito con Prisma
+- `src/app/api/webpay/return/route.ts` — Reescrito con Prisma ($transaction atomic)
+- `src/app/api/store-pickup/route.ts` — Reescrito con Prisma
+- `src/app/api/admin/orders/route.ts` — Reescrito con Prisma
+- `src/app/api/admin/orders/[id]/route.ts` — Reescrito con Prisma (approve/reject/stock restore)
+- `src/app/api/admin/products/route.ts` — Reescrito con Prisma
+- `src/app/api/admin/products/[id]/route.ts` — Reescrito con Prisma
+- `src/app/api/admin/products/[id]/stock/route.ts` — Reescrito con Prisma
+- `src/app/api/admin/products/import/route.ts` — Reescrito con Prisma
+- `src/app/api/admin/categories/route.ts` — Reescrito con Prisma
+- `src/app/api/admin/categories/[id]/route.ts` — Reescrito con Prisma
+- `src/app/api/admin/settings/route.ts` — Reescrito con Prisma
+- `src/app/api/admin/reportes/route.ts` — Reescrito con Prisma
+- `src/app/api/admin/scan-invoice/route.ts` — POST: Google Cloud Vision OCR + Firebase Storage audit trail + parser heurístico
+- `src/lib/invoice-parser/types.ts` — Interfaces `ScannedProductData` + `InvoiceParser`
+- `src/lib/invoice-parser/heuristic-parser.ts` — Parser regex para facturas CL (precio CLP, labs, receta, presentación)
+- `src/lib/invoice-parser/registry.ts` — `getParser()` pluggable para múltiples formatos de factura
+- `src/components/admin/ScanInvoiceModal.tsx` — Modal con capture/processing/review/error (camera + file upload)
+- `src/app/api/admin/scan-invoice/route.ts` — Import actualizado a Firebase api-helpers
+- `src/app/api/admin/clientes/route.ts` — Reescrito con Firebase Admin listUsers + Prisma
+- `src/app/api/admin/clientes/[id]/route.ts` — Reescrito con Firebase Admin SDK
+- `src/app/api/cron/cleanup-orders/route.ts` — Reescrito con Prisma updateMany
+- `src/app/page.tsx` — loadDiscountedProducts usa fetch a /api/products
+- `src/app/checkout/page.tsx` — Fallback sign-in usa Firebase
+- `src/app/sitemap.ts` — Usa getDb() + Prisma directamente
+- `src/lib/excel-import.ts` — loadAllProductsForDiff usa fetch paginado a /api/products
+- `scripts/migrate-users.ts` — One-time script para migrar usuarios Supabase CSV → Firebase
+- `database/cloud-sql-extra-tables.sql` — SQL para tablas extra (admin_settings, stock_movements, discount_percent)
+
+### BLOQUEADOR: Cloud SQL billing
+- Proyecto GCP `tu-farmacia-prod` tiene problema de billing en `timadapa@gmail.com`
+- Ir a console.cloud.google.com/billing → vincular cuenta de facturación válida
+- Luego: crear instancia Cloud SQL + migrar datos + generar prisma/schema.prisma
+
+### Pendiente después de billing fix:
+1. Crear Cloud SQL instance + DB + usuario
+2. pg_dump desde Supabase → importar a Cloud SQL (+ ejecutar cloud-sql-extra-tables.sql)
+3. Service account con roles/cloudsql.client
+4. Cloud SQL Auth Proxy local → `prisma db pull` → `prisma generate`
+5. Habilitar Firebase Auth Email/Password en console.firebase.google.com
+6. Configurar variables de entorno en Vercel (agregar Firebase+CloudSQL, remover Supabase)
+7. Ejecutar scripts/migrate-users.ts con CSV export de Supabase
+8. Setear custom claim admin: `npx ts-node scripts/migrate-users.ts --set-admin email@x.com`
+9. Remover paquetes npm: `@supabase/ssr @supabase/supabase-js`
+10. Eliminar src/lib/supabase/ (4 archivos)
+11. Build + deploy
 
 ---
 

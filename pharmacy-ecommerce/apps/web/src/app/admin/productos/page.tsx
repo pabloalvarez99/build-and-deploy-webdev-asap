@@ -6,9 +6,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuthStore } from '@/store/auth';
 import { productApi, PaginatedProducts, Category } from '@/lib/api';
-import { Plus, Edit, Trash2, Search, Download, Upload, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package, FileSpreadsheet, CheckCircle, XCircle, RefreshCw, ArrowRight, History, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Download, Upload, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package, FileSpreadsheet, CheckCircle, XCircle, RefreshCw, ArrowRight, History, ArrowUp, ArrowDown, ArrowUpDown, Camera } from 'lucide-react';
 import { parseExcelFile, diffProducts, loadAllProductsForDiff, parsePrice, type ExcelRow, type DiffResult } from '@/lib/excel-import';
 import { StockModal } from '@/components/admin/StockModal';
+import { ScanInvoiceModal } from '@/components/admin/ScanInvoiceModal';
+import type { ScannedProductData } from '@/lib/invoice-parser/types';
 import { formatPrice } from '@/lib/format';
 
 export default function AdminProductsPage() {
@@ -60,6 +62,9 @@ export default function AdminProductsPage() {
   return isAsc ? <ArrowUp className="w-3.5 h-3.5 text-emerald-600" /> : <ArrowDown className="w-3.5 h-3.5 text-emerald-600" />;
  };
  const [labSearchTerm, setLabSearchTerm] = useState('');
+
+ // Scan invoice state
+ const [showScanModal, setShowScanModal] = useState(false);
 
  // Import state
  const fileInputRef = useRef<HTMLInputElement>(null);
@@ -299,6 +304,26 @@ export default function AdminProductsPage() {
  .replace(/[\u0300-\u036f]/g, '')
  .replace(/[^a-z0-9]+/g, '-')
  .replace(/(^-|-$)/g, '');
+ };
+
+ const handleScanExtracted = (data: ScannedProductData) => {
+ resetForm();
+ setEditingProduct(null);
+ setFormData(prev => ({
+  ...prev,
+  name: data.name || '',
+  slug: data.name ? generateSlug(data.name) : '',
+  laboratory: data.laboratory || '',
+  price: data.price || '',
+  stock: data.stock || '',
+  therapeutic_action: data.therapeutic_action || '',
+  active_ingredient: data.active_ingredient || '',
+  prescription_type: data.prescription_type || 'direct',
+  presentation: data.presentation || '',
+  discount_percent: data.discount_percent || '',
+ }));
+ setShowScanModal(false);
+ setShowForm(true);
  };
 
  const exportToCSV = () => {
@@ -546,6 +571,13 @@ export default function AdminProductsPage() {
  </p>
  </div>
  <div className="flex flex-wrap gap-2">
+ <button
+ onClick={() => setShowScanModal(true)}
+ className="btn btn-secondary flex items-center gap-2"
+ >
+ <Camera className="w-5 h-5" />
+ Escanear Factura
+ </button>
  <button
  onClick={() => { resetImportState(); setShowImportModal(true); }}
  className="btn btn-secondary flex items-center gap-2"
@@ -1811,6 +1843,14 @@ export default function AdminProductsPage() {
   currentStock={stockModalProduct.stock}
   onClose={() => setStockModalProduct(null)}
   onStockUpdated={handleStockModalUpdate}
+  />
+ )}
+ {showScanModal && (
+  <ScanInvoiceModal
+  isOpen={showScanModal}
+  onClose={() => setShowScanModal(false)}
+  onExtracted={handleScanExtracted}
+  categories={categories}
   />
  )}
  </div>

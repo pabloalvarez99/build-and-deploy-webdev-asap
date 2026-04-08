@@ -117,10 +117,21 @@ export default function CheckoutPage() {
       const regData = await regRes.json();
       if (!regRes.ok) {
         if (regData.error?.includes('Ya existe')) {
-          const { createClient } = await import('@/lib/supabase/client');
-          const supabase = createClient();
-          const { error: signInError } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });
-          if (signInError) { setError('Ya existe una cuenta. Verifica tu contraseña.'); setIsProcessing(false); return; }
+          try {
+            const { signInWithEmailAndPassword, getIdToken } = await import('firebase/auth');
+            const { auth } = await import('@/lib/firebase/client');
+            const cred = await signInWithEmailAndPassword(auth, trimmedEmail, password);
+            const idToken = await getIdToken(cred.user);
+            await fetch('/api/auth/session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ idToken }),
+            });
+          } catch {
+            setError('Ya existe una cuenta. Verifica tu contraseña.');
+            setIsProcessing(false);
+            return;
+          }
         } else {
           setError(regData.error || 'Error al crear la cuenta');
           setIsProcessing(false);

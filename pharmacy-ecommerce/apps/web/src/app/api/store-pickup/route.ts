@@ -1,81 +1,74 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { errorResponse, getServiceClient, getAuthenticatedUser } from '@/lib/supabase/api-helpers';
-import { sendPickupReservationEmail } from '@/lib/email';
+import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser, errorResponse } from '@/lib/firebase/api-helpers'
+import { getDb } from '@/lib/db'
+import { sendPickupReservationEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { items, name, surname, email, phone, notes, session_id } = body;
+    const body = await request.json()
+    const { items, name, surname, email, phone, notes, session_id } = body
 
-    if (!items || items.length === 0) return errorResponse('Cart is empty');
-    if (!email || !phone) return errorResponse('Email and phone are required');
+    if (!items || items.length === 0) return errorResponse('Cart is empty', 400)
+    if (!email || !phone) return errorResponse('Email and phone are required', 400)
 
-    const [supabase, authenticatedUser] = await Promise.all([
-      Promise.resolve(getServiceClient()),
-      getAuthenticatedUser(),
-    ]);
-    const userId = authenticatedUser?.id ?? null;
+    const [db, authenticatedUser] = await Promise.all([getDb(), getAuthenticatedUser()])
+    const userId = authenticatedUser?.uid ?? null
 
     // Validate products and calculate total
-    let total = 0;
-    const orderItems: { product_id: string; product_name: string; quantity: number; price: number }[] = [];
+    let total = 0
+    const orderItems: { product_id: string; product_name: string; quantity: number; price: number }[] = []
 
     for (const item of items) {
-      const { data: product, error } = await supabase
-        .from('products')
-        .select('id, name, price, stock, discount_percent')
-        .eq('id', item.product_id)
-        .eq('active', true)
-        .single();
+      const product = await db.products.findFirst({
+        where: { id: item.product_id, active: true },
+        select: { id: true, name: true, price: true, stock: true, discount_percent: true },
+      })
 
-      if (error || !product) return errorResponse(`Product ${item.product_id} not found`, 404);
-      if (product.stock < item.quantity) return errorResponse(`Insufficient stock for ${product.name}`);
+      if (!product) return errorResponse(`Product ${item.product_id} not found`, 404)
+      if (product.stock < item.quantity) return errorResponse(`Stock insuficiente para ${product.name}`, 400)
 
-      const rawPrice = parseFloat(product.price);
-      const disc = product.discount_percent as number | null;
-      const price = disc ? Math.ceil(rawPrice * (1 - disc / 100)) : rawPrice;
-      total += price * item.quantity;
-      orderItems.push({ product_id: product.id, product_name: product.name, quantity: item.quantity, price });
+      const rawPrice = Number(product.price)
+      const disc = product.discount_percent
+      const price = disc ? Math.ceil(rawPrice * (1 - disc / 100)) : rawPrice
+      total += price * item.quantity
+      orderItems.push({ product_id: product.id, product_name: product.name, quantity: item.quantity, price })
     }
 
-    // Generate 6-digit pickup code
-    const pickupCode = String(Math.floor(100000 + Math.random() * 900000));
+    const pickupCode = String(Math.floor(100000 + Math.random() * 900000))
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
 
-    // Reservation expires in 24 hours
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-
-    // Create order with 'reserved' status
-    const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        user_id: userId,
-        status: 'reserved',
-        total,
-        notes,
-        guest_email: email,
-        guest_session_id: session_id,
-        payment_provider: 'store',
-        pickup_code: pickupCode,
-        reservation_expires_at: expiresAt,
-        customer_phone: phone,
-        guest_name: name,
-        guest_surname: surname,
+    // Create order + items atomically
+    const order = await db.$transaction(async (tx) => {
+      const o = await tx.orders.create({
+        data: {
+          user_id: userId,
+          status: 'reserved',
+          total,
+          notes,
+          guest_email: email,
+          guest_session_id: session_id,
+          payment_provider: 'store',
+          pickup_code: pickupCode,
+          reservation_expires_at: expiresAt,
+          customer_phone: phone,
+          guest_name: name,
+          guest_surname: surname,
+        },
+        select: { id: true },
       })
-      .select('id')
-      .single();
 
-    if (orderError) return errorResponse(orderError.message, 500);
+      await tx.order_items.createMany({
+        data: orderItems.map((item) => ({
+          order_id: o.id,
+          product_id: item.product_id,
+          product_name: item.product_name,
+          quantity: item.quantity,
+          price_at_purchase: item.price,
+        })),
+      })
 
-    // Create order items
-    await supabase.from('order_items').insert(
-      orderItems.map((item) => ({
-        order_id: order.id,
-        product_id: item.product_id,
-        product_name: item.product_name,
-        quantity: item.quantity,
-        price_at_purchase: item.price,
-      }))
-    );
+      return o
+    })
 
     // Send reservation email (non-blocking)
     sendPickupReservationEmail({
@@ -84,21 +77,21 @@ export async function POST(request: NextRequest) {
       orderId: order.id,
       pickupCode,
       total,
-      expiresAt,
-      items: orderItems.map(i => ({
+      expiresAt: expiresAt.toISOString(),
+      items: orderItems.map((i) => ({
         product_name: i.product_name,
         quantity: i.quantity,
         price_at_purchase: String(i.price),
       })),
-    }).catch(() => {});
+    }).catch(() => {})
 
     return NextResponse.json({
       order_id: order.id,
       pickup_code: pickupCode,
-      expires_at: expiresAt,
+      expires_at: expiresAt.toISOString(),
       total: total.toString(),
-    });
+    })
   } catch (error) {
-    return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);
+    return errorResponse(error instanceof Error ? error.message : 'Internal error', 500)
   }
 }

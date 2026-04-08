@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminUser, errorResponse, getServiceClient } from '@/lib/supabase/api-helpers';
+import { getDb } from '@/lib/db';
+import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,16 +8,15 @@ export async function POST(request: NextRequest) {
     if (!admin) return errorResponse('Unauthorized', 403);
 
     const body = await request.json();
-    const supabase = getServiceClient();
+    const db = await getDb();
 
-    const { data, error } = await supabase
-      .from('products')
-      .insert({
+    const product = await db.products.create({
+      data: {
         name: body.name,
         slug: body.slug,
-        description: body.description,
+        description: body.description || null,
         price: parseFloat(body.price),
-        stock: body.stock || 0,
+        stock: body.stock ?? 0,
         category_id: body.category_id || null,
         image_url: body.image_url || null,
         laboratory: body.laboratory || null,
@@ -24,13 +24,17 @@ export async function POST(request: NextRequest) {
         active_ingredient: body.active_ingredient || null,
         prescription_type: body.prescription_type || 'direct',
         presentation: body.presentation || null,
+        discount_percent: body.discount_percent || null,
         active: body.active !== false,
-      })
-      .select()
-      .single();
+      },
+    });
 
-    if (error) return errorResponse(error.message, 500);
-    return NextResponse.json(data);
+    return NextResponse.json({
+      ...product,
+      price: product.price.toString(),
+      created_at: product.created_at.toISOString(),
+      updated_at: product.updated_at.toISOString(),
+    });
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);
   }

@@ -1,68 +1,72 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { errorResponse, getAdminUser, getServiceClient } from '@/lib/supabase/api-helpers';
+import { NextRequest, NextResponse } from 'next/server'
+import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers'
+import { adminAuth } from '@/lib/firebase/admin'
+import { getDb } from '@/lib/db'
 
-export async function GET(request: NextRequest) {
-  const admin = await getAdminUser();
-  if (!admin) return errorResponse('Unauthorized', 401);
+export async function GET(_request: NextRequest) {
+  const admin = await getAdminUser()
+  if (!admin) return errorResponse('Unauthorized', 401)
 
-  const supabase = getServiceClient();
+  const db = await getDb()
 
-  // 1. Get all registered users via admin API
-  const { data: authData, error: authError } = await supabase.auth.admin.listUsers({
-    page: 1,
-    perPage: 1000,
-  });
+  // 1. List all registered users via Firebase Admin (max 1000)
+  const listResult = await adminAuth.listUsers(1000)
+  const authUsers = listResult.users
 
-  if (authError) return errorResponse(authError.message, 500);
+  // 2. Get order counts per user_id
+  const userOrders = await db.orders.findMany({
+    where: { user_id: { not: null } },
+    select: { user_id: true, created_at: true },
+  })
 
-  const authUsers = authData?.users ?? [];
-
-  // 2. Get order counts per user_id for registered users
-  const { data: userOrders } = await supabase
-    .from('orders')
-    .select('user_id, created_at')
-    .not('user_id', 'is', null);
-
-  const userOrderMap: Record<string, { count: number; last: string }> = {};
-  for (const o of userOrders ?? []) {
-    if (!o.user_id) continue;
-    if (!userOrderMap[o.user_id]) userOrderMap[o.user_id] = { count: 0, last: o.created_at };
-    userOrderMap[o.user_id].count++;
-    if (o.created_at > userOrderMap[o.user_id].last) userOrderMap[o.user_id].last = o.created_at;
+  const userOrderMap: Record<string, { count: number; last: string }> = {}
+  for (const o of userOrders) {
+    if (!o.user_id) continue
+    const uid = o.user_id
+    if (!userOrderMap[uid]) userOrderMap[uid] = { count: 0, last: o.created_at.toISOString() }
+    userOrderMap[uid].count++
+    if (o.created_at.toISOString() > userOrderMap[uid].last)
+      userOrderMap[uid].last = o.created_at.toISOString()
   }
 
-  // 3. Get unique guest customers (orders with guest_email not matching any registered email)
-  const registeredEmails = new Set(authUsers.map((u: { email?: string }) => u.email?.toLowerCase()));
+  // 3. Get unique guest customers
+  const registeredEmails = new Set(authUsers.map((u) => u.email?.toLowerCase()))
 
-  const { data: guestOrders } = await supabase
-    .from('orders')
-    .select('guest_email, guest_name, guest_surname, customer_phone, created_at')
-    .not('guest_email', 'is', null)
-    .order('created_at', { ascending: false });
+  const guestOrders = await db.orders.findMany({
+    where: { guest_email: { not: null } },
+    select: { guest_email: true, guest_name: true, guest_surname: true, customer_phone: true, created_at: true },
+    orderBy: { created_at: 'desc' },
+  })
 
-  const guestMap: Record<string, { name: string; surname: string; phone: string | null; count: number; last: string }> = {};
-  for (const o of guestOrders ?? []) {
-    const emailLower = o.guest_email?.toLowerCase();
-    if (!emailLower || registeredEmails.has(emailLower)) continue;
+  const guestMap: Record<string, { name: string; surname: string; phone: string | null; count: number; last: string }> = {}
+  for (const o of guestOrders) {
+    const emailLower = o.guest_email?.toLowerCase()
+    if (!emailLower || registeredEmails.has(emailLower)) continue
     if (!guestMap[emailLower]) {
-      guestMap[emailLower] = { name: o.guest_name || '', surname: o.guest_surname || '', phone: o.customer_phone, count: 0, last: o.created_at };
+      guestMap[emailLower] = {
+        name: o.guest_name || '',
+        surname: o.guest_surname || '',
+        phone: o.customer_phone || null,
+        count: 0,
+        last: o.created_at.toISOString(),
+      }
     }
-    guestMap[emailLower].count++;
-    if (o.created_at > guestMap[emailLower].last) guestMap[emailLower].last = o.created_at;
+    guestMap[emailLower].count++
+    if (o.created_at.toISOString() > guestMap[emailLower].last)
+      guestMap[emailLower].last = o.created_at.toISOString()
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const registered = authUsers.map((u: any) => ({
-    id: u.id,
+  const registered = authUsers.map((u) => ({
+    id: u.uid,
     email: u.email,
-    name: u.user_metadata?.name || '',
-    surname: u.user_metadata?.surname || '',
-    phone: u.user_metadata?.phone || null,
-    created_at: u.created_at,
-    order_count: userOrderMap[u.id]?.count ?? 0,
-    last_order: userOrderMap[u.id]?.last ?? null,
+    name: u.displayName || '',
+    surname: '',
+    phone: u.phoneNumber || null,
+    created_at: u.metadata.creationTime,
+    order_count: userOrderMap[u.uid]?.count ?? 0,
+    last_order: userOrderMap[u.uid]?.last ?? null,
     type: 'registered' as const,
-  }));
+  }))
 
   const guests = Object.entries(guestMap).map(([email, g]) => ({
     id: null,
@@ -74,7 +78,7 @@ export async function GET(request: NextRequest) {
     order_count: g.count,
     last_order: g.last,
     type: 'guest' as const,
-  }));
+  }))
 
-  return NextResponse.json({ registered, guests });
+  return NextResponse.json({ registered, guests })
 }

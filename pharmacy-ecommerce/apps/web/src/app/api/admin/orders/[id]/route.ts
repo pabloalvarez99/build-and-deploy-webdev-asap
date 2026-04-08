@@ -1,201 +1,150 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getAdminUser, errorResponse, getServiceClient } from '@/lib/supabase/api-helpers';
+import { NextRequest, NextResponse } from 'next/server'
+import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers'
+import { getDb } from '@/lib/db'
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+const VALID_STATUSES = ['pending', 'reserved', 'paid', 'processing', 'shipped', 'delivered', 'cancelled']
+const STOCK_DEDUCTED_STATUSES = ['paid', 'processing', 'shipped', 'delivered']
+
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return errorResponse('Unauthorized', 403);
+    const admin = await getAdminUser()
+    if (!admin) return errorResponse('Unauthorized', 403)
 
-    const { id } = await params;
-    const body = await request.json();
-    const supabase = getServiceClient();
+    const { id } = params
+    const body = await request.json()
+    const db = await getDb()
 
-    // Handle reservation approve/reject actions
-    if (body.action === 'approve_reservation') {
-      return await approveReservation(supabase, id);
-    }
-    if (body.action === 'reject_reservation') {
-      return await rejectReservation(supabase, id);
-    }
+    if (body.action === 'approve_reservation') return approveReservation(db, id)
+    if (body.action === 'reject_reservation') return rejectReservation(db, id)
 
-    const validStatuses = ['pending', 'reserved', 'paid', 'processing', 'shipped', 'delivered', 'cancelled'];
-    if (!validStatuses.includes(body.status)) {
-      return errorResponse(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+    if (!VALID_STATUSES.includes(body.status)) {
+      return errorResponse(`Estado inválido. Debe ser uno de: ${VALID_STATUSES.join(', ')}`, 400)
     }
 
-    // When cancelling, restore stock if it was previously deducted
+    // When cancelling, restore stock if it was already deducted
     if (body.status === 'cancelled') {
-      const { data: currentOrder } = await supabase
-        .from('orders')
-        .select('status')
-        .eq('id', id)
-        .single();
-
-      const stockDeductedStatuses = ['paid', 'processing', 'shipped', 'delivered'];
-      if (currentOrder && stockDeductedStatuses.includes(currentOrder.status)) {
-        const { data: items } = await supabase
-          .from('order_items')
-          .select('product_id, quantity')
-          .eq('order_id', id);
-
-        for (const item of items || []) {
-          if (item.product_id) {
-            const { data: product } = await supabase
-              .from('products')
-              .select('stock')
-              .eq('id', item.product_id)
-              .single();
-            if (product) {
-              await supabase
-                .from('products')
-                .update({ stock: product.stock + item.quantity })
-                .eq('id', item.product_id);
+      const current = await db.orders.findUnique({ where: { id }, select: { status: true } })
+      if (current && STOCK_DEDUCTED_STATUSES.includes(current.status)) {
+        const items = await db.order_items.findMany({
+          where: { order_id: id },
+          select: { product_id: true, quantity: true },
+        })
+        await db.$transaction(async (tx) => {
+          for (const item of items) {
+            if (item.product_id) {
+              await tx.products.update({
+                where: { id: item.product_id },
+                data: { stock: { increment: item.quantity } },
+              })
             }
           }
-        }
+        })
       }
     }
 
-    const { data, error } = await supabase
-      .from('orders')
-      .update({ status: body.status })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) return errorResponse(error.message, 500);
-    return NextResponse.json(data);
+    const updated = await db.orders.update({ where: { id }, data: { status: body.status } })
+    return NextResponse.json({ ...updated, total: updated.total.toString() })
   } catch (error) {
-    return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);
+    return errorResponse(error instanceof Error ? error.message : 'Internal error', 500)
   }
 }
 
-async function approveReservation(supabase: ReturnType<typeof getServiceClient>, orderId: string) {
-  // 1. Verify order exists and is in 'reserved' status
-  const { data: order, error: orderError } = await supabase
-    .from('orders')
-    .select('id, status, total, guest_email, guest_name, guest_surname, pickup_code')
-    .eq('id', orderId)
-    .single();
+async function approveReservation(db: Awaited<ReturnType<typeof getDb>>, orderId: string) {
+  const order = await db.orders.findUnique({
+    where: { id: orderId },
+    select: { id: true, status: true, total: true, guest_email: true, guest_name: true, guest_surname: true, pickup_code: true },
+  })
+  if (!order) return errorResponse('Order not found', 404)
+  if (order.status !== 'reserved') return errorResponse('Only reserved orders can be approved', 400)
 
-  if (orderError || !order) return errorResponse('Order not found', 404);
-  if (order.status !== 'reserved') {
-    return errorResponse('Only reserved orders can be approved', 400);
-  }
+  const items = await db.order_items.findMany({
+    where: { order_id: orderId },
+    select: { product_id: true, product_name: true, quantity: true, price_at_purchase: true },
+  })
 
-  // 2. Get order items
-  const { data: items, error: itemsError } = await supabase
-    .from('order_items')
-    .select('product_id, product_name, quantity, price_at_purchase')
-    .eq('order_id', orderId);
-
-  if (itemsError) return errorResponse(itemsError.message, 500);
-
-  // 3. Decrement stock for each item
-  for (const item of items || []) {
-    if (item.product_id) {
-      const { error: stockError } = await supabase.rpc('decrement_stock', {
-        p_product_id: item.product_id,
-        p_quantity: item.quantity,
-      });
-      if (stockError) {
-        return errorResponse(`Stock insuficiente para uno de los productos: ${stockError.message}`, 400);
-      }
+  // Decrement stock atomically for each item
+  for (const item of items) {
+    if (!item.product_id) continue
+    try {
+      await db.$transaction(async (tx) => {
+        const product = await tx.products.findUnique({
+          where: { id: item.product_id! },
+          select: { stock: true, name: true },
+        })
+        if (!product || product.stock < item.quantity) {
+          throw new Error(`Stock insuficiente para ${product?.name || item.product_name}`)
+        }
+        await tx.products.update({
+          where: { id: item.product_id! },
+          data: { stock: { decrement: item.quantity } },
+        })
+      })
+    } catch (err) {
+      return errorResponse(err instanceof Error ? err.message : 'Stock insuficiente', 400)
     }
   }
 
-  // 4. Update status to 'processing'
-  const { data, error } = await supabase
-    .from('orders')
-    .update({ status: 'processing' })
-    .eq('id', orderId)
-    .select()
-    .single();
+  const updated = await db.orders.update({ where: { id: orderId }, data: { status: 'processing' } })
 
-  if (error) return errorResponse(error.message, 500);
-
-  // Send approval email to customer (non-blocking)
+  // Send approval email (non-blocking)
   if (order.guest_email && order.pickup_code) {
-    const { sendPickupApprovalEmail } = await import('@/lib/email');
+    const { sendPickupApprovalEmail } = await import('@/lib/email')
     sendPickupApprovalEmail({
       to: order.guest_email,
       name: order.guest_name || 'Cliente',
       orderId: order.id,
       pickupCode: order.pickup_code,
       total: Number(order.total),
-      items: (items || []).map((i: { product_name: string; quantity: number; price_at_purchase: string }) => ({
+      items: items.map((i) => ({
         product_name: i.product_name,
         quantity: i.quantity,
-        price_at_purchase: i.price_at_purchase,
+        price_at_purchase: i.price_at_purchase.toString(),
       })),
-    }).catch(() => {});
+    }).catch(() => {})
   }
 
-  // Trigger low-stock email alert (non-blocking, best-effort)
-  const productIds = (items || []).map((i: { product_id: string | null }) => i.product_id).filter(Boolean) as string[];
-  checkAndAlertLowStock(supabase, productIds).catch(() => {});
+  // Low-stock alert (non-blocking)
+  const productIds = items.map((i) => i.product_id).filter(Boolean) as string[]
+  checkAndAlertLowStock(db, productIds).catch(() => {})
 
-  return NextResponse.json(data);
+  return NextResponse.json({ ...updated, total: updated.total.toString() })
 }
 
-async function checkAndAlertLowStock(supabase: ReturnType<typeof getServiceClient>, productIds: string[]) {
-  if (productIds.length === 0) return;
+async function rejectReservation(db: Awaited<ReturnType<typeof getDb>>, orderId: string) {
+  const order = await db.orders.findUnique({
+    where: { id: orderId },
+    select: { id: true, status: true, guest_email: true, guest_name: true },
+  })
+  if (!order) return errorResponse('Order not found', 404)
+  if (order.status !== 'reserved') return errorResponse('Only reserved orders can be rejected', 400)
 
-  const { data: settings } = await supabase.from('admin_settings').select('key, value');
-  const settingsMap = Object.fromEntries(
-    (settings || []).map((s: { key: string; value: string }) => [s.key, s.value])
-  );
-  const threshold = parseInt(settingsMap.low_stock_threshold || '10');
-  const alertEmail = settingsMap.alert_email;
-  if (!alertEmail) return;
+  const updated = await db.orders.update({ where: { id: orderId }, data: { status: 'cancelled' } })
 
-  const { data: products } = await supabase
-    .from('products')
-    .select('name, stock')
-    .in('id', productIds)
-    .lte('stock', threshold);
-
-  if (products && products.length > 0) {
-    const { sendLowStockAlert } = await import('@/lib/email');
-    await sendLowStockAlert(alertEmail, products as { name: string; stock: number }[], threshold);
-  }
-}
-
-async function rejectReservation(supabase: ReturnType<typeof getServiceClient>, orderId: string) {
-  // 1. Verify order exists and is in 'reserved' status
-  const { data: order, error: orderError } = await supabase
-    .from('orders')
-    .select('id, status, guest_email, guest_name')
-    .eq('id', orderId)
-    .single();
-
-  if (orderError || !order) return errorResponse('Order not found', 404);
-  if (order.status !== 'reserved') {
-    return errorResponse('Only reserved orders can be rejected', 400);
-  }
-
-  // 2. Update status to 'cancelled'
-  const { data, error } = await supabase
-    .from('orders')
-    .update({ status: 'cancelled' })
-    .eq('id', orderId)
-    .select()
-    .single();
-
-  if (error) return errorResponse(error.message, 500);
-
-  // Notify customer (non-blocking)
   if (order.guest_email) {
-    const { sendPickupRejectionEmail } = await import('@/lib/email');
+    const { sendPickupRejectionEmail } = await import('@/lib/email')
     sendPickupRejectionEmail({
       to: order.guest_email,
       name: order.guest_name || 'Cliente',
       orderId: order.id,
-    }).catch(() => {});
+    }).catch(() => {})
   }
 
-  return NextResponse.json(data);
+  return NextResponse.json({ ...updated, total: updated.total.toString() })
+}
+
+async function checkAndAlertLowStock(db: Awaited<ReturnType<typeof getDb>>, productIds: string[]) {
+  if (productIds.length === 0) return
+  const settings = await db.admin_settings.findMany({ select: { key: true, value: true } })
+  const map = Object.fromEntries(settings.map((s) => [s.key, s.value]))
+  const threshold = parseInt(map.low_stock_threshold || '10')
+  const alertEmail = map.alert_email
+  if (!alertEmail) return
+  const lowStock = await db.products.findMany({
+    where: { id: { in: productIds }, stock: { lte: threshold } },
+    select: { name: true, stock: true },
+  })
+  if (lowStock.length > 0) {
+    const { sendLowStockAlert } = await import('@/lib/email')
+    await sendLowStockAlert(alertEmail, lowStock, threshold)
+  }
 }

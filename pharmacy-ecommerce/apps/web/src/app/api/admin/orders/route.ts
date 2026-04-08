@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminUser, errorResponse, getServiceClient } from '@/lib/supabase/api-helpers';
+import { getDb } from '@/lib/db';
+import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,21 +13,37 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const offset = (page - 1) * limit;
 
-    const supabase = getServiceClient();
+    const db = await getDb();
 
-    let query = supabase
-      .from('orders')
-      .select('*', { count: 'exact' });
+    const where = status ? { status } : undefined;
 
-    if (status) query = query.eq('status', status);
-    query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
+    const [orders, total] = await Promise.all([
+      db.orders.findMany({
+        where,
+        include: { order_items: true },
+        orderBy: { created_at: 'desc' },
+        skip: offset,
+        take: limit,
+      }),
+      db.orders.count({ where }),
+    ]);
 
-    const { data, error, count } = await query;
-    if (error) return errorResponse(error.message, 500);
+    const serialized = orders.map((order) => ({
+      ...order,
+      total: order.total.toString(),
+      created_at: order.created_at.toISOString(),
+      updated_at: order.updated_at.toISOString(),
+      reservation_expires_at: order.reservation_expires_at
+        ? order.reservation_expires_at.toISOString()
+        : null,
+      order_items: order.order_items.map((item) => ({
+        ...item,
+        price_at_purchase: item.price_at_purchase.toString(),
+      })),
+    }));
 
-    const total = count || 0;
     return NextResponse.json({
-      orders: data || [],
+      orders: serialized,
       total,
       page,
       limit,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminUser, errorResponse, getServiceClient } from '@/lib/supabase/api-helpers';
+import { getDb } from '@/lib/db';
+import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 
 export async function PUT(
   request: NextRequest,
@@ -11,9 +12,9 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const supabase = getServiceClient();
+    const db = await getDb();
 
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, unknown> = {};
     if (body.name !== undefined) updateData.name = body.name;
     if (body.slug !== undefined) updateData.slug = body.slug;
     if (body.description !== undefined) updateData.description = body.description;
@@ -27,17 +28,21 @@ export async function PUT(
     if (body.prescription_type !== undefined) updateData.prescription_type = body.prescription_type;
     if (body.presentation !== undefined) updateData.presentation = body.presentation || null;
     if (body.active !== undefined) updateData.active = body.active;
-    if (body.discount_percent !== undefined) updateData.discount_percent = body.discount_percent === 0 ? null : body.discount_percent || null;
+    if (body.discount_percent !== undefined) {
+      updateData.discount_percent = body.discount_percent === 0 ? null : body.discount_percent || null;
+    }
 
-    const { data, error } = await supabase
-      .from('products')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
+    const product = await db.products.update({
+      where: { id },
+      data: updateData,
+    });
 
-    if (error) return errorResponse(error.message, 500);
-    return NextResponse.json(data);
+    return NextResponse.json({
+      ...product,
+      price: product.price.toString(),
+      created_at: product.created_at.toISOString(),
+      updated_at: product.updated_at.toISOString(),
+    });
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);
   }
@@ -52,14 +57,10 @@ export async function DELETE(
     if (!admin) return errorResponse('Unauthorized', 403);
 
     const { id } = await params;
-    const supabase = getServiceClient();
+    const db = await getDb();
 
-    const { error } = await supabase
-      .from('products')
-      .delete()
-      .eq('id', id);
+    await db.products.delete({ where: { id } });
 
-    if (error) return errorResponse(error.message, 500);
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);

@@ -1,17 +1,37 @@
-import { create } from 'zustand';
-import { User } from '@/lib/api';
-import { createClient } from '@/lib/supabase/client';
+import { create } from 'zustand'
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signOut,
+  onIdTokenChanged,
+  updateProfile,
+} from 'firebase/auth'
+import { auth } from '@/lib/firebase/client'
+import { User } from '@/lib/api'
 
 interface AuthState {
-  user: User | null;
-  isLoading: boolean;
-  error: string | null;
-  initialized: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name?: string) => Promise<void>;
-  logout: () => Promise<void>;
-  checkAuth: () => Promise<void>;
-  clearError: () => void;
+  user: User | null
+  isLoading: boolean
+  error: string | null
+  initialized: boolean
+  login: (email: string, password: string) => Promise<void>
+  register: (email: string, password: string, name?: string) => Promise<void>
+  logout: () => Promise<void>
+  checkAuth: () => Promise<void>
+  clearError: () => void
+}
+
+/** Exchange Firebase ID token for a server-side session cookie */
+async function createSession(idToken: string): Promise<string> {
+  const res = await fetch('/api/auth/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken }),
+  })
+  if (!res.ok) throw new Error('Error al crear sesión')
+  const data = await res.json()
+  return data.role || 'user'
 }
 
 export const useAuthStore = create<AuthState>()((set) => ({
@@ -21,116 +41,104 @@ export const useAuthStore = create<AuthState>()((set) => ({
   initialized: false,
 
   login: async (email: string, password: string) => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null })
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw new Error(error.message);
-
-      // Fetch profile for role
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('name, role')
-        .eq('id', data.user.id)
-        .single();
+      const { user: fbUser } = await signInWithEmailAndPassword(auth, email, password)
+      const idToken = await fbUser.getIdToken()
+      const role = await createSession(idToken)
 
       set({
         user: {
-          id: data.user.id,
-          email: data.user.email!,
-          name: profile?.name || data.user.user_metadata?.name || null,
-          role: profile?.role || 'user',
-          created_at: data.user.created_at,
+          id: fbUser.uid,
+          email: fbUser.email!,
+          name: fbUser.displayName || null,
+          role,
+          created_at: fbUser.metadata.creationTime || new Date().toISOString(),
         },
         isLoading: false,
-      });
+      })
     } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Error al iniciar sesión',
-        isLoading: false,
-      });
-      throw error;
+      const msg = error instanceof Error ? error.message : 'Error al iniciar sesión'
+      set({ error: msg, isLoading: false })
+      throw error
     }
   },
 
   register: async (email: string, password: string, name?: string) => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null })
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { name },
-        },
-      });
+      // Use API route so Firebase Admin can set displayName and auto-confirm
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Error al registrarse')
+      }
 
-      if (error) throw new Error(error.message);
-      if (!data.user) throw new Error('Registration failed');
+      // Sign in immediately after registration
+      const { user: fbUser } = await signInWithEmailAndPassword(auth, email, password)
+      if (name) await updateProfile(fbUser, { displayName: name })
+      const idToken = await fbUser.getIdToken()
+      await createSession(idToken)
 
-      // Profile is auto-created by the trigger
       set({
         user: {
-          id: data.user.id,
-          email: data.user.email!,
+          id: fbUser.uid,
+          email: fbUser.email!,
           name: name || null,
           role: 'user',
-          created_at: data.user.created_at,
+          created_at: fbUser.metadata.creationTime || new Date().toISOString(),
         },
         isLoading: false,
-      });
+      })
     } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Error al registrarse',
-        isLoading: false,
-      });
-      throw error;
+      const msg = error instanceof Error ? error.message : 'Error al registrarse'
+      set({ error: msg, isLoading: false })
+      throw error
     }
   },
 
   logout: async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    set({ user: null, error: null });
+    await signOut(auth)
+    await fetch('/api/auth/session', { method: 'DELETE' })
+    set({ user: null, error: null })
   },
 
   checkAuth: async () => {
-    set({ isLoading: true });
+    set({ isLoading: true })
     try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        set({ user: null, isLoading: false, initialized: true });
-        return;
-      }
-
-      // Fetch profile for role
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('name, role')
-        .eq('id', user.id)
-        .single();
-
-      set({
-        user: {
-          id: user.id,
-          email: user.email!,
-          name: profile?.name || user.user_metadata?.name || null,
-          role: profile?.role || 'user',
-          created_at: user.created_at,
-        },
-        isLoading: false,
-        initialized: true,
-      });
+      // Listen for token changes to keep client state in sync with Firebase
+      await new Promise<void>((resolve) => {
+        const unsubscribe = onIdTokenChanged(auth, async (fbUser) => {
+          unsubscribe()
+          if (!fbUser) {
+            set({ user: null, isLoading: false, initialized: true })
+            resolve()
+            return
+          }
+          const idToken = await fbUser.getIdToken()
+          const role = await createSession(idToken)
+          set({
+            user: {
+              id: fbUser.uid,
+              email: fbUser.email!,
+              name: fbUser.displayName || null,
+              role,
+              created_at: fbUser.metadata.creationTime || new Date().toISOString(),
+            },
+            isLoading: false,
+            initialized: true,
+          })
+          resolve()
+        })
+      })
     } catch {
-      set({ user: null, isLoading: false, initialized: true });
+      set({ user: null, isLoading: false, initialized: true })
     }
   },
 
   clearError: () => set({ error: null }),
-}));
+}))

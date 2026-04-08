@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminUser, errorResponse, getServiceClient } from '@/lib/supabase/api-helpers';
+import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
+import { getDb } from '@/lib/db';
 
 function getDefaultFrom(daysAgo: number): string {
   const d = new Date();
@@ -16,44 +17,52 @@ export async function GET(request: NextRequest) {
     const from = searchParams.get('from') || getDefaultFrom(30);
     const to = searchParams.get('to') || new Date().toISOString().split('T')[0];
 
-    const supabase = getServiceClient();
+    const db = await getDb();
 
     // Fetch paid/completed orders in date range
-    const { data: orders, error: ordersError } = await supabase
-      .from('orders')
-      .select('id, total, created_at, status')
-      .gte('created_at', from + 'T00:00:00Z')
-      .lte('created_at', to + 'T23:59:59Z')
-      .in('status', ['paid', 'processing', 'shipped', 'delivered']);
+    const orders = await db.orders.findMany({
+      where: {
+        created_at: {
+          gte: new Date(from + 'T00:00:00Z'),
+          lte: new Date(to + 'T23:59:59Z'),
+        },
+        status: { in: ['paid', 'processing', 'shipped', 'delivered'] },
+      },
+      select: { id: true, total: true, created_at: true, status: true },
+    });
 
-    if (ordersError) return errorResponse(ordersError.message, 500);
+    const orderIds = orders.map((o) => o.id);
 
-    const orderIds = (orders || []).map((o: { id: string }) => o.id);
-
-    // Fetch order items for those orders
-    const { data: items, error: itemsError } = orderIds.length > 0
-      ? await supabase
-          .from('order_items')
-          .select(`
-            product_id, product_name, quantity, price_at_purchase,
-            products:product_id ( category_id, categories:category_id ( name ) )
-          `)
-          .in('order_id', orderIds)
-      : { data: [], error: null };
-
-    if (itemsError) return errorResponse(itemsError.message, 500);
+    // Fetch order items with product + category info
+    const items = orderIds.length > 0
+      ? await db.order_items.findMany({
+          where: { order_id: { in: orderIds } },
+          select: {
+            product_id: true,
+            product_name: true,
+            quantity: true,
+            price_at_purchase: true,
+            products: {
+              select: {
+                category_id: true,
+                categories: { select: { name: true } },
+              },
+            },
+          },
+        })
+      : [];
 
     // KPIs
-    const totalRevenue = (orders || []).reduce((sum: number, o: { total: string }) => sum + parseFloat(o.total), 0);
-    const totalOrders = (orders || []).length;
+    const totalRevenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
+    const totalOrders = orders.length;
     const avgTicket = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
     // Sales by day
     const salesByDay: Record<string, { ventas: number; ordenes: number }> = {};
-    (orders || []).forEach((o: { id: string; total: string; created_at: string; status: string }) => {
-      const day = o.created_at.split('T')[0];
+    orders.forEach((o) => {
+      const day = o.created_at.toISOString().split('T')[0];
       if (!salesByDay[day]) salesByDay[day] = { ventas: 0, ordenes: 0 };
-      salesByDay[day].ventas += parseFloat(o.total);
+      salesByDay[day].ventas += Number(o.total);
       salesByDay[day].ordenes += 1;
     });
     const salesByDayArr = Object.entries(salesByDay)
@@ -62,7 +71,7 @@ export async function GET(request: NextRequest) {
 
     // Top products
     const productMap: Record<string, { name: string; units: number; revenue: number; category: string }> = {};
-    (items || []).forEach((item: any) => {
+    items.forEach((item) => {
       const key = item.product_id || item.product_name;
       if (!productMap[key]) {
         productMap[key] = {
@@ -73,7 +82,7 @@ export async function GET(request: NextRequest) {
         };
       }
       productMap[key].units += item.quantity;
-      productMap[key].revenue += item.quantity * parseFloat(item.price_at_purchase);
+      productMap[key].revenue += item.quantity * Number(item.price_at_purchase);
     });
     const topProducts = Object.values(productMap)
       .sort((a, b) => b.units - a.units)
@@ -81,10 +90,10 @@ export async function GET(request: NextRequest) {
 
     // By category
     const categoryMap: Record<string, { name: string; revenue: number; units: number }> = {};
-    (items || []).forEach((item: any) => {
+    items.forEach((item) => {
       const cat = item.products?.categories?.name || 'Sin categoría';
       if (!categoryMap[cat]) categoryMap[cat] = { name: cat, revenue: 0, units: 0 };
-      categoryMap[cat].revenue += item.quantity * parseFloat(item.price_at_purchase);
+      categoryMap[cat].revenue += item.quantity * Number(item.price_at_purchase);
       categoryMap[cat].units += item.quantity;
     });
     const byCategory = Object.values(categoryMap).sort((a, b) => b.revenue - a.revenue);

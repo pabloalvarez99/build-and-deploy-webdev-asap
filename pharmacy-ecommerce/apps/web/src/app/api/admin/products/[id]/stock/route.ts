@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminUser, errorResponse, getServiceClient } from '@/lib/supabase/api-helpers';
+import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
+import { getDb } from '@/lib/db';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const admin = await getAdminUser();
     if (!admin) return errorResponse('Unauthorized', 403);
 
-    const { id } = await params;
+    const { id } = params;
     const body = await request.json();
     const { delta, reason } = body as { delta: number; reason: string };
 
@@ -21,33 +22,22 @@ export async function PATCH(
       return errorResponse(`reason must be one of: ${validReasons.join(', ')}`);
     }
 
-    const supabase = getServiceClient();
+    const db = await getDb();
 
-    const { data: product, error: fetchError } = await supabase
-      .from('products')
-      .select('id, stock')
-      .eq('id', id)
-      .single();
-
-    if (fetchError || !product) return errorResponse('Product not found', 404);
+    const product = await db.products.findUnique({ where: { id }, select: { id: true, stock: true } });
+    if (!product) return errorResponse('Product not found', 404);
 
     const newStock = product.stock + delta;
     if (newStock < 0) return errorResponse('Stock no puede ser negativo', 400);
 
-    const { data: updated, error: updateError } = await supabase
-      .from('products')
-      .update({ stock: newStock })
-      .eq('id', id)
-      .select('id, name, stock')
-      .single();
+    const updated = await db.products.update({
+      where: { id },
+      data: { stock: newStock },
+      select: { id: true, name: true, stock: true },
+    });
 
-    if (updateError) return errorResponse(updateError.message, 500);
-
-    await supabase.from('stock_movements').insert({
-      product_id: id,
-      delta,
-      reason,
-      admin_id: admin.id,
+    await db.stock_movements.create({
+      data: { product_id: id, delta, reason, admin_id: admin.uid },
     });
 
     return NextResponse.json({ success: true, stock: updated.stock });
@@ -57,28 +47,31 @@ export async function PATCH(
 }
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: { params: { id: string } }
 ) {
   try {
     const admin = await getAdminUser();
     if (!admin) return errorResponse('Unauthorized', 403);
 
-    const { id } = await params;
-    const supabase = getServiceClient();
+    const { id } = params;
+    const db = await getDb();
 
-    const { data, error } = await supabase
-      .from('stock_movements')
-      .select(`
-        id, delta, reason, created_at,
-        profiles:admin_id ( name, email )
-      `)
-      .eq('product_id', id)
-      .order('created_at', { ascending: false })
-      .limit(50);
+    const movements = await db.stock_movements.findMany({
+      where: { product_id: id },
+      orderBy: { created_at: 'desc' },
+      take: 50,
+    });
 
-    if (error) return errorResponse(error.message, 500);
-    return NextResponse.json(data || []);
+    return NextResponse.json(
+      movements.map((m) => ({
+        id: m.id,
+        delta: m.delta,
+        reason: m.reason,
+        created_at: m.created_at.toISOString(),
+        admin_id: m.admin_id,
+      }))
+    );
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);
   }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminUser, errorResponse, getServiceClient } from '@/lib/supabase/api-helpers';
+import { getDb } from '@/lib/db';
+import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,22 +8,23 @@ export async function POST(request: NextRequest) {
     if (!admin) return errorResponse('Unauthorized', 403);
 
     const body = await request.json();
-    const supabase = getServiceClient();
+    const db = await getDb();
 
-    const { data, error } = await supabase
-      .from('categories')
-      .insert({
+    const category = await db.categories.create({
+      data: {
         name: body.name,
         slug: body.slug,
         description: body.description || null,
         image_url: body.image_url || null,
-        active: true,
-      })
-      .select()
-      .single();
+        active: body.active !== false,
+      },
+    });
 
-    if (error) return errorResponse(error.message, 500);
-    return NextResponse.json(data);
+    return NextResponse.json({
+      ...category,
+      created_at: category.created_at.toISOString(),
+      updated_at: category.updated_at.toISOString(),
+    });
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);
   }

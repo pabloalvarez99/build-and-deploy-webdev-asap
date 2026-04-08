@@ -1,97 +1,101 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { errorResponse, getAdminUser, getServiceClient } from '@/lib/supabase/api-helpers';
+import { NextRequest, NextResponse } from 'next/server'
+import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers'
+import { adminAuth } from '@/lib/firebase/admin'
+import { getDb } from '@/lib/db'
 
 // GET /api/admin/clientes/[id] — customer detail + full order history
-// For registered users: id = user UUID
-// For guest users: id = 'guest', ?email=xxx
+// For registered: id = Firebase uid
+// For guest: id = 'guest', ?email=xxx
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  const admin = await getAdminUser();
-  if (!admin) return errorResponse('Unauthorized', 401);
+  const admin = await getAdminUser()
+  if (!admin) return errorResponse('Unauthorized', 401)
 
-  const supabase = getServiceClient();
-  const { id } = params;
+  const db = await getDb()
+  const { id } = params
 
   if (id === 'guest') {
-    const email = request.nextUrl.searchParams.get('email');
-    if (!email) return errorResponse('email required for guest lookup');
+    const email = request.nextUrl.searchParams.get('email')
+    if (!email) return errorResponse('email required for guest lookup', 400)
 
-    const { data: orders } = await supabase
-      .from('orders')
-      .select('*, order_items(*)')
-      .ilike('guest_email', email)
-      .order('created_at', { ascending: false });
+    const orders = await db.orders.findMany({
+      where: { guest_email: { equals: email, mode: 'insensitive' } },
+      include: { order_items: true },
+      orderBy: { created_at: 'desc' },
+    })
 
-    const firstOrder = orders?.[0];
+    const first = orders[0]
     return NextResponse.json({
       customer: {
         id: null,
         email,
-        name: firstOrder?.guest_name || '',
-        surname: firstOrder?.guest_surname || '',
-        phone: firstOrder?.customer_phone || null,
+        name: first?.guest_name || '',
+        surname: first?.guest_surname || '',
+        phone: first?.customer_phone || null,
         type: 'guest',
-        created_at: firstOrder?.created_at || null,
+        created_at: first?.created_at || null,
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      orders: (orders || []).map((o: any) => ({ ...o, items: o.order_items || [] })),
-    });
+      orders: orders.map((o) => ({ ...o, items: o.order_items || [] })),
+    })
   }
 
   // Registered user
-  const { data: userData, error: userError } = await supabase.auth.admin.getUserById(id);
-  if (userError || !userData.user) return errorResponse('Cliente no encontrado', 404);
+  let fbUser
+  try {
+    fbUser = await adminAuth.getUser(id)
+  } catch {
+    return errorResponse('Cliente no encontrado', 404)
+  }
 
-  const u = userData.user;
-  const { data: orders } = await supabase
-    .from('orders')
-    .select('*, order_items(*)')
-    .eq('user_id', id)
-    .order('created_at', { ascending: false });
+  const orders = await db.orders.findMany({
+    where: { user_id: id },
+    include: { order_items: true },
+    orderBy: { created_at: 'desc' },
+  })
 
   return NextResponse.json({
     customer: {
-      id: u.id,
-      email: u.email,
-      name: u.user_metadata?.name || '',
-      surname: u.user_metadata?.surname || '',
-      phone: u.user_metadata?.phone || null,
+      id: fbUser.uid,
+      email: fbUser.email,
+      name: fbUser.displayName || '',
+      surname: '',
+      phone: fbUser.phoneNumber || null,
       type: 'registered',
-      created_at: u.created_at,
+      created_at: fbUser.metadata.creationTime,
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    orders: (orders || []).map((o: any) => ({ ...o, items: o.order_items || [] })),
-  });
+    orders: orders.map((o) => ({ ...o, items: o.order_items || [] })),
+  })
 }
 
-// PUT /api/admin/clientes/[id] — update registered user metadata
+// PUT /api/admin/clientes/[id] — update registered user data
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  const admin = await getAdminUser();
-  if (!admin) return errorResponse('Unauthorized', 401);
+  const admin = await getAdminUser()
+  if (!admin) return errorResponse('Unauthorized', 401)
 
-  const { id } = params;
-  const { name, surname, phone, email } = await request.json();
+  const { id } = params
+  const { name, surname, email } = await request.json()
 
-  const supabase = getServiceClient();
-
-  const updateData: Record<string, unknown> = {
-    user_metadata: { name, surname, phone: phone || null },
-  };
-  if (email) updateData.email = email;
-
-  const { data, error } = await supabase.auth.admin.updateUserById(id, updateData);
-  if (error) return errorResponse(error.message, 500);
-
-  return NextResponse.json({ success: true, user: data.user });
+  try {
+    const updated = await adminAuth.updateUser(id, {
+      ...(email ? { email } : {}),
+      ...(name ? { displayName: [name, surname].filter(Boolean).join(' ').trim() } : {}),
+    })
+    return NextResponse.json({ success: true, user: { uid: updated.uid, email: updated.email } })
+  } catch (err: unknown) {
+    const msg = (err as Error).message || 'Error al actualizar cliente'
+    return errorResponse(msg, 500)
+  }
 }
 
-// DELETE /api/admin/clientes/[id] — delete registered user account (orders remain)
+// DELETE /api/admin/clientes/[id] — delete user account (orders remain)
 export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
-  const admin = await getAdminUser();
-  if (!admin) return errorResponse('Unauthorized', 401);
+  const admin = await getAdminUser()
+  if (!admin) return errorResponse('Unauthorized', 401)
 
-  const supabase = getServiceClient();
-  const { error } = await supabase.auth.admin.deleteUser(params.id);
-  if (error) return errorResponse(error.message, 500);
-
-  return NextResponse.json({ success: true });
+  try {
+    await adminAuth.deleteUser(params.id)
+    return NextResponse.json({ success: true })
+  } catch (err: unknown) {
+    const msg = (err as Error).message || 'Error al eliminar cliente'
+    return errorResponse(msg, 500)
+  }
 }

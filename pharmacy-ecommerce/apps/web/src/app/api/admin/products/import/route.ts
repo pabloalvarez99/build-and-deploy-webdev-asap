@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminUser, errorResponse, getServiceClient } from '@/lib/supabase/api-helpers';
+import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
+import { getDb } from '@/lib/db';
 
-// Same helpers as import script
 function slugify(text: string): string {
   if (!text) return '';
   return text.toString().toLowerCase()
@@ -89,23 +89,20 @@ export async function POST(request: NextRequest) {
     if (!admin) return errorResponse('Unauthorized', 403);
 
     const { newProducts, updateProducts } = await request.json();
-    const supabase = getServiceClient();
+    const db = await getDb();
 
     // Load categories
-    const { data: categories } = await supabase.from('categories').select('id, slug');
+    const categories = await db.categories.findMany({ select: { id: true, slug: true } });
     const catBySlug: Record<string, string> = {};
-    (categories || []).forEach((c: { id: string; slug: string }) => { catBySlug[c.slug] = c.id; });
+    categories.forEach((c) => { catBySlug[c.slug] = c.id; });
 
     // Load therapeutic mappings
-    const { data: mappings } = await supabase
-      .from('therapeutic_category_mapping')
-      .select('therapeutic_action, category_slug')
-      .limit(500);
-    const actionToSlug: Record<string, string> = {};
-    (mappings || []).forEach((m: { therapeutic_action: string; category_slug: string }) => {
-      actionToSlug[m.therapeutic_action.toUpperCase()] = m.category_slug;
+    const mappings = await db.therapeutic_category_mapping.findMany({
+      select: { therapeutic_action: true, category_slug: true },
+      take: 500,
     });
-    // Add extra mappings
+    const actionToSlug: Record<string, string> = {};
+    mappings.forEach((m) => { actionToSlug[m.therapeutic_action.toUpperCase()] = m.category_slug; });
     Object.entries(EXTRA_MAPPINGS).forEach(([action, slug]) => {
       if (!actionToSlug[action.toUpperCase()]) actionToSlug[action.toUpperCase()] = slug;
     });
@@ -113,7 +110,6 @@ export async function POST(request: NextRequest) {
     const resolveCategory = (row: Record<string, string>): string | null => {
       const action = (row.accion_terapeutica || '').toUpperCase();
       const dept = (row.departamento || '').toUpperCase();
-
       if (action && actionToSlug[action]) {
         const slug = actionToSlug[action];
         if (catBySlug[slug]) return catBySlug[slug];
@@ -125,36 +121,35 @@ export async function POST(request: NextRequest) {
       const deptSlug = slugify(dept);
       if (catBySlug[deptSlug]) return catBySlug[deptSlug];
       return catBySlug['otros'] || null;
-    }
+    };
 
     // Load existing slugs to avoid collisions
-    const { data: existingSlugs } = await supabase.from('products').select('slug');
-    const usedSlugs = new Set((existingSlugs || []).map((p: { slug: string }) => p.slug));
+    const existingSlugRows = await db.products.findMany({ select: { slug: true } });
+    const usedSlugs = new Set(existingSlugRows.map((p) => p.slug));
 
     const getUniqueSlug = (name: string): string => {
-      let slug = slugify(name);
-      if (!slug) slug = 'producto';
+      let slug = slugify(name) || 'producto';
       let baseSlug = slug;
       let counter = 1;
-      while (usedSlugs.has(slug)) {
-        slug = `${baseSlug}-${counter}`;
-        counter++;
-      }
+      while (usedSlugs.has(slug)) { slug = `${baseSlug}-${counter}`; counter++; }
       usedSlugs.add(slug);
       return slug;
-    }
+    };
 
     let inserted = 0;
     let updated = 0;
     const errors: string[] = [];
 
-    // Safety check: filter out products that already exist by external_id (prevents duplicates)
+    // Filter out products that already exist by external_id
     let trulyNewProducts = (newProducts || []) as Record<string, string>[];
     if (trulyNewProducts.length > 0) {
       const extIds = trulyNewProducts.map((r) => r.id).filter(Boolean);
       if (extIds.length > 0) {
-        const { data: existing } = await supabase.from('products').select('external_id').in('external_id', extIds);
-        const existingExtIds = new Set((existing || []).map((p: { external_id: string }) => String(p.external_id)));
+        const existing = await db.products.findMany({
+          where: { external_id: { in: extIds } },
+          select: { external_id: true },
+        });
+        const existingExtIds = new Set(existing.map((p) => String(p.external_id)));
         trulyNewProducts = trulyNewProducts.filter((r) => !existingExtIds.has(String(r.id)));
       }
     }
@@ -168,7 +163,7 @@ export async function POST(request: NextRequest) {
         price: parsePrice(row.precio),
         stock: parseInt(row.stock) || 0,
         category_id: resolveCategory(row),
-        image_url: null,
+        image_url: null as string | null,
         active: true,
         external_id: row.id || null,
         laboratory: row.laboratorio || null,
@@ -181,41 +176,36 @@ export async function POST(request: NextRequest) {
       const BATCH_SIZE = 100;
       for (let i = 0; i < records.length; i += BATCH_SIZE) {
         const batch = records.slice(i, i + BATCH_SIZE);
-        const { error } = await supabase.from('products').insert(batch);
-        if (error) {
-          errors.push(`Error inserting batch ${i}: ${error.message}`);
-        } else {
+        try {
+          await db.products.createMany({ data: batch });
           inserted += batch.length;
+        } catch (err) {
+          errors.push(`Error inserting batch ${i}: ${err instanceof Error ? err.message : String(err)}`);
         }
       }
-    } else if (newProducts && newProducts.length > 0) {
-      // All "new" products already exist in DB — nothing to insert (they'll be updated instead)
     }
 
     // Update existing products
     if (updateProducts && updateProducts.length > 0) {
-      for (const row of updateProducts) {
+      for (const row of updateProducts as Record<string, string>[]) {
         const externalId = String(row.id);
-        const updateData: Record<string, unknown> = {
-          stock: parseInt(row.stock) || 0,
-          price: parsePrice(row.precio),
-          laboratory: row.laboratorio || null,
-          therapeutic_action: row.accion_terapeutica || null,
-          active_ingredient: row.principio_activo || null,
-          prescription_type: mapPrescriptionType(row.receta || ''),
-          presentation: row.presentacion || null,
-          description: buildDescription(row),
-        };
-
-        const { error } = await supabase
-          .from('products')
-          .update(updateData)
-          .eq('external_id', externalId);
-
-        if (error) {
-          errors.push(`Error updating ${row.producto}: ${error.message}`);
-        } else {
+        try {
+          await db.products.updateMany({
+            where: { external_id: externalId },
+            data: {
+              stock: parseInt(row.stock) || 0,
+              price: parsePrice(row.precio),
+              laboratory: row.laboratorio || null,
+              therapeutic_action: row.accion_terapeutica || null,
+              active_ingredient: row.principio_activo || null,
+              prescription_type: mapPrescriptionType(row.receta || ''),
+              presentation: row.presentacion || null,
+              description: buildDescription(row),
+            },
+          });
           updated++;
+        } catch (err) {
+          errors.push(`Error updating ${row.producto}: ${err instanceof Error ? err.message : String(err)}`);
         }
       }
     }

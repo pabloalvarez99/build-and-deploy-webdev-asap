@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminUser, errorResponse, getServiceClient } from '@/lib/supabase/api-helpers';
+import { getDb } from '@/lib/db';
+import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 
 export async function GET() {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return errorResponse('Unauthorized', 403);
-
-    const supabase = getServiceClient();
-    const { data, error } = await supabase.from('admin_settings').select('*');
-    if (error) return errorResponse(error.message, 500);
-
-    const settings = Object.fromEntries((data || []).map((r: { key: string; value: string }) => [r.key, r.value]));
+    const db = await getDb();
+    const rows = await db.admin_settings.findMany();
+    const settings = Object.fromEntries(rows.map((r) => [r.key, r.value]));
     return NextResponse.json(settings);
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);
@@ -23,19 +19,23 @@ export async function PATCH(request: NextRequest) {
     if (!admin) return errorResponse('Unauthorized', 403);
 
     const body = await request.json() as Record<string, string>;
-    const supabase = getServiceClient();
+    const db = await getDb();
 
-    const updates = Object.entries(body).map(([key, value]) => ({
-      key,
-      value: String(value),
-      updated_at: new Date().toISOString(),
-    }));
+    // Accept either { key: value } object or [{ key, value }] array
+    const entries: Array<{ key: string; value: string }> = Array.isArray(body)
+      ? body
+      : Object.entries(body).map(([key, value]) => ({ key, value: String(value) }));
 
-    const { error } = await supabase
-      .from('admin_settings')
-      .upsert(updates, { onConflict: 'key' });
+    await Promise.all(
+      entries.map(({ key, value }) =>
+        db.admin_settings.upsert({
+          where: { key },
+          update: { value: String(value), updated_at: new Date() },
+          create: { key, value: String(value) },
+        })
+      )
+    );
 
-    if (error) return errorResponse(error.message, 500);
     return NextResponse.json({ success: true });
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);

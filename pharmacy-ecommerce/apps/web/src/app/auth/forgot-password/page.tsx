@@ -1,33 +1,33 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
-import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import { useState } from 'react'
+import Link from 'next/link'
+import { sendPasswordResetEmail } from 'firebase/auth'
+import { auth } from '@/lib/firebase/client'
+import { Mail, ArrowLeft, CheckCircle } from 'lucide-react'
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
+    e.preventDefault()
+    setIsLoading(true)
+    setError('')
 
     try {
-      const supabase = createClient();
-      const redirectTo = `${window.location.origin}/auth/reset-password`;
-      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
-      if (error) throw new Error(error.message);
-      setSent(true);
+      await sendPasswordResetEmail(auth, email, {
+        url: `${window.location.origin}/auth/login`,
+      })
+      setSent(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al enviar el correo');
+      setError(err instanceof Error ? err.message : 'Error al enviar el correo')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
@@ -99,5 +99,5 @@ export default function ForgotPasswordPage() {
         )}
       </div>
     </div>
-  );
+  )
 }

@@ -9,8 +9,6 @@ import Image from 'next/image';
 import { useCartStore } from '@/store/cart';
 import { formatPrice, discountedPrice } from '@/lib/format';
 import { ReactNode } from 'react';
-import { createClient } from '@/lib/supabase/client';
-
 // Lucide icons per category slug for professional visual recognition
 const categoryIcons: Record<string, ReactNode> = {
   'dolor-fiebre': <Pill className="w-5 h-5" />,
@@ -141,16 +139,11 @@ function HomeContent() {
 
   const loadDiscountedProducts = async () => {
     try {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from('products')
-        .select('*, categories(name, slug)')
-        .not('discount_percent', 'is', null)
-        .eq('active', true)
-        .gt('stock', 0)
-        .order('discount_percent', { ascending: false })
-        .limit(20);
-      if (data) setDiscountedProducts(data as Product[]);
+      const res = await fetch('/api/products?has_discount=true&in_stock=true&sort_by=discount_desc&limit=20&active_only=true');
+      if (res.ok) {
+        const data = await res.json();
+        setDiscountedProducts(data.products || []);
+      }
     } catch (error) {
       console.error('Error loading discounted products:', error);
     }
