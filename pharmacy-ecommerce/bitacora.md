@@ -4,6 +4,19 @@
 
 ---
 
+## SESIÓN Abril 8, 2026 — Build OK + bugs corregidos
+
+### Resultado
+- `next build` pasa: 43/43 páginas, 0 errores TypeScript
+
+### Bug crítico encontrado y corregido
+**Edge Runtime + firebase-admin:** `firebase-admin` no puede correr en Next.js middleware (Edge Runtime).
+- **Síntoma:** Build falla / error en runtime al usar `adminAuth.verifySessionCookie()` en `src/middleware.ts`
+- **Fix:** Reescrito el middleware para decodificar el JWT del session cookie sin usar firebase-admin SDK (decode sin verificar firma para routing decisions). La verificación segura ocurre en las API routes (Node.js runtime).
+- **Regla para el futuro:** Todo código que use `firebase-admin` debe estar en API routes o Server Components con `export const runtime = 'nodejs'`, NUNCA en `middleware.ts`.
+
+---
+
 ## EN PROGRESO: Migración Supabase → Firebase Auth + Cloud SQL PostgreSQL (Abril 7-8, 2026)
 
 ### Resumen
@@ -68,6 +81,14 @@ Bugs corregidos durante build:
 - `db.ts`: string literals `'PUBLIC'`/`'PASSWORD'` no compatibles con tipos del connector. Fix: `IpAddressTypes.PUBLIC` / `AuthTypes.PASSWORD`.
 - `admin/settings`: `updated_at` no existe en `admin_settings`. Removido.
 - `admin/products/[id]/stock`: `errorResponse` faltaba segundo argumento status. Agregado 400.
+
+### Firebase configurado ✅ (Abril 8, 2026)
+- Web app creada en Firebase: `1:164275006028:web:0bcb105734e84a2f7be2e9`
+- Variables en Vercel (production + development): `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `FIREBASE_PROJECT_ID`, `FIREBASE_STORAGE_BUCKET`
+- `.env.local` actualizado con valores Firebase para desarrollo local
+- **Pendiente Firebase**: habilitar Email/Password en Firebase Console → Authentication → Sign-in method
+- **Pendiente**: crear service account GCP → agregar `FIREBASE_CLIENT_EMAIL` + `FIREBASE_PRIVATE_KEY` a Vercel
+- **Pendiente**: habilitar Vision API + crear API key → agregar `GOOGLE_CLOUD_VISION_API_KEY` a Vercel
 
 ### BLOQUEADOR: Cloud SQL billing
 - Proyecto GCP `tu-farmacia-prod` tiene problema de billing en `timadapa@gmail.com`
