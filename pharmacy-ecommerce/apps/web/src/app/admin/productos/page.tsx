@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -62,6 +62,7 @@ export default function AdminProductsPage() {
  const [labSearchTerm, setLabSearchTerm] = useState('');
 
  // Import state
+ const fileInputRef = useRef<HTMLInputElement>(null);
  const [showImportModal, setShowImportModal] = useState(false);
  const [importStep, setImportStep] = useState<'upload' | 'preview' | 'importing' | 'results'>('upload');
  const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -467,6 +468,7 @@ export default function AdminProductsPage() {
  setImportStep('upload');
  setImportLoading(false);
  setParseErrors([]);
+ if (fileInputRef.current) fileInputRef.current.value = '';
  };
 
  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1163,8 +1165,12 @@ export default function AdminProductsPage() {
  Importar Productos desde Excel
  </h2>
 
-  <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-8 text-center mb-4 hover:border-emerald-400 dark:hover:border-emerald-500 transition-colors cursor-pointer">
+ <label
+ htmlFor="excel-upload"
+ className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-8 text-center mb-4 hover:border-emerald-400 dark:hover:border-emerald-500 transition-colors cursor-pointer block"
+ >
  <input
+ ref={fileInputRef}
  type="file"
  accept=".xlsx,.xls"
  onChange={handleFileSelect}
@@ -1173,8 +1179,8 @@ export default function AdminProductsPage() {
  />
  <Upload className="w-14 h-14 mx-auto mb-3 text-emerald-600" />
  <p className="text-lg font-medium mb-1">Selecciona un archivo Excel</p>
-  <p className="text-slate-500 dark:text-slate-400">.xlsx o .xls</p>
-  </div>
+ <p className="text-slate-500 dark:text-slate-400">.xlsx o .xls</p>
+ </label>
 
   {selectedFile && (
   <div className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-700 rounded-2xl p-4 mb-4 flex items-center gap-3">
