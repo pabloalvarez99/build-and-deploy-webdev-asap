@@ -86,7 +86,7 @@ async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
 
     for (const item of orderItems) {
       if (!item.product_id) continue
-      await db.$transaction(async (tx) => {
+      await db.$transaction(async (tx: Parameters<Parameters<typeof db.$transaction>[0]>[0]) => {
         const product = await tx.products.findUnique({
           where: { id: item.product_id! },
           select: { stock: true },

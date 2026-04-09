@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
 
     // Create order + items atomically
-    const order = await db.$transaction(async (tx) => {
+    const order = await db.$transaction(async (tx: Parameters<Parameters<typeof db.$transaction>[0]>[0]) => {
       const o = await tx.orders.create({
         data: {
           user_id: userId,

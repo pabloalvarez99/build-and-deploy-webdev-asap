@@ -29,7 +29,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
           where: { order_id: id },
           select: { product_id: true, quantity: true },
         })
-        await db.$transaction(async (tx) => {
+        await db.$transaction(async (tx: Parameters<Parameters<typeof db.$transaction>[0]>[0]) => {
           for (const item of items) {
             if (item.product_id) {
               await tx.products.update({
@@ -66,7 +66,7 @@ async function approveReservation(db: Awaited<ReturnType<typeof getDb>>, orderId
   for (const item of items) {
     if (!item.product_id) continue
     try {
-      await db.$transaction(async (tx) => {
+      await db.$transaction(async (tx: Parameters<Parameters<typeof db.$transaction>[0]>[0]) => {
         const product = await tx.products.findUnique({
           where: { id: item.product_id! },
           select: { stock: true, name: true },
