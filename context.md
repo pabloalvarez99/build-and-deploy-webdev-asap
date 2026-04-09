@@ -295,7 +295,29 @@ tu-farmacia-prod-1d6e516dbae2.json    ← Service account key (GITIGNORED)
 
 ---
 
-## 13. Plugins Claude Code
+## 13. Obsidian Mind Vault (PKM)
+
+Vault instalado en `C:\Users\Admin\Documents\obsidian-mind` (v3.7.0).
+Cerebro externo del proyecto — decisiones, gotchas, arquitectura, fases ERP.
+
+| Folder vault | Contenido Tu Farmacia |
+|---|---|
+| `brain/Patterns.md` | Patrones del codebase (Firebase Edge, Prisma gotchas, etc.) |
+| `brain/Gotchas.md` | Gotchas conocidos (Webpay 26 chars, CLP sin decimales, etc.) |
+| `brain/Key Decisions.md` | Decisiones: migración Supabase→Firebase, Cloud SQL, Transbank prod |
+| `brain/North Star.md` | Objetivos del producto: ERP completo, POS, reportes financieros |
+| `reference/` | Arquitectura: Auth flow, DB schema, API routes map |
+| `work/active/` | Fases ERP activas (Fase 1: Proveedores + Compras) |
+| `work/archive/` | Fases completadas |
+
+**Comandos útiles desde el vault** (correr con `claude` dentro de `obsidian-mind/`):
+- `/om-standup` — kickoff de sesión con contexto completo
+- `/om-wrap-up` — cierre: archiva, actualiza índices, captura learnings
+- `/om-dump` — captura rápida de cualquier idea/decisión
+
+---
+
+## 14. Plugins Claude Code  <!-- was 13 -->
 
 | Plugin | Para qué sirve |
 |---|---|
@@ -309,20 +331,37 @@ tu-farmacia-prod-1d6e516dbae2.json    ← Service account key (GITIGNORED)
 
 ---
 
-## 14. Tareas Pendientes
+## 15. Tareas Pendientes — ERP Farmacia
 
-> **Sin tareas pendientes** — Todo el backlog post-migración está completo.
+> Módulos priorizados en sesión de brainstorming (Abril 9, 2026).
+> Leer `pharmacy-ecommerce/bitacora.md` para el diseño técnico completo de cada fase.
+
+### Fase 1 — Proveedores + Compras 🚧 SIGUIENTE
+**Objetivo:** Registrar facturas de proveedores (Mediven, Globalpharma) con foto de cámara → OCR → actualizar stock + costo.
+
+Checklist de implementación:
+- [ ] Migración Prisma: tablas `suppliers`, `purchase_orders`, `purchase_order_items`, `supplier_product_mappings` + campo `cost_price` en `products`
+- [ ] API CRUD `/api/admin/suppliers`
+- [ ] API OCR `/api/admin/purchase-orders/scan` (Google Cloud Vision)
+- [ ] API CRUD + receive `/api/admin/purchase-orders`
+- [ ] Página `/admin/proveedores` (lista + crear)
+- [ ] Página `/admin/compras/nueva` (cámara → OCR → mapeo → confirmar)
+- [ ] Página `/admin/compras` (lista) + `/admin/compras/[id]` (detalle)
+- [ ] Actualizar `Sidebar.tsx` con nuevos items
+
+### Fase 2 — Punto de Venta (POS) ⏳ pendiente diseño
+### Fase 3 — Reportes Financieros (márgenes, costos, PDF/Excel) ⏳ pendiente diseño
 
 ### Completado (Abril 8-9, 2026)
-- ✅ Vars Supabase eliminadas de Vercel (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`)
-- ✅ 3 usuarios migrados Supabase → Firebase (Adan Ardiles, Gloria Cortes, admin@pharmacy.com)
-- ✅ Reset-password email → `handleCodeInApp: true` apunta a `https://tu-farmacia.cl/auth/reset-password`
-- ✅ Cron cleanup-orders → `*/30 * * * *` (Vercel Pro confirmado)
+- ✅ Vars Supabase eliminadas de Vercel
+- ✅ 3 usuarios migrados Supabase → Firebase
+- ✅ Reset-password email branded
+- ✅ Cron cleanup-orders cada 30min
 - ✅ Transbank producción activo (`597053071888`)
 
 ---
 
-## 15. Para Retomar Desde Cero
+## 16. Para Retomar Desde Cero
 
 ```bash
 git clone https://github.com/pabloalvarez99/build-and-deploy-webdev-asap.git
@@ -351,4 +390,4 @@ git push origin main
 
 ---
 
-*Última actualización: 2026-04-09 — Stack 100% limpio. Sin tareas pendientes.*
+*Última actualización: 2026-04-09 — ERP Fase 1 (Proveedores + Compras) en diseño.*

@@ -1,0 +1,49 @@
+query ListPharmacies @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public as it lists general pharmacy information.") {
+  pharmacies {
+    id
+    name
+    address
+    phoneNumber
+    operatingHours
+    website
+    latitude
+    longitude
+  }
+}
+
+query GetUserPrescriptions @auth(level: USER, insecureReason: "This operation lists prescriptions for the currently logged-in user.") {
+  prescriptions(where: {userId: {eq_expr: "auth.uid"}}) {
+    id
+    medicationName
+    dosage
+    instructions
+    issueDate
+    expirationDate
+    imageUrl
+    prescriberName
+    notes
+  }
+}
+
+mutation CreateRefillOrder($pharmacyId: UUID!, $prescriptionId: UUID!, $deliveryOption: String!, $deliveryAddress: String, $pickupTime: Timestamp, $notes: String) @auth(level: USER, insecureReason: "This operation allows a logged-in user to create a refill order.") {
+  refillOrder_insert(data: {
+    userId_expr: "auth.uid",
+    pharmacyId: $pharmacyId,
+    prescriptionId: $prescriptionId,
+    orderDate_expr: "request.time",
+    status: "Pending",
+    deliveryOption: $deliveryOption,
+    deliveryAddress: $deliveryAddress,
+    pickupTime: $pickupTime,
+    notes: $notes
+  })
+}
+
+mutation UpdateUserProfile($displayName: String!, $address: String, $phoneNumber: String, $photoUrl: String) @auth(level: USER, insecureReason: "This operation allows a logged-in user to update their own profile information.") {
+  user_update(key: {id_expr: "auth.uid"}, data: {
+    displayName: $displayName,
+    address: $address,
+    phoneNumber: $phoneNumber,
+    photoUrl: $photoUrl
+  })
+}

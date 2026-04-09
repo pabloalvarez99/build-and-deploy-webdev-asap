@@ -27,27 +27,30 @@ model categories {
 }
 
 model products {
-  id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name               String            @db.VarChar(255)
-  slug               String            @unique @db.VarChar(255)
-  description        String?
-  price              Decimal           @db.Decimal(10, 2)
-  stock              Int               @default(0)
-  category_id        String?           @db.Uuid
-  image_url          String?           @db.VarChar(500)
-  active             Boolean           @default(true)
-  external_id        String?           @db.VarChar(50)
-  laboratory         String?           @db.VarChar(255)
-  therapeutic_action String?           @db.VarChar(255)
-  active_ingredient  String?           @db.VarChar(500)
-  prescription_type  String?           @default("direct") @db.VarChar(50)
-  presentation       String?           @db.VarChar(255)
-  discount_percent   Int?
-  created_at         DateTime          @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime          @default(now()) @updatedAt @db.Timestamptz(6)
-  categories         categories?       @relation(fields: [category_id], references: [id], onDelete: SetNull)
-  order_items        order_items[]
-  stock_movements    stock_movements[]
+  id                        String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                      String                      @db.VarChar(255)
+  slug                      String                      @unique @db.VarChar(255)
+  description               String?
+  price                     Decimal                     @db.Decimal(10, 2)
+  cost_price                Decimal?                    @db.Decimal(10, 2)
+  stock                     Int                         @default(0)
+  category_id               String?                     @db.Uuid
+  image_url                 String?                     @db.VarChar(500)
+  active                    Boolean                     @default(true)
+  external_id               String?                     @db.VarChar(50)
+  laboratory                String?                     @db.VarChar(255)
+  therapeutic_action        String?                     @db.VarChar(255)
+  active_ingredient         String?                     @db.VarChar(500)
+  prescription_type         String?                     @default("direct") @db.VarChar(50)
+  presentation              String?                     @db.VarChar(255)
+  discount_percent          Int?
+  created_at                DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime                    @default(now()) @updatedAt @db.Timestamptz(6)
+  categories                categories?                 @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  order_items               order_items[]
+  stock_movements           stock_movements[]
+  purchase_order_items      purchase_order_items[]
+  supplier_product_mappings supplier_product_mappings[]
 }
 
 model orders {
@@ -106,4 +109,62 @@ model stock_movements {
   admin_id   String    @db.VarChar(255)
   created_at DateTime  @default(now()) @db.Timestamptz(6)
   products   products? @relation(fields: [product_id], references: [id], onDelete: Cascade)
+}
+
+model suppliers {
+  id                        String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                      String                      @db.VarChar(255)
+  rut                       String?                     @db.VarChar(20)
+  contact_name              String?                     @db.VarChar(255)
+  contact_email             String?                     @db.VarChar(255)
+  contact_phone             String?                     @db.VarChar(20)
+  website                   String?                     @db.VarChar(255)
+  notes                     String?
+  active                    Boolean                     @default(true)
+  created_at                DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime                    @default(now()) @updatedAt @db.Timestamptz(6)
+  purchase_orders           purchase_orders[]
+  supplier_product_mappings supplier_product_mappings[]
+}
+
+model purchase_orders {
+  id             String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  supplier_id    String                 @db.Uuid
+  invoice_number String?                @db.VarChar(100)
+  invoice_date   DateTime?              @db.Date
+  status         String                 @default("draft") @db.VarChar(20)
+  total_cost     Decimal?               @db.Decimal(10, 2)
+  notes          String?
+  image_url      String?                @db.VarChar(500)
+  ocr_raw        String?
+  created_by     String                 @db.VarChar(255)
+  created_at     DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime               @default(now()) @updatedAt @db.Timestamptz(6)
+  suppliers      suppliers              @relation(fields: [supplier_id], references: [id])
+  items          purchase_order_items[]
+}
+
+model purchase_order_items {
+  id                    String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  purchase_order_id     String          @db.Uuid
+  product_id            String?         @db.Uuid
+  supplier_product_code String?         @db.VarChar(100)
+  product_name_invoice  String?         @db.VarChar(255)
+  quantity              Int
+  unit_cost             Decimal         @db.Decimal(10, 2)
+  subtotal              Decimal         @db.Decimal(10, 2)
+  purchase_orders       purchase_orders @relation(fields: [purchase_order_id], references: [id], onDelete: Cascade)
+  products              products?       @relation(fields: [product_id], references: [id], onDelete: SetNull)
+}
+
+model supplier_product_mappings {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  supplier_id    String    @db.Uuid
+  supplier_code  String    @db.VarChar(100)
+  product_id     String    @db.Uuid
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  suppliers      suppliers @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
+  products       products  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@unique([supplier_id, supplier_code])
 }

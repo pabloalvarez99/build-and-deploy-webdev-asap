@@ -1,0 +1,211 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter, useParams } from 'next/navigation'
+import { useAuthStore } from '@/store/auth'
+import { purchaseOrderApi, type PurchaseOrder } from '@/lib/api'
+import {
+  ClipboardList, ArrowLeft, CheckCircle2, Clock, XCircle,
+  Package, Calendar, Hash, User, FileText,
+} from 'lucide-react'
+
+const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; cls: string }> = {
+  draft: { label: 'Borrador', icon: <Clock className="w-4 h-4" />, cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
+  received: { label: 'Recibida', icon: <CheckCircle2 className="w-4 h-4" />, cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' },
+  cancelled: { label: 'Cancelada', icon: <XCircle className="w-4 h-4" />, cls: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+}
+
+function formatCLP(value: string | null | number) {
+  if (value === null || value === undefined) return '—'
+  const num = typeof value === 'string' ? parseInt(value) : value
+  return `$${num.toLocaleString('es-CL')}`
+}
+
+export default function CompraDetailPage() {
+  const router = useRouter()
+  const params = useParams()
+  const { user } = useAuthStore()
+  const [order, setOrder] = useState<PurchaseOrder | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isCancelling, setIsCancelling] = useState(false)
+
+  useEffect(() => {
+    if (!user || user.role !== 'admin') { router.push('/'); return }
+    load()
+  }, [user, router, params.id])
+
+  async function load() {
+    setIsLoading(true)
+    try {
+      const data = await purchaseOrderApi.get(params.id as string)
+      setOrder(data)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function handleCancel() {
+    if (!order || !confirm('¿Cancelar esta orden de compra?')) return
+    setIsCancelling(true)
+    try {
+      await purchaseOrderApi.update(order.id, { status: 'cancelled' as PurchaseOrder['status'] })
+      await load()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al cancelar')
+    } finally {
+      setIsCancelling(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-48" />
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-6 h-48" />
+      </div>
+    )
+  }
+
+  if (!order) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-slate-500 dark:text-slate-400">Orden no encontrada</p>
+        <button onClick={() => router.push('/admin/compras')} className="mt-4 text-emerald-600 hover:underline text-sm">
+          Volver a compras
+        </button>
+      </div>
+    )
+  }
+
+  const st = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.draft
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => router.push('/admin/compras')}
+          className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 text-slate-500" />
+        </button>
+        <div className="flex items-center gap-3">
+          <ClipboardList className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+            Orden de Compra
+          </h1>
+          <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${st.cls}`}>
+            {st.icon}{st.label}
+          </span>
+        </div>
+      </div>
+
+      {/* Info card */}
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-6 space-y-4">
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="flex items-start gap-2">
+            <Package className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Proveedor</p>
+              <p className="font-semibold text-slate-900 dark:text-white">{order.suppliers?.name ?? '—'}</p>
+            </div>
+          </div>
+          {order.invoice_number && (
+            <div className="flex items-start gap-2">
+              <Hash className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">N° Factura</p>
+                <p className="font-semibold text-slate-900 dark:text-white">{order.invoice_number}</p>
+              </div>
+            </div>
+          )}
+          {order.invoice_date && (
+            <div className="flex items-start gap-2">
+              <Calendar className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Fecha factura</p>
+                <p className="font-semibold text-slate-900 dark:text-white">
+                  {new Date(order.invoice_date).toLocaleDateString('es-CL')}
+                </p>
+              </div>
+            </div>
+          )}
+          <div className="flex items-start gap-2">
+            <User className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Registrada por</p>
+              <p className="font-semibold text-slate-900 dark:text-white">{order.created_by}</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-2">
+            <Calendar className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Fecha ingreso</p>
+              <p className="font-semibold text-slate-900 dark:text-white">
+                {new Date(order.created_at).toLocaleDateString('es-CL')}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {order.notes && (
+          <div className="flex items-start gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
+            <FileText className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+            <p className="text-sm text-slate-600 dark:text-slate-400">{order.notes}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Items */}
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+          <h2 className="font-semibold text-slate-900 dark:text-white">
+            Productos ({order.items?.length ?? 0})
+          </h2>
+        </div>
+        <div className="divide-y divide-slate-100 dark:divide-slate-700">
+          {(order.items ?? []).map((item) => (
+            <div key={item.id} className="px-6 py-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-slate-900 dark:text-white truncate">
+                    {item.products?.name ?? item.product_name_invoice ?? '—'}
+                  </p>
+                  {item.supplier_product_code && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Código proveedor: {item.supplier_product_code}</p>
+                  )}
+                  {!item.product_id && (
+                    <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full">Sin mapear</span>
+                  )}
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{item.quantity} × {formatCLP(item.unit_cost)}</p>
+                  <p className="font-semibold text-slate-900 dark:text-white">{formatCLP(item.subtotal)}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center">
+          <span className="font-medium text-slate-700 dark:text-slate-300">Total</span>
+          <span className="text-xl font-bold text-slate-900 dark:text-white">{formatCLP(order.total_cost)}</span>
+        </div>
+      </div>
+
+      {/* Actions */}
+      {order.status === 'draft' && (
+        <div className="flex gap-3">
+          <button
+            onClick={handleCancel}
+            disabled={isCancelling}
+            className="flex-1 px-4 py-3 border-2 border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-xl font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-40"
+          >
+            {isCancelling ? 'Cancelando...' : 'Cancelar OC'}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}

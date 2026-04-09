@@ -1,0 +1,50 @@
+type User @table {
+  displayName: String!
+  email: String!
+  createdAt: Timestamp!
+  photoUrl: String
+  phoneNumber: String
+  address: String
+}
+
+type Prescription @table {
+  medicationName: String!
+  dosage: String!
+  instructions: String!
+  issueDate: Date!
+  expirationDate: Date!
+  imageUrl: String!
+  prescriberName: String
+  notes: String
+  user: User
+}
+
+type Pharmacy @table {
+  name: String!
+  address: String!
+  phoneNumber: String!
+  operatingHours: String!
+  website: String
+  latitude: Float
+  longitude: Float
+}
+
+type MedicationPrice @table {
+  medicationName: String!
+  price: Float!
+  lastUpdated: Timestamp!
+  insuranceAccepted: Boolean
+  pharmacy: Pharmacy
+}
+
+type RefillOrder @table {
+  orderDate: Timestamp!
+  status: String!
+  deliveryOption: String!
+  deliveryAddress: String
+  pickupTime: Timestamp
+  notes: String
+  user: User
+  pharmacy: Pharmacy
+  prescription: Prescription
+}

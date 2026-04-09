@@ -163,3 +163,41 @@ Despues de cada cambio significativo, actualizar `pharmacy-ecommerce/bitacora.md
 - **Simplicity First**: Make every change as simple as possible. Impact minimal code.
 - **No Laziness**: Find root causes. No temporary fixes. Senior developer standards.
 - **Minimal Impact**: Changes should only touch what's necessary. Avoid introducing bugs.
+
+## Obsidian Mind Vault (PKM)
+
+Vault instalado en `C:\Users\Admin\Documents\obsidian-mind`. Es el cerebro externo del proyecto — todo conocimiento durable vive ahí, no en `~/.claude/memory/`.
+
+### Mapeo Tu Farmacia → Vault
+
+| Qué guardar | Dónde en el vault |
+|---|---|
+| Patrones y gotchas del codebase | `brain/Patterns.md`, `brain/Gotchas.md` |
+| Decisiones arquitectónicas | `brain/Key Decisions.md` + `work/active/` |
+| Fases ERP activas | `work/active/ERP Fase 1 - Proveedores.md` |
+| Contexto de stack y arquitectura | `reference/Tu Farmacia Architecture.md` |
+| Decisiones completadas | `work/archive/YYYY/` |
+| Objetivos del producto | `brain/North Star.md` |
+
+### Sistema de Memoria
+
+Cuando el usuario pida "recuerda X":
+1. Escribir en el topic note relevante de `brain/` (Gotchas, Patterns, Key Decisions)
+2. Actualizar `brain/Memories.md` si se crea un topic note nuevo
+3. NO crear archivos adicionales en `~/.claude/projects/.../memory/` — solo `MEMORY.md` es el índice
+
+### Comandos Relevantes (desde el vault)
+
+| Comando | Uso |
+|---|---|
+| `/om-standup` | Kickoff de sesión — carga contexto, revisa trabajo activo |
+| `/om-wrap-up` | Cierre de sesión — archiva, actualiza índices, captura learnings |
+| `/om-dump` | Captura rápida de cualquier cosa → se enruta al lugar correcto |
+| `/om-intake` | Procesa notas de reunión → las clasifica y enruta |
+
+### Reglas
+
+- Conocimiento durable (gotchas, decisiones, patrones) → vault `brain/`, no en memoria efímera
+- Fases ERP → `work/active/` mientras están en progreso, `work/archive/YYYY/` al completar
+- Arquitectura y stack docs → `reference/`
+- Al terminar una sesión significativa, actualizar `brain/Gotchas.md` con gotchas nuevos encontrados

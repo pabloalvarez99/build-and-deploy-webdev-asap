@@ -16,6 +16,8 @@ import {
   BarChart2,
   Settings,
   Users,
+  Truck,
+  ClipboardList,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -31,6 +33,8 @@ const navItems = [
   { href: '/admin/ordenes', icon: ShoppingBag, label: 'Órdenes' },
   { href: '/admin/clientes', icon: Users, label: 'Clientes' },
   { href: '/admin/categorias', icon: Tags, label: 'Categorías' },
+  { href: '/admin/proveedores', icon: Truck, label: 'Proveedores' },
+  { href: '/admin/compras', icon: ClipboardList, label: 'Compras' },
   { href: '/admin/reportes', icon: BarChart2, label: 'Reportes' },
   { href: '/admin/configuracion', icon: Settings, label: 'Configuración' },
 ];

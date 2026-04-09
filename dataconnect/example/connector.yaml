@@ -1,0 +1,22 @@
+connectorId: example
+generate:
+  javascriptSdk:
+    - outputDir: ..\..\pharmacy-ecommerce\src\dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ..\..\pharmacy-ecommerce
+      react: false
+      angular: false
+    - outputDir: ..\..\pharmacy-ecommerce\packages\shared\src\dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ..\..\pharmacy-ecommerce\packages\shared
+      react: false
+      angular: false
+    - outputDir: ..\..\pharmacy-ecommerce\apps\web\src\dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ..\..\pharmacy-ecommerce\apps\web
+      react: true
+      angular: false
+  adminNodeSdk:
+    - outputDir: ..\..\pharmacy-ecommerce\apps\web\src\dataconnect-admin-generated
+      package: "@dataconnect/admin-generated"
+      packageJsonDir: ..\..\pharmacy-ecommerce\apps\web

@@ -298,3 +298,141 @@ export interface PaginatedOrders {
   limit: number
   total_pages: number
 }
+
+// ============================================
+// ERP Types
+// ============================================
+export interface Supplier {
+  id: string
+  name: string
+  rut: string | null
+  contact_name: string | null
+  contact_email: string | null
+  contact_phone: string | null
+  website: string | null
+  notes: string | null
+  active: boolean
+  created_at: string
+  updated_at: string
+  _count?: { purchase_orders: number }
+  last_order?: { created_at: string; status: string } | null
+}
+
+export interface PurchaseOrderItem {
+  id: string
+  purchase_order_id: string
+  product_id: string | null
+  supplier_product_code: string | null
+  product_name_invoice: string | null
+  quantity: number
+  unit_cost: string
+  subtotal: string
+  products?: { id: string; name: string; slug: string } | null
+}
+
+export interface PurchaseOrder {
+  id: string
+  supplier_id: string
+  invoice_number: string | null
+  invoice_date: string | null
+  status: 'draft' | 'received' | 'cancelled'
+  total_cost: string | null
+  notes: string | null
+  image_url: string | null
+  created_by: string
+  created_at: string
+  updated_at: string
+  suppliers?: { id: string; name: string }
+  items?: PurchaseOrderItem[]
+  _count?: { items: number }
+}
+
+export interface ScannedLine {
+  supplier_product_code: string | null
+  product_name_invoice: string
+  quantity: number
+  unit_cost: number
+  subtotal: number
+  product_id: string | null
+  product_name_matched: string | null
+}
+
+// ============================================
+// Supplier API
+// ============================================
+export const supplierApi = {
+  list: (includeInactive = false) =>
+    apiRequest<{ suppliers: Supplier[] }>(
+      `/api/admin/suppliers?include_inactive=${includeInactive}`,
+      { method: 'GET' }
+    ),
+
+  get: (id: string) =>
+    apiRequest<Supplier>(`/api/admin/suppliers/${id}`, { method: 'GET' }),
+
+  create: (data: Partial<Supplier>) =>
+    apiRequest<Supplier>('/api/admin/suppliers', { body: data }),
+
+  update: (id: string, data: Partial<Supplier>) =>
+    apiRequest<Supplier>(`/api/admin/suppliers/${id}`, { method: 'PUT', body: data }),
+
+  delete: (id: string) =>
+    apiRequest<void>(`/api/admin/suppliers/${id}`, { method: 'DELETE' }),
+}
+
+// ============================================
+// Purchase Order API
+// ============================================
+export const purchaseOrderApi = {
+  list: (params?: { page?: number; limit?: number; status?: string; supplier_id?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.page) qs.set('page', String(params.page))
+    if (params?.limit) qs.set('limit', String(params.limit))
+    if (params?.status) qs.set('status', params.status)
+    if (params?.supplier_id) qs.set('supplier_id', params.supplier_id)
+    return apiRequest<{ orders: PurchaseOrder[]; total: number; total_pages: number }>(
+      `/api/admin/purchase-orders?${qs.toString()}`,
+      { method: 'GET' }
+    )
+  },
+
+  get: (id: string) =>
+    apiRequest<PurchaseOrder>(`/api/admin/purchase-orders/${id}`, { method: 'GET' }),
+
+  create: (data: {
+    supplier_id: string
+    invoice_number?: string
+    invoice_date?: string
+    notes?: string
+    ocr_raw?: string
+    items: Array<{
+      product_id?: string
+      supplier_product_code?: string
+      product_name_invoice?: string
+      quantity: number
+      unit_cost: number
+      subtotal: number
+    }>
+  }) => apiRequest<PurchaseOrder>('/api/admin/purchase-orders', { body: data }),
+
+  update: (id: string, data: Partial<PurchaseOrder>) =>
+    apiRequest<PurchaseOrder>(`/api/admin/purchase-orders/${id}`, { method: 'PUT', body: data }),
+
+  scan: (image_base64: string, supplier_id?: string) =>
+    apiRequest<{ lines: ScannedLine[]; ocr_raw: string }>(
+      '/api/admin/purchase-orders/scan',
+      { body: { image_base64, supplier_id } }
+    ),
+
+  receive: (id: string) =>
+    apiRequest<{ success: boolean; items_updated: number; items_skipped: number }>(
+      `/api/admin/purchase-orders/${id}/receive`,
+      { body: {} }
+    ),
+
+  mapProduct: (orderId: string, item_id: string, product_id: string) =>
+    apiRequest<PurchaseOrderItem>(
+      `/api/admin/purchase-orders/${orderId}/map-product`,
+      { body: { item_id, product_id } }
+    ),
+}

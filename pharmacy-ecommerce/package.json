@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@dataconnect/generated": "file:src/dataconnect-generated",
     "argon2": "^0.44.0",
     "pg": "^8.16.3",
     "xlsx": "^0.18.5"

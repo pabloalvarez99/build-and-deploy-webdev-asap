@@ -1,0 +1,106 @@
+mutation SeedData @transaction @auth(level: USER, insecureReason: "Seed data mutations are for development purposes and not exposed to end users.") {
+  user_insertMany(data: [
+    {
+      id: "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      displayName: "Alice Smith",
+      email: "alice.smith@example.com",
+      createdAt: "2023-01-15T10:00:00Z",
+      phoneNumber: "555-123-4567",
+      address: "123 Main St, Anytown, USA"
+    },
+    {
+      id: "b2c3d4e5-f6a7-8901-2345-67890abcdef0",
+      displayName: "Bob Johnson",
+      email: "bob.johnson@example.com",
+      createdAt: "2023-02-20T11:30:00Z",
+      phoneNumber: "555-987-6543",
+      address: "456 Oak Ave, Otherville, USA"
+    }
+  ])
+  pharmacy_insertMany(data: [
+    {
+      id: "c3d4e5f6-a7b8-9012-3456-7890abcdef01",
+      name: "MediCare Pharmacy",
+      address: "789 Pine Ln, Anytown, USA",
+      phoneNumber: "555-111-2222",
+      operatingHours: "Mon-Fri 9AM-6PM",
+      website: "https://www.medicarepharmacy.com",
+      latitude: 34.0522,
+      longitude: -118.2437
+    },
+    {
+      id: "d4e5f6a7-b8c9-0123-4567-890abcdef012",
+      name: "HealthPlus Drugs",
+      address: "101 Maple Dr, Otherville, USA",
+      phoneNumber: "555-333-4444",
+      operatingHours: "Mon-Sat 8AM-8PM",
+      website: "https://www.healthplusdrugs.net",
+      latitude: 34.0522,
+      longitude: -118.2437
+    }
+  ])
+  prescription_insertMany(data: [
+    {
+      id: "e5f6a7b8-c9d0-1234-5678-90abcdef0123",
+      medicationName: "Amoxicillin",
+      dosage: "250mg",
+      instructions: "Take one capsule every 8 hours",
+      issueDate: "2023-03-01",
+      expirationDate: "2024-03-01",
+      imageUrl: "https://example.com/amoxicillin.jpg",
+      prescriberName: "Dr. Green",
+      userId: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+    },
+    {
+      id: "f6a7b8c9-d0e1-2345-6789-0abcdef01234",
+      medicationName: "Ibuprofen",
+      dosage: "200mg",
+      instructions: "Take one tablet as needed for pain",
+      issueDate: "2023-03-10",
+      expirationDate: "2025-03-10",
+      imageUrl: "https://example.com/ibuprofen.jpg",
+      prescriberName: "Dr. White",
+      userId: "b2c3d4e5-f6a7-8901-2345-67890abcdef0"
+    }
+  ])
+  medicationPrice_insertMany(data: [
+    {
+      id: "01234567-89ab-cdef-0123-456789abcdef",
+      medicationName: "Amoxicillin",
+      price: 15.75,
+      lastUpdated: "2023-04-01T09:00:00Z",
+      insuranceAccepted: true,
+      pharmacyId: "c3d4e5f6-a7b8-9012-3456-7890abcdef01"
+    },
+    {
+      id: "12345678-9abc-def0-1234-56789abcdef0",
+      medicationName: "Ibuprofen",
+      price: 7.99,
+      lastUpdated: "2023-04-02T10:30:00Z",
+      insuranceAccepted: false,
+      pharmacyId: "d4e5f6a7-b8c9-0123-4567-890abcdef012"
+    }
+  ])
+  refillOrder_insertMany(data: [
+    {
+      id: "23456789-abcd-ef01-2345-6789abcdef01",
+      orderDate: "2023-04-05T14:00:00Z",
+      status: "Pending",
+      deliveryOption: "Pickup",
+      pickupTime: "2023-04-06T16:00:00Z",
+      userId: "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      pharmacyId: "c3d4e5f6-a7b8-9012-3456-7890abcdef01",
+      prescriptionId: "e5f6a7b8-c9d0-1234-5678-90abcdef0123"
+    },
+    {
+      id: "34567890-bcde-f012-3456-789abcdef012",
+      orderDate: "2023-04-10T11:00:00Z",
+      status: "Processing",
+      deliveryOption: "Delivery",
+      deliveryAddress: "456 Oak Ave, Otherville, USA",
+      userId: "b2c3d4e5-f6a7-8901-2345-67890abcdef0",
+      pharmacyId: "d4e5f6a7-b8c9-0123-4567-890abcdef012",
+      prescriptionId: "f6a7b8c9-d0e1-2345-6789-0abcdef01234"
+    }
+  ])
+}

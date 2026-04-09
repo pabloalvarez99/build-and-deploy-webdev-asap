@@ -1,6 +1,193 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: PRODUCCIÓN LIMPIA ✅ — Sin deuda técnica (Abril 9, 2026)
+## Estado actual: ERP EN DESARROLLO 🚧 — Fase 1: Proveedores + Compras (Abril 2026)
+
+---
+
+## 2026-04-09 — Obsidian Mind Vault integrado como PKM del proyecto
+
+**Vault instalado:** `C:\Users\Admin\Documents\obsidian-mind` (v3.7.0 — breferrari/obsidian-mind)
+
+**Qué es:** Sistema de PKM (Personal Knowledge Management) integrado con Claude Code.
+Sirve como cerebro externo del proyecto: decisiones, gotchas, patrones, fases ERP, arquitectura.
+
+**Mapeo de contenido Tu Farmacia → Vault:**
+- `brain/Gotchas.md` → gotchas conocidos del codebase (Webpay 26 chars, CLP sin decimales, Firebase Edge Runtime, etc.)
+- `brain/Patterns.md` → patrones recurrentes del stack
+- `brain/Key Decisions.md` → decisiones: migración Supabase→Firebase, Cloud SQL, Transbank prod
+- `brain/North Star.md` → objetivos: ERP completo, POS, reportes financieros
+- `reference/` → arquitectura: Auth flow, DB schema, API routes
+- `work/active/` → fases ERP en progreso
+- `work/archive/` → fases completadas
+
+**Archivos actualizados:**
+- `CLAUDE.md` → sección "Obsidian Mind Vault (PKM)" con mapeo, sistema de memoria y reglas
+- `context.md` → sección 13 con paths del vault y comandos `/om-standup`, `/om-wrap-up`, `/om-dump`
+
+**Comandos Claude disponibles desde el vault** (correr `claude` dentro de `obsidian-mind/`):
+- `/om-standup` — kickoff de sesión
+- `/om-wrap-up` — cierre: archiva, actualiza índices, captura learnings
+- `/om-dump` — captura rápida de decisiones/ideas
+
+---
+
+## PLAN ERP — Fases Priorizadas (Abril 9, 2026)
+
+> Diseñado en sesión de brainstorming. Ejecutar fase por fase en este orden.
+
+### Fase 1 — Proveedores + Compras ← **SIGUIENTE**
+### Fase 2 — Punto de Venta (POS)
+### Fase 3 — Reportes Financieros (márgenes, costos, exportación)
+
+---
+
+## FASE 1: Módulo Proveedores + Compras
+
+### Contexto del negocio
+- Proveedores principales: **Mediven** y **Globalpharma** (portales web)
+- Las cajas llegan con **facturas en papel** (también PDF por email, pero difícil acceso)
+- **Flujo preferido**: sacar foto con cámara del celular a la factura → OCR automático → confirmar productos → stock sube
+- Los códigos de producto del proveedor NO coinciden con `external_id` actual → hay que construir mapeo
+- Se quiere guardar **precio de costo** para calcular márgenes reales (alimenta Fase 3)
+
+### Tablas nuevas (migración Prisma)
+
+```prisma
+model suppliers {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String   @db.VarChar(255)
+  rut             String?  @db.VarChar(20)
+  contact_name    String?  @db.VarChar(255)
+  contact_email   String?  @db.VarChar(255)
+  contact_phone   String?  @db.VarChar(20)
+  website         String?  @db.VarChar(255)
+  notes           String?
+  active          Boolean  @default(true)
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  purchase_orders purchase_orders[]
+  supplier_product_mappings supplier_product_mappings[]
+}
+
+model purchase_orders {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  supplier_id     String   @db.Uuid
+  invoice_number  String?  @db.VarChar(100)
+  invoice_date    DateTime? @db.Date
+  status          String   @default("draft") @db.VarChar(20)  // draft | received | cancelled
+  total_cost      Decimal? @db.Decimal(10, 2)
+  notes           String?
+  image_url       String?  @db.VarChar(500)   // foto de la factura subida a Firebase Storage
+  ocr_raw         String?  // JSON raw del resultado Vision API (para debug)
+  created_by      String   @db.VarChar(255)
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  suppliers       suppliers @relation(fields: [supplier_id], references: [id])
+  items           purchase_order_items[]
+}
+
+model purchase_order_items {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  purchase_order_id    String   @db.Uuid
+  product_id           String?  @db.Uuid    // null si no mapeado aún
+  supplier_product_code String? @db.VarChar(100)
+  product_name_invoice String?  @db.VarChar(255)  // nombre tal como viene en la factura
+  quantity             Int
+  unit_cost            Decimal  @db.Decimal(10, 2)
+  subtotal             Decimal  @db.Decimal(10, 2)
+  purchase_orders      purchase_orders @relation(fields: [purchase_order_id], references: [id], onDelete: Cascade)
+  products             products? @relation(fields: [product_id], references: [id], onDelete: SetNull)
+}
+
+model supplier_product_mappings {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  supplier_id     String   @db.Uuid
+  supplier_code   String   @db.VarChar(100)
+  product_id      String   @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  suppliers       suppliers @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
+  products        products  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  @@unique([supplier_id, supplier_code])
+}
+```
+
+**Campo a agregar en `products`:**
+```prisma
+cost_price  Decimal? @db.Decimal(10, 2)   // precio de costo más reciente
+```
+
+**Relaciones a agregar en `products`:**
+```prisma
+purchase_order_items     purchase_order_items[]
+supplier_product_mappings supplier_product_mappings[]
+```
+
+### API Routes nuevas
+
+```
+GET  POST  /api/admin/suppliers              → CRUD proveedores
+GET  PUT   DELETE /api/admin/suppliers/[id]  → detalle/editar/eliminar proveedor
+
+GET  POST  /api/admin/purchase-orders        → lista / crear nueva OC
+GET  PUT   /api/admin/purchase-orders/[id]   → detalle / actualizar estado
+POST       /api/admin/purchase-orders/[id]/receive  → confirmar recepción: actualiza stock + cost_price
+
+POST       /api/admin/purchase-orders/scan   → recibe imagen base64, llama Vision API, devuelve líneas extraídas
+POST       /api/admin/purchase-orders/[id]/map-product  → guarda mapeo supplier_code → product_id
+```
+
+### Páginas nuevas
+
+```
+/admin/proveedores              → lista de proveedores con stats (# OC, último pedido)
+/admin/proveedores/nuevo        → formulario crear proveedor
+/admin/proveedores/[id]         → detalle proveedor + historial de compras
+
+/admin/compras                  → lista de órdenes de compra (filtro: proveedor, estado, fecha)
+/admin/compras/nueva            → crear OC:
+                                   1. Seleccionar proveedor
+                                   2. FOTO con cámara (capture="environment") o subir imagen
+                                   3. OCR → tabla de líneas extraídas
+                                   4. Mapear productos no reconocidos (buscar en catálogo)
+                                   5. Confirmar → stock sube, cost_price actualiza
+/admin/compras/[id]             → detalle OC + líneas + foto de factura
+```
+
+### Flujo OCR con cámara (detalle técnico)
+
+1. `<input type="file" accept="image/*" capture="environment">` → abre cámara en móvil
+2. Frontend convierte imagen a base64 → POST `/api/admin/purchase-orders/scan`
+3. API llama `@google-cloud/vision` TextDetection (ya tienen `GOOGLE_CLOUD_VISION_API_KEY`)
+4. API parsea el texto para extraer líneas: código, descripción, cantidad, precio unitario
+5. Para cada línea: buscar en `supplier_product_mappings` → si hay match, asigna `product_id`; si no, queda pendiente de mapeo manual
+6. Frontend muestra tabla: líneas auto-reconocidas (verde) + líneas a mapear (naranja, con búsqueda inline)
+7. Al confirmar: `POST /api/admin/purchase-orders/[id]/receive`
+   - Incrementa `stock` en cada producto
+   - Actualiza `cost_price` en `products`
+   - Registra movimiento en `stock_movements` (reason: 'purchase')
+   - Guarda nuevos mappings para el futuro
+   - Cambia status a 'received'
+
+### Sidebar — nuevos items a agregar
+
+En `src/components/admin/Sidebar.tsx`:
+- "Proveedores" (icono: Truck) → `/admin/proveedores`
+- "Compras" (icono: ShoppingCart o ClipboardList) → `/admin/compras` (con badge de OCs en draft)
+
+### Componente existente a aprovechar
+
+`src/components/admin/ScanInvoiceModal.tsx` — revisar si reusar o refactorizar como base para el flujo de cámara+OCR.
+
+### Orden de implementación sugerido
+
+1. Migración Prisma (nuevas tablas + `cost_price` en products)
+2. API `/api/admin/suppliers` CRUD
+3. Página `/admin/proveedores`
+4. API `/api/admin/purchase-orders/scan` (Vision OCR)
+5. API `/api/admin/purchase-orders` CRUD + receive endpoint
+6. Página `/admin/compras/nueva` (flujo cámara → OCR → mapeo → confirmar)
+7. Página `/admin/compras` (lista) + `/admin/compras/[id]` (detalle)
+8. Actualizar sidebar
 
 ---
 
