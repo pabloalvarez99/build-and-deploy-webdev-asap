@@ -23,7 +23,7 @@ async function createPrismaClient(): Promise<PrismaClient> {
   const connector = new Connector({ auth })
 
   const clientOpts = await connector.getOptions({
-    instanceConnectionName: process.env.CLOUD_SQL_INSTANCE!, // project:region:instance
+    instanceConnectionName: process.env.CLOUD_SQL_INSTANCE!.trim(),
     ipType: IpAddressTypes.PUBLIC,
     authType: AuthTypes.PASSWORD,
   })
