@@ -1,242 +1,353 @@
-# Tu Farmacia — Contexto de Herramientas y Entorno
+# Tu Farmacia — Contexto Completo del Proyecto
 
-> **Para el agente que retome esta sesión:** Este archivo documenta todo lo disponible en este equipo y repositorio para Claude Code.
-> Última actualización: 2026-04-03
+> **Punto de entrada para cualquier sesión nueva.**
+> Lee este archivo primero. Tiene todo: estado, credenciales, stack, reglas, herramientas.
+> Última actualización: 2026-04-08
 
 ---
 
-## 1. Sistema Operativo y Entorno
+## 1. Estado Actual — PRODUCCIÓN LIVE ✅
 
-- **OS:** Windows 11 Pro (Build 26200)
-- **Shell:** bash (Git Bash / MinGW64) — usar rutas Unix (`/c/Users/Pablo/...`) no Windows
-- **Cuenta gcloud:** timadapa@gmail.com
-- **CWD del proyecto:** `C:\Users\Pablo\Documents\GitHub\build-and-deploy-webdev-asap`
+**App:** https://tu-farmacia.cl (también https://tu-farmacia.vercel.app)
+**Admin:** https://tu-farmacia.cl/admin
+
+| Componente | Estado |
+|---|---|
+| Next.js 14.2.35 + Tailwind 3 + TypeScript | ✅ Live |
+| Firebase Auth (Email/Password) | ✅ Activo |
+| Cloud SQL PostgreSQL 15 (GCP) | ✅ Conectado — 1482 productos, 17 categorías |
+| Transbank Webpay Plus | ✅ **Producción activa** (Commerce: `597053071888`) |
+| Retiro en tienda (store pickup) | ✅ Operativo |
+| Dark mode (warm-neutral palette) | ✅ Completo en todas las páginas |
+| Admin panel | ✅ Operativo |
+| Emails transaccionales (Resend) | ✅ Configurado |
+| Cron limpieza de órdenes | ✅ Configurado (3 AM UTC diario) |
+
+---
+
+## 2. Sistema y Rutas
+
+- **OS:** Windows 10 Pro (Build 19045)
+- **Shell:** bash (Git Bash) — usar rutas Unix (`/c/Users/Admin/...`) NO Windows
+- **CWD:** `C:\Users\Admin\Documents\GitHub\build-and-deploy-webdev-asap`
 - **Web app:** `pharmacy-ecommerce/apps/web`
+- **Bash paths importantes:**
+  ```bash
+  # gcloud NO está en PATH de bash — usar:
+  GCLOUD="/c/Program Files (x86)/Google/Cloud SDK/google-cloud-sdk/bin/gcloud"
+  # gh está en PATH
+  ```
 
 ---
 
-## 2. CLIs Instalados en bash
+## 3. Stack Técnico
 
-| CLI | Versión | Notas |
-|-----|---------|-------|
-| `node` | v24.13.0 | Runtime principal |
-| `npm` | 11.6.2 | Package manager |
-| `pnpm` | 10.32.1 | Package manager alternativo |
-| `vercel` | 50.13.1 | Deploy + env vars. `.vercel/project.json` en raíz apunta a `prj_OfRAgKGzo9TrgQY1C2isbIzVrIs7` |
-| `git` | 2.53.0 | Control de versiones |
-| `gcloud` | SDK 563.0.0 | Google Cloud (autenticado como timadapa@gmail.com) |
-| `firebase` | 15.12.0 | Firebase CLI |
-| `cargo` | 1.93 | Rust package manager |
-| `rustup` | 1.28 | Rust toolchain manager |
-| `docker` | 29.2.1 | Contenedores |
-| `curl` | MinGW64 | HTTP requests |
-
-**Requieren path completo desde bash (no en PATH automáticamente):**
-- `gh` v2.89.0 — instalado en `/c/Program Files/GitHub CLI/gh.exe`. Autenticado como pabloalvarez99. Agregar al PATH: `echo 'export PATH="$PATH:/c/Program Files/GitHub CLI"' >> ~/.bashrc`
-- `flyctl` — no instalado
-- `python` — no disponible en PATH
+```
+Next.js 14.2.35 (App Router)
+Tailwind CSS 3
+TypeScript (strict: true, noImplicitAny: false)
+Prisma 7.7.0 (driverAdapters — ya estable, sin previewFeatures)
+@google-cloud/cloud-sql-connector (IAM auth, sin IP whitelist)
+Firebase Auth (browser: firebase/auth, server: firebase-admin)
+Zustand (cart en localStorage, auth con Firebase)
+Transbank SDK (Webpay Plus, producción)
+Resend (emails transaccionales)
+Recharts (gráficos admin dashboard)
+Vercel (deploy automático via git push origin main)
+```
 
 ---
 
-## 3. Proyecto — Stack Técnico
+## 4. Credenciales y Variables de Entorno
 
-- **Framework:** Next.js 14.1.0 (App Router) + Tailwind CSS + TypeScript
-- **DB + Auth:** Supabase — project ref `jvagvjwrjiekaafpjbit`
-- **Pagos:** Transbank Webpay Plus (producción activa)
-  - Commerce code: `597053071888`
-  - Environment: production
-- **Deploy:** Vercel — auto-deploy via `git push origin main`
-  - URL: https://tu-farmacia.cl / https://tu-farmacia.vercel.app
-  - Admin: https://tu-farmacia.vercel.app/admin
-  - Team: `team_slBDUpChUWbGxQNGQWmWull3`
-  - Project ID: `prj_OfRAgKGzo9TrgQY1C2isbIzVrIs7`
-- **Cart:** Zustand + localStorage
-- **Auth:** Supabase Auth + Zustand store
+### Admin de la app
+| Campo | Valor |
+|---|---|
+| Email | `timadapa@gmail.com` |
+| Password | `TuFarmacia2026!` |
+| Firebase UID | `mUgyCPYUqxZFYjCWexeZSmNMvsS2` |
+| Custom claim | `{"role":"admin"}` |
+
+### Firebase (proyecto `tu-farmacia-prod`)
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyC9k3tw3ckVIim5G9K6lxX1exOb7LdqnRU
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=tu-farmacia-prod.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=tu-farmacia-prod
+FIREBASE_PROJECT_ID=tu-farmacia-prod
+FIREBASE_STORAGE_BUCKET=tu-farmacia-prod.firebasestorage.app
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-fbsvc@tu-farmacia-prod.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n[ver .env.local]\n-----END PRIVATE KEY-----\n
+```
+
+### Cloud SQL (PostgreSQL 15)
+```
+GOOGLE_SERVICE_ACCOUNT=[JSON completo — ver .env.local]
+CLOUD_SQL_INSTANCE=tu-farmacia-prod:southamerica-east1:tu-farmacia-db
+DB_USER=farmacia
+DB_PASSWORD=srcmlaYhkEo19YivrG4FDLH0woou
+DB_NAME=farmacia
+DATABASE_URL=postgresql://farmacia:srcmlaYhkEo19YivrG4FDLH0woou@34.39.232.207:5432/farmacia
+```
+
+### Transbank (PRODUCCIÓN ACTIVA)
+```
+TRANSBANK_ENVIRONMENT=production
+TRANSBANK_COMMERCE_CODE=597053071888
+TRANSBANK_API_KEY=[encriptado en Vercel]
+```
+
+### Otros
+```
+NEXT_PUBLIC_BASE_URL=https://tu-farmacia.cl
+GOOGLE_CLOUD_VISION_API_KEY=AIzaSyBvh-lRmzwPjvCCeyKm3zry2v50JCTeJUs
+RESEND_API_KEY=[encriptado en Vercel]
+CRON_SECRET=d87aeb48c620b9a0b904cefb902ff9ecca251260b213c5b008fe07b435aa045c
+```
+
+> **NOTA:** Variables Supabase (`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) aún presentes en Vercel pero **no se usan** — el código fue migrado completamente a Firebase + Cloud SQL. Eliminar cuando se confirme que producción funciona bien:
+> ```bash
+> vercel env rm NEXT_PUBLIC_SUPABASE_URL production
+> vercel env rm NEXT_PUBLIC_SUPABASE_ANON_KEY production
+> vercel env rm SUPABASE_SERVICE_ROLE_KEY production
+> ```
 
 ---
 
-## 4. Build & Deploy — Reglas Críticas
+## 5. Infraestructura GCP
+
+| Recurso | Valor |
+|---|---|
+| GCP Project | `tu-farmacia-prod` |
+| GCP Account | `timadapa@gmail.com` |
+| Cloud SQL Instance | `tu-farmacia-db` |
+| Cloud SQL Region | `southamerica-east1-b` |
+| Cloud SQL IP pública | `34.39.232.207` |
+| Cloud SQL Outgoing IP | `35.247.253.253` |
+| DB Name | `farmacia` |
+| DB User | `farmacia` |
+| Service Account | `firebase-adminsdk-fbsvc@tu-farmacia-prod.iam.gserviceaccount.com` |
+| Service Account JSON | `tu-farmacia-prod-1d6e516dbae2.json` (repo root, **gitignored**) |
+| Firebase Web App ID | `1:164275006028:web:0bcb105734e84a2f7be2e9` |
+
+---
+
+## 6. Vercel
+
+| Campo | Valor |
+|---|---|
+| Team ID | `team_slBDUpChUWbGxQNGQWmWull3` |
+| Project ID | `prj_OfRAgKGzo9TrgQY1C2isbIzVrIs7` |
+| Root dir | `pharmacy-ecommerce/apps/web` |
+| Node.js | 24.x |
+| Dominios | `tu-farmacia.cl`, `www.tu-farmacia.cl`, `tu-farmacia.vercel.app` |
+| Deploy | `git push origin main` → auto-deploy |
+
+---
+
+## 7. Build & Deploy
 
 ```bash
-# Build — SIEMPRE desde apps/web/, NUNCA npx (trae Next.js 16)
-cd pharmacy-ecommerce/apps/web
-./node_modules/.bin/next build
+# Build LOCAL — SIEMPRE desde apps/web/
+cd /c/Users/Admin/Documents/GitHub/build-and-deploy-webdev-asap/pharmacy-ecommerce/apps/web
+NODE_OPTIONS=--max-old-space-size=6144 ./node_modules/.bin/next build
+# NUNCA: npx next build (trae Next.js 16 del cache)
 
-# Deploy — push a main dispara auto-deploy en Vercel
+# Build script en package.json ya incluye prisma generate:
+# "build": "prisma generate && next build"
+
+# Deploy → solo hacer push
 git push origin main
 ```
 
-- **Vercel root dir:** `pharmacy-ecommerce/apps/web` (configurado en proyecto Vercel)
-- **`.vercel/project.json`** debe estar en la raíz del repo para `vercel deploy --prod`
-- **CRLF bug Windows:** usar `printf` en vez de `echo` para env vars (echo agrega `\r`)
+**Reglas críticas:**
+1. `firebase-admin` NUNCA en `middleware.ts` — Edge Runtime no lo soporta
+2. `Firebase client.ts` solo inicializa en browser (`typeof window !== 'undefined'`)
+3. `getDb()` es async — siempre `await getDb()`
+4. `GOOGLE_SERVICE_ACCOUNT` se parsea con `JSON.parse()` — debe ser JSON válido como string
+5. `isPickup` → usar `payment_provider === 'store'`, NUNCA `!!order.pickup_code`
+6. Webpay buyOrder max 26 chars: UUID sin guiones, truncado a 26
+7. CLP sin decimales: `Math.round()` al pasar montos a Transbank
 
 ---
 
-## 5. Plugins Claude Code Instalados (24 plugins)
-
-### Navegación y Código
-| Plugin | Para qué sirve |
-|--------|---------------|
-| `serena` | Navegación semántica del codebase (find_symbol, get_symbols_overview) |
-| `typescript-lsp` | LSP para TypeScript/TSX — hover types, go-to-definition |
-| `context7` | Docs actualizadas de librerías (Next.js, Tailwind, Supabase, etc.) |
-| `claude-mem` | Memoria persistente entre sesiones (cross-session search) |
-
-### Desarrollo y Arquitectura
-| Plugin | Para qué sirve |
-|--------|---------------|
-| `feature-dev` | Explorar codebase + arquitectura de features + code review |
-| `superpowers` | Brainstorming, planes, ejecución paralela, debugging sistemático |
-| `frontend-design` | UI profesional con alta calidad visual |
-| `code-review` | Revisión de código contra el plan |
-| `code-simplifier` | Simplificar y refactorizar código |
-
-### Plataforma
-| Plugin | Para qué sirve |
-|--------|---------------|
-| `vercel` | Deploy, env vars, logs, documentación Vercel |
-| `supabase` | Conexión directa a Supabase (queries, auth, RLS) |
-| `playwright` | Testing E2E en browser (navegación, screenshots, clicks) |
-
-### Git y CI/CD
-| Plugin | Para qué sirve |
-|--------|---------------|
-| `commit-commands` | `/commit`, `/commit-push-pr` — commits y PRs automáticos |
-| `ralph-loop` | Loop de tareas repetitivas |
-| `claude-code-setup` | Hooks y configuración de Claude Code |
-| `claude-md-management` | Mejorar y revisar CLAUDE.md |
-
-### Otros
-| Plugin | Para qué sirve |
-|--------|---------------|
-| `security-guidance` | Revisión de seguridad |
-| `plugin-dev` | Crear nuevos plugins/skills |
-| `skill-creator` | Crear nuevos skills |
-| `gopls-lsp` | LSP para Go |
-| `rust-analyzer-lsp` | LSP para Rust |
-| `kotlin-lsp` | LSP para Kotlin |
-| `pyright-lsp` | LSP para Python |
-| `railway` | Deploy en Railway |
-
----
-
-## 6. Skills Disponibles (slash commands)
+## 8. Arquitectura de Autenticación
 
 ```
-/commit          — Crear commit git con mensaje automático
-/commit-push-pr  — Commit + push + abrir PR
-/deploy          — Pipeline completo de deploy Tu Farmacia
-/review          — Code review de archivos modificados
-/debug           — Framework de debugging sistemático
-/continuar       — Leer estado del proyecto y continuar
-/handover        — Generar HANDOVER.md completo
-/simplify        — Simplificar código recién modificado
+Browser
+  └── Firebase Client SDK (signInWithEmailAndPassword)
+        └── POST /api/auth/session { idToken }
+              └── adminAuth.createSessionCookie(idToken, 14 días)
+                    └── 'session' cookie (httpOnly, secure, sameSite: lax)
+                          │
+                          ├── middleware.ts: decodeJwtPayload() — atob(), Edge Runtime
+                          │   Comprueba role === 'admin' para /admin/*
+                          │   NO usa firebase-admin (incompatible con Edge)
+                          │
+                          └── API routes: adminAuth.verifySessionCookie() — Node.js
+                              Verificación criptográfica completa
+```
 
-Superpowers:
-/brainstorming          — Pensar soluciones antes de implementar
-/writing-plans          — Escribir plan de implementación
-/executing-plans        — Ejecutar plan con subagentes
-/dispatching-parallel-agents — Lanzar múltiples agentes en paralelo
-/systematic-debugging   — Debugging sistemático
-/verification-before-completion — Verificar antes de marcar completo
+**Custom claims:** `role: 'admin'` se setea con `adminAuth.setCustomUserClaims(uid, { role: 'admin' })`.
+El claim viaja en el ID token → se preserva en el session cookie.
 
-Vercel:
-/vercel:nextjs    — Guía Next.js App Router
-/vercel:env-vars  — Manejo de variables de entorno
-/vercel:deployments-cicd — Deploy y CI/CD
-/vercel:shadcn    — Componentes shadcn/ui
+**Para crear nuevo admin:**
+```bash
+cd pharmacy-ecommerce/apps/web
+# Crear script temporal set-admin.mjs con firebase-admin
+# o usar Firebase Console → Authentication → Users → Edit user → Custom claims
 ```
 
 ---
 
-## 7. MCP Servers (externos)
-
-Sin MCP servers configurados en `~/.claude/settings.json` a nivel global.
-Los MCP servers que aparecen en sesión (plugin:vercel, plugin:supabase, plugin:playwright, plugin:serena, plugin:context7) son provistos por los plugins instalados, no por configuración manual.
-
----
-
-## 8. Archivos Clave del Proyecto
+## 9. Arquitectura DB
 
 ```
-CLAUDE.md                          — Reglas para Claude Code (LEER PRIMERO)
-bitacora.md                        — Historial completo de cambios
-context.md                         — Este archivo
-pharmacy-ecommerce/apps/web/
-  src/
-    app/                           — Páginas (App Router)
-      page.tsx                     — Homepage
-      producto/[slug]/page.tsx     — Detalle producto
-      carrito/page.tsx             — Carrito
-      checkout/page.tsx            — Checkout (Webpay + Retiro)
-      checkout/reservation/        — Código de retiro
-      checkout/webpay/             — Success/error Webpay
-      mis-pedidos/                 — Historial de pedidos
-      admin/                       — Panel admin
-      auth/                        — Login/registro
-      api/                         — API Routes
-        webpay/                    — Transbank Webpay Plus
-        store-pickup/              — Retiro en tienda
-        admin/                     — CRUD admin
-        cron/                      — Limpieza de órdenes
-    components/
-      Navbar.tsx                   — Navbar con toggle dark mode
-      WhatsAppButton.tsx           — Botón flotante WhatsApp
-    hooks/
-      useTheme.ts                  — Dark mode hook (localStorage: 'theme')
-    lib/
-      api.ts                       — productApi, orderApi
-      supabase/                    — Clients (anon + service role)
-      transbank.ts                 — Webpay Plus client
-    store/
-      cart.ts                      — Zustand cart (localStorage)
-      auth.ts                      — Zustand auth (Supabase)
-    app/globals.css                — Dark mode palette overrides
-  tailwind.config.js               — darkMode: 'class'
-  .vercel/project.json             — Link al proyecto Vercel
-vercel.json                        — Cron config (cleanup-orders)
-.vercel/project.json               — En RAÍZ del repo (para vercel deploy)
+Vercel Function (Node.js)
+  └── src/lib/db.ts → getDb()
+        └── @google-cloud/cloud-sql-connector (IAM, no IP whitelist)
+              └── pg.Pool → PrismaPg adapter → PrismaClient
+
+# Para CLI (prisma db push, prisma studio):
+# Requiere autorizar IP en Cloud SQL temporalmente:
+GCLOUD="/c/Program Files (x86)/Google/Cloud SDK/google-cloud-sdk/bin/gcloud"
+MY_IP=$(curl -s https://api.ipify.org)
+"$GCLOUD" sql instances patch tu-farmacia-db \
+  --authorized-networks="$MY_IP/32" --project=tu-farmacia-prod
+# Después limpiar:
+"$GCLOUD" sql instances patch tu-farmacia-db \
+  --clear-authorized-networks --project=tu-farmacia-prod
 ```
 
 ---
 
-## 9. Estado Actual del Proyecto (Abril 2026)
+## 10. Arquitectura de Páginas y API Routes
 
-- ✅ E-commerce operativo en producción (https://tu-farmacia.cl)
-- ✅ Transbank Webpay Plus activo en producción (Commerce: `597053071888`)
-- ✅ Retiro en tienda con código de 6 dígitos (48h validez)
-- ✅ Dark mode completo + elegante (paleta warm-neutral)
-- ✅ Responsividad móvil corregida (320px-375px pantallas pequeñas)
-- ✅ Productos con receta → solo WhatsApp (no carrito)
-- ✅ Confirmación WhatsApp antes de pago Webpay
-- ✅ 1189 productos en Supabase, 17 categorías
-- ✅ Admin panel con gestión de productos/órdenes
-- 📋 Pendiente: bulk activation/deactivation de productos en admin
+```
+/                       → Homepage (productos + categorías + búsqueda)
+/producto/[slug]        → Detalle producto
+/carrito                → Carrito (localStorage)
+/checkout               → Formulario + Webpay / Retiro
+/checkout/webpay/success → Confirmación Webpay
+/checkout/webpay/error  → Error/cancelación Webpay
+/checkout/reservation   → Código retiro tienda
+/auth/login             → Login Firebase
+/auth/register          → Registro
+/auth/forgot-password   → Reset password (envía email Firebase)
+/auth/reset-password    → Nueva password (oobCode en query string)
+/mis-pedidos            → Órdenes del usuario (requiere auth)
+/mis-pedidos/[id]       → Detalle orden + timeline
+/admin/*                → Panel admin (requiere role:admin)
+
+API Routes:
+POST   /api/webpay/create          → Crea orden pending + transacción Transbank
+GET|POST /api/webpay/return        → Callback Transbank, commit, actualiza a paid
+POST   /api/store-pickup           → Crea orden reserved con pickup_code (24h)
+GET    /api/cron/cleanup-orders    → Cancela órdenes expiradas (cron 3AM UTC)
+GET    /api/admin/orders           → Lista órdenes
+PUT    /api/admin/orders/[id]      → Actualiza estado (approve/reject/cancel)
+CRUD   /api/admin/products         → Productos (con import Excel)
+CRUD   /api/admin/categories       → Categorías
+GET|PATCH /api/admin/settings      → alert_email, low_stock_threshold
+GET    /api/admin/clientes         → Lista clientes
+GET|PUT|DELETE /api/admin/clientes/[id] → Detalle/editar/eliminar cliente
+POST   /api/auth/session           → Crea session cookie desde ID token
+DELETE /api/auth/session           → Logout (borra session cookie)
+POST   /api/auth/register          → Registro via Firebase Admin
+```
 
 ---
 
-## 10. Para Retomar Desde Otro PC
+## 11. Archivos Clave del Código
+
+```
+src/lib/db.ts                          ← Prisma + Cloud SQL connector
+src/lib/firebase/admin.ts              ← Firebase Admin SDK (lazy proxy)
+src/lib/firebase/client.ts             ← Firebase browser SDK (browser-only)
+src/lib/firebase/api-helpers.ts        ← getAuthenticatedUser, getAdminUser
+src/lib/firebase/middleware.ts         ← JWT decode (Edge Runtime, sin firebase-admin)
+src/lib/transbank.ts                   ← Webpay Plus client (prod/integration)
+src/lib/email.ts                       ← Resend emails transaccionales
+src/middleware.ts                      ← Next.js middleware → updateSession()
+src/store/auth.ts                      ← Zustand auth (Firebase)
+src/store/cart.ts                      ← Zustand cart (localStorage)
+src/app/api/auth/session/route.ts      ← Session cookie creation/deletion
+prisma/schema.prisma                   ← Schema Prisma
+prisma.config.ts                       ← Prisma 7 config (DATABASE_URL para CLI)
+vercel.json                            ← Cron: cleanup-orders (0 3 * * *)
+.vercel/project.json                   ← Link al proyecto Vercel
+tu-farmacia-prod-1d6e516dbae2.json    ← Service account key (GITIGNORED)
+```
+
+---
+
+## 12. CLIs Disponibles
+
+| CLI | Versión | Notas |
+|---|---|---|
+| `node` | v24.x | Runtime |
+| `npm` | 11.x | Package manager |
+| `vercel` | 50.37.0 | Deploy + env vars |
+| `firebase` | 15.11.0 | Firebase CLI |
+| `gcloud` | 564.0.0 | **NO está en PATH** — usar path completo |
+| `git` | 2.x | Control de versiones |
+| `gh` | 2.89.0 | GitHub CLI |
+| `docker` | 29.x | Contenedores |
+
+---
+
+## 13. Plugins Claude Code
+
+| Plugin | Para qué sirve |
+|---|---|
+| `vercel` | Deploy, env vars, logs, documentación Vercel (MCP) |
+| `firebase` | Firebase Auth, Firestore, operaciones Firebase (MCP) |
+| `supabase` | Supabase (ya no se usa activamente) |
+| `context7` | Docs actualizadas de librerías |
+| `superpowers` | Brainstorming, planes, debugging sistemático |
+| `feature-dev` | Explorar codebase + arquitectura |
+| `serena` | Navegación semántica del codebase |
+
+---
+
+## 14. Tareas Pendientes (opcionales)
+
+| Prioridad | Tarea |
+|---|---|
+| 🟡 | Configurar Firebase Action URL para branded reset-password: Firebase Console → Authentication → Templates → Password reset → Action URL → `https://tu-farmacia.cl/auth/reset-password` |
+| 🟡 | Eliminar variables Supabase de Vercel (post validación producción) |
+| 🟡 | Cambiar cron de diario a cada 30 min (`*/30 * * * *`) si Vercel Pro — actualmente `0 3 * * *` |
+| 🟢 | Migrar usuarios Supabase → Firebase si hay usuarios registrados (script en sesiones anteriores) |
+| 🟢 | Credenciales reales de producción Transbank ya activas ✅ |
+
+---
+
+## 15. Para Retomar Desde Cero
 
 ```bash
 git clone https://github.com/pabloalvarez99/build-and-deploy-webdev-asap.git
 cd build-and-deploy-webdev-asap
 
-# Leer primero (en este orden):
-cat CLAUDE.md          # reglas para Claude Code
-cat bitacora.md        # historial completo del proyecto
-cat context.md         # herramientas disponibles (este archivo)
+# Leer en este orden:
+cat context.md                              # este archivo
+cat pharmacy-ecommerce/context.md           # contexto técnico detallado
+cat pharmacy-ecommerce/bitacora.md          # historial de cambios
+cat pharmacy-ecommerce/apps/web/CLAUDE.md   # reglas para Claude Code (si existe)
+cat CLAUDE.md                               # reglas globales
 
 # Instalar dependencias
 cd pharmacy-ecommerce/apps/web
 npm install
 
-# Build local
-./node_modules/.bin/next build
+# Variables de entorno (pedir .env.local o hacer vercel env pull)
+vercel env pull .env.local --environment=development
 
-# Deploy → simplemente push a main
+# Build local (requiere más memoria en esta máquina)
+NODE_OPTIONS=--max-old-space-size=6144 ./node_modules/.bin/next build
+
+# Deploy → push a main
 git push origin main
 ```
 
 ---
 
-*Última actualización: 2026-04-03 — Dark mode elegante + responsividad móvil completa.*
+*Última actualización: 2026-04-08 — Migración Supabase → Firebase + Cloud SQL completa. Transbank producción activo.*
