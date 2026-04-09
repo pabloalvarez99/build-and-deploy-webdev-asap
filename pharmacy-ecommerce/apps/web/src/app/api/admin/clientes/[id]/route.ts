@@ -34,7 +34,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         type: 'guest',
         created_at: first?.created_at || null,
       },
-      orders: orders.map((o) => ({ ...o, items: o.order_items || [] })),
+      orders: orders.map((o: typeof orders[number]) => ({ ...o, items: o.order_items || [] })),
     })
   }
 
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       type: 'registered',
       created_at: fbUser.metadata.creationTime,
     },
-    orders: orders.map((o) => ({ ...o, items: o.order_items || [] })),
+    orders: orders.map((o: typeof orders[number]) => ({ ...o, items: o.order_items || [] })),
   })
 }
 
