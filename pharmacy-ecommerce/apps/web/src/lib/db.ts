@@ -30,9 +30,9 @@ async function createPrismaClient(): Promise<PrismaClient> {
 
   const pool = new pg.Pool({
     ...clientOpts,
-    user: process.env.DB_USER!,
-    password: process.env.DB_PASSWORD!,
-    database: process.env.DB_NAME!,
+    user: process.env.DB_USER!.trim(),
+    password: process.env.DB_PASSWORD!.trim(),
+    database: process.env.DB_NAME!.trim(),
     max: 5,
   })
 
