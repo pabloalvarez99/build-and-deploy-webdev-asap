@@ -1,6 +1,19 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: MIGRACIÓN COMPLETA ✅ — Firebase Auth + Cloud SQL activo (Abril 8, 2026)
+## Estado actual: PRODUCCIÓN LIMPIA ✅ — Sin deuda técnica (Abril 9, 2026)
+
+---
+
+## SESIÓN Abril 9, 2026 — Limpieza post-migración
+
+### Completado
+- **Vars Supabase eliminadas de Vercel**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` — ya no quedan referencias a Supabase en producción
+- **Migración usuarios**: 3 usuarios migrados de Supabase Auth → Firebase Auth con mismos UIDs (Adan Ardiles, Gloria Cortes, admin@pharmacy.com). Script: `pharmacy-ecommerce/scripts/run-migration.mjs`
+- **Reset-password branded**: `sendPasswordResetEmail` con `handleCodeInApp: true` → link del email apunta directamente a `https://tu-farmacia.cl/auth/reset-password?oobCode=...` (ya no pasa por página genérica de Firebase)
+- **Cron cada 30 min**: `vercel.json` actualizado de `0 3 * * *` a `*/30 * * * *` (Vercel Pro confirmado)
+
+### Sin tareas pendientes
+El stack está 100% limpio y en producción.
 
 ---
 

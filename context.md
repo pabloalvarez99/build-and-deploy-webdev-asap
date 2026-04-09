@@ -309,15 +309,16 @@ tu-farmacia-prod-1d6e516dbae2.json    ← Service account key (GITIGNORED)
 
 ---
 
-## 14. Tareas Pendientes (opcionales)
+## 14. Tareas Pendientes
 
-| Prioridad | Tarea |
-|---|---|
-| 🟡 | Configurar Firebase Action URL para branded reset-password: Firebase Console → Authentication → Templates → Password reset → Action URL → `https://tu-farmacia.cl/auth/reset-password` |
-| 🟡 | Eliminar variables Supabase de Vercel (post validación producción) |
-| 🟡 | Cambiar cron de diario a cada 30 min (`*/30 * * * *`) si Vercel Pro — actualmente `0 3 * * *` |
-| 🟢 | Migrar usuarios Supabase → Firebase si hay usuarios registrados (script en sesiones anteriores) |
-| 🟢 | Credenciales reales de producción Transbank ya activas ✅ |
+> **Sin tareas pendientes** — Todo el backlog post-migración está completo.
+
+### Completado (Abril 8-9, 2026)
+- ✅ Vars Supabase eliminadas de Vercel (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`)
+- ✅ 3 usuarios migrados Supabase → Firebase (Adan Ardiles, Gloria Cortes, admin@pharmacy.com)
+- ✅ Reset-password email → `handleCodeInApp: true` apunta a `https://tu-farmacia.cl/auth/reset-password`
+- ✅ Cron cleanup-orders → `*/30 * * * *` (Vercel Pro confirmado)
+- ✅ Transbank producción activo (`597053071888`)
 
 ---
 
@@ -350,4 +351,4 @@ git push origin main
 
 ---
 
-*Última actualización: 2026-04-08 — Migración Supabase → Firebase + Cloud SQL completa. Transbank producción activo.*
+*Última actualización: 2026-04-09 — Stack 100% limpio. Sin tareas pendientes.*
