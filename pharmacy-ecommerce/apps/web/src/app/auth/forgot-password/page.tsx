@@ -19,7 +19,8 @@ export default function ForgotPasswordPage() {
 
     try {
       await sendPasswordResetEmail(auth, email, {
-        url: `${window.location.origin}/auth/login`,
+        url: 'https://tu-farmacia.cl/auth/reset-password',
+        handleCodeInApp: true,
       })
       setSent(true)
     } catch (err) {
