@@ -24,9 +24,9 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ role: (decoded.role as string) || 'user' })
-  } catch (err) {
-    console.error('[session POST]', err)
-    return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
+  } catch (err: any) {
+    console.error('[session POST] code:', err?.code, 'msg:', err?.message, 'cause:', err?.cause?.message)
+    return NextResponse.json({ error: 'Token inválido', code: err?.code, detail: err?.message }, { status: 401 })
   }
 }
 
