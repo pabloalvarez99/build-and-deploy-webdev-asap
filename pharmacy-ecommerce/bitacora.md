@@ -1,6 +1,37 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: EN MIGRACIÓN — Supabase → Firebase Auth + Cloud SQL (Abril 2026)
+## Estado actual: MIGRACIÓN COMPLETA ✅ — Firebase Auth + Cloud SQL activo (Abril 8, 2026)
+
+---
+
+## SESIÓN Abril 8, 2026 (tarde) — Migración completa
+
+### Completado
+- **Service account GCP**: `tu-farmacia-prod-1d6e516dbae2.json` creado, protegido en `.gitignore`
+- **Credenciales en Vercel** (production + development): `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`, `GOOGLE_CLOUD_VISION_API_KEY`, `GOOGLE_SERVICE_ACCOUNT`, `CLOUD_SQL_INSTANCE`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
+- **Cloud SQL**: instancia `tu-farmacia-db` (PostgreSQL 15, southamerica-east1), usuario `farmacia`, DB `farmacia`
+- **Datos migrados**: 1482 productos, 17 categorías, 48 órdenes, 174 mapeos terapéuticos
+- **Firebase Auth Email/Password**: habilitado via Identity Platform API
+- **Supabase eliminado**: `@supabase/ssr`, `@supabase/supabase-js` removidos; `src/lib/supabase/` eliminado
+- **Prisma 7**: schema actualizado con `driverAdapters` preview; `prisma generate` OK
+- **Build**: ✅ 43/43 páginas, 0 errores TypeScript
+- **Deploy**: `git push origin main` → Vercel auto-deploy lanzado
+- **context.md**: creado en `pharmacy-ecommerce/context.md` con todas las credenciales y tareas
+
+### Pendiente
+1. **Migrar usuarios** (opcional): exportar CSV desde Supabase Auth → ejecutar `scripts/migrate-users.ts`
+2. **Setear admin**: `npx ts-node scripts/migrate-users.ts --set-admin timadapa@gmail.com`
+3. **Remover vars Supabase en Vercel** (después de validar): `vercel env rm NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+4. **Validar en producción**: registrar usuario → login → checkout → admin panel
+
+### Credenciales Cloud SQL (también en context.md)
+- Instance: `tu-farmacia-prod:southamerica-east1:tu-farmacia-db`
+- IP pública: `34.39.232.207` (sin authorized networks — usa Cloud SQL connector IAM)
+- DB: `farmacia` / User: `farmacia` / Password: `srcmlaYhkEo19YivrG4FDLH0woou`
+
+---
+
+## Estado anterior: EN MIGRACIÓN — Supabase → Firebase Auth + Cloud SQL (Abril 2026)
 
 ---
 
