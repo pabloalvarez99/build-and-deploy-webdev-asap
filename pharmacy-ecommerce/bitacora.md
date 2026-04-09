@@ -4,6 +4,20 @@
 
 ---
 
+## SESIÓN Abril 9, 2026 — Imágenes rotas arregladas
+
+### Completado
+- **Script `fix_broken_images.mjs`**: detecta y arregla URLs de imagen rotas en Cloud SQL
+  - Fase 1: chequeo paralelo de URLs (20 concurrentes) — detectó 149 URLs rotas de 1462
+  - Fase 2: búsqueda de reemplazo via DuckDuckGo + update en Cloud SQL
+  - Resultado: **147/149 arregladas, 0 sin reemplazo, 0 errores DB** (8.5 min)
+  - Los primeros 2 fueron arreglados en tandas anteriores del mismo script
+- **Nota técnica**: script actualiza Cloud SQL (Prisma/producción), no Supabase (obsoleto)
+
+### Sin tareas pendientes
+
+---
+
 ## SESIÓN Abril 9, 2026 — Limpieza post-migración
 
 ### Completado
