@@ -16,7 +16,10 @@ declare global {
 
 async function createPrismaClient(): Promise<PrismaClient> {
   const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT!)
-  const auth = new GoogleAuth({ credentials })
+  const auth = new GoogleAuth({
+    credentials,
+    scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+  })
   const connector = new Connector({ auth })
 
   const clientOpts = await connector.getOptions({
