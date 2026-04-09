@@ -8,7 +8,13 @@ function sanitizeImageUrl(url: string | null): string | null {
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
-  const db = await getDb()
+  let db
+  try {
+    db = await getDb()
+  } catch (err: any) {
+    console.error('[DB_INIT_ERROR]', err?.message, err?.code, err?.cause?.message)
+    return NextResponse.json({ error: 'DB connection failed', detail: err?.message }, { status: 500 })
+  }
 
   const page = Math.max(1, Number(searchParams.get('page') || 1))
   const limit = Math.min(Number(searchParams.get('limit') || 12), 100)
