@@ -77,16 +77,22 @@ export async function GET(request: NextRequest) {
     case 'discount_desc': orderBy = { discount_percent: 'desc' }; break
   }
 
-  const [products, total] = await Promise.all([
-    db.products.findMany({
-      where,
-      include: { categories: { select: { name: true, slug: true } } },
-      orderBy,
-      skip: offset,
-      take: limit,
-    }),
-    db.products.count({ where }),
-  ])
+  let products: any[], total: number
+  try {
+    ;[products, total] = await Promise.all([
+      db.products.findMany({
+        where,
+        include: { categories: { select: { name: true, slug: true } } },
+        orderBy,
+        skip: offset,
+        take: limit,
+      }),
+      db.products.count({ where }),
+    ])
+  } catch (err: any) {
+    console.error('[QUERY_ERROR]', err?.code, err?.message, err?.meta)
+    return NextResponse.json({ error: 'Query failed', code: err?.code, detail: err?.message }, { status: 500 })
+  }
 
   const data = products.map((p) => ({
     id: p.id,
