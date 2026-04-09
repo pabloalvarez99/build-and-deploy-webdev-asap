@@ -18,9 +18,7 @@ export default function ForgotPasswordPage() {
     setError('')
 
     try {
-      await sendPasswordResetEmail(auth, email, {
-        url: `${window.location.origin}/auth/login`,
-      })
+      await sendPasswordResetEmail(auth, email)
       setSent(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al enviar el correo')
