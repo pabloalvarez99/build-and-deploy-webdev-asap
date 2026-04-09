@@ -5,6 +5,7 @@
  */
 import { PrismaClient } from '@prisma/client'
 import { Connector, IpAddressTypes, AuthTypes } from '@google-cloud/cloud-sql-connector'
+import { GoogleAuth } from 'google-auth-library'
 import pg from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
 
@@ -15,7 +16,8 @@ declare global {
 
 async function createPrismaClient(): Promise<PrismaClient> {
   const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT!)
-  const connector = new Connector({ auth: credentials })
+  const auth = new GoogleAuth({ credentials })
+  const connector = new Connector({ auth })
 
   const clientOpts = await connector.getOptions({
     instanceConnectionName: process.env.CLOUD_SQL_INSTANCE!, // project:region:instance
