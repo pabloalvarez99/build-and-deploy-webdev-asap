@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
-import { TrendingUp, TrendingDown, Package, ChevronLeft, ChevronRight } from 'lucide-react'
+import { productApi } from '@/lib/api'
+import { TrendingUp, TrendingDown, Package, ChevronLeft, ChevronRight, Plus, Minus, X, Search, Loader2 } from 'lucide-react'
 
 interface StockMovement {
   id: string
@@ -25,6 +26,8 @@ const REASON_CONFIG: Record<string, { label: string; color: string }> = {
 
 const REASONS = ['', 'purchase', 'sale_pos', 'sale', 'cancelled', 'adjustment']
 
+interface AdjustProduct { id: string; name: string; stock: number }
+
 export default function StockMovementsPage() {
   const router = useRouter()
   const { user } = useAuthStore()
@@ -35,9 +38,56 @@ export default function StockMovementsPage() {
   const [reasonFilter, setReasonFilter] = useState('')
   const [loading, setLoading] = useState(true)
 
+  // Adjust modal state
+  const [showAdjust, setShowAdjust] = useState(false)
+  const [adjSearch, setAdjSearch] = useState('')
+  const [adjProducts, setAdjProducts] = useState<AdjustProduct[]>([])
+  const [adjSearching, setAdjSearching] = useState(false)
+  const [adjProduct, setAdjProduct] = useState<AdjustProduct | null>(null)
+  const [adjDelta, setAdjDelta] = useState('')
+  const [adjNotes, setAdjNotes] = useState('')
+  const [adjSaving, setAdjSaving] = useState(false)
+
   useEffect(() => {
     if (!user || user.role !== 'admin') { router.push('/'); return }
   }, [user, router])
+
+  useEffect(() => {
+    if (!adjSearch.trim()) { setAdjProducts([]); return }
+    const t = setTimeout(async () => {
+      setAdjSearching(true)
+      try {
+        const res = await productApi.list({ search: adjSearch, limit: 8, active_only: true })
+        setAdjProducts((res.products as unknown as AdjustProduct[]))
+      } catch { setAdjProducts([]) }
+      finally { setAdjSearching(false) }
+    }, 300)
+    return () => clearTimeout(t)
+  }, [adjSearch])
+
+  async function handleAdjust() {
+    if (!adjProduct || !adjDelta || adjDelta === '0') return
+    const delta = parseInt(adjDelta)
+    if (isNaN(delta) || delta === 0) return
+    setAdjSaving(true)
+    try {
+      const res = await fetch('/api/admin/stock-movements/adjust', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: adjProduct.id, delta, notes: adjNotes }),
+      })
+      if (!res.ok) { alert(await res.text()); return }
+      const data = await res.json()
+      alert(`✓ Stock actualizado: ${data.product_name} → ${data.new_stock} unidades`)
+      setShowAdjust(false)
+      setAdjProduct(null); setAdjSearch(''); setAdjDelta(''); setAdjNotes('')
+      load()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error')
+    } finally {
+      setAdjSaving(false)
+    }
+  }
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -69,7 +119,14 @@ export default function StockMovementsPage() {
       <div className="flex items-center gap-3">
         <Package className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Movimientos de Stock</h1>
-        <span className="ml-auto text-sm text-slate-500 dark:text-slate-400">{total} registros</span>
+        <span className="text-sm text-slate-500 dark:text-slate-400">{total} registros</span>
+        <button
+          onClick={() => setShowAdjust(true)}
+          className="ml-auto flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Ajustar stock
+        </button>
       </div>
 
       {/* Filters */}
@@ -178,6 +235,104 @@ export default function StockMovementsPage() {
           </div>
         )}
       </div>
+
+      {/* Adjust modal */}
+      {showAdjust && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-white dark:bg-slate-800 rounded-3xl p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Ajuste manual de stock</h3>
+              <button onClick={() => setShowAdjust(false)} className="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Product search */}
+            {!adjProduct ? (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Buscar producto</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={adjSearch}
+                    onChange={(e) => setAdjSearch(e.target.value)}
+                    placeholder="Nombre del producto..."
+                    autoFocus
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 focus:outline-none text-sm"
+                  />
+                  {adjSearching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-slate-400" />}
+                </div>
+                <div className="space-y-1 max-h-48 overflow-y-auto">
+                  {adjProducts.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => { setAdjProduct(p); setAdjSearch('') }}
+                      className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 flex justify-between items-center transition-colors"
+                    >
+                      <span className="text-sm font-medium text-slate-900 dark:text-white">{p.name}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Stock: {p.stock}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 rounded-xl px-4 py-3">
+                  <div>
+                    <p className="font-medium text-slate-900 dark:text-white text-sm">{adjProduct.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Stock actual: {adjProduct.stock}</p>
+                  </div>
+                  <button onClick={() => setAdjProduct(null)} className="text-slate-400 hover:text-slate-600 text-xs underline">Cambiar</button>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Delta (positivo = entrada, negativo = salida)</label>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setAdjDelta((v) => String((parseInt(v) || 0) - 1))} className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center font-bold hover:bg-red-200 transition-colors">
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <input
+                      type="number"
+                      value={adjDelta}
+                      onChange={(e) => setAdjDelta(e.target.value)}
+                      placeholder="0"
+                      className="flex-1 text-center py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-lg font-bold focus:border-emerald-500 focus:outline-none"
+                    />
+                    <button onClick={() => setAdjDelta((v) => String((parseInt(v) || 0) + 1))} className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold hover:bg-emerald-200 transition-colors">
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {adjDelta && !isNaN(parseInt(adjDelta)) && (
+                    <p className="text-xs text-slate-500 text-center">
+                      Stock nuevo: <strong>{adjProduct.stock + (parseInt(adjDelta) || 0)}</strong>
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Motivo (opcional)</label>
+                  <input
+                    type="text"
+                    value={adjNotes}
+                    onChange={(e) => setAdjNotes(e.target.value)}
+                    placeholder="Ej: conteo físico, merma, devolución..."
+                    className="w-full px-3 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+
+                <button
+                  onClick={handleAdjust}
+                  disabled={adjSaving || !adjDelta || adjDelta === '0' || isNaN(parseInt(adjDelta))}
+                  className="w-full py-3 bg-emerald-600 text-white rounded-2xl font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {adjSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</> : 'Confirmar ajuste'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
