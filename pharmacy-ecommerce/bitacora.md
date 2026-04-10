@@ -262,6 +262,16 @@ En `src/components/admin/Sidebar.tsx`:
 - Fase 1 Proveedores + Compras ✅
 - Fase 2 POS ✅
 - Fase 3 Reportes Financieros ✅
+- Mejoras post-Fase 3 ✅
+
+### Mejoras post-Fase 3 (misma sesión)
+- **compras/[id]**: botón "Recibir OC" (llama `/receive` API) + banner verde cuando recibida. Antes no había UI para recibir OC.
+- **GET /api/admin/stock-movements**: lista paginada con filtros por `reason`
+- **POST /api/admin/stock-movements/adjust**: ajuste manual atómico ($transaction) con validación de stock no negativo
+- **Página `/admin/stock`**: tabla de movimientos con delta coloreado, filtros, paginación + modal "Ajustar stock" con búsqueda de producto
+- **Sidebar**: item "Stock" (ArrowUpDown)
+- **Órdenes**: stat card "Ventas POS", filtro chip POS (matches pos_cash|debit|credit), CSV labels POS. API: parámetro `channel=pos|online`
+- **Reportes API**: ahora incluye órdenes POS automáticamente (revenue POS visible en dashboard)
 
 ---
 
