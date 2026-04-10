@@ -1,6 +1,25 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: ERP COMPLETO ✅ — Fidelización + POS Barras + Electron (Abril 2026)
+## Estado actual: ERP COMPLETO ✅ — Fidelización + Canjeo de Puntos + POS Barras + Electron (Abril 2026)
+
+---
+
+## 2026-04-10 — Canjeo de puntos + Banners de puntos ganados
+
+**Banners de puntos ganados:**
+- `/checkout/webpay/success`: banner amber "¡Ganaste X puntos!" (solo usuarios registrados, puntos ya acreditados)
+- `/checkout/reservation`: banner amber "Ganarás X puntos al retirar" (futuro, se acreditan al aprobar el admin)
+- `calcPoints` se usa client-side desde `loyalty-utils` — no requiere llamada extra al API
+
+**Canjeo de puntos de fidelización:**
+- Tasa: 1 punto = $100 CLP de descuento (simétrico a ganancia: $1.000 gastados = 1 punto)
+- Solo disponible en "Retiro en tienda" (Webpay tiene riesgo de reversión de pago)
+- UI en checkout: toggle "Usar X puntos = $Y.000 de descuento" con total tachado + total efectivo
+- Backend atómico: deducción de puntos + creación de orden en misma transacción Prisma
+- `loyalty_transactions` registra puntos negativos con `reason='redemption'` y `order_id`
+- Restauración automática: al cancelar orden (admin PUT) y al expirar reserva (cron cleanup)
+- `loyalty.ts`: nuevas funciones `redeemLoyaltyPoints`, `restoreLoyaltyPoints`, `POINTS_TO_CLP`
+- `loyalty-utils.ts`: exporta `POINTS_TO_CLP` para uso en Client Components
 
 ---
 
