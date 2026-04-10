@@ -111,6 +111,7 @@ export async function GET(request: NextRequest) {
     prescription_type: p.prescription_type,
     presentation: p.presentation,
     discount_percent: p.discount_percent,
+    cost_price: p.cost_price != null ? p.cost_price.toString() : null,
     created_at: p.created_at.toISOString(),
     category_name: p.categories?.name ?? null,
     category_slug: p.categories?.slug ?? null,
