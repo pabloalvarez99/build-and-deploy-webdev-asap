@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
-import { Save, Mail, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Save, Mail, AlertTriangle, CheckCircle, Monitor, Download } from 'lucide-react';
 
 export default function AdminConfigPage() {
   const router = useRouter();
@@ -51,6 +51,40 @@ export default function AdminConfigPage() {
       <div>
         <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Configuración</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">Ajustes del panel de administración</p>
+      </div>
+
+      {/* App de escritorio */}
+      <div className="card p-6 space-y-4">
+        <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-3">
+          <Monitor className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+          <h2 className="font-semibold text-slate-900 dark:text-slate-100">App de Escritorio (Windows)</h2>
+        </div>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          Aplicación nativa para el mostrador de farmacia. Accede al panel y al Punto de Venta directamente desde el escritorio, sin necesidad de abrir el navegador.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <a
+            href="https://github.com/pabloalvarez99/build-and-deploy-webdev-asap/releases/latest/download/Tu-Farmacia-Setup.exe"
+            className="btn btn-primary flex items-center gap-2"
+            download
+          >
+            <Download className="w-4 h-4" />
+            Descargar instalador (.exe)
+          </a>
+          <a
+            href="https://github.com/pabloalvarez99/build-and-deploy-webdev-asap/releases/latest/download/Tu-Farmacia-Portable.exe"
+            className="btn btn-secondary flex items-center gap-2"
+            download
+          >
+            <Download className="w-4 h-4" />
+            Versión portable
+          </a>
+        </div>
+        <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 text-xs text-slate-500 dark:text-slate-400 space-y-1">
+          <p><span className="font-medium text-slate-700 dark:text-slate-300">POS directo:</span> Al abrir la app, usa el menú <span className="font-mono bg-slate-200 dark:bg-slate-700 px-1 rounded">Navegación → Punto de Venta</span> o presiona <span className="font-mono bg-slate-200 dark:bg-slate-700 px-1 rounded">Ctrl+P</span>.</p>
+          <p><span className="font-medium text-slate-700 dark:text-slate-300">Pantalla completa:</span> <span className="font-mono bg-slate-200 dark:bg-slate-700 px-1 rounded">F11</span> — ideal para un monitor dedicado al POS.</p>
+          <p><span className="font-medium text-slate-700 dark:text-slate-300">Lector de barras:</span> Compatible con lectores USB — funciona automáticamente en el POS.</p>
+        </div>
       </div>
 
       {loading ? (
