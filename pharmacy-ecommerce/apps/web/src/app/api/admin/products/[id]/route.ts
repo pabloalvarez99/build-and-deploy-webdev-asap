@@ -31,6 +31,9 @@ export async function PUT(
     if (body.discount_percent !== undefined) {
       updateData.discount_percent = body.discount_percent === 0 ? null : body.discount_percent || null;
     }
+    if (body.cost_price !== undefined) {
+      updateData.cost_price = body.cost_price === '' || body.cost_price === null ? null : parseFloat(body.cost_price);
+    }
 
     const product = await db.products.update({
       where: { id },

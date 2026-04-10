@@ -96,6 +96,7 @@ export default function AdminProductsPage() {
  prescription_type: 'direct' as 'direct' | 'prescription' | 'retained',
  presentation: '',
  discount_percent: '',
+ cost_price: '',
  active: true,
  });
 
@@ -203,6 +204,7 @@ export default function AdminProductsPage() {
  prescription_type: formData.prescription_type,
  presentation: formData.presentation || undefined,
  discount_percent: parseInt(formData.discount_percent) || 0,
+ cost_price: formData.cost_price ? parseFloat(formData.cost_price) : null,
  active: formData.active,
  };
 
@@ -238,6 +240,7 @@ export default function AdminProductsPage() {
  prescription_type: product.prescription_type || 'direct',
  presentation: product.presentation || '',
  discount_percent: product.discount_percent ? String(product.discount_percent) : '',
+ cost_price: (product as any).cost_price ? String((product as any).cost_price) : '',
  active: product.active ?? true,
  });
  setEditingProduct(product.id);
@@ -293,6 +296,7 @@ export default function AdminProductsPage() {
  prescription_type: 'direct',
  presentation: '',
  discount_percent: '',
+ cost_price: '',
  active: true,
  });
  };
@@ -1147,6 +1151,29 @@ export default function AdminProductsPage() {
  </span>
  </span>
  )}
+ </div>
+ </div>
+
+ <div>
+ <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+  Precio de costo (CLP) <span className="text-xs text-slate-400 font-normal">— para cálculo de márgenes</span>
+ </label>
+ <div className="flex items-center gap-3">
+  <input
+  type="number"
+  min="0"
+  value={formData.cost_price}
+  onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
+  className="input w-40"
+  placeholder="Ej: 4500"
+  />
+  {formData.cost_price && formData.price && parseFloat(formData.cost_price) > 0 && (
+  <span className="text-sm text-slate-600 dark:text-slate-400">
+   Margen: <span className="font-bold text-emerald-700 dark:text-emerald-400">
+   {(((parseFloat(formData.price) - parseFloat(formData.cost_price)) / parseFloat(formData.price)) * 100).toFixed(1)}%
+   </span>
+  </span>
+  )}
  </div>
  </div>
 

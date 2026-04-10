@@ -231,6 +231,7 @@ export interface CreateProductData {
   prescription_type?: 'direct' | 'prescription' | 'retained'
   presentation?: string
   discount_percent?: number
+  cost_price?: number | null
   active?: boolean
 }
 
