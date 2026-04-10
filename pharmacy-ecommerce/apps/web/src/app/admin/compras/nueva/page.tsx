@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
 import {
   purchaseOrderApi, supplierApi, productApi,
@@ -20,6 +20,7 @@ interface LineState extends ScannedLine {
 
 export default function NuevaCompraPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user } = useAuthStore()
 
   const [step, setStep] = useState<Step>('proveedor')
@@ -49,8 +50,15 @@ export default function NuevaCompraPage() {
 
   useEffect(() => {
     if (!user || user.role !== 'admin') { router.push('/'); return }
-    supplierApi.list().then((d) => setSuppliers(d.suppliers)).catch(console.error)
-  }, [user, router])
+    const presetId = searchParams.get('supplier_id')
+    supplierApi.list().then((d) => {
+      setSuppliers(d.suppliers)
+      if (presetId) {
+        const found = d.suppliers.find((s) => s.id === presetId)
+        if (found) { setSelectedSupplier(found); setStep('foto') }
+      }
+    }).catch(console.error)
+  }, [user, router, searchParams])
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]

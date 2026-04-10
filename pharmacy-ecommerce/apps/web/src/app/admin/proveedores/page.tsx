@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
 import { supplierApi, type Supplier } from '@/lib/api'
 import { Truck, Plus, Edit2, Trash2, Phone, Mail, Globe, Package, ShoppingCart } from 'lucide-react'
+import Link from 'next/link'
 
 const emptyForm = {
   name: '', rut: '', contact_name: '', contact_email: '',
@@ -144,7 +145,7 @@ export default function ProveedoresPage() {
             <div key={s.id} className={`bg-white dark:bg-slate-800 rounded-2xl border-2 p-5 space-y-3 ${s.active ? 'border-slate-100 dark:border-slate-700' : 'border-slate-200 dark:border-slate-600 opacity-60'}`}>
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h3 className="font-semibold text-slate-900 dark:text-white text-lg leading-tight">{s.name}</h3>
+                  <Link href={`/admin/proveedores/${s.id}`} className="font-semibold text-slate-900 dark:text-white text-lg leading-tight hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">{s.name}</Link>
                   {s.rut && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">RUT {s.rut}</p>}
                   {!s.active && <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full">Inactivo</span>}
                 </div>
