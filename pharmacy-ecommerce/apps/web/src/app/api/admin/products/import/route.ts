@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Insert new products in batches
+    // Insert new products in batches + registrar stock_movement inicial
     if (trulyNewProducts.length > 0) {
       const records = trulyNewProducts.map((row: Record<string, string>) => ({
         name: row.producto,
@@ -179,21 +179,47 @@ export async function POST(request: NextRequest) {
         try {
           await db.products.createMany({ data: batch });
           inserted += batch.length;
+
+          // Registrar stock_movement para los productos recién insertados con stock > 0
+          const extIds = batch.map((r) => r.external_id).filter((id): id is string => !!id);
+          if (extIds.length > 0) {
+            const created = await db.products.findMany({
+              where: { external_id: { in: extIds } },
+              select: { id: true, stock: true },
+            });
+            const movements = created
+              .filter((p) => p.stock > 0)
+              .map((p) => ({
+                product_id: p.id,
+                delta: p.stock,
+                reason: 'import_excel',
+                admin_id: admin.uid,
+              }));
+            if (movements.length > 0) {
+              await db.stock_movements.createMany({ data: movements });
+            }
+          }
         } catch (err) {
           errors.push(`Error inserting batch ${i}: ${err instanceof Error ? err.message : String(err)}`);
         }
       }
     }
 
-    // Update existing products
+    // Update existing products + registrar delta de stock como stock_movement
     if (updateProducts && updateProducts.length > 0) {
       for (const row of updateProducts as Record<string, string>[]) {
         const externalId = String(row.id);
+        const newStock = parseInt(row.stock) || 0;
         try {
+          const existing = await db.products.findFirst({
+            where: { external_id: externalId },
+            select: { id: true, stock: true },
+          });
+
           await db.products.updateMany({
             where: { external_id: externalId },
             data: {
-              stock: parseInt(row.stock) || 0,
+              stock: newStock,
               price: parsePrice(row.precio),
               laboratory: row.laboratorio || null,
               therapeutic_action: row.accion_terapeutica || null,
@@ -203,6 +229,19 @@ export async function POST(request: NextRequest) {
               description: buildDescription(row),
             },
           });
+
+          // Registrar el delta de stock (positivo = reposición, negativo = corrección)
+          if (existing && newStock !== existing.stock) {
+            await db.stock_movements.create({
+              data: {
+                product_id: existing.id,
+                delta: newStock - existing.stock,
+                reason: 'import_excel',
+                admin_id: admin.uid,
+              },
+            });
+          }
+
           updated++;
         } catch (err) {
           errors.push(`Error updating ${row.producto}: ${err instanceof Error ? err.message : String(err)}`);

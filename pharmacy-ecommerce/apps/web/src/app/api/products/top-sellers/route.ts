@@ -3,9 +3,8 @@ import { getDb } from '@/lib/db'
 
 /**
  * GET /api/products/top-sellers?limit=10
- * Retorna los N productos más vendidos por unidades (historial completo).
- * Incluye ventas online (paid/processing/shipped/delivered) y POS/retiro (completed, approved).
- * Fallback: si no hay historial de ventas suficiente, retorna productos con mayor descuento activo.
+ * Retorna los N productos más repuestos vía importación de Excel (stock_movements reason='import_excel').
+ * Solo cuenta deltas positivos (reposiciones). Fallback: productos con mayor descuento si no hay historial.
  * Público — no requiere autenticación.
  */
 export async function GET(request: Request) {
@@ -13,28 +12,6 @@ export async function GET(request: Request) {
   const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 20)
 
   const db = await getDb()
-
-  const PAID_STATUSES = ['paid', 'processing', 'shipped', 'delivered', 'completed', 'approved']
-
-  const items = await db.order_items.findMany({
-    where: {
-      orders: { status: { in: PAID_STATUSES } },
-      product_id: { not: null },
-    },
-    select: { product_id: true, quantity: true },
-  })
-
-  // Sumar unidades por producto
-  const unitsByProduct: Record<string, number> = {}
-  for (const item of items) {
-    if (!item.product_id) continue
-    unitsByProduct[item.product_id] = (unitsByProduct[item.product_id] ?? 0) + item.quantity
-  }
-
-  const topIds = Object.entries(unitsByProduct)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, limit)
-    .map(([id]) => id)
 
   const productSelect = {
     id: true,
@@ -46,7 +23,24 @@ export async function GET(request: Request) {
     stock: true,
   }
 
-  // Fallback: si no hay suficiente historial, mostrar productos con descuento activo
+  // Sumar unidades importadas por producto (solo deltas positivos = reposiciones)
+  const movements = await db.stock_movements.findMany({
+    where: { reason: 'import_excel', delta: { gt: 0 } },
+    select: { product_id: true, delta: true },
+  })
+
+  const unitsByProduct: Record<string, number> = {}
+  for (const m of movements) {
+    if (!m.product_id) continue
+    unitsByProduct[m.product_id] = (unitsByProduct[m.product_id] ?? 0) + m.delta
+  }
+
+  const topIds = Object.entries(unitsByProduct)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([id]) => id)
+
+  // Fallback: si no hay suficiente historial de imports, mostrar productos con descuento activo
   if (topIds.length < 4) {
     const featured = await db.products.findMany({
       where: { active: true, stock: { gt: 0 }, discount_percent: { gt: 0 } },
