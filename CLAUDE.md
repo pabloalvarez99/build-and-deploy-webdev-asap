@@ -75,6 +75,7 @@ POST     /api/auth/register                        → Registro via service role
 ## Gotchas conocidos
 - Supabase `.eq('tabla_join.campo', valor)` NO funciona como inner join. Siempre buscar el ID primero y filtrar por FK directo.
 - `orderApi.list()` filtra por user_id (usuario). `orderApi.listAll()` usa service role (admin, ve guest orders).
+- **`orderApi.get(id)` filtra por `user_id = auth.uid()`** — el admin NO puede ver órdenes de otros usuarios con este endpoint. Usar `orderApi.adminGet(id)` → `GET /api/admin/orders/[id]` que no tiene filtro de user.
 - Webpay buyOrder max 26 chars: UUID sin guiones truncado a 26 chars.
 - CLP no tiene decimales: usar `Math.round()` al pasar montos a Transbank.
 - Las imagenes pueden tener `http://` — `sanitizeImageUrl()` en api.ts convierte a `https://`.
@@ -83,6 +84,8 @@ POST     /api/auth/register                        → Registro via service role
 - `fetch` no lanza error en 4xx/5xx — siempre chequear `res.ok` antes de mostrar exito.
 - Cart items tienen campo `stock: number` — el boton "+" esta deshabilitado si `quantity >= stock`.
 - `fetchCart` en cart.ts capea quantity a `Math.min(item.quantity, product.stock)` y sincroniza localStorage.
+- **Electron APP_URL debe ser `https://tu-farmacia.vercel.app`** — dominios .cl u otros sin Vercel hacen que los fetch a `/api/*` fallen silenciosamente. Un `catch {}` vacío devuelve array vacío, la UI muestra "Sin resultados" sin indicar el error real.
+- **`catch {}` silente en búsquedas del POS** = "Sin resultados" engañoso cuando hay errores de red o API. Siempre mostrar el error en pantalla.
 
 ## Diseño y UI
 - Mobile-first para adultos mayores

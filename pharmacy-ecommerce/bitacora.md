@@ -1,6 +1,23 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: ERP COMPLETO ✅ — Fidelización + Canjeo de Puntos + POS Barras + Electron (Abril 2026)
+## Estado actual: ERP COMPLETO ✅ — Fidelización + Canjeo + Bugs Admin/POS corregidos (Abril 2026)
+
+---
+
+## 2026-04-10 — Fix: Admin order detail + POS Electron sin productos
+
+**Bug fix — "Orden no encontrada" en detalle de orden admin:**
+- Causa: `orderApi.get(id)` llamaba `GET /api/orders/[id]` que filtra `WHERE user_id = auth.uid()`.
+  Las órdenes de otros usuarios son invisibles para el admin con ese endpoint.
+- Fix: Nuevo `GET /api/admin/orders/[id]` (usa `getAdminUser`, sin filtro de user_id, incluye `order_items`).
+- `api.ts`: nuevo `orderApi.adminGet(id)` → `/api/admin/orders/[id]`.
+- `admin/ordenes/[id]/page.tsx`: usa `adminGet` en lugar de `get`.
+
+**Bug fix — POS en Electron no muestra productos al buscar:**
+- Causa: `main.js` tenía `APP_URL = 'https://tu-farmacia.cl'` (dominio no configurado en Vercel).
+  Las llamadas a `/api/products` fallaban silenciosamente (catch vacío → array vacío → "Sin resultados").
+- Fix: `APP_URL` corregido a `'https://tu-farmacia.vercel.app'`.
+- Fix adicional: POS ahora muestra el mensaje de error real en pantalla (ya no catch silente).
 
 ---
 

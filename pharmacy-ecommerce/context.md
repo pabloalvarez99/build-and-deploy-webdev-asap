@@ -5,12 +5,11 @@
 
 ---
 
-## Estado actual: MIGRACIÓN 100% COMPLETA ✅
+## Estado actual: ERP COMPLETO ✅ — Fidelización + Canjeo de Puntos + Electron POS
 
-**Supabase → Firebase Auth + Cloud SQL PostgreSQL 15: DONE.**
-- Build Vercel: **PASSING** (commit `ee516c3`)
-- App live: https://tu-farmacia.vercel.app
-- Admin panel: https://tu-farmacia.vercel.app/admin
+**Último commit:** `6fd875b` — fix: orden no encontrada en admin + POS sin productos en Electron
+**App live:** https://tu-farmacia.vercel.app
+**Admin panel:** https://tu-farmacia.vercel.app/admin
 
 ---
 
@@ -23,43 +22,67 @@
 | Firebase UID | `mUgyCPYUqxZFYjCWexeZSmNMvsS2` |
 | Custom claim | `{"role":"admin"}` |
 
-Para cambiar password: https://tu-farmacia.vercel.app/auth/forgot-password
+---
+
+## Qué se completó hoy (Abril 10, 2026)
+
+### Features
+- **Banners puntos ganados** en páginas de éxito:
+  - Webpay success: "¡Ganaste X puntos!" (puntos ya acreditados)
+  - Reserva tienda: "Ganarás X puntos al retirar" (se acreditan al aprobar admin)
+  - Solo visibles para usuarios registrados (`useAuthStore`)
+- **Canjeo de puntos en checkout** (solo retiro en tienda):
+  - Tasa: 1 punto = $100 CLP descuento (10% de retorno sobre $1000 = 1 punto)
+  - UI: toggle en resumen del pedido, total tachado + total efectivo
+  - Backend: deducción atómica con la orden en misma transacción Prisma
+  - Restauración automática al cancelar (admin PUT) o expirar (cron)
+  - Nuevas funciones en `loyalty.ts`: `redeemLoyaltyPoints`, `restoreLoyaltyPoints`, `POINTS_TO_CLP`
+- **POS en Electron** (apps/desktop/):
+  - `main.js`: carga `https://tu-farmacia.vercel.app` (URL corregida)
+  - Barcode scanner HID con detección por timing
+  - Error visible en POS si falla búsqueda (antes era silent catch)
+
+### Bug fixes
+- **Admin order detail "Orden no encontrada"**: `orderApi.get()` filtraba por `user_id = admin.uid`. Fix: nuevo `GET /api/admin/orders/[id]` sin filtro de user, `orderApi.adminGet(id)` en `api.ts`.
+- **POS sin productos en Electron**: `APP_URL = 'https://tu-farmacia.cl'` no existía en Vercel → fetch silenciosamente fallaba. Fix: URL corregida a `tu-farmacia.vercel.app`.
 
 ---
 
-## MCP Plugins Claude Code (2026-04-10)
+## Tareas pendientes (próxima sesión)
 
-| Plugin | Estado | Notas |
-|---|---|---|
-| `github@claude-plugins-official` | ✅ Activo | Token en `GITHUB_PERSONAL_ACCESS_TOKEN` (Windows setx). Si falla: crear PAT con `repo`, `read:org`, `copilot`. |
-| `goodmem@claude-plugins-official` | ✅ Activo | Requirió build manual: `npm install && npm run build` en `~/.claude/plugins/cache/.../goodmem/0.1.0/mcp/`. Si falla al reconectar, re-correr el build. |
+### 1. 🔴 Email de notificación de órdenes Webpay pendientes
+El usuario reportó que no recibió email para la orden `#0cf10df5` (Webpay, status "Pendiente").
+- El email de confirmación Webpay se envía en `/api/webpay/return` al confirmar el pago.
+- Una orden "Pendiente" significa que Webpay aún no ha confirmado (el usuario no completó el pago o está en proceso).
+- **Verificar**: ¿Está `RESEND_API_KEY` configurado en Vercel? ¿Está `alert_email` en `admin_settings` DB?
+- Ver `/api/admin/settings` o Supabase/Cloud SQL directamente.
 
----
+### 2. 🟡 Electron app — Activos pendientes
+- Agregar `assets/icon.ico` en `pharmacy-ecommerce/apps/desktop/assets/` para el `.exe`
+- Hacer build: `cd pharmacy-ecommerce/apps/desktop && npm run build` → genera `dist/*.exe`
 
-## Tareas opcionales pendientes
+### 3. 🟡 Barcodes en productos
+- Cargar `external_id` en productos de la BD cuando el usuario entregue el Excel/CSV con códigos de barra
+- El POS ya tiene el barcode scanner funcionando — solo falta los datos
 
-### 1. 🟡 Configurar Firebase Action URL (branded reset-password)
-Actualmente reset-password funciona pero usa la página genérica de Firebase.
-Para usar `/auth/reset-password` propio:
+### 4. 🟡 Credenciales Webpay producción
+- Cambiar `TRANSBANK_ENVIRONMENT=integration` → `production` en Vercel env vars
+- Ingresar `TRANSBANK_COMMERCE_CODE` y `TRANSBANK_API_KEY` reales
 
-**Firebase Console** → Authentication → Templates → Password reset → Customize action URL:
+### 5. 🟡 Configurar Firebase Action URL (branded reset-password)
+Firebase Console → Authentication → Templates → Password reset → Customize action URL:
 ```
 https://tu-farmacia.vercel.app/auth/reset-password
 ```
-También agregar `tu-farmacia.vercel.app` a los dominios autorizados en Authentication → Settings → Authorized domains.
 
-### 2. 🟡 Eliminar variables Supabase de Vercel (después de validar producción)
-```bash
-cd pharmacy-ecommerce/apps/web
-vercel env rm NEXT_PUBLIC_SUPABASE_URL production
-vercel env rm NEXT_PUBLIC_SUPABASE_ANON_KEY production
-vercel env rm SUPABASE_SERVICE_ROLE_KEY production
-```
+---
 
-### 3. 🟢 Migrar usuarios registrados de Supabase → Firebase (si aplica)
-Si hubiera usuarios registrados en Supabase que necesiten migrar:
-- Exportar CSV desde Supabase Dashboard → Authentication → Users → Export
-- Ver context anterior para el script de migración
+## MCP Plugins Claude Code
+
+| Plugin | Estado | Notas |
+|---|---|---|
+| `github@claude-plugins-official` | ✅ Activo | Token en `GITHUB_PERSONAL_ACCESS_TOKEN` (Windows setx). Si falla: PAT con `repo`, `read:org`, `copilot`. |
+| `goodmem@claude-plugins-official` | ✅ Activo | Requirió build manual: `npm install && npm run build` en `~/.claude/plugins/cache/.../goodmem/0.1.0/mcp/`. Si falla al reconectar, re-correr. |
 
 ---
 
@@ -71,56 +94,34 @@ Si hubiera usuarios registrados en Supabase que necesiten migrar:
 | GCP Account | `timadapa@gmail.com` |
 | Cloud SQL Instance | `tu-farmacia-db` |
 | Cloud SQL Region | `southamerica-east1-b` |
-| Cloud SQL Version | PostgreSQL 15 |
 | Cloud SQL IP pública | `34.39.232.207` |
-| Cloud SQL Outgoing IP | `35.247.253.253` |
-| CLOUD_SQL_INSTANCE (connector) | `tu-farmacia-prod:southamerica-east1:tu-farmacia-db` |
+| CLOUD_SQL_INSTANCE | `tu-farmacia-prod:southamerica-east1:tu-farmacia-db` |
 | DB Name | `farmacia` |
 | DB User | `farmacia` |
 | DB Password | `srcmlaYhkEo19YivrG4FDLH0woou` |
 | Firebase Project | `tu-farmacia-prod` |
-| Firebase Web App ID | `1:164275006028:web:0bcb105734e84a2f7be2e9` |
-| Service Account | `firebase-adminsdk-fbsvc@tu-farmacia-prod.iam.gserviceaccount.com` |
-| Service Account JSON | `tu-farmacia-prod-1d6e516dbae2.json` (repo root, gitignored) |
-| Service Account Key ID | `1d6e516dbae2eabe5c8d3b6094e89c2917f1ad94` |
 
 ---
 
-## Variables de entorno (todas configuradas en Vercel Production + Development)
+## Variables de entorno (Vercel Production + Development)
 
 ```bash
-# Firebase públicas
 NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyC9k3tw3ckVIim5G9K6lxX1exOb7LdqnRU
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=tu-farmacia-prod.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=tu-farmacia-prod
-
-# Firebase Admin (server-side)
 FIREBASE_PROJECT_ID=tu-farmacia-prod
-FIREBASE_STORAGE_BUCKET=tu-farmacia-prod.firebasestorage.app
 FIREBASE_CLIENT_EMAIL=firebase-adminsdk-fbsvc@tu-farmacia-prod.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n[...ver .env.local...]\n-----END PRIVATE KEY-----\n
-
-# Cloud SQL
-GOOGLE_SERVICE_ACCOUNT=[JSON completo del service account — ver .env.local]
+GOOGLE_SERVICE_ACCOUNT=[JSON completo — ver .env.local]
 CLOUD_SQL_INSTANCE=tu-farmacia-prod:southamerica-east1:tu-farmacia-db
 DB_USER=farmacia
 DB_PASSWORD=srcmlaYhkEo19YivrG4FDLH0woou
 DB_NAME=farmacia
 DATABASE_URL=postgresql://farmacia:srcmlaYhkEo19YivrG4FDLH0woou@34.39.232.207:5432/farmacia
-
-# Vision API
 GOOGLE_CLOUD_VISION_API_KEY=AIzaSyBvh-lRmzwPjvCCeyKm3zry2v50JCTeJUs
-
-# Pagos
-TRANSBANK_ENVIRONMENT=integration
-# TRANSBANK_COMMERCE_CODE= (pendiente credenciales reales)
-# TRANSBANK_API_KEY= (pendiente credenciales reales)
-
-# Email
-# RESEND_API_KEY= (confirmar si está en Vercel)
-
-# Cron
-# CRON_SECRET= (confirmar si está en Vercel)
+TRANSBANK_ENVIRONMENT=integration   # ← cambiar a 'production' con credenciales reales
+# RESEND_API_KEY= (verificar si está configurado)
+# CRON_SECRET= (verificar si está configurado)
 ```
 
 ---
@@ -132,49 +133,32 @@ Vercel Function (Node.js)
   └── src/lib/db.ts → getDb()
         └── @google-cloud/cloud-sql-connector
               ├── Auth: GOOGLE_SERVICE_ACCOUNT (JSON) via IAM
-              ├── Instance: CLOUD_SQL_INSTANCE
               └── pg.Pool → PrismaPg adapter → PrismaClient
-
 # NO usa DATABASE_URL en runtime — solo para CLI (prisma.config.ts)
-# NO necesita allowlist de IPs — usa autenticación IAM del connector
 ```
-
----
 
 ## Arquitectura de autenticación
 
 ```
-Browser
-  └── Firebase Client SDK (signInWithEmailAndPassword)
-        └── POST /api/auth/session { idToken }
-              └── adminAuth.createSessionCookie(idToken, 14 días)
-                    └── session cookie (httpOnly, secure)
-                          └── middleware.ts: decodeJwtPayload (Edge Runtime, sin firebase-admin)
-                                └── API routes: adminAuth.verifySessionCookie (Node.js, full verify)
+Browser → Firebase Client SDK → POST /api/auth/session { idToken }
+  → adminAuth.createSessionCookie(idToken, 14 días)
+    → session cookie (httpOnly, secure)
+      → middleware.ts: decodeJwtPayload (Edge Runtime, sin firebase-admin)
+        → API routes: adminAuth.verifySessionCookie (Node.js)
 ```
 
-Custom claims → `role: 'admin'` en el ID token → session cookie incluye el claim → middleware y API routes lo leen.
-
 ---
 
-## Flujo reset-password
+## Sistema de fidelización (implementado)
 
-1. `/auth/forgot-password` → `sendPasswordResetEmail(auth, email, { url: '/auth/login' })`
-2. Firebase envía email → link a `tu-farmacia-prod.firebaseapp.com/__/auth/action`
-3. Usuario resetea en página Firebase → redirigido a `/auth/login`
-4. (Opcional) Configurar Action URL en Firebase Console para usar `/auth/reset-password` propio
-
----
-
-## CLIs disponibles locales
-
-| CLI | Path |
+| Concepto | Valor |
 |---|---|
-| gcloud | `/c/Program Files (x86)/Google/Cloud SDK/google-cloud-sdk/bin/gcloud` |
-| vercel | `vercel` |
-| firebase | `firebase` |
-
-**gcloud no está en PATH de bash** → usar path completo o `export GCLOUD="..."`.
+| Ganancia | 1 punto por cada $1.000 CLP gastados |
+| Canje | 1 punto = $100 CLP de descuento |
+| Retorno | 10% |
+| Solo canjeable en | Retiro en tienda (Webpay tiene riesgo de reversión) |
+| Restauración | Al cancelar (admin) o expirar reserva (cron) |
+| Tabla | `loyalty_transactions` (points negativos = canje) |
 
 ---
 
@@ -182,16 +166,19 @@ Custom claims → `role: 'admin'` en el ID token → session cookie incluye el c
 
 ```
 src/lib/db.ts                          ← Prisma + Cloud SQL connector
-src/lib/firebase/admin.ts              ← Firebase Admin SDK (lazy proxy)
-src/lib/firebase/client.ts             ← Firebase browser SDK (browser-only init)
+src/lib/firebase/admin.ts              ← Firebase Admin SDK
+src/lib/firebase/client.ts             ← Firebase browser SDK
 src/lib/firebase/api-helpers.ts        ← getAuthenticatedUser, getAdminUser
-src/lib/firebase/middleware.ts         ← JWT decode para middleware routing
-src/middleware.ts                      ← Next.js middleware (NO firebase-admin aquí)
+src/lib/loyalty.ts                     ← awardLoyaltyPoints, redeemLoyaltyPoints, restoreLoyaltyPoints
+src/lib/loyalty-utils.ts               ← calcPoints, POINTS_TO_CLP (safe para Client Components)
+src/middleware.ts                      ← Next.js middleware (NO firebase-admin)
 src/store/auth.ts                      ← Zustand auth store con Firebase
 src/app/api/auth/session/route.ts      ← POST: crea session cookie; DELETE: logout
-prisma/schema.prisma                   ← Schema Prisma (sin driverAdapters, ya estable)
-prisma.config.ts                       ← Config Prisma 7 (url desde DATABASE_URL)
-tu-farmacia-prod-1d6e516dbae2.json    ← Service account key (GITIGNORED, repo root)
+src/app/api/loyalty/route.ts           ← GET: puntos del usuario autenticado
+src/app/api/admin/orders/[id]/route.ts ← GET (admin, sin filtro user) + PUT (update/acciones)
+src/app/admin/pos/page.tsx             ← POS con barcode scanner HID
+pharmacy-ecommerce/apps/desktop/       ← App Electron (main.js, preload.js)
+prisma/schema.prisma                   ← Schema Prisma
 ```
 
 ---
@@ -201,6 +188,8 @@ tu-farmacia-prod-1d6e516dbae2.json    ← Service account key (GITIGNORED, repo 
 1. **firebase-admin NUNCA en middleware.ts** — Edge Runtime no lo soporta.
 2. **Firebase client.ts solo inicializa en browser** — `typeof window !== 'undefined'` guard.
 3. **getDb() es async** — siempre `await getDb()`.
-4. **Build command:** `prisma generate && next build` (ya en package.json scripts.build).
-5. **GOOGLE_SERVICE_ACCOUNT** en db.ts se parsea con `JSON.parse()` — debe ser JSON válido como string.
-6. **Admin check:** `getAdminUser()` verifica `role === 'admin'` en custom claim del session cookie.
+4. **Build command:** `prisma generate && next build` (en package.json).
+5. **Admin orders**: usar `orderApi.adminGet(id)` (→ `/api/admin/orders/[id]`), nunca `orderApi.get(id)` (→ filtra por user_id).
+6. **Electron APP_URL**: siempre `https://tu-farmacia.vercel.app`, no dominios .cl u otros.
+7. **Build local**: `NODE_OPTIONS=--max-old-space-size=6144 ./node_modules/.bin/next build` desde `apps/web/`.
+8. **Catch silente en POS/búsquedas**: siempre mostrar el error, nunca `catch {}` vacío en UI.
