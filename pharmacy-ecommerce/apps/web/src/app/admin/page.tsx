@@ -194,10 +194,10 @@ export default function AdminPage() {
  // 7-day sales chart from reportes salesByDay (last 7 days from 30-day data)
  if (reportData?.salesByDay?.length > 0) {
   const last7 = reportData.salesByDay.slice(-7);
-  const salesChartData: SalesData[] = last7.map((d: { date: string; ventas: number; ordenes: number }) => ({
+  const salesChartData: SalesData[] = last7.map((d: { date: string; ventas: number; ordenes: number; ventas_pos?: number; ordenes_pos?: number }) => ({
    date: new Date(d.date + 'T12:00:00').toLocaleDateString('es-CL', { day: '2-digit', month: 'short' }),
-   ventas: Math.round(d.ventas),
-   ordenes: d.ordenes,
+   ventas: Math.round((d.ventas || 0) + (d.ventas_pos || 0)),
+   ordenes: (d.ordenes || 0) + (d.ordenes_pos || 0),
   }));
   setSalesData(salesChartData);
  } else {
@@ -247,7 +247,7 @@ export default function AdminPage() {
  });
 
  const ventas = dayOrders
- .filter((o) => ['paid', 'processing', 'shipped', 'delivered'].includes(o.status))
+ .filter((o) => ['paid', 'processing', 'shipped', 'delivered', 'completed'].includes(o.status))
  .reduce((sum, o) => sum + parseFloat(o.total), 0);
 
  data.push({
