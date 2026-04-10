@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/auth'
 import { productApi } from '@/lib/api'
 import {
   ShoppingCart, Search, Plus, Minus, Trash2, CreditCard, Banknote,
-  CheckCircle2, X, Receipt, Loader2, SmartphoneNfc,
+  CheckCircle2, X, Receipt, Loader2, SmartphoneNfc, ScanLine, CheckCircle, AlertCircle,
 } from 'lucide-react'
 
 interface CartItem {
@@ -54,11 +54,93 @@ export default function POSPage() {
   const [showPayModal, setShowPayModal] = useState(false)
   const [cashReceived, setCashReceived] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
+  // Barcode scanner (HID keyboard emulator) — chars arrive < 50ms apart
+  const barcodeBufferRef = useRef<{ char: string; time: number }[]>([])
+  const barcodeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [barcodeFlash, setBarcodeFlash] = useState<{ ok: boolean; text: string } | null>(null)
 
   useEffect(() => {
     if (!user || user.role !== 'admin') { router.push('/'); return }
     searchRef.current?.focus()
   }, [user, router])
+
+  // Barcode scanner: global capture listener — intercepts before element handlers
+  const handleBarcodeScan = useCallback(async (code: string) => {
+    try {
+      const res = await fetch(`/api/products?barcode=${encodeURIComponent(code)}&active_only=true&limit=1`)
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      const product = data.products?.[0] as Product | undefined
+      if (product) {
+        addToCart(product)
+        setBarcodeFlash({ ok: true, text: product.name })
+      } else {
+        setBarcodeFlash({ ok: false, text: `Código no encontrado: ${code}` })
+      }
+    } catch {
+      setBarcodeFlash({ ok: false, text: `Error al buscar: ${code}` })
+    }
+    setTimeout(() => setBarcodeFlash(null), 2500)
+  }, []) // addToCart is stable (no deps)
+
+  useEffect(() => {
+    // Barcode scanners send chars at ~0-5ms intervals (HID keyboard emulator).
+    // Human typing is typically >80ms per keystroke.
+    // Strategy: buffer chars in capture phase; if Enter arrives and all buffered
+    // chars came in within 50ms each → it's a barcode scan, not manual input.
+    const SCANNER_INTERVAL_MS = 50
+    const MIN_BARCODE_LENGTH = 6
+
+    function onKeyDown(e: KeyboardEvent) {
+      const now = Date.now()
+      const buf = barcodeBufferRef.current
+
+      if (e.key === 'Enter') {
+        if (barcodeTimeoutRef.current) {
+          clearTimeout(barcodeTimeoutRef.current)
+          barcodeTimeoutRef.current = null
+        }
+        if (buf.length >= MIN_BARCODE_LENGTH) {
+          // Check: every consecutive interval must be short (scanner speed)
+          let isScanner = true
+          for (let i = 1; i < buf.length; i++) {
+            if (buf[i].time - buf[i - 1].time > SCANNER_INTERVAL_MS) {
+              isScanner = false
+              break
+            }
+          }
+          if (isScanner) {
+            const code = buf.map((b) => b.char).join('')
+            barcodeBufferRef.current = []
+            e.preventDefault()
+            e.stopPropagation()
+            handleBarcodeScan(code)
+            return
+          }
+        }
+        barcodeBufferRef.current = []
+        return
+      }
+
+      // Accumulate printable chars
+      if (e.key.length === 1) {
+        buf.push({ char: e.key, time: now })
+        if (buf.length > 30) buf.shift() // cap buffer
+
+        // Clear buffer if no more chars arrive within 200ms
+        if (barcodeTimeoutRef.current) clearTimeout(barcodeTimeoutRef.current)
+        barcodeTimeoutRef.current = setTimeout(() => {
+          barcodeBufferRef.current = []
+        }, 200)
+      } else if (!['Shift', 'CapsLock', 'Control', 'Alt', 'Meta'].includes(e.key)) {
+        // Non-printable, non-modifier key → reset buffer
+        barcodeBufferRef.current = []
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown, { capture: true })
+    return () => document.removeEventListener('keydown', onKeyDown, { capture: true })
+  }, [handleBarcodeScan])
 
   // Global '/' shortcut to focus search
   useEffect(() => {
@@ -194,10 +276,28 @@ export default function POSPage() {
     <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-8rem)]">
       {/* Left: Product search */}
       <div className="flex-1 flex flex-col gap-4 min-h-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 flex-wrap">
           <Receipt className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Punto de Venta</h1>
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-full ml-auto">
+            <ScanLine className="w-3.5 h-3.5" />
+            <span>Lector de barras activo</span>
+          </div>
         </div>
+
+        {/* Barcode scan flash */}
+        {barcodeFlash && (
+          <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border-2 ${
+            barcodeFlash.ok
+              ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300'
+              : 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700 text-red-800 dark:text-red-300'
+          }`}>
+            {barcodeFlash.ok
+              ? <CheckCircle className="w-4 h-4 flex-shrink-0" />
+              : <AlertCircle className="w-4 h-4 flex-shrink-0" />}
+            <span className="line-clamp-1">{barcodeFlash.text}</span>
+          </div>
+        )}
 
         {/* Search */}
         <div className="relative">

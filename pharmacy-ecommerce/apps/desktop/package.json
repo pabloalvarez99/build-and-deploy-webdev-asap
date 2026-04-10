@@ -1,0 +1,38 @@
+{
+  "name": "tu-farmacia-desktop",
+  "version": "1.0.0",
+  "description": "Tu Farmacia — App de escritorio para mostrador (POS)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "start:pos": "electron . --pos",
+    "build": "electron-builder --win --x64",
+    "build:portable": "electron-builder --win portable --x64"
+  },
+  "build": {
+    "appId": "cl.tufarmacia.desktop",
+    "productName": "Tu Farmacia",
+    "copyright": "Tu Farmacia Coquimbo",
+    "win": {
+      "target": [
+        { "target": "portable", "arch": ["x64"] },
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "assets/**"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  }
+}

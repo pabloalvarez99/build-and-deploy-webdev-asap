@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
       { laboratory: { contains: s, mode: 'insensitive' } },
     ]
   }
+  if (searchParams.get('barcode')) where.external_id = searchParams.get('barcode')
   if (searchParams.get('in_stock') === 'true') where.stock = { gt: 0 }
   if (searchParams.get('no_image') === 'true') where.image_url = null
   if (searchParams.get('has_discount') === 'true') where.discount_percent = { gt: 0 }
