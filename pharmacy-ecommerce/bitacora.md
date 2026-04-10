@@ -1,6 +1,27 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: ERP EN DESARROLLO 🚧 — Fase 1: Proveedores + Compras (Abril 2026)
+## Estado actual: ERP COMPLETO ✅ — Fidelización + Checkout mejorado (Abril 2026)
+
+---
+
+## 2026-04-10 — Fidelización de puntos + Checkout mejorado para adultos mayores
+
+**Feature A — Fidelización:**
+- Schema: `loyalty_points Int` + `phone String?` en `profiles`, tabla `loyalty_transactions` (user_id, order_id, points, reason)
+- Regla: 1 punto por cada $1000 CLP gastados (`Math.floor(total/1000)`)
+- Se otorgan al confirmar pago Webpay (`/api/webpay/return`) y al aprobar retiro en tienda (`/api/admin/orders/[id]` → `approve_reservation`)
+- API `GET /api/loyalty` → `{ points: number }` para el cliente
+- `/mis-pedidos`: banner amber con estrella mostrando puntos acumulados
+- Checkout: preview de puntos a ganar en el resumen del pedido
+
+**Feature D — Checkout UX (adultos mayores):**
+- Si el usuario está logueado: pre-llena nombre + email automáticamente
+- Oculta campo contraseña (ya tiene sesión activa)
+- Muestra "Hola, {nombre}" + aviso "Sesión activa — tus datos están pre-completados"
+- `processStorePickup` salta el flujo de registro/login si hay sesión
+- Email pre-llenado es `readOnly` para usuarios logueados
+
+**Fix adicional:** `handleDuplicate` en admin/productos faltaba el campo `cost_price`.
 
 ---
 
