@@ -60,6 +60,18 @@ export default function POSPage() {
     searchRef.current?.focus()
   }, [user, router])
 
+  // Global '/' shortcut to focus search
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === '/' && document.activeElement !== searchRef.current) {
+        e.preventDefault()
+        searchRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [])
+
   const searchProducts = useCallback(async (q: string) => {
     if (!q.trim()) { setProducts([]); return }
     setIsSearching(true)
@@ -195,7 +207,13 @@ export default function POSPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar producto por nombre, laboratorio..."
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && products.length > 0) {
+                addToCart(products[0])
+                setSearch('')
+              }
+            }}
+            placeholder="Buscar producto… (/ para enfocar, Enter para agregar)"
             className="w-full pl-9 pr-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:border-emerald-500 focus:outline-none text-sm"
           />
           {isSearching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 animate-spin" />}
