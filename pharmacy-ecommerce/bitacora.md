@@ -1,6 +1,31 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: ERP COMPLETO ✅ — Fidelización + Checkout mejorado (Abril 2026)
+## Estado actual: ERP COMPLETO ✅ — Fidelización + POS Barras + Electron (Abril 2026)
+
+---
+
+## 2026-04-10 — Lector de códigos de barra en POS + App Electron
+
+**Lector de barras (USB HID) en POS:**
+- Detección por timing: chars < 50ms entre sí + Enter = escáner (no teclado humano)
+- Listener global `keydown` con `{ capture: true }` para interceptar antes que cualquier input
+- `handleBarcodeScan(code)`: busca producto por `external_id` via `/api/products?barcode=X`, agrega al carrito
+- Flash visual verde/rojo 2.5s con nombre del producto o mensaje de error
+- Indicador "Lector de barras activo" en el header del POS
+- API `/api/products`: nuevo filtro `?barcode=X` → `where.external_id = X`
+- Nota: los barcodes se cargarán cuando el usuario entregue la BD con `external_id` por producto
+
+**App Electron (mostrador farmacia):**
+- Nuevo directorio `pharmacy-ecommerce/apps/desktop/`
+- `main.js`: carga `https://tu-farmacia.cl` (live URL, sin servidor local)
+- Flag `--pos`: abre `/admin/pos` directamente en 1280×800, oculta menú
+- Flag `--kiosk`: modo pantalla completa kiosk
+- Menú de app: POS (Ctrl+P), Admin (Ctrl+A), Recarga (Ctrl+R), Atrás (Alt+←), Pantalla completa (F11), Modo kiosk (Ctrl+Shift+K), Imprimir (Ctrl+Shift+P)
+- Atajos globales: F5 recarga, Escape sale de kiosk
+- Links externos se abren en el browser del sistema
+- `preload.js`: expone solo `window.electronApp.platform` (aislamiento seguro)
+- Build: `electron-builder --win --x64` → genera portable + instalador NSIS
+- `package.json` scripts: `start`, `start:pos`, `build`, `build:portable`
 
 ---
 
