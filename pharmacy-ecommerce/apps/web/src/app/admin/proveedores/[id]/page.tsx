@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/auth'
 import { supplierApi, type Supplier } from '@/lib/api'
 import {
   Truck, ArrowLeft, Mail, Phone, Globe, FileText, ClipboardList,
-  Package, CheckCircle2, Clock, XCircle, Hash,
+  Package, CheckCircle2, Clock, XCircle, Hash, Edit2, X, Save,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -47,6 +47,9 @@ export default function ProveedorDetailPage() {
   const { user } = useAuthStore()
   const [supplier, setSupplier] = useState<SupplierDetail | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showEdit, setShowEdit] = useState(false)
+  const [editForm, setEditForm] = useState({ name: '', rut: '', contact_name: '', contact_email: '', contact_phone: '', website: '', notes: '', active: true })
+  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     if (!user || user.role !== 'admin') { router.push('/'); return }
@@ -60,6 +63,36 @@ export default function ProveedorDetailPage() {
       setSupplier(data)
     } catch { /* fail */ }
     finally { setLoading(false) }
+  }
+
+  function openEdit() {
+    if (!supplier) return
+    setEditForm({
+      name: supplier.name,
+      rut: supplier.rut ?? '',
+      contact_name: supplier.contact_name ?? '',
+      contact_email: supplier.contact_email ?? '',
+      contact_phone: supplier.contact_phone ?? '',
+      website: supplier.website ?? '',
+      notes: supplier.notes ?? '',
+      active: supplier.active,
+    })
+    setShowEdit(true)
+  }
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault()
+    if (!supplier) return
+    setIsSaving(true)
+    try {
+      await supplierApi.update(supplier.id, editForm)
+      setShowEdit(false)
+      await load()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al guardar')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   if (loading) {
@@ -101,6 +134,13 @@ export default function ProveedorDetailPage() {
         {!supplier.active && (
           <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">Inactivo</span>
         )}
+        <button
+          onClick={openEdit}
+          className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
+          title="Editar proveedor"
+        >
+          <Edit2 className="w-4 h-4 text-slate-500" />
+        </button>
         <Link
           href={`/admin/compras/nueva?supplier_id=${supplier.id}`}
           className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-xl transition-colors"
@@ -207,6 +247,113 @@ export default function ProveedorDetailPage() {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Edit modal */}
+      {showEdit && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Editar proveedor</h2>
+                <button onClick={() => setShowEdit(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+                  <X className="w-5 h-5 text-slate-500" />
+                </button>
+              </div>
+              <form onSubmit={handleSave} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nombre *</label>
+                  <input
+                    required
+                    value={editForm.name}
+                    onChange={(e) => setEditForm(f => ({ ...f, name: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">RUT</label>
+                  <input
+                    value={editForm.rut}
+                    onChange={(e) => setEditForm(f => ({ ...f, rut: e.target.value }))}
+                    placeholder="12.345.678-9"
+                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Contacto</label>
+                    <input
+                      value={editForm.contact_name}
+                      onChange={(e) => setEditForm(f => ({ ...f, contact_name: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Teléfono</label>
+                    <input
+                      value={editForm.contact_phone}
+                      onChange={(e) => setEditForm(f => ({ ...f, contact_phone: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email contacto</label>
+                  <input
+                    type="email"
+                    value={editForm.contact_email}
+                    onChange={(e) => setEditForm(f => ({ ...f, contact_email: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Sitio web</label>
+                  <input
+                    value={editForm.website}
+                    onChange={(e) => setEditForm(f => ({ ...f, website: e.target.value }))}
+                    placeholder="https://..."
+                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Notas</label>
+                  <textarea
+                    value={editForm.notes}
+                    onChange={(e) => setEditForm(f => ({ ...f, notes: e.target.value }))}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                  />
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editForm.active}
+                    onChange={(e) => setEditForm(f => ({ ...f, active: e.target.checked }))}
+                    className="w-4 h-4 text-emerald-600 rounded"
+                  />
+                  <span className="text-sm text-slate-700 dark:text-slate-300">Activo</span>
+                </label>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowEdit(false)}
+                    className="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    {isSaving ? 'Guardando...' : 'Guardar'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

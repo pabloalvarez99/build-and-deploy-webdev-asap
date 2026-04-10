@@ -8,6 +8,7 @@ import {
   ClipboardList, ArrowLeft, CheckCircle2, Clock, XCircle,
   Package, Calendar, Hash, User, FileText, PackageCheck,
 } from 'lucide-react'
+import Link from 'next/link'
 
 const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; cls: string }> = {
   draft: { label: 'Borrador', icon: <Clock className="w-4 h-4" />, cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
@@ -138,7 +139,13 @@ export default function CompraDetailPage() {
             <Package className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
             <div>
               <p className="text-xs text-slate-500 dark:text-slate-400">Proveedor</p>
-              <p className="font-semibold text-slate-900 dark:text-white">{order.suppliers?.name ?? '—'}</p>
+              {order.suppliers?.id ? (
+                <Link href={`/admin/proveedores/${order.suppliers.id}`} className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
+                  {order.suppliers.name}
+                </Link>
+              ) : (
+                <p className="font-semibold text-slate-900 dark:text-white">{order.suppliers?.name ?? '—'}</p>
+              )}
             </div>
           </div>
           {order.invoice_number && (
