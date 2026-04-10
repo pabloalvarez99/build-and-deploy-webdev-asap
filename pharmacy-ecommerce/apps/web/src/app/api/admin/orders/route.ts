@@ -11,11 +11,18 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
     const status = searchParams.get('status');
+    const channel = searchParams.get('channel'); // 'pos' | 'online'
     const offset = (page - 1) * limit;
 
     const db = await getDb();
 
-    const where = status ? { status } : undefined;
+    const where: Record<string, unknown> = {};
+    if (status) where.status = status;
+    if (channel === 'pos') {
+      where.payment_provider = { in: ['pos_cash', 'pos_debit', 'pos_credit'] };
+    } else if (channel === 'online') {
+      where.payment_provider = { notIn: ['pos_cash', 'pos_debit', 'pos_credit'] };
+    }
 
     const [orders, total] = await Promise.all([
       db.orders.findMany({

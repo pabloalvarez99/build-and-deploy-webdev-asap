@@ -102,7 +102,11 @@ export default function AdminOrdersPage() {
   const filteredOrders = useMemo(() => {
     return allOrders.filter((order) => {
       if (filterStatus.length > 0 && !filterStatus.includes(order.status)) return false;
-      if (filterProvider && order.payment_provider !== filterProvider) return false;
+      if (filterProvider) {
+        if (filterProvider === 'pos') {
+          if (!['pos_cash', 'pos_debit', 'pos_credit'].includes(order.payment_provider || '')) return false;
+        } else if (order.payment_provider !== filterProvider) return false;
+      }
       if (dateFrom && new Date(order.created_at) < new Date(dateFrom)) return false;
       if (dateTo) {
         const to = new Date(dateTo);
@@ -134,8 +138,9 @@ export default function AdminOrdersPage() {
     const pending = allOrders.filter((o) => o.status === 'pending').length;
     const reserved = allOrders.filter((o) => o.status === 'reserved').length;
     const webpayPaid = allOrders.filter((o) => o.payment_provider === 'webpay' && o.status === 'paid').length;
+    const posCompleted = allOrders.filter((o) => ['pos_cash', 'pos_debit', 'pos_credit'].includes(o.payment_provider || '') && o.status === 'completed').length;
     const total = allOrders.length;
-    return { revenue, pending, reserved, webpayPaid, total };
+    return { revenue, pending, reserved, webpayPaid, posCompleted, total };
   }, [allOrders]);
 
   // Pagination on filtered results
@@ -204,7 +209,7 @@ export default function AdminOrdersPage() {
       getCustomerEmail(o),
       o.customer_phone || '',
       STATUS_CONFIG[o.status]?.label || o.status,
-      o.payment_provider === 'webpay' ? 'Webpay Plus' : o.payment_provider === 'store' ? 'Retiro en tienda' : o.payment_provider || '',
+      o.payment_provider === 'webpay' ? 'Webpay Plus' : o.payment_provider === 'store' ? 'Retiro en tienda' : o.payment_provider === 'pos_cash' ? 'POS Efectivo' : o.payment_provider === 'pos_debit' ? 'POS Débito' : o.payment_provider === 'pos_credit' ? 'POS Crédito' : o.payment_provider || '',
       o.total,
       o.pickup_code || '',
       o.shipping_address || '',
@@ -315,6 +320,18 @@ export default function AdminOrdersPage() {
             <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">{stats.webpayPaid}</p>
           </div>
         </button>
+        <button
+          onClick={() => setFilterProvider(filterProvider === 'pos' ? '' : 'pos')}
+          className={`card p-4 flex items-center gap-3 text-left w-full hover:shadow-md transition-shadow ${filterProvider === 'pos' ? 'ring-2 ring-emerald-400' : ''}`}
+        >
+          <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl">
+            <Package className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Ventas POS</p>
+            <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">{stats.posCompleted}</p>
+          </div>
+        </button>
       </div>
 
       {/* Quick search bar */}
@@ -381,6 +398,7 @@ export default function AdminOrdersPage() {
               {[
                 { value: 'webpay', label: 'Webpay Plus', icon: <CreditCard className="w-3.5 h-3.5" />, activeClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' },
                 { value: 'store', label: 'Retiro en tienda', icon: <Store className="w-3.5 h-3.5" />, activeClass: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300' },
+                { value: 'pos', label: 'Venta POS', icon: <Package className="w-3.5 h-3.5" />, activeClass: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300' },
               ].map(({ value, label, icon, activeClass }) => (
                 <button
                   key={value}
