@@ -230,7 +230,38 @@ En `src/components/admin/Sidebar.tsx`:
 - `reason: 'sale_pos'` en `stock_movements` distingue ventas POS de ventas online
 
 ### Pendientes
-- Fase 3 — Reportes Financieros (márgenes con cost_price, CSV export)
+- ~~Fase 3 — Reportes Financieros~~ ✅ Completado
+
+---
+
+## SESIÓN Abril 9, 2026 — ERP Fase 3 completa ✅ — Reportes Financieros
+
+### Completado
+- **API `/api/admin/reportes`** extendida:
+  - Incluye órdenes POS (`payment_provider IN ['pos_cash','pos_debit','pos_credit']`) junto a órdenes online
+  - KPIs nuevos: `totalCost`, `grossMargin`, `marginPct`
+  - `channelBreakdown`: online vs POS (con desglose efectivo/débito/crédito)
+  - `salesByDay`: divide `ventas` (online) + `ventas_pos` por día
+  - `topProducts`: agrega `cost`, `margin`, `margin_pct` (cuando product tiene `cost_price`)
+  - `topByMargin`: top 10 por margen bruto (filtrado a productos con costo)
+  - `byCategory`: agrega `cost` y `margin` por categoría
+- **Página `/admin/reportes`** renovada:
+  - Tabs "Ventas" y "Financiero"
+  - 6 KPI cards: Revenue, Órdenes, Ticket promedio, Costo total, Margen bruto, % Margen
+  - Canal breakdown (Online vs POS con desglose de método de pago)
+  - Gráfico líneas: ventas por día separado por canal
+  - Tab Financiero: bar chart top 10 por margen, bar chart Revenue vs Costo por categoría, tabla financiera completa
+  - CSV export con columnas Costo, Margen, % Margen
+
+### Decisiones técnicas
+- Margen solo calculable cuando products.cost_price ≠ NULL (se actualiza al recibir OCs en Fase 1)
+- `margin_pct >= 20%` = verde, `>= 0%` = ámbar, `< 0%` = rojo
+- Warning banner si totalCost === 0 (no hay productos con costo ingresado aún)
+
+### Estado ERP
+- Fase 1 Proveedores + Compras ✅
+- Fase 2 POS ✅
+- Fase 3 Reportes Financieros ✅
 
 ---
 
