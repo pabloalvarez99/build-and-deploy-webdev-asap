@@ -42,6 +42,10 @@
   # gh está en PATH
   ```
 
+### MCP Plugins (Claude Code)
+- **github@claude-plugins-official** — HTTP MCP → `https://api.githubcopilot.com/mcp/`. Requiere `GITHUB_PERSONAL_ACCESS_TOKEN` en env Windows (`setx`). Token actual: `gho_...` (OAuth via `gh auth token`). Si falla auth, crear PAT clásico con scopes `repo`, `read:org`, `copilot`.
+- **goodmem@claude-plugins-official** — Node.js MCP server. Requiere build previo: `cd ~/.claude/plugins/cache/.../goodmem/0.1.0/mcp && npm install && npm run build`. Si falla al reconectar, re-correr el build (el `dist/` puede haberse borrado al actualizar el plugin).
+
 ---
 
 ## 3. Stack Técnico

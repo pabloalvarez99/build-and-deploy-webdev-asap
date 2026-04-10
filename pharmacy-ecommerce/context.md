@@ -1,4 +1,4 @@
-# Contexto de Sesión — Tu Farmacia (actualizado Abril 8, 2026)
+# Contexto de Sesión — Tu Farmacia (actualizado Abril 10, 2026)
 
 > **Este archivo es el punto de entrada para la próxima sesión.**
 > Tiene todo lo necesario para retomar sin buscar en bitácora ni historial.
@@ -24,6 +24,15 @@
 | Custom claim | `{"role":"admin"}` |
 
 Para cambiar password: https://tu-farmacia.vercel.app/auth/forgot-password
+
+---
+
+## MCP Plugins Claude Code (2026-04-10)
+
+| Plugin | Estado | Notas |
+|---|---|---|
+| `github@claude-plugins-official` | ✅ Activo | Token en `GITHUB_PERSONAL_ACCESS_TOKEN` (Windows setx). Si falla: crear PAT con `repo`, `read:org`, `copilot`. |
+| `goodmem@claude-plugins-official` | ✅ Activo | Requirió build manual: `npm install && npm run build` en `~/.claude/plugins/cache/.../goodmem/0.1.0/mcp/`. Si falla al reconectar, re-correr el build. |
 
 ---
 

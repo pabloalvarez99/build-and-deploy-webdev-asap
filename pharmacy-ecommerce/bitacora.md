@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-04-10 — MCP Plugins: GitHub + GoodMem reparados
+
+**Problema:** `/mcp` reportaba `Failed to reconnect to plugin:goodmem:goodmem`. GitHub también fallaba silenciosamente.
+
+**Causa raíz GoodMem:**
+- El plugin `goodmem@claude-plugins-official` instala un servidor MCP en TypeScript (`mcp/src/index.ts`).
+- El `.mcp.json` apunta a `${CLAUDE_PLUGIN_ROOT}/mcp/dist/index.js`, pero ese archivo **no existía** — el build nunca se había corrido.
+- Fix: `cd ~/.claude/plugins/cache/.../goodmem/0.1.0/mcp && npm install && npm run build` → generó `dist/index.js` (788 KB bundle).
+
+**Causa raíz GitHub:**
+- El plugin `github@claude-plugins-official` usa MCP HTTP apuntando a `https://api.githubcopilot.com/mcp/` con `Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}`.
+- La variable de entorno no estaba seteada.
+- Fix: obtener token con `gh auth token` → `setx GITHUB_PERSONAL_ACCESS_TOKEN "gho_..."` (persistente en Windows).
+
+**Acción requerida:** Reiniciar Claude Code para que ambos cambios tomen efecto.
+
+**Nota:** Si GitHub MCP falla con error de auth, crear PAT clásico en `github.com/settings/tokens` con scopes `repo`, `read:org`, `copilot`.
+
+---
+
 ## 2026-04-09 — Obsidian Mind Vault integrado como PKM del proyecto
 
 **Vault instalado:** `C:\Users\Admin\Documents\obsidian-mind` (v3.7.0 — breferrari/obsidian-mind)

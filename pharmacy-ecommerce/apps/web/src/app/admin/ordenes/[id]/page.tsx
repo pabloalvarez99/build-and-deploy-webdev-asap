@@ -216,6 +216,8 @@ export default function AdminOrderDetailPage() {
 
  const isPickup = order.payment_provider === 'store';
  const isWebpay = order.payment_provider === 'webpay';
+ const isPOS = ['pos_cash', 'pos_debit', 'pos_credit'].includes(order.payment_provider ?? '');
+ const posMethodLabel = order.payment_provider === 'pos_cash' ? 'Efectivo' : order.payment_provider === 'pos_debit' ? 'Débito' : 'Crédito';
  const currentStatus = statusOptions.find((s) => s.value === order.status);
  const total = parseFloat(order.total);
  const date = new Date(order.created_at).toLocaleDateString('es-CL', {
@@ -255,6 +257,21 @@ export default function AdminOrderDetailPage() {
  </span>
  )}
  </div>
+
+ {/* POS Sale Banner */}
+ {isPOS && (
+ <div className="card border-2 border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-900/20 p-5 mb-6 flex items-center gap-4">
+ <CreditCard className="w-6 h-6 text-teal-600 dark:text-teal-400 shrink-0" />
+ <div>
+ <p className="font-semibold text-teal-900 dark:text-teal-200">Venta en Punto de Venta (POS)</p>
+ <p className="text-sm text-teal-700 dark:text-teal-300">
+ Método de pago: <strong>{posMethodLabel}</strong>
+ {(order.guest_name) && <> · Cliente: <strong>{order.guest_name}</strong></>}
+ {order.customer_phone && <> · Tel: {order.customer_phone}</>}
+ </p>
+ </div>
+ </div>
+ )}
 
  {/* Reservation Approval Section */}
  {order.status === 'reserved' && (
