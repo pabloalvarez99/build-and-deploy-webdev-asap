@@ -28,6 +28,14 @@ export async function GET(
           },
         },
         _count: { select: { purchase_orders: true } },
+        supplier_product_mappings: {
+          select: {
+            id: true,
+            supplier_code: true,
+            products: { select: { name: true, stock: true } },
+          },
+          orderBy: { supplier_code: 'asc' },
+        },
       },
     });
 
