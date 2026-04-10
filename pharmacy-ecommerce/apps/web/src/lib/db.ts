@@ -33,7 +33,11 @@ async function createPrismaClient(): Promise<PrismaClient> {
     user: process.env.DB_USER!.trim(),
     password: process.env.DB_PASSWORD!.trim(),
     database: process.env.DB_NAME!.trim(),
-    max: 5,
+    // Serverless: 1 conexión por instancia de función para no agotar Cloud SQL.
+    // Vercel corre muchas instancias en paralelo; con max>1 se llega al límite rápido.
+    max: 1,
+    min: 0,
+    idleTimeoutMillis: 10000,
   })
 
   const adapter = new PrismaPg(pool)
