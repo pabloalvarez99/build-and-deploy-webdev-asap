@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
 import { productApi } from '@/lib/api'
-import { TrendingUp, TrendingDown, Package, ChevronLeft, ChevronRight, Plus, Minus, X, Search, Loader2, Download } from 'lucide-react'
+import { TrendingUp, TrendingDown, Package, ChevronLeft, ChevronRight, Plus, Minus, X, Search, Loader2, Download, AlertTriangle, ShoppingCart } from 'lucide-react'
+import Link from 'next/link'
 import { formatPrice } from '@/lib/format'
 
 interface StockMovement {
@@ -39,9 +40,11 @@ export default function StockMovementsPage() {
   const [reasonFilter, setReasonFilter] = useState('')
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'movimientos' | 'inventario'>('movimientos')
+  const [invFilter, setInvFilter] = useState<'all' | 'low' | 'out'>('all')
+  const [invSearch, setInvSearch] = useState('')
   const [inventory, setInventory] = useState<{
-    summary: { total_products: number; products_with_cost: number; total_retail_value: number; total_cost_value: number; gross_margin_value: number; margin_pct: number };
-    items: Array<{ id: string; name: string; stock: number; price: number; cost_price: number | null; retail_value: number; cost_value: number | null; margin_pct: number | null; category: string }>;
+    summary: { total_products: number; products_with_cost: number; total_retail_value: number; total_cost_value: number; gross_margin_value: number; margin_pct: number; low_stock_threshold: number };
+    items: Array<{ id: string; name: string; slug: string; stock: number; price: number; cost_price: number | null; retail_value: number; cost_value: number | null; margin_pct: number | null; category: string; low_stock: boolean; supplier: { id: string; name: string; code: string } | null }>;
   } | null>(null)
   const [inventoryLoading, setInventoryLoading] = useState(false)
 
@@ -72,27 +75,38 @@ export default function StockMovementsPage() {
     return () => clearTimeout(t)
   }, [adjSearch])
 
-  async function loadInventory() {
+  async function loadInventory(filter = invFilter, search = invSearch) {
     setInventoryLoading(true)
     try {
-      const res = await fetch('/api/admin/inventory')
+      const qs = new URLSearchParams()
+      if (filter !== 'all') qs.set('filter', filter)
+      if (search) qs.set('search', search)
+      const res = await fetch(`/api/admin/inventory?${qs}`)
       if (res.ok) setInventory(await res.json())
     } catch { /* fail silently */ }
     finally { setInventoryLoading(false) }
   }
 
   useEffect(() => {
-    if (activeTab === 'inventario' && !inventory) loadInventory()
-  }, [activeTab])
+    if (activeTab === 'inventario') loadInventory()
+  }, [activeTab, invFilter])
+
+  // Debounced search
+  useEffect(() => {
+    if (activeTab !== 'inventario') return
+    const t = setTimeout(() => loadInventory(invFilter, invSearch), 300)
+    return () => clearTimeout(t)
+  }, [invSearch])
 
   function exportInventoryCSV() {
     if (!inventory) return
-    const headers = ['Producto', 'Categoría', 'Stock', 'Precio venta', 'Precio costo', 'Valor retail', 'Valor costo', '% Margen']
+    const headers = ['Producto', 'Categoría', 'Stock', 'Precio venta', 'Precio costo', 'Valor retail', 'Valor costo', '% Margen', 'Proveedor']
     const rows = inventory.items.map((i) => [
       i.name, i.category, i.stock,
       Math.round(i.price), i.cost_price != null ? Math.round(i.cost_price) : '',
       Math.round(i.retail_value), i.cost_value != null ? Math.round(i.cost_value) : '',
       i.margin_pct != null ? i.margin_pct.toFixed(1) + '%' : '',
+      i.supplier?.name ?? '',
     ])
     const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
@@ -183,6 +197,37 @@ export default function StockMovementsPage() {
       {/* ── TAB: INVENTARIO ── */}
       {activeTab === 'inventario' && (
         <>
+          {/* Inventory filters */}
+          <div className="flex gap-2 flex-wrap items-center">
+            {[
+              { key: 'all', label: 'Todos' },
+              { key: 'low', label: 'Stock bajo', icon: <AlertTriangle className="w-3.5 h-3.5" /> },
+              { key: 'out', label: 'Agotados', icon: <X className="w-3.5 h-3.5" /> },
+            ].map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setInvFilter(f.key as 'all' | 'low' | 'out')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  invFilter === f.key
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                }`}
+              >
+                {f.icon}{f.label}
+              </button>
+            ))}
+            <div className="relative ml-auto">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={invSearch}
+                onChange={(e) => setInvSearch(e.target.value)}
+                placeholder="Buscar producto..."
+                className="pl-9 pr-4 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 w-52"
+              />
+            </div>
+          </div>
+
           {inventoryLoading ? (
             <div className="space-y-2">
               {[...Array(5)].map((_, i) => <div key={i} className="h-12 bg-slate-100 dark:bg-slate-700 rounded-xl animate-pulse" />)}
@@ -220,31 +265,53 @@ export default function StockMovementsPage() {
                   <table className="w-full text-sm">
                     <thead className="bg-slate-50 dark:bg-slate-700/50">
                       <tr>
-                        {['Producto', 'Categoría', 'Stock', 'Precio', 'Costo', 'Valor retail', 'Valor costo', '% Margen'].map((h) => (
+                        {['Producto', 'Stock', 'Precio', 'Costo', 'Valor retail', '% Margen', 'Proveedor'].map((h) => (
                           <th key={h} className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                       {inventory.items.map((item) => (
-                        <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                          <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100 max-w-[200px] truncate">{item.name}</td>
-                          <td className="px-4 py-3 text-slate-500 dark:text-slate-400 text-xs">{item.category}</td>
-                          <td className="px-4 py-3 font-mono font-bold text-slate-900 dark:text-slate-100">{item.stock}</td>
-                          <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{formatPrice(item.price)}</td>
-                          <td className="px-4 py-3 text-red-600 dark:text-red-400">
-                            {item.cost_price != null ? formatPrice(item.cost_price) : <span className="text-slate-300 dark:text-slate-600">—</span>}
+                        <tr key={item.id} className={`hover:bg-slate-50 dark:hover:bg-slate-700/30 ${item.stock === 0 ? 'opacity-60' : ''}`}>
+                          <td className="px-4 py-3 max-w-[200px]">
+                            <p className="font-medium text-slate-900 dark:text-slate-100 truncate">{item.name}</p>
+                            <p className="text-xs text-slate-400">{item.category}</p>
                           </td>
-                          <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100">{formatPrice(item.retail_value)}</td>
-                          <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
-                            {item.cost_value != null ? formatPrice(item.cost_value) : <span className="text-slate-300 dark:text-slate-600">—</span>}
+                          <td className="px-4 py-3">
+                            <span className={`font-mono font-bold ${item.stock === 0 ? 'text-red-600 dark:text-red-400' : item.low_stock ? 'text-amber-600 dark:text-amber-400' : 'text-slate-900 dark:text-slate-100'}`}>
+                              {item.stock}
+                            </span>
+                            {item.low_stock && item.stock > 0 && <AlertTriangle className="inline w-3.5 h-3.5 text-amber-500 ml-1" />}
                           </td>
+                          <td className="px-4 py-3 text-slate-700 dark:text-slate-300 whitespace-nowrap">{formatPrice(item.price)}</td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            {item.cost_price != null ? <span className="text-red-600 dark:text-red-400">{formatPrice(item.cost_price)}</span> : <span className="text-slate-300 dark:text-slate-600">—</span>}
+                          </td>
+                          <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">{formatPrice(item.retail_value)}</td>
                           <td className="px-4 py-3 font-bold">
                             {item.margin_pct != null ? (
                               <span className={item.margin_pct >= 20 ? 'text-emerald-600 dark:text-emerald-400' : item.margin_pct >= 0 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}>
                                 {item.margin_pct.toFixed(1)}%
                               </span>
                             ) : <span className="text-slate-300 dark:text-slate-600">—</span>}
+                          </td>
+                          <td className="px-4 py-3">
+                            {item.supplier ? (
+                              <div className="flex items-center gap-2">
+                                <Link href={`/admin/proveedores/${item.supplier.id}`} className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline truncate max-w-[100px]">
+                                  {item.supplier.name}
+                                </Link>
+                                {item.low_stock && (
+                                  <Link
+                                    href={`/admin/compras/nueva?supplier_id=${item.supplier.id}`}
+                                    title="Crear orden de compra"
+                                    className="p-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 transition-colors"
+                                  >
+                                    <ShoppingCart className="w-3.5 h-3.5" />
+                                  </Link>
+                                )}
+                              </div>
+                            ) : <span className="text-slate-300 dark:text-slate-600 text-xs">—</span>}
                           </td>
                         </tr>
                       ))}
