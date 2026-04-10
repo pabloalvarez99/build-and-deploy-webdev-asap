@@ -17,13 +17,16 @@
       "target": [
         { "target": "portable", "arch": ["x64"] },
         { "target": "nsis", "arch": ["x64"] }
-      ],
-      "icon": "assets/icon.ico"
+      ]
+    },
+    "portable": {
+      "artifactName": "Tu-Farmacia-Portable.exe"
     },
     "nsis": {
       "oneClick": true,
       "perMachine": false,
-      "allowToChangeInstallationDirectory": false
+      "allowToChangeInstallationDirectory": false,
+      "artifactName": "Tu-Farmacia-Setup.exe"
     },
     "files": [
       "main.js",
