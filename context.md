@@ -2,7 +2,7 @@
 
 > **Punto de entrada para cualquier sesión nueva.**
 > Lee este archivo primero. Tiene todo: estado, credenciales, stack, reglas, herramientas.
-> Última actualización: 2026-04-08
+> Última actualización: 2026-04-09
 
 ---
 
@@ -22,6 +22,10 @@
 | Admin panel | ✅ Operativo |
 | Emails transaccionales (Resend) | ✅ Configurado |
 | Cron limpieza de órdenes | ✅ Configurado (3 AM UTC diario) |
+| **ERP Fase 1 — Proveedores + Compras** | ✅ Completo |
+| **ERP Fase 2 — Punto de Venta (POS)** | ✅ Completo |
+| **ERP Fase 3 — Reportes Financieros** | ✅ Completo |
+| **Inventario valorizado + ajuste manual stock** | ✅ Completo |
 
 ---
 
@@ -253,6 +257,17 @@ GET|PUT|DELETE /api/admin/clientes/[id] → Detalle/editar/eliminar cliente
 POST   /api/auth/session           → Crea session cookie desde ID token
 DELETE /api/auth/session           → Logout (borra session cookie)
 POST   /api/auth/register          → Registro via Firebase Admin
+
+# ERP (Abril 2026)
+CRUD   /api/admin/suppliers              → Proveedores (GET/POST/GET:id/PUT/DELETE)
+CRUD   /api/admin/purchase-orders        → Órdenes de compra (GET/POST/GET:id/PUT)
+POST   /api/admin/purchase-orders/[id]/receive   → Recibe OC: stock++, cost_price, movements
+POST   /api/admin/purchase-orders/[id]/map-product → Mapea item → producto
+POST   /api/admin/purchase-orders/scan   → OCR Vision API → líneas parseadas
+POST   /api/admin/pos/sale               → Venta POS: crea orden completed + stock-- atómico
+GET    /api/admin/stock-movements        → Lista movimientos (filtro: reason, product_id)
+POST   /api/admin/stock-movements/adjust → Ajuste manual de stock ($transaction)
+GET    /api/admin/inventory              → Inventario valorizado (retail + costo + margen)
 ```
 
 ---
