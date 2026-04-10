@@ -58,6 +58,7 @@ export default function POSPage() {
   const barcodeBufferRef = useRef<{ char: string; time: number }[]>([])
   const barcodeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [barcodeFlash, setBarcodeFlash] = useState<{ ok: boolean; text: string } | null>(null)
+  const [searchError, setSearchError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user || user.role !== 'admin') { router.push('/'); return }
@@ -155,13 +156,15 @@ export default function POSPage() {
   }, [])
 
   const searchProducts = useCallback(async (q: string) => {
-    if (!q.trim()) { setProducts([]); return }
+    if (!q.trim()) { setProducts([]); setSearchError(null); return }
     setIsSearching(true)
+    setSearchError(null)
     try {
       const res = await productApi.list({ search: q, active_only: true, in_stock: false, limit: 20 })
       setProducts(res.products as unknown as Product[])
-    } catch {
+    } catch (err) {
       setProducts([])
+      setSearchError(err instanceof Error ? err.message : 'Error al buscar productos')
     } finally {
       setIsSearching(false)
     }
@@ -327,9 +330,15 @@ export default function POSPage() {
               <p>Busca un producto para agregar al carrito</p>
             </div>
           )}
-          {products.length === 0 && search.trim() !== '' && !isSearching && (
+          {products.length === 0 && search.trim() !== '' && !isSearching && !searchError && (
             <div className="text-center py-16 text-slate-400 dark:text-slate-500">
               <p>Sin resultados para "{search}"</p>
+            </div>
+          )}
+          {searchError && (
+            <div className="text-center py-16 text-red-500 dark:text-red-400">
+              <p className="font-semibold">Error al buscar</p>
+              <p className="text-sm mt-1">{searchError}</p>
             </div>
           )}
           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">

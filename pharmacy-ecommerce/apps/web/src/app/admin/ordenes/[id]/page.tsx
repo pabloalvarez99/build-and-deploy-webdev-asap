@@ -133,7 +133,7 @@ export default function AdminOrderDetailPage() {
 
  const loadOrder = async () => {
  try {
- const data = await orderApi.get(orderId);
+ const data = await orderApi.adminGet(orderId);
  setOrder(data);
  } catch (error) {
  console.error('Error loading order:', error);

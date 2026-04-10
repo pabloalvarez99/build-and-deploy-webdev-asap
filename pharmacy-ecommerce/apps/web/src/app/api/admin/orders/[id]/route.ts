@@ -6,6 +6,34 @@ import { awardLoyaltyPoints, restoreLoyaltyPoints } from '@/lib/loyalty'
 const VALID_STATUSES = ['pending', 'reserved', 'paid', 'processing', 'shipped', 'delivered', 'cancelled']
 const STOCK_DEDUCTED_STATUSES = ['paid', 'processing', 'shipped', 'delivered']
 
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const admin = await getAdminUser()
+    if (!admin) return errorResponse('Unauthorized', 403)
+
+    const db = await getDb()
+    const order = await db.orders.findUnique({
+      where: { id: params.id },
+      include: { order_items: true },
+    })
+
+    if (!order) return errorResponse('Orden no encontrada', 404)
+
+    return NextResponse.json({
+      ...order,
+      total: order.total.toString(),
+      created_at: order.created_at.toISOString(),
+      reservation_expires_at: order.reservation_expires_at?.toISOString() ?? null,
+      items: order.order_items.map((i) => ({
+        ...i,
+        price_at_purchase: i.price_at_purchase.toString(),
+      })),
+    })
+  } catch (error) {
+    return errorResponse(error instanceof Error ? error.message : 'Internal error', 500)
+  }
+}
+
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const admin = await getAdminUser()

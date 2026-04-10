@@ -146,6 +146,9 @@ export const orderApi = {
   get: (id: string) =>
     apiRequest<OrderWithItems>(`/api/orders/${id}`, { method: 'GET' }),
 
+  adminGet: (id: string) =>
+    apiRequest<OrderWithItems>(`/api/admin/orders/${id}`, { method: 'GET' }),
+
   // Admin operations
   listAll: (params?: { page?: number; limit?: number; status?: string }) => {
     const qs = new URLSearchParams()

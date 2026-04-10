@@ -1,7 +1,7 @@
 const { app, BrowserWindow, Menu, shell, globalShortcut } = require('electron')
 const path = require('path')
 
-const APP_URL = 'https://tu-farmacia.cl'
+const APP_URL = 'https://tu-farmacia.vercel.app'
 const POS_URL = `${APP_URL}/admin/pos`
 
 const isPOS = process.argv.includes('--pos')
