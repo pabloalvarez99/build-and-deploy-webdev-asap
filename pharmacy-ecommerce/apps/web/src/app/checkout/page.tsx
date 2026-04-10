@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
 import { orderApi } from '@/lib/api';
-import { calcPoints } from '@/lib/loyalty-utils';
+import { calcPoints, POINTS_TO_CLP } from '@/lib/loyalty-utils';
 import { Loader2, ShieldCheck, Store, Phone, User, Mail, Lock, Eye, EyeOff, CreditCard, Check, MessageCircle, X, AlertCircle, Star } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
@@ -27,6 +27,8 @@ export default function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [loyaltyPoints, setLoyaltyPoints] = useState(0);
+  const [usePoints, setUsePoints] = useState(false);
 
   useEffect(() => { fetchCart(); }, [fetchCart]);
 
@@ -36,6 +38,15 @@ export default function CheckoutPage() {
       if (user.name) setName(user.name);
       if (user.email) setEmail(user.email);
     }
+  }, [user]);
+
+  // Fetch loyalty points for logged-in users
+  useEffect(() => {
+    if (!user) { setLoyaltyPoints(0); setUsePoints(false); return; }
+    fetch('/api/loyalty')
+      .then(r => r.ok ? r.json() : { points: 0 })
+      .then(data => setLoyaltyPoints(data.points ?? 0))
+      .catch(() => {});
   }, [user]);
 
   const validate = () => {
@@ -165,6 +176,7 @@ export default function CheckoutPage() {
         email: trimmedEmail,
         phone: trimmedPhone,
         session_id: getSessionId(),
+        use_points: usePoints && loyaltyPoints > 0,
       });
       clearCart();
       router.push(`/checkout/reservation?order_id=${response.order_id}&code=${response.pickup_code}&expires=${encodeURIComponent(response.expires_at)}&total=${response.total}`);
@@ -186,7 +198,12 @@ export default function CheckoutPage() {
   }
 
   const itemCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
-  const pointsToEarn = calcPoints(Number(cart.total));
+  const cartTotal = Number(cart.total);
+  const pointsDiscount = (usePoints && paymentMethod === 'store')
+    ? Math.min(loyaltyPoints * POINTS_TO_CLP, cartTotal)
+    : 0;
+  const effectiveTotal = cartTotal - pointsDiscount;
+  const pointsToEarn = calcPoints(effectiveTotal);
   const canSubmit = name && phone && email && (user || paymentMethod === 'webpay' || password.length >= 6);
 
   return (
@@ -268,8 +285,22 @@ export default function CheckoutPage() {
         <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-4 mb-4">
           <div className="flex justify-between items-center">
             <span className="text-slate-600 dark:text-slate-400 font-medium">{itemCount} producto{itemCount > 1 ? 's' : ''}</span>
-            <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{formatPrice(cart.total)}</span>
+            <span className={`text-2xl font-black ${pointsDiscount > 0 ? 'line-through text-slate-400 dark:text-slate-500 text-lg' : 'text-emerald-700 dark:text-emerald-400'}`}>
+              {formatPrice(cart.total)}
+            </span>
           </div>
+          {pointsDiscount > 0 && (
+            <div className="flex justify-between items-center mt-1">
+              <span className="text-sm text-amber-700 dark:text-amber-400">Descuento puntos</span>
+              <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">-{formatPrice(pointsDiscount)}</span>
+            </div>
+          )}
+          {pointsDiscount > 0 && (
+            <div className="flex justify-between items-center mt-1">
+              <span className="font-semibold text-slate-700 dark:text-slate-300">Total a pagar</span>
+              <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{formatPrice(effectiveTotal)}</span>
+            </div>
+          )}
           {cart.items.length <= 4 && (
             <div className="mt-3 space-y-1.5">
               {cart.items.map((item) => (
@@ -278,6 +309,38 @@ export default function CheckoutPage() {
                   <span className="flex-shrink-0 font-medium text-slate-700 dark:text-slate-300">{formatPrice(item.subtotal)}</span>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Canjeo de puntos — solo retiro en tienda y usuarios con puntos */}
+          {user && loyaltyPoints > 0 && paymentMethod === 'store' && (
+            <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-600">
+              <button
+                type="button"
+                onClick={() => setUsePoints(!usePoints)}
+                className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl border-2 transition-all ${
+                  usePoints
+                    ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20'
+                    : 'border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700/50'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Star className={`w-5 h-5 flex-shrink-0 ${usePoints ? 'text-amber-500 fill-amber-400' : 'text-slate-400'}`} />
+                  <div className="text-left">
+                    <p className={`text-sm font-semibold ${usePoints ? 'text-amber-800 dark:text-amber-300' : 'text-slate-700 dark:text-slate-300'}`}>
+                      Usar {loyaltyPoints} punto{loyaltyPoints !== 1 ? 's' : ''}
+                    </p>
+                    <p className={`text-xs ${usePoints ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'}`}>
+                      = {formatPrice(Math.min(loyaltyPoints * POINTS_TO_CLP, cartTotal))} de descuento
+                    </p>
+                  </div>
+                </div>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                  usePoints ? 'border-amber-500 bg-amber-500' : 'border-slate-300 dark:border-slate-500'
+                }`}>
+                  {usePoints && <Check className="w-3 h-3 text-white" />}
+                </div>
+              </button>
             </div>
           )}
 

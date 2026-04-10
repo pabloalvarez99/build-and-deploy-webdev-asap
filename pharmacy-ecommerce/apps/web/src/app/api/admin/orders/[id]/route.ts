@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers'
 import { getDb } from '@/lib/db'
-import { awardLoyaltyPoints } from '@/lib/loyalty'
+import { awardLoyaltyPoints, restoreLoyaltyPoints } from '@/lib/loyalty'
 
 const VALID_STATUSES = ['pending', 'reserved', 'paid', 'processing', 'shipped', 'delivered', 'cancelled']
 const STOCK_DEDUCTED_STATUSES = ['paid', 'processing', 'shipped', 'delivered']
@@ -41,6 +41,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
           }
         })
       }
+    }
+
+    // Restore redeemed loyalty points when cancelling
+    if (body.status === 'cancelled') {
+      restoreLoyaltyPoints(id).catch(() => {})
     }
 
     const updated = await db.orders.update({ where: { id }, data: { status: body.status } })

@@ -132,6 +132,7 @@ export const orderApi = {
     phone: string
     notes?: string
     session_id: string
+    use_points?: boolean
   }) => apiRequest<StorePickupResponse>('/api/store-pickup', { body: data }),
 
   list: (params?: { page?: number; limit?: number; status?: string }) => {

@@ -2,3 +2,6 @@
 export function calcPoints(totalCLP: number): number {
   return Math.floor(totalCLP / 1000)
 }
+
+/** 1 punto = $100 CLP de descuento. Safe para usar en Client Components. */
+export const POINTS_TO_CLP = 100

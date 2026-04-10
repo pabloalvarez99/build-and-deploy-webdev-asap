@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { sendPickupRejectionEmail } from '@/lib/email'
+import { restoreLoyaltyPoints } from '@/lib/loyalty'
 
 // Cleans up:
 // 1. Abandoned Webpay "pending" orders older than 30 minutes
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
     data: { status: 'cancelled' },
   })
 
-  // Notify customers whose reservations expired (non-blocking)
+  // Notify customers + restore loyalty points for expired reservations (non-blocking)
   for (const order of expiredPickups) {
     if (order.guest_email) {
       sendPickupRejectionEmail({
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
         orderId: order.id,
       }).catch(() => {})
     }
+    restoreLoyaltyPoints(order.id).catch(() => {})
   }
 
   const result = {
