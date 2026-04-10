@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/auth'
 import { purchaseOrderApi, type PurchaseOrder } from '@/lib/api'
 import {
   ClipboardList, ArrowLeft, CheckCircle2, Clock, XCircle,
-  Package, Calendar, Hash, User, FileText,
+  Package, Calendar, Hash, User, FileText, PackageCheck,
 } from 'lucide-react'
 
 const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; cls: string }> = {
@@ -28,6 +28,7 @@ export default function CompraDetailPage() {
   const [order, setOrder] = useState<PurchaseOrder | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isCancelling, setIsCancelling] = useState(false)
+  const [isReceiving, setIsReceiving] = useState(false)
 
   useEffect(() => {
     if (!user || user.role !== 'admin') { router.push('/'); return }
@@ -43,6 +44,34 @@ export default function CompraDetailPage() {
       console.error(e)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  async function handleReceive() {
+    if (!order) return
+    const mappedCount = (order.items ?? []).filter((i) => i.product_id).length
+    if (mappedCount === 0) {
+      alert('No hay productos mapeados. Ve a "Nueva compra" y mapea los productos antes de recibir.')
+      return
+    }
+    if (!confirm(`¿Confirmar recepción? Se actualizará el stock de ${mappedCount} producto(s).`)) return
+    setIsReceiving(true)
+    try {
+      const res = await fetch(`/api/admin/purchase-orders/${order.id}/receive`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      if (!res.ok) {
+        const err = await res.text()
+        alert(err || 'Error al recibir OC')
+        return
+      }
+      await load()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al recibir')
+    } finally {
+      setIsReceiving(false)
     }
   }
 
@@ -198,12 +227,26 @@ export default function CompraDetailPage() {
       {order.status === 'draft' && (
         <div className="flex gap-3">
           <button
-            onClick={handleCancel}
-            disabled={isCancelling}
-            className="flex-1 px-4 py-3 border-2 border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-xl font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-40"
+            onClick={handleReceive}
+            disabled={isReceiving || isCancelling}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors disabled:opacity-40"
           >
-            {isCancelling ? 'Cancelando...' : 'Cancelar OC'}
+            <PackageCheck className="w-4 h-4" />
+            {isReceiving ? 'Recibiendo...' : 'Recibir OC'}
           </button>
+          <button
+            onClick={handleCancel}
+            disabled={isCancelling || isReceiving}
+            className="px-4 py-3 border-2 border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-xl font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-40"
+          >
+            {isCancelling ? '...' : 'Cancelar'}
+          </button>
+        </div>
+      )}
+      {order.status === 'received' && (
+        <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl text-emerald-700 dark:text-emerald-400 text-sm font-medium">
+          <CheckCircle2 className="w-4 h-4" />
+          Orden recibida — stock actualizado
         </div>
       )}
     </div>
