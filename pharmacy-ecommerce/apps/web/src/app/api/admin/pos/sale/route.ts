@@ -2,6 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 
+async function checkAndAlertLowStock(db: Awaited<ReturnType<typeof getDb>>, productIds: string[]) {
+  if (productIds.length === 0) return;
+  const settings = await db.admin_settings.findMany({ select: { key: true, value: true } });
+  const map = Object.fromEntries(settings.map((s) => [s.key, s.value]));
+  const threshold = parseInt(map.low_stock_threshold || '10');
+  const alertEmail = map.alert_email;
+  if (!alertEmail) return;
+  const lowStock = await db.products.findMany({
+    where: { id: { in: productIds }, stock: { lte: threshold } },
+    select: { name: true, stock: true },
+  });
+  if (lowStock.length > 0) {
+    const { sendLowStockAlert } = await import('@/lib/email');
+    await sendLowStockAlert(alertEmail, lowStock, threshold);
+  }
+}
+
 interface SaleItem {
   product_id: string;
   product_name: string;
@@ -91,6 +108,9 @@ export async function POST(request: NextRequest) {
 
       return newOrder;
     });
+
+    // Fire-and-forget low stock check (same logic as online order approval)
+    checkAndAlertLowStock(db, items.map((i) => i.product_id)).catch(() => {});
 
     return NextResponse.json({
       id: order.id,
