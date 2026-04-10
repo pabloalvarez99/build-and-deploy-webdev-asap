@@ -45,6 +45,8 @@ interface Stats {
  pendingOrders: number;
  totalOrders: number;
  totalRevenue: number;
+ todayRevenue: number;
+ todayOrders: number;
 }
 
 interface LowStockProduct {
@@ -182,6 +184,12 @@ export default function AdminPage() {
  // Revenue and top products from accurate server-side reports API (no 1000-order limit)
  const totalRevenue = reportData?.kpis?.totalRevenue ?? 0;
 
+ // Today's revenue from salesByDay (last entry if it matches today)
+ const todayStr = toStr; // YYYY-MM-DD
+ const todayEntry = (reportData?.salesByDay ?? []).find((d: { date: string }) => d.date === todayStr);
+ const todayRevenue = todayEntry ? Math.round((todayEntry.ventas ?? 0) + (todayEntry.ventas_pos ?? 0)) : 0;
+ const todayOrders = todayEntry ? ((todayEntry.ordenes ?? 0) + (todayEntry.ordenes_pos ?? 0)) : 0;
+
  // Top products
  const topProductsList: TopProduct[] = (reportData?.topProducts || []).slice(0, 5).map(
   (p: { name: string; units: number }) => ({
@@ -215,6 +223,8 @@ export default function AdminPage() {
  pendingOrders: pendingOrders.total + reservedOrders.total,
  totalOrders: allOrders.total,
  totalRevenue,
+ todayRevenue,
+ todayOrders,
  });
 
  // Calculate status distribution
@@ -295,6 +305,14 @@ export default function AdminPage() {
   textColor: 'text-purple-600 dark:text-purple-400',
   },
   {
+  title: 'Ventas hoy',
+  value: stats.todayRevenue > 0 ? formatPrice(stats.todayRevenue) : '$0',
+  icon: <TrendingUp className="w-6 h-6" />,
+  color: 'bg-teal-500',
+  textColor: 'text-teal-600 dark:text-teal-400',
+  subtitle: stats.todayOrders > 0 ? `${stats.todayOrders} orden(es)` : undefined,
+  },
+  {
   title: 'Ventas (30 días)',
   value: formatPrice(stats.totalRevenue),
   icon: <DollarSign className="w-6 h-6" />,
@@ -336,8 +354,8 @@ export default function AdminPage() {
  <div className="mb-8">
  <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-4">Resumen</h2>
  {isLoading ? (
- <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
- {[...Array(6)].map((_, i) => (
+ <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
+ {[...Array(7)].map((_, i) => (
  <div key={i} className="card p-4 animate-pulse">
  <div className="h-10 w-10 bg-slate-200 dark:bg-slate-700 rounded-lg mb-3" />
  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-20 mb-2" />
@@ -346,7 +364,7 @@ export default function AdminPage() {
  ))}
  </div>
  ) : (
- <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+ <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
  {statCards.map((stat) => (
  <div key={stat.title} className="card p-4">
  <div
@@ -356,6 +374,7 @@ export default function AdminPage() {
  </div>
  <p className="text-sm text-slate-500 dark:text-slate-400">{stat.title}</p>
  <p className={`text-xl font-bold ${stat.textColor}`}>{stat.value}</p>
+ {'subtitle' in stat && stat.subtitle && <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{stat.subtitle}</p>}
  </div>
  ))}
  </div>
