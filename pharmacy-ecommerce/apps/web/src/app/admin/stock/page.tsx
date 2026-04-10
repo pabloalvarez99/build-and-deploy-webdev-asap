@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
 import { productApi } from '@/lib/api'
-import { TrendingUp, TrendingDown, Package, ChevronLeft, ChevronRight, Plus, Minus, X, Search, Loader2 } from 'lucide-react'
+import { TrendingUp, TrendingDown, Package, ChevronLeft, ChevronRight, Plus, Minus, X, Search, Loader2, Download } from 'lucide-react'
+import { formatPrice } from '@/lib/format'
 
 interface StockMovement {
   id: string
@@ -37,6 +38,12 @@ export default function StockMovementsPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [reasonFilter, setReasonFilter] = useState('')
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'movimientos' | 'inventario'>('movimientos')
+  const [inventory, setInventory] = useState<{
+    summary: { total_products: number; products_with_cost: number; total_retail_value: number; total_cost_value: number; gross_margin_value: number; margin_pct: number };
+    items: Array<{ id: string; name: string; stock: number; price: number; cost_price: number | null; retail_value: number; cost_value: number | null; margin_pct: number | null; category: string }>;
+  } | null>(null)
+  const [inventoryLoading, setInventoryLoading] = useState(false)
 
   // Adjust modal state
   const [showAdjust, setShowAdjust] = useState(false)
@@ -64,6 +71,36 @@ export default function StockMovementsPage() {
     }, 300)
     return () => clearTimeout(t)
   }, [adjSearch])
+
+  async function loadInventory() {
+    setInventoryLoading(true)
+    try {
+      const res = await fetch('/api/admin/inventory')
+      if (res.ok) setInventory(await res.json())
+    } catch { /* fail silently */ }
+    finally { setInventoryLoading(false) }
+  }
+
+  useEffect(() => {
+    if (activeTab === 'inventario' && !inventory) loadInventory()
+  }, [activeTab])
+
+  function exportInventoryCSV() {
+    if (!inventory) return
+    const headers = ['Producto', 'Categoría', 'Stock', 'Precio venta', 'Precio costo', 'Valor retail', 'Valor costo', '% Margen']
+    const rows = inventory.items.map((i) => [
+      i.name, i.category, i.stock,
+      Math.round(i.price), i.cost_price != null ? Math.round(i.cost_price) : '',
+      Math.round(i.retail_value), i.cost_value != null ? Math.round(i.cost_value) : '',
+      i.margin_pct != null ? i.margin_pct.toFixed(1) + '%' : '',
+    ])
+    const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `inventario_${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+  }
 
   async function handleAdjust() {
     if (!adjProduct || !adjDelta || adjDelta === '0') return
@@ -116,10 +153,24 @@ export default function StockMovementsPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <Package className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Movimientos de Stock</h1>
-        <span className="text-sm text-slate-500 dark:text-slate-400">{total} registros</span>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Stock</h1>
+        <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+          {(['movimientos', 'inventario'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all capitalize ${
+                activeTab === tab
+                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              {tab === 'movimientos' ? 'Movimientos' : 'Inventario'}
+            </button>
+          ))}
+        </div>
         <button
           onClick={() => setShowAdjust(true)}
           className="ml-auto flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors"
@@ -129,6 +180,87 @@ export default function StockMovementsPage() {
         </button>
       </div>
 
+      {/* ── TAB: INVENTARIO ── */}
+      {activeTab === 'inventario' && (
+        <>
+          {inventoryLoading ? (
+            <div className="space-y-2">
+              {[...Array(5)].map((_, i) => <div key={i} className="h-12 bg-slate-100 dark:bg-slate-700 rounded-xl animate-pulse" />)}
+            </div>
+          ) : inventory ? (
+            <>
+              {/* Summary cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+                {[
+                  { label: 'Productos en stock', value: String(inventory.summary.total_products) },
+                  { label: 'Con precio costo', value: String(inventory.summary.products_with_cost) },
+                  { label: 'Valor retail', value: formatPrice(inventory.summary.total_retail_value) },
+                  { label: 'Valor costo', value: inventory.summary.total_cost_value > 0 ? formatPrice(inventory.summary.total_cost_value) : '—' },
+                  { label: 'Margen potencial', value: inventory.summary.gross_margin_value > 0 ? formatPrice(inventory.summary.gross_margin_value) : '—' },
+                  { label: '% Margen', value: inventory.summary.margin_pct > 0 ? `${inventory.summary.margin_pct.toFixed(1)}%` : '—' },
+                ].map((card) => (
+                  <div key={card.label} className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-4">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{card.label}</p>
+                    <p className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{card.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                  <p className="font-semibold text-slate-900 dark:text-white text-sm">{inventory.items.length} productos</p>
+                  <button
+                    onClick={exportInventoryCSV}
+                    className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
+                  >
+                    <Download className="w-4 h-4" /> CSV
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-50 dark:bg-slate-700/50">
+                      <tr>
+                        {['Producto', 'Categoría', 'Stock', 'Precio', 'Costo', 'Valor retail', 'Valor costo', '% Margen'].map((h) => (
+                          <th key={h} className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                      {inventory.items.map((item) => (
+                        <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                          <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100 max-w-[200px] truncate">{item.name}</td>
+                          <td className="px-4 py-3 text-slate-500 dark:text-slate-400 text-xs">{item.category}</td>
+                          <td className="px-4 py-3 font-mono font-bold text-slate-900 dark:text-slate-100">{item.stock}</td>
+                          <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{formatPrice(item.price)}</td>
+                          <td className="px-4 py-3 text-red-600 dark:text-red-400">
+                            {item.cost_price != null ? formatPrice(item.cost_price) : <span className="text-slate-300 dark:text-slate-600">—</span>}
+                          </td>
+                          <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100">{formatPrice(item.retail_value)}</td>
+                          <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                            {item.cost_value != null ? formatPrice(item.cost_value) : <span className="text-slate-300 dark:text-slate-600">—</span>}
+                          </td>
+                          <td className="px-4 py-3 font-bold">
+                            {item.margin_pct != null ? (
+                              <span className={item.margin_pct >= 20 ? 'text-emerald-600 dark:text-emerald-400' : item.margin_pct >= 0 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}>
+                                {item.margin_pct.toFixed(1)}%
+                              </span>
+                            ) : <span className="text-slate-300 dark:text-slate-600">—</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-16 text-slate-400"><p>Error cargando inventario</p></div>
+          )}
+        </>
+      )}
+
+      {/* ── TAB: MOVIMIENTOS (filters + table) ── */}
+      {activeTab === 'movimientos' && <>
       {/* Filters */}
       <div className="flex gap-2 flex-wrap">
         {REASONS.map((r) => {
@@ -235,6 +367,7 @@ export default function StockMovementsPage() {
           </div>
         )}
       </div>
+      </> }
 
       {/* Adjust modal */}
       {showAdjust && (
