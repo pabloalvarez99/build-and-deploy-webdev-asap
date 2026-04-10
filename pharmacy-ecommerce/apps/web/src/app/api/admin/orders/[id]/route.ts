@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers'
 import { getDb } from '@/lib/db'
+import { awardLoyaltyPoints } from '@/lib/loyalty'
 
 const VALID_STATUSES = ['pending', 'reserved', 'paid', 'processing', 'shipped', 'delivered', 'cancelled']
 const STOCK_DEDUCTED_STATUSES = ['paid', 'processing', 'shipped', 'delivered']
@@ -52,7 +53,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 async function approveReservation(db: Awaited<ReturnType<typeof getDb>>, orderId: string) {
   const order = await db.orders.findUnique({
     where: { id: orderId },
-    select: { id: true, status: true, total: true, guest_email: true, guest_name: true, guest_surname: true, pickup_code: true },
+    select: { id: true, status: true, total: true, user_id: true, guest_email: true, guest_name: true, guest_surname: true, pickup_code: true },
   })
   if (!order) return errorResponse('Order not found', 404)
   if (order.status !== 'reserved') return errorResponse('Only reserved orders can be approved', 400)
@@ -101,6 +102,11 @@ async function approveReservation(db: Awaited<ReturnType<typeof getDb>>, orderId
         price_at_purchase: i.price_at_purchase.toString(),
       })),
     }).catch(() => {})
+  }
+
+  // Loyalty points (non-blocking — solo para usuarios registrados)
+  if (order.user_id) {
+    awardLoyaltyPoints(order.user_id, orderId, Number(order.total)).catch(() => {})
   }
 
   // Low-stock alert (non-blocking)

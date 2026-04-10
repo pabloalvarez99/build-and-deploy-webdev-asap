@@ -263,6 +263,7 @@ export default function AdminProductsPage() {
  prescription_type: product.prescription_type || 'direct',
  presentation: product.presentation || '',
  discount_percent: '',
+ cost_price: '',
  active: false, // Start as inactive
  });
  setEditingProduct(null); // This is a new product

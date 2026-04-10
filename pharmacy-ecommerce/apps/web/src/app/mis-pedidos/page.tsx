@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { orderApi, PaginatedOrders } from '@/lib/api';
-import { Package, ChevronRight, Clock, CheckCircle, XCircle, Truck, Store } from 'lucide-react';
+import { Package, ChevronRight, Clock, CheckCircle, XCircle, Truck, Store, Star } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -25,6 +25,7 @@ export default function MyOrdersPage() {
   const [orders, setOrders] = useState<PaginatedOrders | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [loyaltyPoints, setLoyaltyPoints] = useState<number | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -32,7 +33,18 @@ export default function MyOrdersPage() {
       return;
     }
     loadOrders();
+    if (currentPage === 1) loadLoyalty();
   }, [user, router, currentPage]);
+
+  const loadLoyalty = async () => {
+    try {
+      const res = await fetch('/api/loyalty');
+      if (res.ok) {
+        const data = await res.json();
+        setLoyaltyPoints(data.points);
+      }
+    } catch {}
+  };
 
   const loadOrders = async () => {
     setIsLoading(true);
@@ -52,7 +64,18 @@ export default function MyOrdersPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-8">Mis Pedidos</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Mis Pedidos</h1>
+        {loyaltyPoints !== null && (
+          <div className="flex items-center gap-3 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-700 rounded-2xl px-4 py-3 self-start">
+            <Star className="w-6 h-6 text-amber-500 fill-amber-500 flex-shrink-0" />
+            <div>
+              <p className="text-xl font-black text-amber-700 dark:text-amber-400">{loyaltyPoints} punto{loyaltyPoints !== 1 ? 's' : ''}</p>
+              <p className="text-xs text-amber-600 dark:text-amber-500">acumulados</p>
+            </div>
+          </div>
+        )}
+      </div>
 
       {isLoading ? (
         <div className="space-y-4">

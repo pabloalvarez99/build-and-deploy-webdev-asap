@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { webpayTransaction } from '@/lib/transbank'
 import { sendWebpayConfirmation, sendLowStockAlert } from '@/lib/email'
+import { awardLoyaltyPoints } from '@/lib/loyalty'
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL!
 
@@ -51,7 +52,7 @@ async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
     // Find pending webpay order matching the buy_order prefix
     const pendingOrders = await db.orders.findMany({
       where: { payment_provider: 'webpay', status: 'pending' },
-      select: { id: true, total: true, guest_email: true, guest_name: true, guest_surname: true },
+      select: { id: true, total: true, user_id: true, guest_email: true, guest_name: true, guest_surname: true },
     })
 
     const order = pendingOrders.find((o) =>
@@ -113,6 +114,11 @@ async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
           price_at_purchase: i.price_at_purchase.toString(),
         })),
       }).catch(() => {})
+    }
+
+    // Loyalty points (non-blocking — solo para usuarios registrados)
+    if (order.user_id) {
+      awardLoyaltyPoints(order.user_id, order.id, Number(order.total)).catch(() => {})
     }
 
     // Low-stock alert (non-blocking)

@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cart';
+import { useAuthStore } from '@/store/auth';
 import { orderApi } from '@/lib/api';
-import { Loader2, ShieldCheck, Store, Phone, User, Mail, Lock, Eye, EyeOff, CreditCard, Check, MessageCircle, X, AlertCircle } from 'lucide-react';
+import { calcPoints } from '@/lib/loyalty-utils';
+import { Loader2, ShieldCheck, Store, Phone, User, Mail, Lock, Eye, EyeOff, CreditCard, Check, MessageCircle, X, AlertCircle, Star } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 type PaymentMethod = 'store' | 'webpay';
@@ -14,6 +16,7 @@ const WHATSAPP_NUMBER = '56993649604';
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, fetchCart, clearCart, getSessionId } = useCartStore();
+  const { user } = useAuthStore();
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('store');
   const [name, setName] = useState('');
@@ -27,6 +30,14 @@ export default function CheckoutPage() {
 
   useEffect(() => { fetchCart(); }, [fetchCart]);
 
+  // Pre-fill form when user is logged in
+  useEffect(() => {
+    if (user) {
+      if (user.name) setName(user.name);
+      if (user.email) setEmail(user.email);
+    }
+  }, [user]);
+
   const validate = () => {
     const trimmedName = name.trim();
     const trimmedPhone = phone.replace(/[\s\-\(\)]/g, '');
@@ -34,7 +45,7 @@ export default function CheckoutPage() {
     if (!trimmedName || trimmedName.length < 2) return 'Ingresa tu nombre';
     if (!/^\+?\d{8,12}$/.test(trimmedPhone)) return 'Teléfono inválido (ej: 912345678)';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) return 'Email inválido';
-    if (paymentMethod === 'store' && password.length < 6) return 'Contraseña mínimo 6 caracteres';
+    if (!user && paymentMethod === 'store' && password.length < 6) return 'Contraseña mínimo 6 caracteres';
     return null;
   };
 
@@ -54,7 +65,6 @@ export default function CheckoutPage() {
     setError('');
 
     if (paymentMethod === 'webpay') {
-      // Show WhatsApp confirmation before charging real money
       setShowWhatsAppModal(true);
       return;
     }
@@ -108,40 +118,43 @@ export default function CheckoutPage() {
     const trimmedEmail = email.trim();
     const items = cart.items.map(item => ({ product_id: item.product_id, quantity: item.quantity }));
 
-    try {
-      const regRes = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: trimmedEmail, password, name: trimmedName, surname: '', phone: trimmedPhone }),
-      });
-      const regData = await regRes.json();
-      if (!regRes.ok) {
-        if (regData.error?.includes('Ya existe')) {
-          try {
-            const { signInWithEmailAndPassword, getIdToken } = await import('firebase/auth');
-            const { auth } = await import('@/lib/firebase/client');
-            const cred = await signInWithEmailAndPassword(auth, trimmedEmail, password);
-            const idToken = await getIdToken(cred.user);
-            await fetch('/api/auth/session', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ idToken }),
-            });
-          } catch {
-            setError('Ya existe una cuenta. Verifica tu contraseña.');
+    // Si el usuario ya está logueado, saltamos el registro/login
+    if (!user) {
+      try {
+        const regRes = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: trimmedEmail, password, name: trimmedName, surname: '', phone: trimmedPhone }),
+        });
+        const regData = await regRes.json();
+        if (!regRes.ok) {
+          if (regData.error?.includes('Ya existe')) {
+            try {
+              const { signInWithEmailAndPassword, getIdToken } = await import('firebase/auth');
+              const { auth } = await import('@/lib/firebase/client');
+              const cred = await signInWithEmailAndPassword(auth, trimmedEmail, password);
+              const idToken = await getIdToken(cred.user);
+              await fetch('/api/auth/session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken }),
+              });
+            } catch {
+              setError('Ya existe una cuenta. Verifica tu contraseña.');
+              setIsProcessing(false);
+              return;
+            }
+          } else {
+            setError(regData.error || 'Error al crear la cuenta');
             setIsProcessing(false);
             return;
           }
-        } else {
-          setError(regData.error || 'Error al crear la cuenta');
-          setIsProcessing(false);
-          return;
         }
+      } catch {
+        setError('Error al crear la cuenta');
+        setIsProcessing(false);
+        return;
       }
-    } catch {
-      setError('Error al crear la cuenta');
-      setIsProcessing(false);
-      return;
     }
 
     try {
@@ -173,7 +186,8 @@ export default function CheckoutPage() {
   }
 
   const itemCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
-  const canSubmit = name && phone && email && (paymentMethod === 'webpay' || password.length >= 6);
+  const pointsToEarn = calcPoints(Number(cart.total));
+  const canSubmit = name && phone && email && (user || paymentMethod === 'webpay' || password.length >= 6);
 
   return (
     <>
@@ -201,7 +215,6 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Cart summary in modal */}
             <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3 mb-4 space-y-1.5">
               {cart.items.map(item => (
                 <div key={item.product_id} className="flex justify-between text-sm">
@@ -215,7 +228,6 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* WhatsApp button */}
             <a
               href={buildWhatsAppUrl()}
               target="_blank"
@@ -226,7 +238,6 @@ export default function CheckoutPage() {
               Confirmar disponibilidad por WhatsApp
             </a>
 
-            {/* Proceed to pay */}
             <button
               onClick={processWebpay}
               className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base transition-colors flex items-center justify-center gap-2"
@@ -246,6 +257,11 @@ export default function CheckoutPage() {
         {/* Header */}
         <div className="text-center mb-5">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Finalizar pedido</h1>
+          {user && (
+            <p className="text-slate-500 dark:text-slate-400 mt-1">
+              Hola, <span className="font-semibold text-emerald-700 dark:text-emerald-400">{user.name || user.email}</span>
+            </p>
+          )}
         </div>
 
         {/* Order summary */}
@@ -262,6 +278,16 @@ export default function CheckoutPage() {
                   <span className="flex-shrink-0 font-medium text-slate-700 dark:text-slate-300">{formatPrice(item.subtotal)}</span>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Puntos a ganar (solo usuarios logueados) */}
+          {user && pointsToEarn > 0 && (
+            <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-600 flex items-center gap-2">
+              <Star className="w-4 h-4 text-amber-500 fill-amber-500 flex-shrink-0" />
+              <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">
+                Ganarás <strong>{pointsToEarn} punto{pointsToEarn > 1 ? 's' : ''}</strong> con esta compra
+              </p>
             </div>
           )}
         </div>
@@ -313,7 +339,6 @@ export default function CheckoutPage() {
             </button>
           </div>
 
-          {/* Webpay note */}
           {paymentMethod === 'webpay' && (
             <div className="mt-2 flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-3 py-2">
               <MessageCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
@@ -326,6 +351,16 @@ export default function CheckoutPage() {
 
         {/* Form */}
         <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-5 space-y-4">
+          {/* Bienvenida para usuario logueado */}
+          {user && (
+            <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800">
+              <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+              <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
+                Sesión activa — tus datos están pre-completados
+              </p>
+            </div>
+          )}
+
           <div>
             <label htmlFor="ck-name" className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300 mb-2">
               <User className="w-5 h-5 text-emerald-600" />Nombre completo
@@ -345,10 +380,12 @@ export default function CheckoutPage() {
               <Mail className="w-5 h-5 text-emerald-600" />Email
             </label>
             <input id="ck-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu@email.com" className="input" autoComplete="email" />
+              placeholder="tu@email.com" className="input" autoComplete="email"
+              readOnly={!!user} />
           </div>
 
-          {paymentMethod === 'store' && (
+          {/* Password solo para usuarios NO logueados en retiro tienda */}
+          {!user && paymentMethod === 'store' && (
             <div>
               <label htmlFor="ck-pass" className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300 mb-2">
                 <Lock className="w-5 h-5 text-emerald-600" />Contraseña
@@ -366,10 +403,12 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
-            ¿Ya tienes cuenta?{' '}
-            <a href="/auth/login" className="text-emerald-700 dark:text-emerald-400 font-semibold hover:underline">Inicia sesión</a>
-          </p>
+          {!user && (
+            <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
+              ¿Ya tienes cuenta?{' '}
+              <a href="/auth/login" className="text-emerald-700 dark:text-emerald-400 font-semibold hover:underline">Inicia sesión</a>
+            </p>
+          )}
         </div>
 
         {error && (
