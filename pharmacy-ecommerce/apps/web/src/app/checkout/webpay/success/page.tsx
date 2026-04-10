@@ -2,10 +2,12 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { CheckCircle, Printer } from 'lucide-react';
+import { CheckCircle, Printer, Star } from 'lucide-react';
 import { Suspense, useEffect } from 'react';
 import { formatPrice } from '@/lib/format';
 import { useCartStore } from '@/store/cart';
+import { useAuthStore } from '@/store/auth';
+import { calcPoints } from '@/lib/loyalty-utils';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -14,6 +16,9 @@ function SuccessContent() {
   const name = searchParams.get('name');
   const token = searchParams.get('token');
   const { clearCart } = useCartStore();
+  const { user } = useAuthStore();
+
+  const pointsEarned = user && total ? calcPoints(Number(total)) : 0;
 
   // Clear cart now that payment is confirmed
   useEffect(() => {
@@ -67,6 +72,22 @@ function SuccessContent() {
           </span>
         </div>
       </div>
+
+      {pointsEarned > 0 && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-2xl p-5 mb-5 flex items-center gap-4">
+          <div className="bg-amber-100 dark:bg-amber-800/50 w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0">
+            <Star className="w-7 h-7 text-amber-500 fill-amber-400" />
+          </div>
+          <div>
+            <p className="font-bold text-amber-900 dark:text-amber-300 text-lg">
+              ¡Ganaste {pointsEarned} punto{pointsEarned !== 1 ? 's' : ''}!
+            </p>
+            <p className="text-amber-700 dark:text-amber-400 text-sm mt-0.5">
+              Se sumaron a tu cuenta de fidelización
+            </p>
+          </div>
+        </div>
+      )}
 
       {token && (
         <div className="bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-2xl p-5 mb-5">

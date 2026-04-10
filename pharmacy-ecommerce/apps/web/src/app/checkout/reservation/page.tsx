@@ -2,9 +2,11 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Store, Clock, Copy, CheckCircle, MessageCircle } from 'lucide-react';
+import { Store, Clock, Copy, CheckCircle, MessageCircle, Star } from 'lucide-react';
 import { Suspense, useState } from 'react';
 import { formatPrice } from '@/lib/format';
+import { useAuthStore } from '@/store/auth';
+import { calcPoints } from '@/lib/loyalty-utils';
 
 const WHATSAPP_NUMBER = '56993649604';
 
@@ -15,6 +17,9 @@ function ReservationContent() {
   const expires = searchParams.get('expires');
   const total = searchParams.get('total');
   const [copied, setCopied] = useState(false);
+  const { user } = useAuthStore();
+
+  const pointsToEarn = user && total ? calcPoints(Number(total)) : 0;
 
   const whatsappMessage = encodeURIComponent(
     `Hola! Quisiera confirmar mi reserva en Tu Farmacia.\n\n` +
@@ -101,6 +106,23 @@ function ReservationContent() {
           </div>
         )}
       </div>
+
+      {/* Loyalty points preview */}
+      {pointsToEarn > 0 && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-2xl p-5 mb-5 flex items-center gap-4">
+          <div className="bg-amber-100 dark:bg-amber-800/50 w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0">
+            <Star className="w-7 h-7 text-amber-500 fill-amber-400" />
+          </div>
+          <div>
+            <p className="font-bold text-amber-900 dark:text-amber-300 text-lg">
+              Ganarás {pointsToEarn} punto{pointsToEarn !== 1 ? 's' : ''}
+            </p>
+            <p className="text-amber-700 dark:text-amber-400 text-sm mt-0.5">
+              Se acreditarán cuando retires tu pedido
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Steps - simple and big */}
       <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-2xl p-5 mb-5">
