@@ -37,6 +37,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string 
   shipped:    { label: 'Enviado',     color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300',   dot: 'bg-purple-400' },
   delivered:  { label: 'Entregado',   color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',       dot: 'bg-green-500' },
   cancelled:  { label: 'Cancelado',   color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',               dot: 'bg-red-400' },
+  completed:  { label: 'Completado',  color: 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300',             dot: 'bg-teal-500' },
 };
 
 const PAGE_SIZE = 20;
@@ -459,6 +460,7 @@ export default function AdminOrdersPage() {
               });
               const isPickup = order.payment_provider === 'store';
               const isWebpay = order.payment_provider === 'webpay';
+              const isPOS = ['pos_cash', 'pos_debit', 'pos_credit'].includes(order.payment_provider || '');
               const customerName = getCustomerName(order);
               const customerEmail = getCustomerEmail(order);
 
@@ -487,6 +489,11 @@ export default function AdminOrdersPage() {
                       {isWebpay && (
                         <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400 text-xs font-medium">
                           <CreditCard className="w-3.5 h-3.5" /> Webpay
+                        </span>
+                      )}
+                      {isPOS && (
+                        <span className="flex items-center gap-1 text-teal-600 dark:text-teal-400 text-xs font-medium">
+                          <Package className="w-3.5 h-3.5" /> POS
                         </span>
                       )}
                       <span className="font-bold text-slate-900 dark:text-slate-100">{formatPrice(order.total)}</span>
@@ -554,6 +561,7 @@ export default function AdminOrdersPage() {
                   });
                   const isPickup = order.payment_provider === 'store';
                   const isWebpay = order.payment_provider === 'webpay';
+                  const isPOS = ['pos_cash', 'pos_debit', 'pos_credit'].includes(order.payment_provider || '');
                   const customerName = getCustomerName(order);
                   const customerEmail = getCustomerEmail(order);
                   const isGuest = !order.user_id;
@@ -591,6 +599,10 @@ export default function AdminOrdersPage() {
                         ) : isWebpay ? (
                           <span className="flex items-center gap-1 text-blue-700 dark:text-blue-400 text-xs font-medium bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-full w-fit">
                             <CreditCard className="w-3.5 h-3.5" /> Webpay
+                          </span>
+                        ) : isPOS ? (
+                          <span className="flex items-center gap-1 text-teal-700 dark:text-teal-400 text-xs font-medium bg-teal-50 dark:bg-teal-900/20 px-2 py-1 rounded-full w-fit">
+                            <Package className="w-3.5 h-3.5" /> {order.payment_provider === 'pos_cash' ? 'POS Efect.' : order.payment_provider === 'pos_debit' ? 'POS Déb.' : 'POS Créd.'}
                           </span>
                         ) : (
                           <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
