@@ -191,6 +191,30 @@ En `src/components/admin/Sidebar.tsx`:
 
 ---
 
+## SESIÓN Abril 9, 2026 — ERP Fase 1 completa ✅
+
+### Completado
+- **Migración Prisma** (`prisma db push`): tablas `suppliers`, `purchase_orders`, `purchase_order_items`, `supplier_product_mappings` + campo `cost_price` en `products`
+  - Approach: `prisma db push` + IP temporalmente autorizada en Cloud SQL (no `migrate dev` — DB sin historial de migraciones)
+- **API `/api/admin/suppliers`** CRUD completo (GET, POST, GET/:id, PUT/:id, DELETE/:id con validación de OCs)
+- **API `/api/admin/purchase-orders`**: lista/crear, detalle/actualizar, `/receive` (transacción atómica: stock++, cost_price, stock_movements, mappings), `/map-product`, `/scan` (Vision API OCR)
+- **Páginas admin**: `/admin/proveedores` (lista + modal), `/admin/compras` (lista filtrable), `/admin/compras/nueva` (flujo 4 pasos: proveedor → foto → OCR → confirmar), `/admin/compras/[id]` (detalle)
+- **Sidebar**: items "Proveedores" (Truck) + "Compras" (ClipboardList) con badge azul para OCs en draft
+- **lib/api.ts**: `supplierApi` + `purchaseOrderApi` con tipos TypeScript
+- **Obsidian vault**: `brain/Gotchas.md`, `brain/North Star.md`, `work/active/ERP Fase 1.md` poblados
+- **Build**: 45/45 páginas, 0 errores TypeScript
+
+### Decisiones técnicas
+- OCR usa Google Cloud Vision API REST (misma key que scan-invoice existente, no SDK)
+- Parser de facturas heurístico multi-línea (distinto al `HeuristicParser` existente que parsea etiqueta single-product)
+- `$transaction` de Prisma en `/receive` para atomicidad
+- Firebase Storage para foto de factura: diferido a Fase 2 (image_url = null en draft)
+
+### Pendientes (siguiente sesión)
+- Fase 2 — POS (Punto de Venta)
+
+---
+
 ## SESIÓN Abril 9, 2026 — Imágenes rotas arregladas
 
 ### Completado

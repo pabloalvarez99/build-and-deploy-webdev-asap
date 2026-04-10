@@ -24,6 +24,7 @@ interface SidebarProps {
   pendingOrders?: number;
   pendingReservations?: number;
   criticalStock?: number;
+  draftPurchaseOrders?: number;
   onOpenCommandPalette?: () => void;
 }
 
@@ -39,7 +40,7 @@ const navItems = [
   { href: '/admin/configuracion', icon: Settings, label: 'Configuración' },
 ];
 
-export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalStock = 0, onOpenCommandPalette }: SidebarProps) {
+export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalStock = 0, draftPurchaseOrders = 0, onOpenCommandPalette }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -105,6 +106,7 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
           const showBadge = item.href === '/admin/ordenes' && pendingOrders > 0;
           const showReservationBadge = item.href === '/admin/ordenes' && pendingReservations > 0;
           const showStockBadge = item.href === '/admin/productos' && criticalStock > 0;
+          const showDraftPOBadge = item.href === '/admin/compras' && draftPurchaseOrders > 0;
 
           return (
             <Link
@@ -135,6 +137,11 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
                     <span className="px-2 py-0.5 text-xs font-bold bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded-full flex items-center gap-1">
                       <AlertTriangle className="w-3 h-3" />
                       {criticalStock}
+                    </span>
+                  )}
+                  {showDraftPOBadge && (
+                    <span className="px-2 py-0.5 text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full">
+                      {draftPurchaseOrders}
                     </span>
                   )}
                 </>
@@ -187,12 +194,15 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
           const active = isActive(item.href, item.exact);
           const hasBadge =
             (item.href === '/admin/ordenes' && (pendingOrders > 0 || pendingReservations > 0)) ||
-            (item.href === '/admin/productos' && criticalStock > 0);
+            (item.href === '/admin/productos' && criticalStock > 0) ||
+            (item.href === '/admin/compras' && draftPurchaseOrders > 0);
           const badgeCount =
             item.href === '/admin/ordenes'
               ? pendingOrders + pendingReservations
               : item.href === '/admin/productos'
               ? criticalStock
+              : item.href === '/admin/compras'
+              ? draftPurchaseOrders
               : 0;
 
           return (
