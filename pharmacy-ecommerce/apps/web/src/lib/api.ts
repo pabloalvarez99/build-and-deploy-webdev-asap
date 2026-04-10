@@ -436,3 +436,16 @@ export const purchaseOrderApi = {
       { body: { item_id, product_id } }
     ),
 }
+
+// ============================================
+// POS API
+// ============================================
+export const posApi = {
+  sale: (data: {
+    items: Array<{ product_id: string; product_name: string; quantity: number; price: number }>
+    payment_method: 'pos_cash' | 'pos_debit' | 'pos_credit'
+    customer_name?: string
+    customer_phone?: string
+    notes?: string
+  }) => apiRequest<{ id: string; total: string; items_count: number }>('/api/admin/pos/sale', { body: data }),
+}

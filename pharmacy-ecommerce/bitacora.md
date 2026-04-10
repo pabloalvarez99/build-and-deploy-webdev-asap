@@ -211,7 +211,26 @@ En `src/components/admin/Sidebar.tsx`:
 - Firebase Storage para foto de factura: diferido a Fase 2 (image_url = null en draft)
 
 ### Pendientes (siguiente sesión)
-- Fase 2 — POS (Punto de Venta)
+- ~~Fase 2 — POS (Punto de Venta)~~ ✅ Completado
+
+---
+
+## SESIÓN Abril 9, 2026 — ERP Fase 2 completa ✅ — POS (Punto de Venta)
+
+### Completado
+- **API `POST /api/admin/pos/sale`**: crea orden `completed` + `payment_provider='pos_cash'|'pos_debit'|'pos_credit'` en `$transaction` atómica con decremento de stock y `stock_movements` reason=`sale_pos`
+- **Página `/admin/pos`**: layout split (búsqueda izquierda, carrito derecho), búsqueda con debounce, grid de productos, control qty en carrito, selector de método de pago, modal de confirmación con calculadora de vuelto para efectivo, campos opcionales de cliente
+- **Sidebar**: item "POS" (Receipt) en segunda posición tras Dashboard
+- **lib/api.ts**: `posApi.sale()` exportado
+
+### Decisiones técnicas
+- No se requirió migración de esquema: se reutiliza tabla `orders` con nuevos valores de `payment_provider`
+- Validación de stock antes de iniciar transacción (pre-check) + decremento atómico en `$transaction`
+- La venta POS aparece automáticamente en `/admin/ordenes` con estado `completed`
+- `reason: 'sale_pos'` en `stock_movements` distingue ventas POS de ventas online
+
+### Pendientes
+- Fase 3 — Reportes Financieros (márgenes con cost_price, CSV export)
 
 ---
 

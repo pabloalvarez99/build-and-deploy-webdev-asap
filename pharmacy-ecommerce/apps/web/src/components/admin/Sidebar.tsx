@@ -18,6 +18,7 @@ import {
   Users,
   Truck,
   ClipboardList,
+  Receipt,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -30,6 +31,7 @@ interface SidebarProps {
 
 const navItems = [
   { href: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
+  { href: '/admin/pos', icon: Receipt, label: 'POS' },
   { href: '/admin/productos', icon: Package, label: 'Productos' },
   { href: '/admin/ordenes', icon: ShoppingBag, label: 'Órdenes' },
   { href: '/admin/clientes', icon: Users, label: 'Clientes' },
