@@ -1,6 +1,24 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: ERP COMPLETO ✅ — Fidelización + Canjeo + Bugs Admin/POS corregidos (Abril 2026)
+## Estado actual: ERP COMPLETO ✅ — Carrusel más vendidos con mock fallback (Abril 2026)
+
+---
+
+## 2026-04-11 — Feat: mock fallback en carrusel "Más vendidos"
+
+- Agregado array `MOCK_TOP_SELLERS` con 8 productos farmacéuticos realistas (Paracetamol, Ibuprofeno, Omeprazol, Loratadina, Vitamina C, Metformina, Clonazepam, Amoxicilina) con precios CLP y algunos con descuento.
+- El estado inicial de `topSellers` usa los mocks — el carrusel se muestra inmediatamente sin esperar la API.
+- `loadTopSellers` solo reemplaza mocks si la API devuelve datos reales (`data.length > 0`).
+- Permite visualizar el carrusel en producción aunque no haya historial de ventas aún.
+- Build OK (57 páginas, 0 errores TypeScript).
+
+---
+
+## 2026-04-10 — Chore: desktop package-lock.json trackeado
+
+- Agregado `pharmacy-ecommerce/apps/desktop/package-lock.json` al repo (antes sin trackear).
+- Build web OK (57 páginas, 0 errores). Sin cambios funcionales.
+- Push `d088f64` → Vercel no hace rebuild (archivo fuera del root dir configurado).
 
 ---
 

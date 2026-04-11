@@ -9,6 +9,18 @@ import Image from 'next/image';
 import { useCartStore } from '@/store/cart';
 import { formatPrice, discountedPrice } from '@/lib/format';
 import { ReactNode } from 'react';
+// Mock top sellers — placeholder visual mientras no hay datos reales
+const MOCK_TOP_SELLERS: Product[] = [
+  { id: 'm1', name: 'Paracetamol 500mg x 20 comp', slug: '#', price: '1990', stock: 50, category_id: null, image_url: null, active: true, external_id: null, laboratory: 'Mintlab', therapeutic_action: null, active_ingredient: 'Paracetamol', prescription_type: 'direct', presentation: 'Comprimidos', discount_percent: null, description: null, created_at: '' },
+  { id: 'm2', name: 'Ibuprofeno 400mg x 20 comp', slug: '#', price: '2490', stock: 40, category_id: null, image_url: null, active: true, external_id: null, laboratory: 'Bestpharma', therapeutic_action: null, active_ingredient: 'Ibuprofeno', prescription_type: 'direct', presentation: 'Comprimidos', discount_percent: 10, description: null, created_at: '' },
+  { id: 'm3', name: 'Omeprazol 20mg x 14 cáps', slug: '#', price: '3290', stock: 30, category_id: null, image_url: null, active: true, external_id: null, laboratory: 'Saval', therapeutic_action: null, active_ingredient: 'Omeprazol', prescription_type: 'direct', presentation: 'Cápsulas', discount_percent: null, description: null, created_at: '' },
+  { id: 'm4', name: 'Loratadina 10mg x 10 comp', slug: '#', price: '1790', stock: 60, category_id: null, image_url: null, active: true, external_id: null, laboratory: 'Mintlab', therapeutic_action: null, active_ingredient: 'Loratadina', prescription_type: 'direct', presentation: 'Comprimidos', discount_percent: null, description: null, created_at: '' },
+  { id: 'm5', name: 'Vitamina C 1000mg x 30 comp', slug: '#', price: '4990', stock: 80, category_id: null, image_url: null, active: true, external_id: null, laboratory: 'Natural Pharma', therapeutic_action: null, active_ingredient: 'Ácido ascórbico', prescription_type: 'direct', presentation: 'Comprimidos', discount_percent: 15, description: null, created_at: '' },
+  { id: 'm6', name: 'Metformina 850mg x 30 comp', slug: '#', price: '2890', stock: 25, category_id: null, image_url: null, active: true, external_id: null, laboratory: 'Biosano', therapeutic_action: null, active_ingredient: 'Metformina', prescription_type: 'prescription', presentation: 'Comprimidos', discount_percent: null, description: null, created_at: '' },
+  { id: 'm7', name: 'Clonazepam 0.5mg x 30 comp', slug: '#', price: '3490', stock: 20, category_id: null, image_url: null, active: true, external_id: null, laboratory: 'Recalcine', therapeutic_action: null, active_ingredient: 'Clonazepam', prescription_type: 'retained', presentation: 'Comprimidos', discount_percent: null, description: null, created_at: '' },
+  { id: 'm8', name: 'Amoxicilina 500mg x 12 cáps', slug: '#', price: '3990', stock: 35, category_id: null, image_url: null, active: true, external_id: null, laboratory: 'Saval', therapeutic_action: null, active_ingredient: 'Amoxicilina', prescription_type: 'prescription', presentation: 'Cápsulas', discount_percent: null, description: null, created_at: '' },
+];
+
 // Lucide icons per category slug for professional visual recognition
 const categoryIcons: Record<string, ReactNode> = {
   'dolor-fiebre': <Pill className="w-5 h-5" />,
@@ -85,7 +97,7 @@ function HomeContent() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [discountedProducts, setDiscountedProducts] = useState<Product[]>([]);
-  const [topSellers, setTopSellers] = useState<Product[]>([]);
+  const [topSellers, setTopSellers] = useState<Product[]>(MOCK_TOP_SELLERS);
   const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
   const [showDiscountOnly, setShowDiscountOnly] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -144,7 +156,7 @@ function HomeContent() {
       const res = await fetch('/api/products/top-sellers?limit=10');
       if (res.ok) {
         const data = await res.json();
-        setTopSellers(data);
+        if (data.length > 0) setTopSellers(data);
       }
     } catch {}
   };
