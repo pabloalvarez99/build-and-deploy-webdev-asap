@@ -329,8 +329,22 @@ export default function ProductPage() {
                 </button>
               </div>
             ) : (
-              <div className="w-full py-5 px-8 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-center font-bold text-xl min-h-[64px] flex items-center justify-center">
-                No disponible
+              <div className="space-y-4">
+                <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4">
+                  <p className="font-bold text-slate-700 dark:text-slate-300 text-lg mb-1">Producto agotado</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-base">
+                    Este producto no está disponible en este momento. Puedes solicitar un presupuesto y te avisamos cuando lo tengamos.
+                  </p>
+                </div>
+                <a
+                  href={`https://wa.me/56993649604?text=${encodeURIComponent(`Hola! Quisiera solicitar presupuesto para:\n\n*${product.name}*${product.presentation ? `\nPresentación: ${product.presentation}` : ''}${product.laboratory ? `\nLaboratorio: ${product.laboratory}` : ''}\n\n¿Pueden conseguirlo? Gracias!`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-5 px-8 rounded-2xl font-bold text-xl flex items-center justify-center gap-3 min-h-[64px] bg-[#25D366] text-white hover:bg-[#1ebe5d] shadow-lg shadow-green-600/25 active:scale-[0.98] transition-all"
+                >
+                  <MessageCircle className="w-6 h-6" />
+                  Solicitar presupuesto
+                </a>
               </div>
             )}
           </div>

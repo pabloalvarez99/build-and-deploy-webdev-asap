@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { productApi, PaginatedProducts, Category, Product } from '@/lib/api';
-import { Search, ShoppingCart, Check, X, ChevronUp, Package, ChevronDown, Pill, Heart, Droplets, Apple, Stethoscope, Brain, Wind, Sparkles, Eye, Flower2, Shield, Droplet, Baby, Users, Activity, Leaf, TrendingUp } from 'lucide-react';
+import { Search, ShoppingCart, Check, X, ChevronUp, Package, ChevronDown, Pill, Heart, Droplets, Apple, Stethoscope, Brain, Wind, Sparkles, Eye, Flower2, Shield, Droplet, Baby, Users, Activity, Leaf, TrendingUp, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCartStore } from '@/store/cart';
@@ -609,20 +609,48 @@ function HomeContent() {
             )}
           </>
         ) : (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-700 py-16 text-center">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-700 py-12 text-center px-6">
             <Search className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-            <p className="text-xl text-slate-500 dark:text-slate-400 font-medium">No se encontraron productos</p>
-            {(selectedCategory || searchTerm) && (
-              <button
-                onClick={() => { handleCategoryChange(''); setSearchInput(''); setSearchTerm(''); }}
-                className="mt-4 text-emerald-600 dark:text-emerald-400 font-bold hover:underline text-lg"
-              >
-                Ver todos los productos
-              </button>
+            <p className="text-xl text-slate-500 dark:text-slate-400 font-medium mb-2">No se encontraron productos</p>
+            {searchTerm && (
+              <p className="text-slate-400 dark:text-slate-500 mb-5">
+                ¿No encontraste <strong className="text-slate-600 dark:text-slate-300">&ldquo;{searchTerm}&rdquo;</strong>? Solicita un presupuesto y lo conseguimos para ti.
+              </p>
             )}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              {(selectedCategory || searchTerm) && (
+                <button
+                  onClick={() => { handleCategoryChange(''); setSearchInput(''); setSearchTerm(''); }}
+                  className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline text-lg"
+                >
+                  Ver todos los productos
+                </button>
+              )}
+              <a
+                href={`https://wa.me/56993649604?text=${encodeURIComponent(`Hola! Busqué "${searchTerm || 'un producto'}" en su tienda y no lo encontré. ¿Pueden conseguirlo o darme un presupuesto? Gracias!`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#25D366] text-white font-bold text-base hover:bg-[#1ebe5d] transition-colors"
+              >
+                <MessageCircle className="w-5 h-5" />
+                Solicitar presupuesto
+              </a>
+            </div>
           </div>
         )}
       </main>
+
+      {/* Floating presupuesto button */}
+      <a
+        href={`https://wa.me/56993649604?text=${encodeURIComponent('Hola! Quisiera solicitar un presupuesto para un producto que no encuentro en su catálogo. ¿Pueden ayudarme?')}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`fixed z-40 flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold rounded-full shadow-lg transition-all ${cart && cart.item_count > 0 ? 'bottom-24 right-4' : 'bottom-6 right-4'} px-4 py-3`}
+        title="Solicitar presupuesto"
+      >
+        <MessageCircle className="w-5 h-5 flex-shrink-0" />
+        <span className="text-sm hidden sm:inline">Presupuesto</span>
+      </a>
 
       {/* Mobile Bottom Cart Bar - Grande y siempre visible */}
       {cart && cart.item_count > 0 && (

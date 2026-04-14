@@ -6,7 +6,7 @@ import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
 import { orderApi } from '@/lib/api';
 import { calcPoints, POINTS_TO_CLP } from '@/lib/loyalty-utils';
-import { Loader2, ShieldCheck, Store, Phone, User, Mail, Lock, Eye, EyeOff, CreditCard, Check, MessageCircle, X, AlertCircle, Star } from 'lucide-react';
+import { Loader2, ShieldCheck, Store, Phone, User, Mail, CreditCard, Check, MessageCircle, X, AlertCircle, Star } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 type PaymentMethod = 'store' | 'webpay';
@@ -22,8 +22,6 @@ export default function CheckoutPage() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
@@ -55,8 +53,8 @@ export default function CheckoutPage() {
     const trimmedEmail = email.trim();
     if (!trimmedName || trimmedName.length < 2) return 'Ingresa tu nombre';
     if (!/^\+?\d{8,12}$/.test(trimmedPhone)) return 'Teléfono inválido (ej: 912345678)';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) return 'Email inválido';
-    if (!user && paymentMethod === 'store' && password.length < 6) return 'Contraseña mínimo 6 caracteres';
+    if (paymentMethod === 'webpay' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) return 'Email inválido';
+    if (paymentMethod === 'store' && trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) return 'Email inválido';
     return null;
   };
 
@@ -129,54 +127,15 @@ export default function CheckoutPage() {
     const trimmedEmail = email.trim();
     const items = cart.items.map(item => ({ product_id: item.product_id, quantity: item.quantity }));
 
-    // Si el usuario ya está logueado, saltamos el registro/login
-    if (!user) {
-      try {
-        const regRes = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: trimmedEmail, password, name: trimmedName, surname: '', phone: trimmedPhone }),
-        });
-        const regData = await regRes.json();
-        if (!regRes.ok) {
-          if (regData.error?.includes('Ya existe')) {
-            try {
-              const { signInWithEmailAndPassword, getIdToken } = await import('firebase/auth');
-              const { auth } = await import('@/lib/firebase/client');
-              const cred = await signInWithEmailAndPassword(auth, trimmedEmail, password);
-              const idToken = await getIdToken(cred.user);
-              await fetch('/api/auth/session', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idToken }),
-              });
-            } catch {
-              setError('Ya existe una cuenta. Verifica tu contraseña.');
-              setIsProcessing(false);
-              return;
-            }
-          } else {
-            setError(regData.error || 'Error al crear la cuenta');
-            setIsProcessing(false);
-            return;
-          }
-        }
-      } catch {
-        setError('Error al crear la cuenta');
-        setIsProcessing(false);
-        return;
-      }
-    }
-
     try {
       const response = await orderApi.storePickup({
         items,
         name: trimmedName,
         surname: '',
-        email: trimmedEmail,
+        email: trimmedEmail || undefined,
         phone: trimmedPhone,
         session_id: getSessionId(),
-        use_points: usePoints && loyaltyPoints > 0,
+        use_points: usePoints && loyaltyPoints > 0 && !!user,
       });
       clearCart();
       router.push(`/checkout/reservation?order_id=${response.order_id}&code=${response.pickup_code}&expires=${encodeURIComponent(response.expires_at)}&total=${response.total}`);
@@ -204,7 +163,7 @@ export default function CheckoutPage() {
     : 0;
   const effectiveTotal = cartTotal - pointsDiscount;
   const pointsToEarn = calcPoints(effectiveTotal);
-  const canSubmit = name && phone && email && (user || paymentMethod === 'webpay' || password.length >= 6);
+  const canSubmit = name && phone && (paymentMethod === 'webpay' ? email : true);
 
   return (
     <>
@@ -440,31 +399,17 @@ export default function CheckoutPage() {
           </div>
           <div>
             <label htmlFor="ck-email" className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300 mb-2">
-              <Mail className="w-5 h-5 text-emerald-600" />Email
+              <Mail className="w-5 h-5 text-emerald-600" />
+              Email
+              {paymentMethod === 'store' && !user && (
+                <span className="text-slate-400 dark:text-slate-500 font-normal text-sm">(opcional)</span>
+              )}
             </label>
             <input id="ck-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu@email.com" className="input" autoComplete="email"
+              placeholder={paymentMethod === 'store' && !user ? 'Para recibir confirmación (opcional)' : 'tu@email.com'}
+              className="input" autoComplete="email"
               readOnly={!!user} />
           </div>
-
-          {/* Password solo para usuarios NO logueados en retiro tienda */}
-          {!user && paymentMethod === 'store' && (
-            <div>
-              <label htmlFor="ck-pass" className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                <Lock className="w-5 h-5 text-emerald-600" />Contraseña
-              </label>
-              <div className="relative">
-                <input id="ck-pass" type={showPassword ? 'text' : 'password'} value={password}
-                  onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres"
-                  className="input pr-12" autoComplete="new-password" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1">
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-              <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Para ver tus pedidos después</p>
-            </div>
-          )}
 
           {!user && (
             <p className="text-sm text-slate-500 dark:text-slate-400 text-center">

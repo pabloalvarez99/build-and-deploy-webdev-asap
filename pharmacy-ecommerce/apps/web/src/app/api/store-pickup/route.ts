@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     const { items, name, surname, email, phone, notes, session_id, use_points } = body
 
     if (!items || items.length === 0) return errorResponse('Cart is empty', 400)
-    if (!email || !phone) return errorResponse('Email and phone are required', 400)
+    if (!phone) return errorResponse('Phone is required', 400)
 
     const [db, authenticatedUser] = await Promise.all([getDb(), getAuthenticatedUser()])
     const userId = authenticatedUser?.uid ?? null
@@ -98,20 +98,22 @@ export async function POST(request: NextRequest) {
       return o
     })
 
-    // Send reservation email (non-blocking)
-    sendPickupReservationEmail({
-      to: email,
-      name: name || 'Cliente',
-      orderId: order.id,
-      pickupCode,
-      total: finalTotal,
-      expiresAt: expiresAt.toISOString(),
-      items: orderItems.map((i) => ({
-        product_name: i.product_name,
-        quantity: i.quantity,
-        price_at_purchase: String(i.price),
-      })),
-    }).catch(() => {})
+    // Send reservation email (non-blocking, solo si hay email)
+    if (email) {
+      sendPickupReservationEmail({
+        to: email,
+        name: name || 'Cliente',
+        orderId: order.id,
+        pickupCode,
+        total: finalTotal,
+        expiresAt: expiresAt.toISOString(),
+        items: orderItems.map((i) => ({
+          product_name: i.product_name,
+          quantity: i.quantity,
+          price_at_purchase: String(i.price),
+        })),
+      }).catch(() => {})
+    }
 
     return NextResponse.json({
       order_id: order.id,

@@ -64,18 +64,23 @@ async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
       return NextResponse.redirect(`${BASE_URL}/checkout/webpay/error?reason=order_not_found`, { status: 303 })
     }
 
+    // Generar pickup_code para retiro en tienda
+    const pickupCode = String(Math.floor(100000 + Math.random() * 900000))
+    const pickupExpires = new Date(Date.now() + 24 * 60 * 60 * 1000)
+
     // Atomic compare-and-swap: update only if still 'pending' (prevents double-commit)
     const { count } = await db.orders.updateMany({
       where: { id: order.id, status: 'pending' },
-      data: { status: 'paid' },
+      data: { status: 'paid', pickup_code: pickupCode, reservation_expires_at: pickupExpires },
     })
 
     const fullName = [order.guest_name, order.guest_surname].filter(Boolean).join(' ')
 
     // Another request already committed — redirect to success anyway
     if (count === 0) {
+      const existing = await db.orders.findUnique({ where: { id: order.id }, select: { pickup_code: true, reservation_expires_at: true, total: true } })
       return NextResponse.redirect(
-        `${BASE_URL}/checkout/webpay/success?order_id=${order.id}&total=${order.total}&name=${encodeURIComponent(fullName)}&token=${tokenWs}`,
+        `${BASE_URL}/checkout/reservation?order_id=${order.id}&code=${existing?.pickup_code ?? pickupCode}&expires=${encodeURIComponent((existing?.reservation_expires_at ?? pickupExpires).toISOString())}&total=${existing?.total ?? order.total}`,
         { status: 303 }
       )
     }
@@ -133,7 +138,7 @@ async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
     }
 
     return NextResponse.redirect(
-      `${BASE_URL}/checkout/webpay/success?order_id=${order.id}&total=${order.total}&name=${encodeURIComponent(fullName)}&token=${tokenWs}`,
+      `${BASE_URL}/checkout/reservation?order_id=${order.id}&code=${pickupCode}&expires=${encodeURIComponent(pickupExpires.toISOString())}&total=${order.total}&paid=webpay`,
       { status: 303 }
     )
   } catch (error) {

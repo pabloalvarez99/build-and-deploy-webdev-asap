@@ -16,6 +16,7 @@ function ReservationContent() {
   const code = searchParams.get('code');
   const expires = searchParams.get('expires');
   const total = searchParams.get('total');
+  const paidWithWebpay = searchParams.get('paid') === 'webpay';
   const [copied, setCopied] = useState(false);
   const { user } = useAuthStore();
 
@@ -57,7 +58,7 @@ function ReservationContent() {
           <CheckCircle className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-1">
-          Reserva creada
+          {paidWithWebpay ? '¡Pago confirmado!' : 'Reserva creada'}
         </h1>
         <p className="text-slate-500 dark:text-slate-400 text-lg">
           Confirma por WhatsApp para que preparen tu pedido
