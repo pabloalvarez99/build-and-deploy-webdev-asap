@@ -270,10 +270,26 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Sync automático de barcodes: asociar productos recién importados con barcode_catalog
+    let barcodesLinked = 0;
+    try {
+      const syncResult = await db.$executeRaw`
+        INSERT INTO product_barcodes (product_id, barcode)
+        SELECT p.id, bc.barcode
+        FROM barcode_catalog bc
+        JOIN products p ON p.external_id = bc.external_id
+        ON CONFLICT (barcode) DO NOTHING
+      `;
+      barcodesLinked = syncResult;
+    } catch {
+      // No bloquear el import si falla el sync de barcodes
+    }
+
     return NextResponse.json({
       success: true,
       inserted,
       updated,
+      barcodes_linked: barcodesLinked,
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {

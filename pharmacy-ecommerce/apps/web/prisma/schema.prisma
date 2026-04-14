@@ -57,6 +57,13 @@ model products {
   product_barcodes          product_barcodes[]
 }
 
+model barcode_catalog {
+  external_id String @db.VarChar(50)
+  barcode     String @id @db.VarChar(50)
+
+  @@index([external_id])
+}
+
 model product_barcodes {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   product_id String   @db.Uuid
