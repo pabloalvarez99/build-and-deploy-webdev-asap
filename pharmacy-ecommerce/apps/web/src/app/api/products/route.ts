@@ -45,7 +45,19 @@ export async function GET(request: NextRequest) {
       { laboratory: { contains: s, mode: 'insensitive' } },
     ]
   }
-  if (searchParams.get('barcode')) where.external_id = searchParams.get('barcode')
+  const barcodeVal = searchParams.get('barcode')
+  if (barcodeVal) {
+    const barcodeRecord = await db.product_barcodes.findUnique({
+      where: { barcode: barcodeVal },
+      select: { product_id: true },
+    })
+    if (barcodeRecord) {
+      where.id = barcodeRecord.product_id
+    } else {
+      // Fallback: intentar por external_id (compatibilidad anterior)
+      where.external_id = barcodeVal
+    }
+  }
   if (searchParams.get('in_stock') === 'true') where.stock = { gt: 0 }
   if (searchParams.get('no_image') === 'true') where.image_url = null
   if (searchParams.get('has_discount') === 'true') where.discount_percent = { gt: 0 }
