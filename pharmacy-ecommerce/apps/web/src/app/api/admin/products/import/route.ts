@@ -83,6 +83,8 @@ const EXTRA_MAPPINGS: Record<string, string> = {
   'DESMAQUILLANTE': 'higiene-cuidado-personal',
 };
 
+export const maxDuration = 300;
+
 export async function POST(request: NextRequest) {
   try {
     const admin = await getAdminUser();
@@ -207,15 +209,25 @@ export async function POST(request: NextRequest) {
 
     // Update existing products + registrar delta de stock como stock_movement
     if (updateProducts && updateProducts.length > 0) {
-      for (const row of updateProducts as Record<string, string>[]) {
-        const externalId = String(row.id);
-        const newStock = parseInt(row.stock) || 0;
-        try {
-          const existing = await db.products.findFirst({
-            where: { external_id: externalId },
-            select: { id: true, stock: true },
-          });
+      const rows = updateProducts as Record<string, string>[];
 
+      // 1 query para obtener todos los productos existentes a actualizar
+      const updateExtIds = rows.map((r) => String(r.id)).filter(Boolean);
+      const existingForUpdate = await db.products.findMany({
+        where: { external_id: { in: updateExtIds } },
+        select: { id: true, stock: true, external_id: true },
+      });
+      const existingMap = new Map(existingForUpdate.map((p) => [String(p.external_id), p]));
+
+      const stockMovements: { product_id: string; delta: number; reason: string; admin_id: string }[] = [];
+
+      // Actualizar en batches paralelos en lugar de loop secuencial
+      const UPDATE_BATCH = 20;
+      for (let i = 0; i < rows.length; i += UPDATE_BATCH) {
+        const batch = rows.slice(i, i + UPDATE_BATCH);
+        const results = await Promise.allSettled(batch.map(async (row) => {
+          const externalId = String(row.id);
+          const newStock = parseInt(row.stock) || 0;
           await db.products.updateMany({
             where: { external_id: externalId },
             data: {
@@ -229,23 +241,32 @@ export async function POST(request: NextRequest) {
               description: buildDescription(row),
             },
           });
+          return { row, externalId, newStock };
+        }));
 
-          // Registrar el delta de stock (positivo = reposición, negativo = corrección)
-          if (existing && newStock !== existing.stock) {
-            await db.stock_movements.create({
-              data: {
+        for (const result of results) {
+          if (result.status === 'fulfilled') {
+            const { row, externalId, newStock } = result.value;
+            updated++;
+            const existing = existingMap.get(externalId);
+            if (existing && newStock !== existing.stock) {
+              stockMovements.push({
                 product_id: existing.id,
                 delta: newStock - existing.stock,
                 reason: 'import_excel',
                 admin_id: admin.uid,
-              },
-            });
+              });
+            }
+          } else {
+            const row = batch[results.indexOf(result)] as Record<string, string>;
+            errors.push(`Error updating ${row?.producto}: ${result.reason instanceof Error ? result.reason.message : String(result.reason)}`);
           }
-
-          updated++;
-        } catch (err) {
-          errors.push(`Error updating ${row.producto}: ${err instanceof Error ? err.message : String(err)}`);
         }
+      }
+
+      // 1 sola query para todos los stock_movements
+      if (stockMovements.length > 0) {
+        await db.stock_movements.createMany({ data: stockMovements });
       }
     }
 
