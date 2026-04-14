@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db'
 import { webpayTransaction } from '@/lib/transbank'
 import { sendWebpayConfirmation, sendLowStockAlert } from '@/lib/email'
 import { awardLoyaltyPoints } from '@/lib/loyalty'
+import { adminAuth } from '@/lib/firebase/admin'
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL!
 
@@ -101,10 +102,14 @@ async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
       }).catch(console.error)
     }
 
-    // Send confirmation email (non-blocking)
-    if (order.guest_email) {
+    // Send confirmation email (non-blocking) — guest o usuario registrado
+    const emailDest = order.guest_email || await (async () => {
+      if (!order.user_id) return null
+      try { return (await adminAuth.getUser(order.user_id)).email ?? null } catch { return null }
+    })()
+    if (emailDest) {
       sendWebpayConfirmation({
-        to: order.guest_email,
+        to: emailDest,
         name: order.guest_name || 'Cliente',
         orderId: order.id,
         total: Number(order.total),
