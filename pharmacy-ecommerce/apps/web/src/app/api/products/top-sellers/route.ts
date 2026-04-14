@@ -3,8 +3,8 @@ import { getDb } from '@/lib/db'
 
 /**
  * GET /api/products/top-sellers?limit=10
- * Retorna los N productos más repuestos vía importación de Excel (stock_movements reason='import_excel').
- * Solo cuenta deltas positivos (reposiciones). Fallback: productos con mayor descuento si no hay historial.
+ * Retorna los N productos más vendidos según order_items de órdenes pagadas/completadas.
+ * Fallback: productos con mayor stock si no hay historial de ventas suficiente.
  * Público — no requiere autenticación.
  */
 export async function GET(request: Request) {
@@ -23,16 +23,19 @@ export async function GET(request: Request) {
     stock: true,
   }
 
-  // Sumar unidades importadas por producto (solo deltas positivos = reposiciones)
-  const movements = await db.stock_movements.findMany({
-    where: { reason: 'import_excel', delta: { gt: 0 } },
-    select: { product_id: true, delta: true },
+  // Sumar unidades vendidas por producto en órdenes pagadas/completadas/aprobadas
+  const soldItems = await db.order_items.findMany({
+    where: {
+      orders: { status: { in: ['paid', 'completed', 'approved'] } },
+      product_id: { not: null },
+    },
+    select: { product_id: true, quantity: true },
   })
 
   const unitsByProduct: Record<string, number> = {}
-  for (const m of movements) {
-    if (!m.product_id) continue
-    unitsByProduct[m.product_id] = (unitsByProduct[m.product_id] ?? 0) + m.delta
+  for (const item of soldItems) {
+    if (!item.product_id) continue
+    unitsByProduct[item.product_id] = (unitsByProduct[item.product_id] ?? 0) + item.quantity
   }
 
   const topIds = Object.entries(unitsByProduct)
@@ -40,11 +43,11 @@ export async function GET(request: Request) {
     .slice(0, limit)
     .map(([id]) => id)
 
-  // Fallback: si no hay suficiente historial de imports, mostrar productos con descuento activo
+  // Fallback: si no hay suficientes ventas reales, mostrar los de mayor stock con imagen
   if (topIds.length < 4) {
     const featured = await db.products.findMany({
-      where: { active: true, stock: { gt: 0 }, discount_percent: { gt: 0 } },
-      orderBy: { discount_percent: 'desc' },
+      where: { active: true, stock: { gt: 0 }, image_url: { not: null } },
+      orderBy: { stock: 'desc' },
       take: limit,
       select: productSelect,
     })
