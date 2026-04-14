@@ -1,15 +1,15 @@
-# Contexto de Sesión — Tu Farmacia (actualizado Abril 10, 2026)
+# Contexto de Sesión — Tu Farmacia (actualizado Abril 13, 2026)
 
 > **Este archivo es el punto de entrada para la próxima sesión.**
 > Tiene todo lo necesario para retomar sin buscar en bitácora ni historial.
 
 ---
 
-## Estado actual: ERP COMPLETO ✅ — Fidelización + Canjeo de Puntos + Electron POS
+## Estado actual: ERP COMPLETO ✅ — Barcodes POS + Electron build + Emails Webpay
 
-**Último commit:** `6fd875b` — fix: orden no encontrada en admin + POS sin productos en Electron
-**App live:** https://tu-farmacia.vercel.app
-**Admin panel:** https://tu-farmacia.vercel.app/admin
+**Último commit:** `5e849d0` — feat: ícono Tu Farmacia para Electron desktop app
+**App live:** https://tu-farmacia.cl (también https://tu-farmacia.vercel.app)
+**Admin panel:** https://tu-farmacia.cl/admin
 
 ---
 
@@ -48,32 +48,18 @@
 
 ---
 
+## Completado Abril 13, 2026
+
+- ✅ **Import Excel**: fix timeout (batches paralelos), fix `stock_movements_reason_check`, fix "Too many connections" (max_connections 60)
+- ✅ **Códigos de barra POS**: tabla `product_barcodes` + `barcode_catalog` (3,160 barcodes del CSV). Sync automático al final de cada import Excel. API `?barcode=<EAN>` busca en product_barcodes primero.
+- ✅ **Email Webpay usuarios registrados**: antes solo se enviaba a guests. Ahora busca email en Firebase Admin si hay `user_id`.
+- ✅ **Electron icon + build**: cruz farmacéutica verde (emerald-600), ICO multi-resolución. `Tu-Farmacia-Portable.exe` + `Tu-Farmacia-Setup.exe` (71MB) en `apps/desktop/dist/`.
+- ✅ **Firebase Action URL**: `https://tu-farmacia.cl/auth/reset-password` configurado en Firebase Console.
+- ✅ **CLAUDE.md actualizado**: eliminadas todas las referencias a Supabase. Refleja stack real (Firebase Auth + Cloud SQL).
+
 ## Tareas pendientes (próxima sesión)
 
-### 1. 🔴 Email de notificación de órdenes Webpay pendientes
-El usuario reportó que no recibió email para la orden `#0cf10df5` (Webpay, status "Pendiente").
-- El email de confirmación Webpay se envía en `/api/webpay/return` al confirmar el pago.
-- Una orden "Pendiente" significa que Webpay aún no ha confirmado (el usuario no completó el pago o está en proceso).
-- **Verificar**: ¿Está `RESEND_API_KEY` configurado en Vercel? ¿Está `alert_email` en `admin_settings` DB?
-- Ver `/api/admin/settings` o Supabase/Cloud SQL directamente.
-
-### 2. 🟡 Electron app — Activos pendientes
-- Agregar `assets/icon.ico` en `pharmacy-ecommerce/apps/desktop/assets/` para el `.exe`
-- Hacer build: `cd pharmacy-ecommerce/apps/desktop && npm run build` → genera `dist/*.exe`
-
-### 3. 🟡 Barcodes en productos
-- Cargar `external_id` en productos de la BD cuando el usuario entregue el Excel/CSV con códigos de barra
-- El POS ya tiene el barcode scanner funcionando — solo falta los datos
-
-### 4. 🟡 Credenciales Webpay producción
-- Cambiar `TRANSBANK_ENVIRONMENT=integration` → `production` en Vercel env vars
-- Ingresar `TRANSBANK_COMMERCE_CODE` y `TRANSBANK_API_KEY` reales
-
-### 5. 🟡 Configurar Firebase Action URL (branded reset-password)
-Firebase Console → Authentication → Templates → Password reset → Customize action URL:
-```
-https://tu-farmacia.vercel.app/auth/reset-password
-```
+> No hay tareas críticas pendientes. El sistema está completo y en producción.
 
 ---
 
@@ -119,9 +105,10 @@ DB_PASSWORD=srcmlaYhkEo19YivrG4FDLH0woou
 DB_NAME=farmacia
 DATABASE_URL=postgresql://farmacia:srcmlaYhkEo19YivrG4FDLH0woou@34.39.232.207:5432/farmacia
 GOOGLE_CLOUD_VISION_API_KEY=AIzaSyBvh-lRmzwPjvCCeyKm3zry2v50JCTeJUs
-TRANSBANK_ENVIRONMENT=integration   # ← cambiar a 'production' con credenciales reales
-# RESEND_API_KEY= (verificar si está configurado)
-# CRON_SECRET= (verificar si está configurado)
+TRANSBANK_ENVIRONMENT=production
+TRANSBANK_COMMERCE_CODE=597053071888
+# RESEND_API_KEY= (configurado en Vercel)
+# CRON_SECRET= (configurado en Vercel)
 ```
 
 ---
