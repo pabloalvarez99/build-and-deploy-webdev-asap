@@ -81,6 +81,10 @@ export default function AdminProductsPage() {
  const [editingStockValue, setEditingStockValue] = useState<string>('');
  const [stockModalProduct, setStockModalProduct] = useState<{ id: string; name: string; stock: number } | null>(null);
 
+ // Barcodes del producto en edición
+ const [editingProductExternalId, setEditingProductExternalId] = useState<string | null>(null);
+ const [editingProductBarcodes, setEditingProductBarcodes] = useState<string[]>([]);
+
  // Form state
  const [formData, setFormData] = useState({
  name: '',
@@ -225,7 +229,7 @@ export default function AdminProductsPage() {
  }
  };
 
- const handleEdit = (product: any) => {
+ const handleEdit = async (product: any) => {
  setFormData({
  name: product.name,
  slug: product.slug,
@@ -243,8 +247,15 @@ export default function AdminProductsPage() {
  cost_price: (product as any).cost_price ? String((product as any).cost_price) : '',
  active: product.active ?? true,
  });
+ setEditingProductExternalId(product.external_id || null);
+ setEditingProductBarcodes([]);
  setEditingProduct(product.id);
  setShowForm(true);
+ // Cargar barcodes en segundo plano
+ fetch(`/api/admin/products/${product.id}`)
+   .then(r => r.ok ? r.json() : null)
+   .then(data => { if (data?.barcodes) setEditingProductBarcodes(data.barcodes); })
+   .catch(() => {});
  };
 
  const handleDuplicate = (product: any) => {
@@ -1191,6 +1202,35 @@ export default function AdminProductsPage() {
  </label>
  </div>
 
+ {/* ID externo y códigos de barra — solo en modo edición */}
+ {editingProduct && (editingProductExternalId || editingProductBarcodes.length > 0) && (
+   <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-4 space-y-3">
+     <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Identificadores POS</p>
+     {editingProductExternalId && (
+       <div>
+         <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">ID Lista de Precios</p>
+         <div className="flex items-center gap-2">
+           <code className="text-sm font-mono bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-slate-700 dark:text-slate-300">
+             {editingProductExternalId}
+           </code>
+         </div>
+       </div>
+     )}
+     {editingProductBarcodes.length > 0 && (
+       <div>
+         <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Códigos de barra</p>
+         <div className="flex flex-wrap gap-2">
+           {editingProductBarcodes.map(bc => (
+             <code key={bc} className="text-sm font-mono bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-slate-700 dark:text-slate-300">
+               {bc}
+             </code>
+           ))}
+         </div>
+       </div>
+     )}
+   </div>
+ )}
+
  <div className="flex gap-3 pt-4">
  <button type="submit" className="btn btn-primary flex-1">
  {editingProduct ? 'Guardar Cambios' : 'Crear Producto'}
@@ -1200,6 +1240,8 @@ export default function AdminProductsPage() {
  onClick={() => {
  setShowForm(false);
  setEditingProduct(null);
+ setEditingProductExternalId(null);
+ setEditingProductBarcodes([]);
  resetForm();
  }}
  className="btn btn-secondary"

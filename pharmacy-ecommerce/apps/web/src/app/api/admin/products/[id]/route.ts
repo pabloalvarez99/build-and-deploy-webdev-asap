@@ -2,6 +2,37 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const admin = await getAdminUser();
+    if (!admin) return errorResponse('Unauthorized', 403);
+
+    const { id } = await params;
+    const db = await getDb();
+
+    const product = await db.products.findUnique({
+      where: { id },
+      include: { product_barcodes: { select: { barcode: true } } },
+    });
+
+    if (!product) return errorResponse('Not found', 404);
+
+    return NextResponse.json({
+      ...product,
+      price: product.price.toString(),
+      cost_price: product.cost_price?.toString() ?? null,
+      barcodes: product.product_barcodes.map((b) => b.barcode),
+      created_at: product.created_at.toISOString(),
+      updated_at: product.updated_at.toISOString(),
+    });
+  } catch (error) {
+    return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);
+  }
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
