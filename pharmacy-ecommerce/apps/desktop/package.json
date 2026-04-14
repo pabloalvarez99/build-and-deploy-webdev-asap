@@ -13,7 +13,9 @@
     "appId": "cl.tufarmacia.desktop",
     "productName": "Tu Farmacia",
     "copyright": "Tu Farmacia Coquimbo",
+    "icon": "assets/icon.ico",
     "win": {
+      "icon": "assets/icon.ico",
       "target": [
         { "target": "portable", "arch": ["x64"] },
         { "target": "nsis", "arch": ["x64"] }
