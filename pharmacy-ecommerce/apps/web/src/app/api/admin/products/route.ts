@@ -10,6 +10,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const db = await getDb();
 
+    const barcodes: string[] = Array.isArray(body.barcodes)
+      ? body.barcodes.map((b: string) => b.trim()).filter((b: string) => b.length > 0)
+      : [];
+
     const product = await db.products.create({
       data: {
         name: body.name,
@@ -26,6 +30,12 @@ export async function POST(request: NextRequest) {
         presentation: body.presentation || null,
         discount_percent: body.discount_percent || null,
         active: body.active !== false,
+        external_id: body.external_id || null,
+        ...(barcodes.length > 0 && {
+          product_barcodes: {
+            createMany: { data: barcodes.map((barcode) => ({ barcode })), skipDuplicates: true },
+          },
+        }),
       },
     });
 

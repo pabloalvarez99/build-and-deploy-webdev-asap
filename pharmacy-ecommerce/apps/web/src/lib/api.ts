@@ -128,7 +128,7 @@ export const orderApi = {
     items: { product_id: string; quantity: number }[]
     name: string
     surname: string
-    email: string
+    email?: string
     phone: string
     notes?: string
     session_id: string
@@ -237,6 +237,8 @@ export interface CreateProductData {
   discount_percent?: number
   cost_price?: number | null
   active?: boolean
+  external_id?: string | null
+  barcodes?: string[]
 }
 
 export interface CartItem {

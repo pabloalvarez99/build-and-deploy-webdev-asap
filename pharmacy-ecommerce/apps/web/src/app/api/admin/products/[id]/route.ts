@@ -65,6 +65,34 @@ export async function PUT(
     if (body.cost_price !== undefined) {
       updateData.cost_price = body.cost_price === '' || body.cost_price === null ? null : parseFloat(body.cost_price);
     }
+    if (body.external_id !== undefined) {
+      updateData.external_id = body.external_id || null;
+    }
+
+    // If barcodes array is provided, replace all existing ones atomically
+    if (Array.isArray(body.barcodes)) {
+      const barcodes: string[] = body.barcodes
+        .map((b: string) => b.trim())
+        .filter((b: string) => b.length > 0);
+
+      const [product] = await db.$transaction([
+        db.products.update({ where: { id }, data: updateData }),
+        db.product_barcodes.deleteMany({ where: { product_id: id } }),
+        ...(barcodes.length > 0
+          ? [db.product_barcodes.createMany({
+              data: barcodes.map((barcode) => ({ product_id: id, barcode })),
+              skipDuplicates: true,
+            })]
+          : []),
+      ]);
+
+      return NextResponse.json({
+        ...product,
+        price: product.price.toString(),
+        created_at: product.created_at.toISOString(),
+        updated_at: product.updated_at.toISOString(),
+      });
+    }
 
     const product = await db.products.update({
       where: { id },

@@ -81,9 +81,10 @@ export default function AdminProductsPage() {
  const [editingStockValue, setEditingStockValue] = useState<string>('');
  const [stockModalProduct, setStockModalProduct] = useState<{ id: string; name: string; stock: number } | null>(null);
 
- // Barcodes del producto en edición
- const [editingProductExternalId, setEditingProductExternalId] = useState<string | null>(null);
+ // Identificadores POS — external_id y barcodes son editables en create y edit
+ const [editingProductExternalId, setEditingProductExternalId] = useState<string>('');
  const [editingProductBarcodes, setEditingProductBarcodes] = useState<string[]>([]);
+ const [newBarcodeInput, setNewBarcodeInput] = useState<string>('');
 
  // Form state
  const [formData, setFormData] = useState({
@@ -210,6 +211,8 @@ export default function AdminProductsPage() {
  discount_percent: parseInt(formData.discount_percent) || 0,
  cost_price: formData.cost_price ? parseFloat(formData.cost_price) : null,
  active: formData.active,
+ external_id: editingProductExternalId.trim() || null,
+ barcodes: editingProductBarcodes,
  };
 
  if (editingProduct) {
@@ -220,6 +223,9 @@ export default function AdminProductsPage() {
 
  setShowForm(false);
  setEditingProduct(null);
+ setEditingProductExternalId('');
+ setEditingProductBarcodes([]);
+ setNewBarcodeInput('');
  resetForm();
  loadProducts();
  loadLaboratories(); // Refresh labs list if a new one was added
@@ -247,8 +253,9 @@ export default function AdminProductsPage() {
  cost_price: (product as any).cost_price ? String((product as any).cost_price) : '',
  active: product.active ?? true,
  });
- setEditingProductExternalId(product.external_id || null);
+ setEditingProductExternalId(product.external_id || '');
  setEditingProductBarcodes([]);
+ setNewBarcodeInput('');
  setEditingProduct(product.id);
  setShowForm(true);
  // Cargar barcodes en segundo plano
@@ -612,6 +619,9 @@ export default function AdminProductsPage() {
  onClick={() => {
  resetForm();
  setEditingProduct(null);
+ setEditingProductExternalId('');
+ setEditingProductBarcodes([]);
+ setNewBarcodeInput('');
  setShowForm(true);
  }}
  className="btn btn-primary flex items-center gap-2"
@@ -1202,34 +1212,80 @@ export default function AdminProductsPage() {
  </label>
  </div>
 
- {/* ID externo y códigos de barra — solo en modo edición */}
- {editingProduct && (editingProductExternalId || editingProductBarcodes.length > 0) && (
-   <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-4 space-y-3">
-     <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Identificadores POS</p>
-     {editingProductExternalId && (
-       <div>
-         <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">ID Lista de Precios</p>
-         <div className="flex items-center gap-2">
-           <code className="text-sm font-mono bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-slate-700 dark:text-slate-300">
-             {editingProductExternalId}
-           </code>
-         </div>
-       </div>
-     )}
-     {editingProductBarcodes.length > 0 && (
-       <div>
-         <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Códigos de barra</p>
-         <div className="flex flex-wrap gap-2">
-           {editingProductBarcodes.map(bc => (
-             <code key={bc} className="text-sm font-mono bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-slate-700 dark:text-slate-300">
-               {bc}
-             </code>
-           ))}
-         </div>
-       </div>
-     )}
+ {/* ID externo y códigos de barra — editables en crear y editar */}
+ <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-4 space-y-4">
+   <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Identificadores POS</p>
+
+   {/* ID externo */}
+   <div>
+     <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">ID Lista de Precios (external_id)</label>
+     <input
+       type="text"
+       value={editingProductExternalId}
+       onChange={(e) => setEditingProductExternalId(e.target.value)}
+       className="input font-mono text-sm"
+       placeholder="Ej: 12345"
+     />
    </div>
- )}
+
+   {/* Códigos de barra */}
+   <div>
+     <label className="block text-xs text-slate-500 dark:text-slate-400 mb-2">Códigos de barra (EAN)</label>
+     {editingProductBarcodes.length > 0 && (
+       <div className="flex flex-wrap gap-2 mb-2">
+         {editingProductBarcodes.map((bc) => (
+           <span
+             key={bc}
+             className="inline-flex items-center gap-1.5 text-sm font-mono bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1"
+           >
+             {bc}
+             <button
+               type="button"
+               onClick={() => setEditingProductBarcodes(prev => prev.filter(b => b !== bc))}
+               className="text-slate-400 hover:text-red-500 transition-colors ml-1"
+               title="Eliminar"
+             >
+               ×
+             </button>
+           </span>
+         ))}
+       </div>
+     )}
+     <div className="flex gap-2">
+       <input
+         type="text"
+         value={newBarcodeInput}
+         onChange={(e) => setNewBarcodeInput(e.target.value)}
+         onKeyDown={(e) => {
+           if (e.key === 'Enter') {
+             e.preventDefault();
+             const val = newBarcodeInput.trim();
+             if (val && !editingProductBarcodes.includes(val)) {
+               setEditingProductBarcodes(prev => [...prev, val]);
+             }
+             setNewBarcodeInput('');
+           }
+         }}
+         className="input font-mono text-sm flex-1"
+         placeholder="Escanear o escribir código..."
+       />
+       <button
+         type="button"
+         onClick={() => {
+           const val = newBarcodeInput.trim();
+           if (val && !editingProductBarcodes.includes(val)) {
+             setEditingProductBarcodes(prev => [...prev, val]);
+           }
+           setNewBarcodeInput('');
+         }}
+         className="btn btn-secondary text-sm px-3"
+       >
+         Agregar
+       </button>
+     </div>
+     <p className="text-xs text-slate-400 mt-1">Presiona Enter o haz clic en Agregar. Un producto puede tener múltiples códigos.</p>
+   </div>
+ </div>
 
  <div className="flex gap-3 pt-4">
  <button type="submit" className="btn btn-primary flex-1">
@@ -1240,8 +1296,9 @@ export default function AdminProductsPage() {
  onClick={() => {
  setShowForm(false);
  setEditingProduct(null);
- setEditingProductExternalId(null);
+ setEditingProductExternalId('');
  setEditingProductBarcodes([]);
+ setNewBarcodeInput('');
  resetForm();
  }}
  className="btn btn-secondary"
