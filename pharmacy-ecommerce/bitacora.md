@@ -1,6 +1,19 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: ERP COMPLETO ✅ — Carrusel más vendidos con mock fallback (Abril 2026)
+## Estado actual: ERP COMPLETO ✅ — Barcodes y external_id editables en admin (Abril 2026)
+
+---
+
+## 2026-04-16 — Feat: external_id y códigos de barra editables en formulario de productos
+
+- **external_id**: ahora editable en el formulario tanto al crear como al editar un producto (antes solo lectura)
+- **Barcodes**: UI de chips con botón × para eliminar, input para agregar por Enter o botón "Agregar"
+- Un producto puede tener múltiples códigos EAN; se guardan en tabla `product_barcodes`
+- API `POST /api/admin/products`: crea barcodes junto al producto en la misma operación
+- API `PUT /api/admin/products/[id]`: reemplaza todos los barcodes atómicamente en transacción Prisma (deleteMany + createMany)
+- `api.ts`: `CreateProductData` ahora incluye `external_id` y `barcodes` opcionales
+- Regenerado el cliente Prisma (`prisma generate`) para incluir la relación `product_barcodes`
+- Fix colateral: `email` en `storePickup` ahora es opcional en el tipo TypeScript
 
 ---
 
