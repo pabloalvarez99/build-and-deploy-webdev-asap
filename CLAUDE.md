@@ -28,6 +28,33 @@ E-commerce de farmacia para adultos mayores en Coquimbo, Chile.
 - **Vercel root dir**: `pharmacy-ecommerce/apps/web`
 - **Deploy**: `git push origin main` → auto-deploy en Vercel
 
+## Protocolo de Deploy — OBLIGATORIO después de cada prompt
+
+Después de cada cambio funcional, ejecutar siempre en orden:
+
+```bash
+# 1. Build local (verifica TypeScript y errores)
+cd pharmacy-ecommerce/apps/web
+NODE_OPTIONS=--max-old-space-size=6144 ./node_modules/.bin/next build
+
+# 2. Commit y push (dispara deploy automático en Vercel)
+cd /c/Users/Admin/Documents/GitHub/build-and-deploy-webdev-asap
+git add <archivos>
+git commit -m "feat/fix: descripción"
+git push origin main
+```
+
+**Regla**: Nunca terminar un prompt sin hacer push. Los cambios deben verse en producción inmediatamente.
+
+## Sincronización Web + Electron
+
+Toda la lógica de negocio vive en la web app (`pharmacy-ecommerce/apps/web`). La app Electron (`pharmacy-ecommerce/apps/desktop`) es solo un wrapper que carga la URL de producción — **no tiene lógica propia**.
+
+- **Nunca duplicar lógica** entre web y Electron
+- Cualquier feature nuevo se implementa en la web app y automáticamente queda disponible en Electron al recargar
+- La app Electron se actualiza sin rebuild: solo recarga la URL de Vercel
+- El POS (`/admin/pos`), el admin y la tienda son la misma app web, accesibles desde ambas plataformas
+
 ## Database (Cloud SQL PostgreSQL 15)
 - ~1482 productos, 17 categorías
 - **Sin RLS** — seguridad via Firebase Auth + verificación server-side en API routes
