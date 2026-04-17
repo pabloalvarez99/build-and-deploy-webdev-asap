@@ -8,6 +8,21 @@ function getDefaultFrom(daysAgo: number): string {
   return d.toISOString().split('T')[0];
 }
 
+function buildOrderWhere(dateFilter: { gte: Date; lte: Date }) {
+  return {
+    created_at: dateFilter,
+    OR: [
+      { status: { in: ['paid', 'processing', 'shipped', 'delivered'] } },
+      { status: 'completed', payment_provider: { in: ['pos_cash', 'pos_debit', 'pos_credit'] } },
+    ],
+  };
+}
+
+function computeKpis(orders: { total: any }[]) {
+  const totalRevenue = orders.reduce((s, o) => s + Number(o.total), 0);
+  return { totalRevenue, totalOrders: orders.length, avgTicket: orders.length > 0 ? totalRevenue / orders.length : 0 };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const admin = await getAdminUser();
@@ -19,31 +34,28 @@ export async function GET(request: NextRequest) {
 
     const db = await getDb();
 
-    const dateFilter = {
-      gte: new Date(from + 'T00:00:00Z'),
-      lte: new Date(to + 'T23:59:59Z'),
-    };
+    const fromDate = new Date(from + 'T00:00:00Z');
+    const toDate = new Date(to + 'T23:59:59Z');
+    const periodMs = toDate.getTime() - fromDate.getTime();
 
-    // Fetch both online and POS orders
-    const orders = await db.orders.findMany({
-      where: {
-        created_at: dateFilter,
-        OR: [
-          { status: { in: ['paid', 'processing', 'shipped', 'delivered'] } },
-          {
-            status: 'completed',
-            payment_provider: { in: ['pos_cash', 'pos_debit', 'pos_credit'] },
-          },
-        ],
-      },
-      select: {
-        id: true,
-        total: true,
-        created_at: true,
-        status: true,
-        payment_provider: true,
-      },
-    });
+    // Previous period: same duration ending the day before `from`
+    const prevTo = new Date(fromDate.getTime() - 24 * 60 * 60 * 1000);
+    const prevFrom = new Date(prevTo.getTime() - periodMs);
+
+    const dateFilter = { gte: fromDate, lte: toDate };
+    const prevDateFilter = { gte: prevFrom, lte: prevTo };
+
+    // Fetch both periods in parallel
+    const [orders, prevOrders] = await Promise.all([
+      db.orders.findMany({
+        where: buildOrderWhere(dateFilter),
+        select: { id: true, total: true, created_at: true, status: true, payment_provider: true },
+      }),
+      db.orders.findMany({
+        where: buildOrderWhere(prevDateFilter),
+        select: { total: true },
+      }),
+    ]);
 
     const orderIds = orders.map((o) => o.id);
 
@@ -172,8 +184,11 @@ export async function GET(request: NextRequest) {
       .map((c) => ({ ...c, margin: c.revenue - c.cost }))
       .sort((a, b) => b.revenue - a.revenue);
 
+    const prevKpis = computeKpis(prevOrders);
+
     return NextResponse.json({
       kpis: { totalRevenue, totalOrders, avgTicket, totalCost, grossMargin, marginPct },
+      prevKpis: { totalRevenue: prevKpis.totalRevenue, totalOrders: prevKpis.totalOrders, avgTicket: prevKpis.avgTicket },
       channelBreakdown,
       salesByDay: salesByDayArr,
       topProducts,

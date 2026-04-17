@@ -30,6 +30,11 @@ interface ReportData {
     grossMargin: number;
     marginPct: number;
   };
+  prevKpis?: {
+    totalRevenue: number;
+    totalOrders: number;
+    avgTicket: number;
+  };
   channelBreakdown: {
     online: { orders: number; revenue: number };
     pos: { orders: number; revenue: number; cash: number; debit: number; credit: number };
@@ -67,6 +72,22 @@ function getFromDate(days: number) {
 
 function pct(n: number) {
   return `${n >= 0 ? '+' : ''}${n.toFixed(1)}%`;
+}
+
+function deltaPct(curr: number, prev: number): number | null {
+  if (prev === 0) return null;
+  return ((curr - prev) / prev) * 100;
+}
+
+function DeltaBadge({ curr, prev }: { curr: number; prev: number }) {
+  const d = deltaPct(curr, prev);
+  if (d === null) return null;
+  const positive = d >= 0;
+  return (
+    <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${positive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
+      {positive ? '▲' : '▼'} {Math.abs(d).toFixed(1)}%
+    </span>
+  );
 }
 
 export default function AdminReportesPage() {
@@ -191,12 +212,12 @@ export default function AdminReportesPage() {
           {/* KPI cards — always visible */}
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             {[
-              { label: 'Revenue total', value: formatPrice(data.kpis.totalRevenue), icon: TrendingUp, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400' },
-              { label: 'Órdenes', value: String(data.kpis.totalOrders), icon: ShoppingBag, bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
-              { label: 'Ticket promedio', value: formatPrice(data.kpis.avgTicket), icon: Calculator, bg: 'bg-purple-100 dark:bg-purple-900/30', color: 'text-purple-600 dark:text-purple-400' },
-              { label: 'Costo total', value: data.kpis.totalCost > 0 ? formatPrice(data.kpis.totalCost) : '—', icon: TrendingDown, bg: 'bg-red-100 dark:bg-red-900/30', color: 'text-red-500 dark:text-red-400' },
-              { label: 'Margen bruto', value: data.kpis.grossMargin > 0 ? formatPrice(data.kpis.grossMargin) : '—', icon: TrendingUp, bg: 'bg-teal-100 dark:bg-teal-900/30', color: 'text-teal-600 dark:text-teal-400' },
-              { label: '% Margen', value: data.kpis.marginPct > 0 ? pct(data.kpis.marginPct) : '—', icon: Package, bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-600 dark:text-orange-400' },
+              { label: 'Revenue total', value: formatPrice(data.kpis.totalRevenue), icon: TrendingUp, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400', curr: data.kpis.totalRevenue, prev: data.prevKpis?.totalRevenue },
+              { label: 'Órdenes', value: String(data.kpis.totalOrders), icon: ShoppingBag, bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400', curr: data.kpis.totalOrders, prev: data.prevKpis?.totalOrders },
+              { label: 'Ticket promedio', value: formatPrice(data.kpis.avgTicket), icon: Calculator, bg: 'bg-purple-100 dark:bg-purple-900/30', color: 'text-purple-600 dark:text-purple-400', curr: data.kpis.avgTicket, prev: data.prevKpis?.avgTicket },
+              { label: 'Costo total', value: data.kpis.totalCost > 0 ? formatPrice(data.kpis.totalCost) : '—', icon: TrendingDown, bg: 'bg-red-100 dark:bg-red-900/30', color: 'text-red-500 dark:text-red-400', curr: null, prev: null },
+              { label: 'Margen bruto', value: data.kpis.grossMargin > 0 ? formatPrice(data.kpis.grossMargin) : '—', icon: TrendingUp, bg: 'bg-teal-100 dark:bg-teal-900/30', color: 'text-teal-600 dark:text-teal-400', curr: null, prev: null },
+              { label: '% Margen', value: data.kpis.marginPct > 0 ? pct(data.kpis.marginPct) : '—', icon: Package, bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-600 dark:text-orange-400', curr: null, prev: null },
             ].map((kpi) => (
               <div key={kpi.label} className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-5">
                 <div className={`w-10 h-10 ${kpi.bg} rounded-xl flex items-center justify-center mb-3`}>
@@ -204,6 +225,11 @@ export default function AdminReportesPage() {
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">{kpi.label}</p>
                 <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-0.5">{kpi.value}</p>
+                {kpi.curr != null && kpi.prev != null && (
+                  <div className="mt-1.5">
+                    <DeltaBadge curr={kpi.curr} prev={kpi.prev} />
+                  </div>
+                )}
               </div>
             ))}
           </div>
