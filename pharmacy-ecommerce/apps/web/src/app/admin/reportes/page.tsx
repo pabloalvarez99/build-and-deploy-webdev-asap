@@ -55,6 +55,7 @@ const PERIODS = [
   { label: '7 días', days: 7 },
   { label: '30 días', days: 30 },
   { label: '90 días', days: 90 },
+  { label: 'Personalizado', days: 0 },
 ];
 
 const TABS = [
@@ -94,6 +95,8 @@ export default function AdminReportesPage() {
   const router = useRouter();
   const { user } = useAuthStore();
   const [period, setPeriod] = useState(30);
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
   const [activeTab, setActiveTab] = useState<'ventas' | 'financiero'>('ventas');
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -110,8 +113,8 @@ export default function AdminReportesPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const from = getFromDate(period);
-      const to = new Date().toISOString().split('T')[0];
+      const from = period === 0 ? (customFrom || getFromDate(30)) : getFromDate(period);
+      const to = period === 0 ? (customTo || new Date().toISOString().split('T')[0]) : new Date().toISOString().split('T')[0];
       const res = await fetch(`/api/admin/reportes?from=${from}&to=${to}`);
       if (res.ok) setData(await res.json());
     } catch {
@@ -119,7 +122,7 @@ export default function AdminReportesPage() {
     } finally {
       setLoading(false);
     }
-  }, [period]);
+  }, [period, customFrom, customTo]);
 
   useEffect(() => {
     if (!user || user.role !== 'admin') { router.push('/'); return; }
@@ -183,6 +186,26 @@ export default function AdminReportesPage() {
           </button>
         </div>
       </div>
+
+      {/* Custom date range */}
+      {period === 0 && (
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Rango personalizado:</span>
+          <input
+            type="date"
+            value={customFrom}
+            onChange={(e) => setCustomFrom(e.target.value)}
+            className="px-3 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:border-emerald-500 focus:outline-none"
+          />
+          <span className="text-slate-400">→</span>
+          <input
+            type="date"
+            value={customTo}
+            onChange={(e) => setCustomTo(e.target.value)}
+            className="px-3 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:border-emerald-500 focus:outline-none"
+          />
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1 w-fit">

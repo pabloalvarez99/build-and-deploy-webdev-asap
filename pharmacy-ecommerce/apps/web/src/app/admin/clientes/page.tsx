@@ -18,6 +18,7 @@ interface Customer {
   order_count: number;
   last_order: string | null;
   type: 'registered' | 'guest';
+  loyalty_points?: number;
 }
 
 interface OrderItem {
@@ -506,15 +507,21 @@ export default function ClientesPage() {
                 </div>
 
                 {/* Order stats */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className={`grid gap-3 ${selected.customer.loyalty_points != null ? 'grid-cols-3' : 'grid-cols-2'}`}>
                   <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl p-3 text-center">
                     <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{selected.orders.length}</p>
-                    <p className="text-xs text-emerald-600 dark:text-emerald-500 font-medium">Pedidos totales</p>
+                    <p className="text-xs text-emerald-600 dark:text-emerald-500 font-medium">Pedidos</p>
                   </div>
                   <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl p-3 text-center">
-                    <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{formatPrice(totalSpent(selected.orders))}</p>
+                    <p className="text-lg font-black text-emerald-700 dark:text-emerald-400 leading-tight">{formatPrice(totalSpent(selected.orders))}</p>
                     <p className="text-xs text-emerald-600 dark:text-emerald-500 font-medium">Total comprado</p>
                   </div>
+                  {selected.customer.loyalty_points != null && (
+                    <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-3 text-center">
+                      <p className="text-2xl font-black text-amber-700 dark:text-amber-400">⭐{selected.customer.loyalty_points}</p>
+                      <p className="text-xs text-amber-600 dark:text-amber-500 font-medium">Puntos</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Order history */}

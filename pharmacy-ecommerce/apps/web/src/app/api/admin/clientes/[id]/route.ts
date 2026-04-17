@@ -46,11 +46,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     return errorResponse('Cliente no encontrado', 404)
   }
 
-  const orders = await db.orders.findMany({
-    where: { user_id: id },
-    include: { order_items: true },
-    orderBy: { created_at: 'desc' },
-  })
+  const [orders, profile] = await Promise.all([
+    db.orders.findMany({
+      where: { user_id: id },
+      include: { order_items: true },
+      orderBy: { created_at: 'desc' },
+    }),
+    db.profiles.findUnique({ where: { id }, select: { loyalty_points: true, phone: true } }),
+  ])
 
   return NextResponse.json({
     customer: {
@@ -58,9 +61,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       email: fbUser.email,
       name: fbUser.displayName || '',
       surname: '',
-      phone: fbUser.phoneNumber || null,
+      phone: fbUser.phoneNumber || profile?.phone || null,
       type: 'registered',
       created_at: fbUser.metadata.creationTime,
+      loyalty_points: profile?.loyalty_points ?? 0,
     },
     orders: orders.map((o: typeof orders[number]) => ({ ...o, items: o.order_items || [] })),
   })
