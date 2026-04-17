@@ -245,11 +245,11 @@ function HomeContent() {
       {/* Toast */}
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
 
-      {/* Scroll to Top */}
+      {/* Scroll to Top — positioned above WhatsApp button (bottom-6) + 4rem gap, or above cart bar */}
       {showScrollTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-24 right-4 z-40 w-14 h-14 bg-emerald-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-emerald-700 transition-all"
+          className={`fixed right-4 z-40 w-14 h-14 bg-slate-700 dark:bg-slate-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-slate-800 dark:hover:bg-slate-500 transition-all ${cart && cart.item_count > 0 ? 'bottom-52' : 'bottom-24'}`}
           aria-label="Volver arriba"
           title="Volver arriba"
         >
@@ -639,18 +639,6 @@ function HomeContent() {
           </div>
         )}
       </main>
-
-      {/* Floating presupuesto button */}
-      <a
-        href={`https://wa.me/56993649604?text=${encodeURIComponent('Hola! Quisiera solicitar un presupuesto para un producto que no encuentro en su catálogo. ¿Pueden ayudarme?')}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`fixed z-40 flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold rounded-full shadow-lg transition-all ${cart && cart.item_count > 0 ? 'bottom-24 right-4' : 'bottom-6 right-4'} px-4 py-3`}
-        title="Solicitar presupuesto"
-      >
-        <MessageCircle className="w-5 h-5 flex-shrink-0" />
-        <span className="text-sm hidden sm:inline">Presupuesto</span>
-      </a>
 
       {/* Mobile Bottom Cart Bar - Grande y siempre visible */}
       {cart && cart.item_count > 0 && (
