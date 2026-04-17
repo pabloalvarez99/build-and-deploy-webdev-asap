@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
-import { productApi } from '@/lib/api'
+import { productApi, Category } from '@/lib/api'
 import {
   ShoppingCart, Search, Plus, Minus, Trash2, CreditCard, Banknote,
   CheckCircle2, X, Receipt, Loader2, SmartphoneNfc, ScanLine, CheckCircle, AlertCircle,
@@ -64,10 +64,16 @@ export default function POSPage() {
   const barcodeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [barcodeFlash, setBarcodeFlash] = useState<{ ok: boolean; text: string } | null>(null)
   const [searchError, setSearchError] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [categories, setCategories] = useState<Category[]>([])
 
   useEffect(() => {
     if (!user || user.role !== 'admin') { router.push('/'); return }
     searchRef.current?.focus()
+    // Load categories for quick filter pills
+    productApi.listCategories(true)
+      .then(data => setCategories(data.sort((a, b) => a.name.localeCompare(b.name))))
+      .catch(() => {})
   }, [user, router])
 
   // Barcode scanner: global capture listener — intercepts before element handlers
@@ -160,12 +166,12 @@ export default function POSPage() {
     return () => document.removeEventListener('keydown', handleKey)
   }, [])
 
-  const searchProducts = useCallback(async (q: string) => {
-    if (!q.trim()) { setProducts([]); setSearchError(null); return }
+  const searchProducts = useCallback(async (q: string, category: string) => {
+    if (!q.trim() && !category) { setProducts([]); setSearchError(null); return }
     setIsSearching(true)
     setSearchError(null)
     try {
-      const res = await productApi.list({ search: q, active_only: true, in_stock: false, limit: 20 })
+      const res = await productApi.list({ search: q || undefined, category: category || undefined, active_only: true, in_stock: false, limit: 40 })
       setProducts(res.products as unknown as Product[])
     } catch (err) {
       setProducts([])
@@ -176,9 +182,9 @@ export default function POSPage() {
   }, [])
 
   useEffect(() => {
-    const t = setTimeout(() => searchProducts(search), 300)
+    const t = setTimeout(() => searchProducts(search, selectedCategory), 300)
     return () => clearTimeout(t)
-  }, [search, searchProducts])
+  }, [search, selectedCategory, searchProducts])
 
   function addToCart(p: Product) {
     setCart((prev) => {
@@ -402,17 +408,42 @@ export default function POSPage() {
           {isSearching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 animate-spin" />}
         </div>
 
+        {/* Category pills */}
+        {categories.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              onClick={() => { setSelectedCategory(''); setSearch('') }}
+              className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
+                !selectedCategory ? 'bg-emerald-600 text-white border-emerald-600' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-emerald-400 hover:text-emerald-600'
+              }`}
+            >
+              Todos
+            </button>
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => { setSelectedCategory(cat.slug); setSearch('') }}
+                className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
+                  selectedCategory === cat.slug ? 'bg-emerald-600 text-white border-emerald-600' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-emerald-400 hover:text-emerald-600'
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Product grid */}
         <div className="flex-1 overflow-y-auto">
-          {products.length === 0 && search.trim() === '' && (
+          {products.length === 0 && !search.trim() && !selectedCategory && (
             <div className="text-center py-16 text-slate-400 dark:text-slate-500">
               <Search className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>Busca un producto para agregar al carrito</p>
+              <p>Busca un producto o selecciona una categoría</p>
             </div>
           )}
-          {products.length === 0 && search.trim() !== '' && !isSearching && !searchError && (
+          {products.length === 0 && (search.trim() || selectedCategory) && !isSearching && !searchError && (
             <div className="text-center py-16 text-slate-400 dark:text-slate-500">
-              <p>Sin resultados para "{search}"</p>
+              <p>Sin resultados{search ? ` para "${search}"` : ''}{selectedCategory ? ` en esta categoría` : ''}</p>
             </div>
           )}
           {searchError && (
