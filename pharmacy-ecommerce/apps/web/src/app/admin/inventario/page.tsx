@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/auth';
 import { formatPrice } from '@/lib/format';
 import {
   Warehouse, Search, Download, AlertTriangle, Package, TrendingUp,
-  ChevronDown, ChevronUp, ArrowUpDown, DollarSign, X,
+  ChevronDown, ChevronUp, ArrowUpDown, DollarSign, X, RefreshCw, Mail, Phone,
 } from 'lucide-react';
 
 interface InventoryItem {
@@ -37,6 +37,15 @@ interface InventorySummary {
 
 type SortField = 'name' | 'stock' | 'price' | 'cost_price' | 'retail_value' | 'margin_pct';
 
+interface ReorderItem {
+  product_id: string; name: string; stock: number;
+  price: number; cost_price: number | null; supplier_code: string;
+}
+interface ReorderGroup {
+  supplier: { id: string; name: string; contact_name: string | null; contact_email: string | null; contact_phone: string | null };
+  items: ReorderItem[];
+}
+
 export default function InventarioPage() {
   const router = useRouter();
   const { user } = useAuthStore();
@@ -47,6 +56,10 @@ export default function InventarioPage() {
   const [filter, setFilter] = useState<'' | 'low' | 'out' | 'no_cost'>('');
   const [sortField, setSortField] = useState<SortField>('retail_value');
   const [sortAsc, setSortAsc] = useState(false);
+  const [activeTab, setActiveTab] = useState<'valorization' | 'reorder'>('valorization');
+  const [reorderGroups, setReorderGroups] = useState<ReorderGroup[]>([]);
+  const [reorderThreshold, setReorderThreshold] = useState(10);
+  const [reorderLoading, setReorderLoading] = useState(false);
 
   useEffect(() => {
     if (!user || user.role !== 'admin') { router.push('/'); return; }
@@ -65,6 +78,23 @@ export default function InventarioPage() {
     } catch { /* silent */ }
     finally { setLoading(false); }
   };
+
+  const loadReorder = async () => {
+    setReorderLoading(true);
+    try {
+      const res = await fetch('/api/admin/inventory/reorder-suggestions', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setReorderGroups(data.groups);
+        setReorderThreshold(data.threshold);
+      }
+    } catch { /* silent */ }
+    finally { setReorderLoading(false); }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'reorder' && reorderGroups.length === 0 && !reorderLoading) loadReorder();
+  }, [activeTab]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) setSortAsc(!sortAsc);
@@ -190,6 +220,110 @@ export default function InventarioPage() {
           </div>
         </div>
       ) : null}
+
+      {/* Tabs */}
+      <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1 w-fit">
+        {([
+          { id: 'valorization', label: 'Valorización' },
+          { id: 'reorder', label: `Sugerencias de reposición${reorderGroups.length > 0 ? ` (${reorderGroups.reduce((s, g) => s + g.items.length, 0)})` : ''}` },
+        ] as { id: 'valorization' | 'reorder'; label: string }[]).map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === tab.id
+                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'reorder' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Productos con stock ≤ {reorderThreshold} que tienen proveedor asignado, agrupados por proveedor.
+            </p>
+            <button onClick={loadReorder} disabled={reorderLoading} className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400 hover:underline disabled:opacity-50">
+              <RefreshCw className={`w-3.5 h-3.5 ${reorderLoading ? 'animate-spin' : ''}`} />
+              Actualizar
+            </button>
+          </div>
+          {reorderLoading ? (
+            <div className="p-12 text-center text-slate-400 animate-pulse">Cargando sugerencias...</div>
+          ) : reorderGroups.length === 0 ? (
+            <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-12 text-center text-slate-400 dark:text-slate-500">
+              <Package className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p>No hay productos bajo el umbral con proveedor asignado</p>
+            </div>
+          ) : reorderGroups.map((group) => (
+            <div key={group.supplier.id} className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden">
+              <div className="px-5 py-4 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <h3 className="font-bold text-slate-900 dark:text-slate-100">{group.supplier.name}</h3>
+                  <div className="flex flex-wrap gap-3 mt-1">
+                    {group.supplier.contact_name && (
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{group.supplier.contact_name}</span>
+                    )}
+                    {group.supplier.contact_email && (
+                      <a href={`mailto:${group.supplier.contact_email}`} className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
+                        <Mail className="w-3 h-3" />{group.supplier.contact_email}
+                      </a>
+                    )}
+                    {group.supplier.contact_phone && (
+                      <a href={`tel:${group.supplier.contact_phone}`} className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
+                        <Phone className="w-3 h-3" />{group.supplier.contact_phone}
+                      </a>
+                    )}
+                  </div>
+                </div>
+                <span className="text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2.5 py-1 rounded-full">
+                  {group.items.length} producto{group.items.length !== 1 ? 's' : ''} a reponer
+                </span>
+              </div>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-slate-700">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Producto</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Cód. Proveedor</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Stock actual</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-500 dark:text-slate-400">P. Costo</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
+                  {group.items.map((item) => (
+                    <tr key={item.product_id} className="hover:bg-slate-50 dark:hover:bg-slate-700/20">
+                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{item.name}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-slate-500 dark:text-slate-400">{item.supplier_code || '—'}</td>
+                      <td className="px-4 py-3">
+                        <span className={`font-bold ${item.stock === 0 ? 'text-red-500 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                          {item.stock}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
+                        {item.cost_price != null ? formatPrice(item.cost_price) : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-700 flex justify-end">
+                <Link
+                  href={`/admin/compras/nueva?supplier=${group.supplier.id}`}
+                  className="text-sm text-emerald-600 dark:text-emerald-400 font-medium hover:underline"
+                >
+                  Crear orden de compra →
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'valorization' && <>
 
       {/* Filters bar */}
       <div className="flex flex-wrap gap-3 items-center">
@@ -318,8 +452,10 @@ export default function InventarioPage() {
         )}
       </div>
 
+      </> /* end valorization tab */}
+
       {/* Quick links */}
-      {!loading && (outOfStock > 0 || lowStock > 0) && (
+      {activeTab === 'valorization' && !loading && (outOfStock > 0 || lowStock > 0) && (
         <div className="flex flex-wrap gap-3">
           {outOfStock > 0 && (
             <Link
