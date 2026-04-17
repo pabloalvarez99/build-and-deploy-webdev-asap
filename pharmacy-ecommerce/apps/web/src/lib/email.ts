@@ -259,6 +259,105 @@ export async function sendPickupRejectionEmail(opts: {
   });
 }
 
+export async function sendDailyReport(opts: {
+  to: string;
+  date: string; // e.g. "lunes 14 de abril"
+  revenue: number;
+  orders: number;
+  posRevenue: number;
+  posOrders: number;
+  onlineRevenue: number;
+  onlineOrders: number;
+  avgTicket: number;
+  topProducts: { name: string; units: number; revenue: number }[];
+  lowStock: { name: string; stock: number }[];
+  threshold: number;
+}) {
+  if (!process.env.RESEND_API_KEY || !opts.to) return;
+
+  const topRows = opts.topProducts.map((p, i) =>
+    `<tr style="background:${i % 2 === 0 ? '#f8fafc' : '#ffffff'};">
+      <td style="padding:8px 12px;color:#334155;">${p.name}</td>
+      <td style="padding:8px 12px;text-align:center;color:#334155;">${p.units}</td>
+      <td style="padding:8px 12px;text-align:right;font-weight:600;color:#0f172a;">${formatCLP(p.revenue)}</td>
+    </tr>`
+  ).join('');
+
+  const lowStockRows = opts.lowStock.length === 0
+    ? `<p style="margin:0;color:#166534;">Sin productos bajo el umbral (${opts.threshold} uds). ✅</p>`
+    : opts.lowStock.slice(0, 10).map(p =>
+        `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #fde68a;">
+          <span style="color:#92400e;">${p.name}</span>
+          <span style="font-weight:700;color:#b45309;">${p.stock} ud${p.stock !== 1 ? 's' : ''}.</span>
+        </div>`
+      ).join('');
+
+  const html = emailWrapper(`
+    <h1 style="margin:0 0 4px;font-size:20px;color:#0f172a;">Resumen diario</h1>
+    <p style="margin:0 0 24px;color:#64748b;font-size:14px;">${opts.date}</p>
+
+    <!-- KPI row -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td width="50%" style="padding-right:8px;">
+          <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:16px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#166534;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Ventas totales</p>
+            <p style="margin:6px 0 0;font-size:26px;font-weight:800;color:#059669;">${formatCLP(opts.revenue)}</p>
+            <p style="margin:4px 0 0;font-size:12px;color:#4ade80;">${opts.orders} orden${opts.orders !== 1 ? 'es' : ''}</p>
+          </div>
+        </td>
+        <td width="50%" style="padding-left:8px;">
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:16px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#1e3a8a;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Ticket promedio</p>
+            <p style="margin:6px 0 0;font-size:26px;font-weight:800;color:#2563eb;">${formatCLP(opts.avgTicket)}</p>
+            <p style="margin:4px 0 0;font-size:12px;color:#93c5fd;">&nbsp;</p>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Channel split -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:12px;margin-bottom:24px;overflow:hidden;">
+      <thead><tr style="background:#f8fafc;">
+        <th style="padding:10px 12px;text-align:left;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;">Canal</th>
+        <th style="padding:10px 12px;text-align:center;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;">Órdenes</th>
+        <th style="padding:10px 12px;text-align:right;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;">Ventas</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:8px 12px;color:#334155;">POS (presencial)</td><td style="padding:8px 12px;text-align:center;">${opts.posOrders}</td><td style="padding:8px 12px;text-align:right;font-weight:600;">${formatCLP(opts.posRevenue)}</td></tr>
+        <tr style="background:#f8fafc;"><td style="padding:8px 12px;color:#334155;">Online (web)</td><td style="padding:8px 12px;text-align:center;">${opts.onlineOrders}</td><td style="padding:8px 12px;text-align:right;font-weight:600;">${formatCLP(opts.onlineRevenue)}</td></tr>
+      </tbody>
+    </table>
+
+    ${opts.topProducts.length > 0 ? `
+    <!-- Top products -->
+    <h2 style="margin:0 0 12px;font-size:16px;color:#0f172a;">Top productos del día</h2>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:12px;margin-bottom:24px;overflow:hidden;">
+      <thead><tr style="background:#f8fafc;">
+        <th style="padding:10px 12px;text-align:left;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;">Producto</th>
+        <th style="padding:10px 12px;text-align:center;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;">Uds.</th>
+        <th style="padding:10px 12px;text-align:right;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;">Ventas</th>
+      </tr></thead>
+      <tbody>${topRows}</tbody>
+    </table>` : ''}
+
+    <!-- Low stock -->
+    <h2 style="margin:0 0 12px;font-size:16px;color:#0f172a;">Stock crítico</h2>
+    <div style="background:${opts.lowStock.length === 0 ? '#f0fdf4;border:1px solid #86efac' : '#fffbeb;border:1px solid #fde68a'};border-radius:12px;padding:16px;margin-bottom:24px;">
+      ${lowStockRows}
+    </div>
+
+    <a href="${BASE}/admin" style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;">Ir al panel admin →</a>
+  `);
+
+  await getResend().emails.send({
+    from: 'Tu Farmacia Admin <onboarding@resend.dev>',
+    to: opts.to,
+    subject: `📊 Resumen del día — ${opts.date} · Tu Farmacia`,
+    html,
+  });
+}
+
 export async function sendLowStockAlert(
   toEmail: string,
   products: LowStockProduct[],
