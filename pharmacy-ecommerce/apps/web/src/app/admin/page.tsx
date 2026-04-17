@@ -18,6 +18,8 @@ import {
  ExternalLink,
  TrendingUp,
  TrendingDown,
+ Store,
+ CheckCircle,
 } from 'lucide-react';
 import {
  LineChart,
@@ -105,6 +107,8 @@ export default function AdminPage() {
  const [statusData, setStatusData] = useState<StatusData[]>([]);
  const [isLoading, setIsLoading] = useState(true);
  const [isDark, setIsDark] = useState(false);
+ const [pendingReservations, setPendingReservations] = useState<Order[]>([]);
+ const [reservationActions, setReservationActions] = useState<Record<string, 'approving' | 'rejecting' | 'done'>>({});
 
  // Track dark mode for Recharts SVG props (can't use Tailwind dark: on SVG attributes)
  useEffect(() => {
@@ -134,10 +138,35 @@ export default function AdminPage() {
 
  const loadRecentOrders = async () => {
  try {
- const orders = await orderApi.listAll({ limit: 5 });
+ const [orders, reserved] = await Promise.all([
+   orderApi.listAll({ limit: 5 }),
+   orderApi.listAll({ status: 'reserved', limit: 20 }),
+ ]);
  setRecentOrders(orders.orders);
+ setPendingReservations(reserved.orders);
  } catch (error) {
  console.error('Error loading orders:', error);
+ }
+ };
+
+ const handleReservationAction = async (orderId: string, action: 'approve_reservation' | 'reject_reservation') => {
+ setReservationActions(prev => ({ ...prev, [orderId]: action === 'approve_reservation' ? 'approving' : 'rejecting' }));
+ try {
+   const res = await fetch(`/api/admin/orders/${orderId}`, {
+     method: 'PUT',
+     headers: { 'Content-Type': 'application/json' },
+     credentials: 'include',
+     body: JSON.stringify({ action }),
+   });
+   if (res.ok) {
+     setReservationActions(prev => ({ ...prev, [orderId]: 'done' }));
+     setTimeout(() => {
+       setPendingReservations(prev => prev.filter(o => o.id !== orderId));
+       setReservationActions(prev => { const n = { ...prev }; delete n[orderId]; return n; });
+     }, 1200);
+   }
+ } catch {
+   setReservationActions(prev => { const n = { ...prev }; delete n[orderId]; return n; });
  }
  };
 
@@ -472,6 +501,80 @@ export default function AdminPage() {
  </div>
  </div>
  </div>
+ )}
+
+ {/* Pending Reservations Widget */}
+ {!isLoading && pendingReservations.length > 0 && (
+  <div className="card overflow-hidden mb-8">
+   <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-4">
+    <div className="flex items-center justify-between">
+     <div className="flex items-center gap-3 text-white">
+      <Store className="w-6 h-6" />
+      <h3 className="text-lg font-semibold">Reservas pendientes de aprobación</h3>
+      <span className="bg-white/20 text-white text-xs font-bold px-2 py-0.5 rounded-full">{pendingReservations.length}</span>
+     </div>
+     <Link href="/admin/ordenes?status=reserved" className="text-white/80 hover:text-white text-sm flex items-center gap-1">
+      Ver todas <ArrowRight className="w-4 h-4" />
+     </Link>
+    </div>
+   </div>
+   <div className="divide-y divide-slate-100 dark:divide-slate-700">
+    {pendingReservations.slice(0, 8).map((order) => {
+     const expiresAt = order.reservation_expires_at ? new Date(order.reservation_expires_at) : null;
+     const now = new Date();
+     const diffMs = expiresAt ? expiresAt.getTime() - now.getTime() : null;
+     const hoursLeft = diffMs != null ? diffMs / (1000 * 60 * 60) : null;
+     const isExpired = hoursLeft != null && hoursLeft <= 0;
+     const expiryLabel = hoursLeft == null ? null : isExpired ? 'Expirada' : hoursLeft < 1 ? `${Math.round(hoursLeft * 60)}min` : `${Math.round(hoursLeft)}h`;
+     const actionState = reservationActions[order.id];
+     const customerName = order.guest_name ? `${order.guest_name} ${order.guest_surname || ''}`.trim() : 'Invitado';
+     return (
+      <div key={order.id} className="px-5 py-3 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+       <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+         <span className="font-mono text-xs text-slate-400">#{order.id.slice(0, 8)}</span>
+         <span className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{customerName}</span>
+         {order.pickup_code && <span className="text-xs font-mono bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded">{order.pickup_code}</span>}
+        </div>
+        <div className="flex items-center gap-3 mt-0.5">
+         <span className="text-xs text-slate-500">{formatPrice(order.total)}</span>
+         {expiryLabel && (
+          <span className={`text-xs font-medium ${isExpired ? 'text-red-500 dark:text-red-400' : hoursLeft! < 6 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'}`}>
+           ⏱ {expiryLabel}
+          </span>
+         )}
+        </div>
+       </div>
+       {actionState === 'done' ? (
+        <CheckCircle className="w-5 h-5 text-emerald-500" />
+       ) : (
+        <div className="flex items-center gap-1.5 shrink-0">
+         <button
+          onClick={() => handleReservationAction(order.id, 'approve_reservation')}
+          disabled={!!actionState}
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 disabled:opacity-50 transition-colors"
+         >
+          <CheckCircle className="w-3.5 h-3.5" />
+          {actionState === 'approving' ? '…' : 'Aprobar'}
+         </button>
+         <button
+          onClick={() => handleReservationAction(order.id, 'reject_reservation')}
+          disabled={!!actionState}
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 transition-colors"
+         >
+          <XCircle className="w-3.5 h-3.5" />
+          {actionState === 'rejecting' ? '…' : 'Rechazar'}
+         </button>
+         <Link href={`/admin/ordenes/${order.id}`} className="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+          <ExternalLink className="w-3.5 h-3.5" />
+         </Link>
+        </div>
+       )}
+      </div>
+     );
+    })}
+   </div>
+  </div>
  )}
 
  {/* Two Column Layout */}
