@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuthStore } from '@/store/auth';
 import { productApi, PaginatedProducts, Category } from '@/lib/api';
-import { Plus, Edit, Trash2, Search, Download, Upload, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package, FileSpreadsheet, CheckCircle, XCircle, RefreshCw, ArrowRight, History, ArrowUp, ArrowDown, ArrowUpDown, Camera } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Download, Upload, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package, FileSpreadsheet, CheckCircle, XCircle, RefreshCw, ArrowRight, History, ArrowUp, ArrowDown, ArrowUpDown, Camera, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
 import { parseExcelFile, diffProducts, loadAllProductsForDiff, parsePrice, type ExcelRow, type DiffResult } from '@/lib/excel-import';
 import { StockModal } from '@/components/admin/StockModal';
 import { ScanInvoiceModal } from '@/components/admin/ScanInvoiceModal';
@@ -82,6 +82,19 @@ export default function AdminProductsPage() {
  const [importResults, setImportResults] = useState<{ success: boolean; inserted: number; updated: number; errors?: string[] } | null>(null);
  const [importLoading, setImportLoading] = useState(false);
  const [parseErrors, setParseErrors] = useState<string[]>([]);
+
+ // Price import state
+ const priceFileRef = useRef<HTMLInputElement>(null);
+ const [showPriceImportModal, setShowPriceImportModal] = useState(false);
+ const [priceImportStep, setPriceImportStep] = useState<'upload' | 'preview' | 'applying' | 'done'>('upload');
+ const [priceImportPreview, setPriceImportPreview] = useState<{
+  matched: number; unmatched: number; unmatched_keys: string[];
+  preview: { product_id: string; name: string; old_price: number | null; new_price: number; old_cost: number | null; new_cost: number | null; key: string }[];
+ } | null>(null);
+ const [priceImportResult, setPriceImportResult] = useState<{ updated: number; unmatched: number } | null>(null);
+ const [priceImportRows, setPriceImportRows] = useState<{ barcode?: string; external_id?: string; price: number; cost_price?: number | null }[]>([]);
+ const [priceImportLoading, setPriceImportLoading] = useState(false);
+ const [priceImportError, setPriceImportError] = useState<string | null>(null);
 
  // Stock inline editing
  const [editingStockId, setEditingStockId] = useState<string | null>(null);
@@ -580,6 +593,86 @@ export default function AdminProductsPage() {
  }
  };
 
+ // ─── Price import handlers ───
+ const parsePriceCSV = (text: string): { barcode?: string; external_id?: string; price: number; cost_price?: number | null }[] => {
+ const lines = text.trim().split('\n');
+ const sep = lines[0].includes('\t') ? '\t' : ',';
+ const headers = lines[0].split(sep).map(h => h.replace(/^["']|["']$/g, '').toLowerCase().trim());
+
+ // Map known column names → canonical
+ const colIdx = {
+  barcode: headers.findIndex(h => /barra|barcode|ean|codigo_barra|codigobarra|s_codigo/i.test(h)),
+  ext_id: headers.findIndex(h => /external_id|external|extid|codigo_externo/i.test(h)),
+  price: headers.findIndex(h => /precio|price|pvp|dc_pvp|pvps/i.test(h)),
+  cost: headers.findIndex(h => /costo|cost|cost_price/i.test(h)),
+ };
+ if (colIdx.price === -1) throw new Error('No se encontró columna de precio (precio, price, pvp, dc_pvp)');
+ if (colIdx.barcode === -1 && colIdx.ext_id === -1) throw new Error('Se necesita columna barcode/EAN o external_id');
+
+ return lines.slice(1).flatMap(line => {
+  const cols = line.split(sep).map(c => c.replace(/^["']|["']$/g, '').trim());
+  const rawPrice = cols[colIdx.price]?.replace(',', '.');
+  const price = parseFloat(rawPrice);
+  if (!rawPrice || isNaN(price) || price <= 0) return [];
+  const barcode = colIdx.barcode >= 0 ? cols[colIdx.barcode] || undefined : undefined;
+  const external_id = colIdx.ext_id >= 0 ? cols[colIdx.ext_id] || undefined : undefined;
+  if (!barcode && !external_id) return [];
+  const rawCost = colIdx.cost >= 0 ? cols[colIdx.cost]?.replace(',', '.') : undefined;
+  const cost_price = rawCost && !isNaN(parseFloat(rawCost)) ? parseFloat(rawCost) : null;
+  return [{ barcode, external_id, price: Math.round(price), cost_price }];
+ });
+ };
+
+ const handlePriceFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+ const file = e.target.files?.[0];
+ if (!file) return;
+ setPriceImportError(null);
+ setPriceImportLoading(true);
+ try {
+  const text = await file.text();
+  const rows = parsePriceCSV(text);
+  if (rows.length === 0) throw new Error('No se encontraron filas válidas en el archivo');
+  setPriceImportRows(rows);
+  const res = await fetch('/api/admin/products/update-prices', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ rows, dry_run: true }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const data = await res.json();
+  setPriceImportPreview(data);
+  setPriceImportStep('preview');
+ } catch (err) {
+  setPriceImportError(err instanceof Error ? err.message : 'Error al procesar archivo');
+ } finally {
+  setPriceImportLoading(false);
+  if (priceFileRef.current) priceFileRef.current.value = '';
+ }
+ };
+
+ const handleApplyPrices = async () => {
+ if (priceImportRows.length === 0) return;
+ setPriceImportStep('applying');
+ setPriceImportLoading(true);
+ try {
+  const res = await fetch('/api/admin/products/update-prices', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ rows: priceImportRows }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const data = await res.json();
+  setPriceImportResult(data);
+  setPriceImportStep('done');
+  loadProducts(); // Refresh product list
+ } catch (err) {
+  setPriceImportError(err instanceof Error ? err.message : 'Error al aplicar precios');
+  setPriceImportStep('preview');
+ } finally {
+  setPriceImportLoading(false);
+ }
+ };
+
  if (!user || user.role !== 'admin') {
  return null;
  }
@@ -610,6 +703,20 @@ export default function AdminProductsPage() {
  >
  <Upload className="w-5 h-5" />
  Importar Excel
+ </button>
+ <button
+ onClick={() => {
+  setShowPriceImportModal(true);
+  setPriceImportStep('upload');
+  setPriceImportPreview(null);
+  setPriceImportResult(null);
+  setPriceImportRows([]);
+  setPriceImportError(null);
+ }}
+ className="btn btn-secondary flex items-center gap-2"
+ >
+ <DollarSign className="w-5 h-5" />
+ Importar Precios
  </button>
  <button
  onClick={exportToCSV}
@@ -2080,6 +2187,136 @@ export default function AdminProductsPage() {
   onExtracted={handleScanExtracted}
   categories={categories}
   />
+ )}
+
+ {/* Price Import Modal */}
+ {showPriceImportModal && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+  <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] flex flex-col gap-4">
+   <div className="flex items-center justify-between">
+   <div>
+    <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Importar Lista de Precios</h2>
+    <p className="text-xs text-slate-500 mt-0.5">CSV con columnas: barcode/EAN, precio (y opcionalmente costo)</p>
+   </div>
+   <button onClick={() => setShowPriceImportModal(false)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+    <X className="w-4 h-4" />
+   </button>
+   </div>
+
+   {priceImportStep === 'upload' && (
+   <div className="space-y-4">
+    <div className="border-2 border-dashed border-slate-200 dark:border-slate-600 rounded-xl p-8 text-center space-y-3">
+    <DollarSign className="w-10 h-10 text-slate-300 mx-auto" />
+    <p className="text-sm text-slate-500 dark:text-slate-400">
+     Sube un CSV con columnas <code className="bg-slate-100 dark:bg-slate-700 px-1 rounded">barcode</code> y <code className="bg-slate-100 dark:bg-slate-700 px-1 rounded">precio</code>
+    </p>
+    <p className="text-xs text-slate-400">Compatible con el formato del respaldo (s_codigoBarra, dc_pvpSugerido)</p>
+    <button
+     onClick={() => priceFileRef.current?.click()}
+     disabled={priceImportLoading}
+     className="btn btn-primary text-base py-3"
+    >
+     {priceImportLoading ? 'Procesando...' : 'Seleccionar CSV'}
+    </button>
+    <input ref={priceFileRef} type="file" accept=".csv,.txt,.tsv" className="hidden" onChange={handlePriceFileSelect} />
+    </div>
+    {priceImportError && (
+    <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl text-sm text-red-700 dark:text-red-300">
+     <XCircle className="w-4 h-4 shrink-0 mt-0.5" />
+     {priceImportError}
+    </div>
+    )}
+   </div>
+   )}
+
+   {(priceImportStep === 'preview' || priceImportStep === 'applying') && priceImportPreview && (
+   <div className="flex flex-col gap-3 min-h-0 overflow-hidden">
+    <div className="flex flex-wrap gap-3 text-sm">
+    <span className="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-full font-medium">
+     {priceImportPreview.matched} productos encontrados
+    </span>
+    {priceImportPreview.unmatched > 0 && (
+     <span className="px-3 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-full font-medium">
+     {priceImportPreview.unmatched} no encontrados
+     </span>
+    )}
+    </div>
+    <div className="flex-1 overflow-y-auto border rounded-xl max-h-72">
+    <table className="w-full text-xs">
+     <thead className="bg-slate-50 dark:bg-slate-700/50 sticky top-0">
+     <tr>
+      <th className="px-3 py-2 text-left font-medium text-slate-600 dark:text-slate-300">Producto</th>
+      <th className="px-3 py-2 text-right font-medium text-slate-600 dark:text-slate-300">Precio actual</th>
+      <th className="px-3 py-2 text-right font-medium text-slate-600 dark:text-slate-300">Precio nuevo</th>
+      <th className="px-3 py-2 text-right font-medium text-slate-600 dark:text-slate-300">Cambio</th>
+     </tr>
+     </thead>
+     <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+     {priceImportPreview.preview.map(row => {
+      const diff = row.old_price != null ? row.new_price - row.old_price : null;
+      return (
+      <tr key={row.product_id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+       <td className="px-3 py-2 text-slate-900 dark:text-slate-100 max-w-[180px] truncate">{row.name}</td>
+       <td className="px-3 py-2 text-right text-slate-500">{row.old_price != null ? `$${row.old_price.toLocaleString('es-CL')}` : '—'}</td>
+       <td className="px-3 py-2 text-right font-semibold text-slate-900 dark:text-slate-100">${row.new_price.toLocaleString('es-CL')}</td>
+       <td className="px-3 py-2 text-right">
+       {diff != null && diff !== 0 && (
+        <span className={`flex items-center justify-end gap-0.5 font-medium ${diff > 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+        {diff > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+        {diff > 0 ? '+' : ''}{diff.toLocaleString('es-CL')}
+        </span>
+       )}
+       {diff === 0 && <span className="text-slate-300">sin cambio</span>}
+       </td>
+      </tr>
+      );
+     })}
+     </tbody>
+    </table>
+    </div>
+    {priceImportError && (
+    <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl text-sm text-red-700 dark:text-red-300">
+     <XCircle className="w-4 h-4 shrink-0 mt-0.5" />
+     {priceImportError}
+    </div>
+    )}
+    <div className="flex gap-3">
+    <button
+     onClick={() => { setPriceImportStep('upload'); setPriceImportPreview(null); }}
+     className="btn btn-secondary flex-1"
+     disabled={priceImportStep === 'applying'}
+    >
+     Cancelar
+    </button>
+    <button
+     onClick={handleApplyPrices}
+     disabled={priceImportStep === 'applying' || priceImportLoading}
+     className="btn btn-primary flex-1"
+    >
+     {priceImportStep === 'applying' ? 'Aplicando...' : `Aplicar ${priceImportPreview.matched} precios`}
+    </button>
+    </div>
+   </div>
+   )}
+
+   {priceImportStep === 'done' && priceImportResult && (
+   <div className="text-center space-y-4 py-4">
+    <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto">
+    <CheckCircle className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+    </div>
+    <div>
+    <p className="font-bold text-slate-900 dark:text-slate-100 text-lg">{priceImportResult.updated} precios actualizados</p>
+    {priceImportResult.unmatched > 0 && (
+     <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">{priceImportResult.unmatched} productos no encontrados</p>
+    )}
+    </div>
+    <button onClick={() => setShowPriceImportModal(false)} className="btn btn-primary w-full">
+    Cerrar
+    </button>
+   </div>
+   )}
+  </div>
+  </div>
  )}
  </div>
  );
