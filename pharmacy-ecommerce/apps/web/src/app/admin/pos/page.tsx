@@ -52,10 +52,12 @@ export default function POSPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [successOrder, setSuccessOrder] = useState<{
     id: string; total: number; items: CartItem[]; method: PaymentMethod;
-    customer: string; change: number; date: string;
+    customer: string; change: number; date: string; discountAmount: number;
   } | null>(null)
   const [showPayModal, setShowPayModal] = useState(false)
   const [cashReceived, setCashReceived] = useState('')
+  const [discountType, setDiscountType] = useState<'%' | '$'>('%')
+  const [discountValue, setDiscountValue] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
   // Barcode scanner (HID keyboard emulator) — chars arrive < 50ms apart
   const barcodeBufferRef = useRef<{ char: string; time: number }[]>([])
@@ -208,7 +210,12 @@ export default function POSPage() {
     setCart((prev) => prev.filter((i) => i.product_id !== product_id))
   }
 
-  const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0)
+  const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0)
+  const discountNum = parseFloat(discountValue) || 0
+  const discountAmount = discountType === '%'
+    ? Math.round(subtotal * Math.min(discountNum, 100) / 100)
+    : Math.min(Math.round(discountNum), subtotal)
+  const total = Math.max(0, subtotal - discountAmount)
   const change = cashReceived ? Math.max(0, parseFloat(cashReceived) - total) : 0
 
   async function handleSale() {
@@ -228,6 +235,10 @@ export default function POSPage() {
           payment_method: paymentMethod,
           customer_name: customerName || undefined,
           customer_phone: customerPhone || undefined,
+          discount_amount: discountAmount > 0 ? discountAmount : undefined,
+          notes: discountAmount > 0
+            ? `Descuento ${discountType === '%' ? discountNum + '%' : formatCLP(discountAmount)} aplicado`
+            : undefined,
         }),
       })
       if (!res.ok) {
@@ -244,6 +255,7 @@ export default function POSPage() {
         customer: customerName,
         change: paymentMethod === 'pos_cash' && cashReceived ? Math.max(0, parseFloat(cashReceived) - total) : 0,
         date: saleDate,
+        discountAmount,
       })
       setCart([])
       setSearch('')
@@ -251,6 +263,7 @@ export default function POSPage() {
       setCustomerName('')
       setCustomerPhone('')
       setCashReceived('')
+      setDiscountValue('')
       setShowPayModal(false)
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Error al procesar venta')
@@ -292,6 +305,12 @@ export default function POSPage() {
             ))}
           </div>
           <div className="border-t border-dashed border-slate-300 dark:border-slate-600 my-2" />
+          {successOrder.discountAmount > 0 && (
+            <div className="flex justify-between text-xs text-emerald-600 dark:text-emerald-400">
+              <span>Descuento</span>
+              <span>-{formatCLP(successOrder.discountAmount)}</span>
+            </div>
+          )}
           <div className="flex justify-between font-bold">
             <span>TOTAL</span>
             <span>{formatCLP(successOrder.total)}</span>
@@ -510,9 +529,38 @@ export default function POSPage() {
               ))}
             </div>
 
+            {/* Discount */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500 dark:text-slate-400 shrink-0">Descuento</span>
+              <div className="flex flex-1 rounded-xl border-2 border-slate-200 dark:border-slate-700 overflow-hidden">
+                <button
+                  onClick={() => setDiscountType(discountType === '%' ? '$' : '%')}
+                  className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors shrink-0"
+                >
+                  {discountType}
+                </button>
+                <input
+                  type="number"
+                  min="0"
+                  value={discountValue}
+                  onChange={(e) => setDiscountValue(e.target.value)}
+                  placeholder="0"
+                  className="flex-1 min-w-0 px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none"
+                />
+                {discountAmount > 0 && (
+                  <span className="px-2 py-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold shrink-0 self-center">
+                    -{formatCLP(discountAmount)}
+                  </span>
+                )}
+              </div>
+            </div>
+
             {/* Total */}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-600 dark:text-slate-400">Total</span>
+              {discountAmount > 0 && (
+                <span className="text-xs text-slate-400 line-through">{formatCLP(subtotal)}</span>
+              )}
+              <span className="text-sm text-slate-600 dark:text-slate-400 ml-auto mr-2">Total</span>
               <span className="text-2xl font-bold text-slate-900 dark:text-white">{formatCLP(total)}</span>
             </div>
 
@@ -554,6 +602,12 @@ export default function POSPage() {
                   <span className="font-medium text-slate-900 dark:text-white shrink-0">{formatCLP(i.price * i.quantity)}</span>
                 </div>
               ))}
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
+                  <span>Descuento ({discountType === '%' ? `${discountValue}%` : formatCLP(discountAmount)})</span>
+                  <span>-{formatCLP(discountAmount)}</span>
+                </div>
+              )}
               <div className="border-t border-slate-200 dark:border-slate-600 pt-2 flex justify-between font-bold">
                 <span className="text-slate-900 dark:text-white">Total</span>
                 <span className="text-emerald-600 dark:text-emerald-400 text-lg">{formatCLP(total)}</span>

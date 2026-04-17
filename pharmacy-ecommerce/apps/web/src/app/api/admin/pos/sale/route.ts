@@ -37,12 +37,14 @@ export async function POST(request: NextRequest) {
       payment_method, // 'pos_cash' | 'pos_debit' | 'pos_credit'
       customer_name,
       customer_phone,
+      discount_amount,
       notes,
     }: {
       items: SaleItem[];
       payment_method: string;
       customer_name?: string;
       customer_phone?: string;
+      discount_amount?: number;
       notes?: string;
     } = body;
 
@@ -51,7 +53,9 @@ export async function POST(request: NextRequest) {
       return errorResponse('Método de pago inválido', 400);
     }
 
-    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const discount = discount_amount && discount_amount > 0 ? Math.min(Math.round(discount_amount), subtotal) : 0;
+    const total = subtotal - discount;
     const db = await getDb();
 
     // Check stock for all items before starting transaction
