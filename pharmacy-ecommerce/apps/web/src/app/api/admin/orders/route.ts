@@ -19,6 +19,8 @@ export async function GET(request: NextRequest) {
     const from = searchParams.get('from'); // YYYY-MM-DD
     const to = searchParams.get('to');     // YYYY-MM-DD
 
+    const search = searchParams.get('search');
+
     const where: Record<string, unknown> = {};
     if (status) where.status = status;
     if (channel === 'pos') {
@@ -31,6 +33,14 @@ export async function GET(request: NextRequest) {
         ...(from ? { gte: new Date(from + 'T00:00:00.000Z') } : {}),
         ...(to ? { lte: new Date(to + 'T23:59:59.999Z') } : {}),
       };
+    }
+    if (search) {
+      where.OR = [
+        { guest_name: { contains: search, mode: 'insensitive' } },
+        { guest_surname: { contains: search, mode: 'insensitive' } },
+        { guest_email: { contains: search, mode: 'insensitive' } },
+        { customer_phone: { contains: search } },
+      ];
     }
 
     const [orders, total] = await Promise.all([

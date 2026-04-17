@@ -121,10 +121,12 @@ export default function AdminOrdersPage() {
         const q = searchQuery.toLowerCase();
         const name = getCustomerName(order).toLowerCase();
         const email = getCustomerEmail(order).toLowerCase();
+        const phone = (order.customer_phone ?? '').replace(/\D/g, '');
         if (
           !order.id.toLowerCase().includes(q) &&
           !name.includes(q) &&
-          !email.includes(q)
+          !email.includes(q) &&
+          !phone.includes(q.replace(/\D/g, ''))
         ) return false;
       }
       return true;
@@ -324,7 +326,7 @@ export default function AdminOrdersPage() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Buscar por ID, nombre o email del cliente..."
+          placeholder="Buscar por ID, nombre, email o teléfono..."
           className="input pl-10 w-full"
         />
         {searchQuery && (
