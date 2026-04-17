@@ -83,6 +83,9 @@ export default function AdminProductsPage() {
  const [importLoading, setImportLoading] = useState(false);
  const [parseErrors, setParseErrors] = useState<string[]>([]);
 
+ // Labels print state
+ const [showLabelsModal, setShowLabelsModal] = useState(false);
+
  // Price import state
  const priceFileRef = useRef<HTMLInputElement>(null);
  const [showPriceImportModal, setShowPriceImportModal] = useState(false);
@@ -1129,7 +1132,14 @@ export default function AdminProductsPage() {
  Limpiar selección
  </button>
  </div>
- <div className="flex items-center gap-2">
+ <div className="flex items-center gap-2 flex-wrap">
+ <button
+ onClick={() => setShowLabelsModal(true)}
+ className="btn btn-secondary flex items-center gap-2 text-sm py-2"
+ >
+ <Package className="w-4 h-4" />
+ Etiquetas
+ </button>
  <button
  onClick={() => handleBulkActivate(true)}
  disabled={bulkActionLoading}
@@ -2188,6 +2198,56 @@ export default function AdminProductsPage() {
   categories={categories}
   />
  )}
+
+ {/* Labels Print Modal */}
+ {showLabelsModal && (() => {
+  const labelProducts = products?.products.filter(p => selectedProducts.has(p.id)) ?? [];
+  return (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 print:hidden">
+   <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-3xl max-h-[90vh] flex flex-col gap-4">
+   <div className="flex items-center justify-between">
+    <div>
+    <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Etiquetas de precio</h2>
+    <p className="text-xs text-slate-500 mt-0.5">{labelProducts.length} producto{labelProducts.length !== 1 ? 's' : ''} seleccionado{labelProducts.length !== 1 ? 's' : ''}</p>
+    </div>
+    <button onClick={() => setShowLabelsModal(false)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+    <X className="w-4 h-4" />
+    </button>
+   </div>
+   {/* Label preview */}
+   <div id="labels-grid" className="flex-1 overflow-y-auto">
+    <div className="grid grid-cols-3 gap-2">
+    {labelProducts.map(p => (
+     <div key={p.id} className="border-2 border-slate-300 dark:border-slate-600 rounded-lg p-3 space-y-1 text-center">
+     <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-tight line-clamp-2">{p.name}</p>
+     {p.laboratory && <p className="text-[10px] text-slate-400 truncate">{p.laboratory}</p>}
+     <p className="text-xl font-bold text-emerald-700 dark:text-emerald-400 leading-none">{formatPrice(p.price)}</p>
+     {(p as any).discount_percent > 0 && (
+      <p className="text-[10px] text-red-500 font-bold">-{(p as any).discount_percent}% OFF</p>
+     )}
+     {(p as any).external_id && (
+      <p className="text-[10px] font-mono text-slate-400 mt-1">{(p as any).external_id}</p>
+     )}
+     </div>
+    ))}
+    </div>
+   </div>
+   <div className="flex gap-3">
+    <button onClick={() => setShowLabelsModal(false)} className="btn btn-secondary flex-1 text-sm py-2.5">
+    Cerrar
+    </button>
+    <button
+    onClick={() => window.print()}
+    className="btn btn-primary flex-1 text-sm py-2.5 flex items-center justify-center gap-2"
+    >
+    <Download className="w-4 h-4" />
+    Imprimir etiquetas
+    </button>
+   </div>
+   </div>
+  </div>
+  );
+ })()}
 
  {/* Price Import Modal */}
  {showPriceImportModal && (

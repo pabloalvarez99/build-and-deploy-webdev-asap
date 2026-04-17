@@ -96,6 +96,23 @@ html {
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 
+/* Product labels: when labels grid is present, print only the grid on A4 */
+@media print {
+  body:has(#labels-grid) * { visibility: hidden; }
+  body:has(#labels-grid) #labels-grid,
+  body:has(#labels-grid) #labels-grid * { visibility: visible; }
+  body:has(#labels-grid) #labels-grid {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4mm;
+    padding: 8mm;
+  }
+  @page { size: A4 portrait; margin: 0; }
+}
+
 /* POS receipt: when receipt is on screen, print ONLY the receipt (80mm thermal paper) */
 @media print {
   body:has(#pos-receipt) * { visibility: hidden; }
