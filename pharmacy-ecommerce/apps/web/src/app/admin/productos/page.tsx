@@ -1269,13 +1269,16 @@ export default function AdminProductsPage() {
   className="input w-40"
   placeholder="Ej: 4500"
   />
-  {formData.cost_price && formData.price && parseFloat(formData.cost_price) > 0 && (
-  <span className="text-sm text-slate-600 dark:text-slate-400">
-   Margen: <span className="font-bold text-emerald-700 dark:text-emerald-400">
-   {(((parseFloat(formData.price) - parseFloat(formData.cost_price)) / parseFloat(formData.price)) * 100).toFixed(1)}%
+  {formData.cost_price && formData.price && parseFloat(formData.cost_price) > 0 && parseFloat(formData.price) > 0 && (() => {
+   const m = ((parseFloat(formData.price) - parseFloat(formData.cost_price)) / parseFloat(formData.price)) * 100;
+   const color = m < 0 ? 'text-red-600 dark:text-red-400' : m < 15 ? 'text-orange-500' : m < 30 ? 'text-yellow-600' : 'text-emerald-600 dark:text-emerald-400';
+   return (
+   <span className="text-sm text-slate-600 dark:text-slate-400">
+    Margen: <span className={`font-bold ${color}`}>{m.toFixed(1)}%</span>
+    {m < 0 && <span className="ml-1 text-xs text-red-500"> ⚠ bajo costo</span>}
    </span>
-  </span>
-  )}
+   );
+  })()}
  </div>
  </div>
 
@@ -1824,6 +1827,7 @@ export default function AdminProductsPage() {
    Precio {getSortIcon('price')}
   </button>
  </th>
+ <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase" title="Margen = (precio - costo) / precio">Margen</th>
  <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
    <button onClick={() => handleColumnSort('discount')} className="group flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-200 transition-colors mx-auto">
    Descuento {getSortIcon('discount')}
@@ -1922,6 +1926,23 @@ export default function AdminProductsPage() {
  </td>
  <td className="px-4 py-3 text-right text-slate-900 dark:text-slate-100 font-medium">
  {formatPrice(product.price)}
+ </td>
+ <td className="px-4 py-3 text-right">
+ {(() => {
+  const cp = (product as any).cost_price ? parseFloat((product as any).cost_price) : null;
+  const pPrice = parseFloat(product.price as unknown as string) || product.price as unknown as number;
+  if (!cp || cp <= 0 || !pPrice) return <span className="text-slate-300 dark:text-slate-600 text-xs">—</span>;
+  const margin = ((pPrice - cp) / pPrice) * 100;
+  const color = margin < 0 ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20' :
+   margin < 15 ? 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20' :
+   margin < 30 ? 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20' :
+   'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20';
+  return (
+  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${color}`}>
+   {margin.toFixed(0)}%
+  </span>
+  );
+ })()}
  </td>
  <td className="px-4 py-3 text-center">
  {(product as any).discount_percent ? (
