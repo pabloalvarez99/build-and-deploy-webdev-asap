@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/auth'
 import { productApi, Category } from '@/lib/api'
 import {
   ShoppingCart, Search, Plus, Minus, Trash2, CreditCard, Banknote,
-  CheckCircle2, X, Receipt, Loader2, SmartphoneNfc, ScanLine, CheckCircle, AlertCircle,
+  CheckCircle2, X, Receipt, Loader2, SmartphoneNfc, ScanLine, CheckCircle, AlertCircle, User, History,
 } from 'lucide-react'
 
 interface CartItem {
@@ -67,6 +67,11 @@ export default function POSPage() {
   const [selectedCategory, setSelectedCategory] = useState('')
   const [categories, setCategories] = useState<Category[]>([])
   const [todayStats, setTodayStats] = useState<{ count: number; revenue: number } | null>(null)
+  const [customerHistory, setCustomerHistory] = useState<{
+    found: boolean; name?: string | null; visit_count?: number;
+    top_products?: string[]; recent_orders?: { date: string; total: number; items: string }[];
+  } | null>(null)
+  const [historyLoading, setHistoryLoading] = useState(false)
 
   const loadTodayStats = () => {
     // Compute today in Santiago local time (UTC-3 / UTC-4 depending on DST)
@@ -82,6 +87,22 @@ export default function POSPage() {
       })
       .catch(() => {})
   }
+
+  // Customer phone lookup with debounce
+  useEffect(() => {
+    const digits = customerPhone.replace(/\D/g, '')
+    if (digits.length < 4) { setCustomerHistory(null); return }
+    const t = setTimeout(async () => {
+      setHistoryLoading(true)
+      try {
+        const r = await fetch(`/api/admin/pos/customer-history?phone=${encodeURIComponent(digits)}`, { credentials: 'include' })
+        if (r.ok) setCustomerHistory(await r.json())
+        else setCustomerHistory(null)
+      } catch { setCustomerHistory(null) }
+      finally { setHistoryLoading(false) }
+    }, 400)
+    return () => clearTimeout(t)
+  }, [customerPhone])
 
   useEffect(() => {
     if (!user || user.role !== 'admin') { router.push('/'); return }
@@ -285,6 +306,7 @@ export default function POSPage() {
       setProducts([])
       setCustomerName('')
       setCustomerPhone('')
+      setCustomerHistory(null)
       setCashReceived('')
       setDiscountValue('')
       setShowPayModal(false)
@@ -717,14 +739,60 @@ export default function POSPage() {
                 placeholder="Nombre (opcional)"
                 className="px-3 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:border-emerald-500 focus:outline-none"
               />
-              <input
-                type="tel"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="Teléfono (opcional)"
-                className="px-3 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:border-emerald-500 focus:outline-none"
-              />
+              <div className="relative">
+                <input
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(e) => {
+                    setCustomerPhone(e.target.value)
+                    // Auto-fill name when history found and name field is empty
+                    if (!customerName && customerHistory?.found && customerHistory.name) {
+                      setCustomerName(customerHistory.name)
+                    }
+                  }}
+                  placeholder="Teléfono (opcional)"
+                  className="w-full px-3 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:border-emerald-500 focus:outline-none pr-7"
+                />
+                {historyLoading && (
+                  <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 animate-spin" />
+                )}
+                {!historyLoading && customerHistory?.found && (
+                  <User className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-emerald-500" />
+                )}
+              </div>
             </div>
+
+            {/* Customer history card */}
+            {customerHistory?.found && (
+              <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 rounded-xl p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+                    {customerHistory.name || 'Cliente conocido'}
+                  </span>
+                  <span className="ml-auto text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 rounded-full">
+                    {customerHistory.visit_count} visita{customerHistory.visit_count !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                {customerHistory.top_products && customerHistory.top_products.length > 0 && (
+                  <div className="flex items-start gap-1.5">
+                    <History className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                    <p className="text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed line-clamp-2">
+                      {customerHistory.top_products.join(' · ')}
+                    </p>
+                  </div>
+                )}
+                {!customerName && customerHistory.name && (
+                  <button
+                    type="button"
+                    onClick={() => setCustomerName(customerHistory.name!)}
+                    className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
+                  >
+                    Usar nombre: {customerHistory.name}
+                  </button>
+                )}
+              </div>
+            )}
 
             <button
               onClick={handleSale}
