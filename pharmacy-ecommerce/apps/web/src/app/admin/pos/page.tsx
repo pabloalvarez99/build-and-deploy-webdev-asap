@@ -66,6 +66,22 @@ export default function POSPage() {
   const [searchError, setSearchError] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState('')
   const [categories, setCategories] = useState<Category[]>([])
+  const [todayStats, setTodayStats] = useState<{ count: number; revenue: number } | null>(null)
+
+  const loadTodayStats = () => {
+    // Compute today in Santiago local time (UTC-3 / UTC-4 depending on DST)
+    const todayCL = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Santiago' })
+    fetch(`/api/admin/orders?from=${todayCL}&to=${todayCL}&channel=pos&status=completed&limit=500`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { orders?: { total: string | number }[] } | null) => {
+        if (!data?.orders) return
+        setTodayStats({
+          count: data.orders.length,
+          revenue: data.orders.reduce((s: number, o: { total: string | number }) => s + parseFloat(String(o.total)), 0),
+        })
+      })
+      .catch(() => {})
+  }
 
   useEffect(() => {
     if (!user || user.role !== 'admin') { router.push('/'); return }
@@ -74,6 +90,7 @@ export default function POSPage() {
     productApi.listCategories(true)
       .then(data => setCategories(data.sort((a, b) => a.name.localeCompare(b.name))))
       .catch(() => {})
+    loadTodayStats()
   }, [user, router])
 
   // Barcode scanner: global capture listener — intercepts before element handlers
@@ -271,6 +288,7 @@ export default function POSPage() {
       setCashReceived('')
       setDiscountValue('')
       setShowPayModal(false)
+      loadTodayStats()
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Error al procesar venta')
     } finally {
@@ -608,6 +626,23 @@ export default function POSPage() {
             >
               Limpiar carrito
             </button>
+          </div>
+        )}
+
+        {/* Today's summary */}
+        {todayStats !== null && (
+          <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-700">
+            <p className="text-[10px] uppercase font-semibold text-slate-400 dark:text-slate-500 mb-1.5">Ventas hoy</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-2 text-center">
+                <p className="text-lg font-bold text-slate-900 dark:text-white">{todayStats.count}</p>
+                <p className="text-[10px] text-slate-400">ventas</p>
+              </div>
+              <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-2 text-center">
+                <p className="text-base font-bold text-emerald-700 dark:text-emerald-400 leading-tight">{formatCLP(todayStats.revenue)}</p>
+                <p className="text-[10px] text-slate-400">recaudado</p>
+              </div>
+            </div>
           </div>
         )}
       </div>

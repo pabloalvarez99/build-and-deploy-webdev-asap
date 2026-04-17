@@ -16,12 +16,21 @@ export async function GET(request: NextRequest) {
 
     const db = await getDb();
 
+    const from = searchParams.get('from'); // YYYY-MM-DD
+    const to = searchParams.get('to');     // YYYY-MM-DD
+
     const where: Record<string, unknown> = {};
     if (status) where.status = status;
     if (channel === 'pos') {
       where.payment_provider = { in: ['pos_cash', 'pos_debit', 'pos_credit'] };
     } else if (channel === 'online') {
       where.payment_provider = { notIn: ['pos_cash', 'pos_debit', 'pos_credit'] };
+    }
+    if (from || to) {
+      where.created_at = {
+        ...(from ? { gte: new Date(from + 'T00:00:00.000Z') } : {}),
+        ...(to ? { lte: new Date(to + 'T23:59:59.999Z') } : {}),
+      };
     }
 
     const [orders, total] = await Promise.all([
