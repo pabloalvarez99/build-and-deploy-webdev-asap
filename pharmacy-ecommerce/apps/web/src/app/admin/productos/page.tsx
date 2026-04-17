@@ -47,6 +47,13 @@ export default function AdminProductsPage() {
  const [maxPrice, setMaxPrice] = useState('');
  const [noImage, setNoImage] = useState(false);
  const [hasDiscount, setHasDiscount] = useState(false);
+ const [noExternalId, setNoExternalId] = useState(false);
+ const [noBarcode, setNoBarcode] = useState(false);
+
+ // Data completeness stats (loaded once on mount)
+ const [productStats, setProductStats] = useState<{
+  total: number; noImage: number; noExternalId: number; noBarcode: number; outOfStock: number; lowStock: number;
+ } | null>(null);
 
  const handleColumnSort = (field: string) => {
   const isActive = sortBy === `${field}_asc` || sortBy === `${field}_desc` || (field === 'name' && (sortBy === 'name' || sortBy === 'name_asc'));
@@ -112,6 +119,10 @@ export default function AdminProductsPage() {
  }
  loadCategories();
  loadLaboratories();
+ fetch('/api/admin/products/stats', { credentials: 'include' })
+  .then(r => r.ok ? r.json() : null)
+  .then(data => { if (data) setProductStats(data); })
+  .catch(() => {});
  }, [user, router]);
 
  useEffect(() => {
@@ -136,7 +147,7 @@ export default function AdminProductsPage() {
  if (user) {
  loadProducts();
  }
- }, [user, currentPage, searchTerm, selectedCategory, selectedLaboratory, selectedPrescription, sortBy, stockFilter, minPrice, maxPrice, noImage, hasDiscount]);
+ }, [user, currentPage, searchTerm, selectedCategory, selectedLaboratory, selectedPrescription, sortBy, stockFilter, minPrice, maxPrice, noImage, hasDiscount, noExternalId, noBarcode]);
 
  const loadCategories = async () => {
  try {
@@ -175,6 +186,8 @@ export default function AdminProductsPage() {
  max_price: maxPrice ? parseInt(maxPrice) : undefined,
  no_image: noImage || undefined,
  has_discount: hasDiscount || undefined,
+ no_external_id: noExternalId || undefined,
+ no_barcode: noBarcode || undefined,
  in_stock: stockFilter === 'in' ? true : undefined,
  stock_filter: (stockFilter === 'low' || stockFilter === 'out') ? (stockFilter as 'low' | 'out') : undefined,
  });
@@ -419,12 +432,14 @@ export default function AdminProductsPage() {
  setMaxPrice('');
  setNoImage(false);
  setHasDiscount(false);
+ setNoExternalId(false);
+ setNoBarcode(false);
  setCurrentPage(1);
  window.history.replaceState({}, '', '/admin/productos');
  };
 
  // Count active filters (excludes search and sort — those are in the main bar)
- const activeFilterCount = [selectedCategory, selectedLaboratory, selectedPrescription, stockFilter, minPrice || maxPrice ? 'price' : '', noImage ? 'noimg' : '', hasDiscount ? 'disc' : ''].filter(Boolean).length;
+ const activeFilterCount = [selectedCategory, selectedLaboratory, selectedPrescription, stockFilter, minPrice || maxPrice ? 'price' : '', noImage ? 'noimg' : '', hasDiscount ? 'disc' : '', noExternalId ? 'noid' : '', noBarcode ? 'nobc' : ''].filter(Boolean).length;
 
  // Filter laboratories by search term
  const filteredLaboratories = laboratories.filter(lab =>
@@ -632,6 +647,47 @@ export default function AdminProductsPage() {
  </div>
  </div>
 
+ {/* Data Completeness Panel */}
+ {productStats && (
+ <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
+  {[
+  { label: 'Sin imagen', value: productStats.noImage, color: 'amber', onClick: () => { setNoImage(true); setCurrentPage(1); } },
+  { label: 'Sin cód. externo', value: productStats.noExternalId, color: 'violet', onClick: () => { setNoExternalId(true); setCurrentPage(1); } },
+  { label: 'Sin barcode', value: productStats.noBarcode, color: 'cyan', onClick: () => { setNoBarcode(true); setCurrentPage(1); } },
+  { label: 'Agotados', value: productStats.outOfStock, color: 'red', onClick: () => { setStockFilter('out'); setCurrentPage(1); } },
+  { label: 'Stock bajo', value: productStats.lowStock, color: 'orange', onClick: () => { setStockFilter('low'); setCurrentPage(1); } },
+  { label: 'Total activos', value: productStats.total, color: 'emerald', onClick: undefined },
+  ].map(({ label, value, color, onClick }) => (
+  <button
+   key={label}
+   onClick={onClick}
+   disabled={!onClick}
+   className={`flex flex-col items-center py-2.5 px-3 rounded-xl border-2 transition-all text-center ${
+   onClick
+    ? `cursor-pointer hover:shadow-sm active:scale-95 ${
+     color === 'amber' ? 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 hover:border-amber-400' :
+     color === 'violet' ? 'border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/20 hover:border-violet-400' :
+     color === 'cyan' ? 'border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-900/20 hover:border-cyan-400' :
+     color === 'red' ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 hover:border-red-400' :
+     'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 hover:border-orange-400'
+    }`
+    : 'cursor-default border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20'
+   }`}
+  >
+   <span className={`text-xl font-bold leading-none ${
+   color === 'amber' ? 'text-amber-700 dark:text-amber-300' :
+   color === 'violet' ? 'text-violet-700 dark:text-violet-300' :
+   color === 'cyan' ? 'text-cyan-700 dark:text-cyan-300' :
+   color === 'red' ? 'text-red-700 dark:text-red-300' :
+   color === 'orange' ? 'text-orange-700 dark:text-orange-300' :
+   'text-emerald-700 dark:text-emerald-300'
+   }`}>{value.toLocaleString('es-CL')}</span>
+   <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-tight">{label}</span>
+  </button>
+  ))}
+ </div>
+ )}
+
  {/* Search and Filters */}
  <div className="card p-4 mb-6">
  {/* Main filter bar */}
@@ -715,7 +771,7 @@ export default function AdminProductsPage() {
  </div>
 
  {/* Active filter chips */}
- {(selectedCategory || selectedLaboratory || selectedPrescription || stockFilter || minPrice || maxPrice || noImage || hasDiscount) && (
+ {(selectedCategory || selectedLaboratory || selectedPrescription || stockFilter || minPrice || maxPrice || noImage || hasDiscount || noExternalId || noBarcode) && (
  <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
  <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">Filtros activos:</span>
  {selectedCategory && (
@@ -761,6 +817,18 @@ export default function AdminProductsPage() {
  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-pink-50 dark:bg-pink-900/20 text-pink-800 dark:text-pink-300 border border-pink-200 dark:border-pink-700 rounded-full text-xs font-medium">
  Con descuento
  <button onClick={() => { setHasDiscount(false); setCurrentPage(1); }} className="hover:text-pink-600"><X className="w-3 h-3" /></button>
+ </span>
+ )}
+ {noExternalId && (
+ <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-violet-50 dark:bg-violet-900/20 text-violet-800 dark:text-violet-300 border border-violet-200 dark:border-violet-700 rounded-full text-xs font-medium">
+ Sin código externo
+ <button onClick={() => { setNoExternalId(false); setCurrentPage(1); }} className="hover:text-violet-600"><X className="w-3 h-3" /></button>
+ </span>
+ )}
+ {noBarcode && (
+ <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-700 rounded-full text-xs font-medium">
+ Sin código de barra
+ <button onClick={() => { setNoBarcode(false); setCurrentPage(1); }} className="hover:text-cyan-600"><X className="w-3 h-3" /></button>
  </span>
  )}
  <button onClick={clearFilters} className="ml-auto text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 underline">Limpiar todo</button>
@@ -891,6 +959,30 @@ export default function AdminProductsPage() {
  Con descuento
  </span>
  {hasDiscount && <span className="w-4 h-4 bg-pink-400 rounded-full flex items-center justify-center text-white text-[10px]">✓</span>}
+ </button>
+ <button
+ onClick={() => { setNoExternalId(!noExternalId); setCurrentPage(1); }}
+ className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+ noExternalId ? 'bg-violet-50 dark:bg-violet-900/20 border-violet-400 dark:border-violet-600 text-violet-800 dark:text-violet-300' : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+ }`}
+ >
+ <span className="flex items-center gap-2">
+ <span className="text-violet-500 font-bold text-sm leading-none">#</span>
+ Sin código externo
+ </span>
+ {noExternalId && <span className="w-4 h-4 bg-violet-400 rounded-full flex items-center justify-center text-white text-[10px]">✓</span>}
+ </button>
+ <button
+ onClick={() => { setNoBarcode(!noBarcode); setCurrentPage(1); }}
+ className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+ noBarcode ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-400 dark:border-cyan-600 text-cyan-800 dark:text-cyan-300' : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+ }`}
+ >
+ <span className="flex items-center gap-2">
+ <span className="text-cyan-500 font-bold text-sm leading-none">▌</span>
+ Sin código de barra
+ </span>
+ {noBarcode && <span className="w-4 h-4 bg-cyan-400 rounded-full flex items-center justify-center text-white text-[10px]">✓</span>}
  </button>
  </div>
  </div>

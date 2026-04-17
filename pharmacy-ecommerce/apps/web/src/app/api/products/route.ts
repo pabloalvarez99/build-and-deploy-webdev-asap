@@ -61,6 +61,8 @@ export async function GET(request: NextRequest) {
   if (searchParams.get('in_stock') === 'true') where.stock = { gt: 0 }
   if (searchParams.get('no_image') === 'true') where.image_url = null
   if (searchParams.get('has_discount') === 'true') where.discount_percent = { gt: 0 }
+  if (searchParams.get('no_external_id') === 'true') where.external_id = null
+  if (searchParams.get('no_barcode') === 'true') where.product_barcodes = { none: {} }
 
   const minPrice = searchParams.get('min_price')
   const maxPrice = searchParams.get('max_price')

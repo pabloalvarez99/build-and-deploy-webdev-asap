@@ -49,6 +49,8 @@ export const productApi = {
     no_image?: boolean
     has_discount?: boolean
     stock_filter?: 'low' | 'out' | ''
+    no_external_id?: boolean
+    no_barcode?: boolean
   }): Promise<PaginatedProducts> => {
     const qs = new URLSearchParams()
     if (params?.category) qs.set('category', params.category)
@@ -67,6 +69,8 @@ export const productApi = {
     if (params?.no_image) qs.set('no_image', 'true')
     if (params?.has_discount) qs.set('has_discount', 'true')
     if (params?.stock_filter) qs.set('stock_filter', params.stock_filter)
+    if (params?.no_external_id) qs.set('no_external_id', 'true')
+    if (params?.no_barcode) qs.set('no_barcode', 'true')
     return apiRequest<PaginatedProducts>(`/api/products?${qs.toString()}`, { method: 'GET' })
   },
 
