@@ -363,34 +363,22 @@ export default function AdminProductsPage() {
  };
 
  const exportToCSV = () => {
- if (!products) return;
-
- const headers = ['Nombre', 'Slug', 'Precio', 'Stock', 'Categoría', 'Laboratorio', 'Acción Terapéutica', 'Principio Activo', 'Tipo de Venta', 'Presentación', 'Estado'];
- const prescriptionLabels: Record<string, string> = {
- direct: 'Venta Directa',
- prescription: 'Receta Médica',
- retained: 'Receta Retenida'
- };
- const rows = products.products.map(p => [
- `"${p.name.replace(/"/g, '""')}"`,
- p.slug,
- p.price,
- p.stock,
- p.category_name || '',
- p.laboratory || '',
- (p as any).therapeutic_action || '',
- (p as any).active_ingredient || '',
- prescriptionLabels[(p as any).prescription_type] || 'Venta Directa',
- (p as any).presentation || '',
- p.active ? 'Activo' : 'Inactivo'
- ]);
-
- const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
- const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM for Excel
- const link = document.createElement('a');
- link.href = URL.createObjectURL(blob);
- link.download = `productos_${new Date().toISOString().split('T')[0]}.csv`;
- link.click();
+ // Build same query params as the current view (all pages, server-side)
+ const qs = new URLSearchParams();
+ if (searchTerm) qs.set('search', searchTerm);
+ if (selectedCategory) qs.set('category', selectedCategory);
+ if (selectedLaboratory) qs.set('laboratory', selectedLaboratory);
+ if (selectedPrescription) qs.set('prescription_type', selectedPrescription);
+ if (minPrice) qs.set('min_price', minPrice);
+ if (maxPrice) qs.set('max_price', maxPrice);
+ if (noImage) qs.set('no_image', 'true');
+ if (hasDiscount) qs.set('has_discount', 'true');
+ if (noExternalId) qs.set('no_external_id', 'true');
+ if (noBarcode) qs.set('no_barcode', 'true');
+ if (stockFilter === 'out' || stockFilter === 'low') qs.set('stock_filter', stockFilter);
+ if (stockFilter === 'in') qs.set('in_stock', 'true');
+ qs.set('active_only', 'false'); // export includes inactive too
+ window.location.href = `/api/admin/products/export?${qs.toString()}`;
  };
 
  const handleStockClick = (productId: string, currentStock: number) => {
