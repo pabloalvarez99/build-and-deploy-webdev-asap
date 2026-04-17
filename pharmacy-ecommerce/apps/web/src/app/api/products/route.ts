@@ -43,6 +43,8 @@ export async function GET(request: NextRequest) {
       { name: { contains: s, mode: 'insensitive' } },
       { description: { contains: s, mode: 'insensitive' } },
       { laboratory: { contains: s, mode: 'insensitive' } },
+      { active_ingredient: { contains: s, mode: 'insensitive' } },
+      { therapeutic_action: { contains: s, mode: 'insensitive' } },
     ]
   }
   const barcodeVal = searchParams.get('barcode')

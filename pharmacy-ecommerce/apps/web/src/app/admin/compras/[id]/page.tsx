@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/auth'
 import { purchaseOrderApi, type PurchaseOrder } from '@/lib/api'
 import {
   ClipboardList, ArrowLeft, CheckCircle2, Clock, XCircle,
-  Package, Calendar, Hash, User, FileText, PackageCheck,
+  Package, Calendar, Hash, User, FileText, PackageCheck, Printer,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -112,9 +112,9 @@ export default function CompraDetailPage() {
   const st = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.draft
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6" id="purchase-order-print">
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 print:hidden">
         <button
           onClick={() => router.push('/admin/compras')}
           className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
@@ -130,6 +130,22 @@ export default function CompraDetailPage() {
             {st.icon}{st.label}
           </span>
         </div>
+        <button
+          onClick={() => window.print()}
+          className="ml-auto flex items-center gap-2 px-3 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-xl text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+        >
+          <Printer className="w-4 h-4" />
+          Imprimir
+        </button>
+      </div>
+
+      {/* Print-only header */}
+      <div className="hidden print:block text-center mb-6">
+        <p className="text-xl font-bold">Tu Farmacia — Orden de Compra</p>
+        <p className="text-sm text-slate-500">
+          {order.suppliers?.name} · {new Date(order.created_at).toLocaleDateString('es-CL')}
+          {order.invoice_number ? ` · Factura #${order.invoice_number}` : ''}
+        </p>
       </div>
 
       {/* Info card */}
@@ -230,9 +246,9 @@ export default function CompraDetailPage() {
         </div>
       </div>
 
-      {/* Actions */}
+      {/* Actions (hidden on print) */}
       {order.status === 'draft' && (
-        <div className="flex gap-3">
+        <div className="flex gap-3 print:hidden">
           <button
             onClick={handleReceive}
             disabled={isReceiving || isCancelling}
