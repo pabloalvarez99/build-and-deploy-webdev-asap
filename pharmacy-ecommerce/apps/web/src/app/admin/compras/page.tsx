@@ -4,7 +4,27 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
 import { purchaseOrderApi, supplierApi, type PurchaseOrder, type Supplier } from '@/lib/api'
-import { ClipboardList, Plus, Eye, Filter, CheckCircle2, Clock, XCircle } from 'lucide-react'
+import { ClipboardList, Plus, Eye, Filter, CheckCircle2, Clock, XCircle, AlertTriangle, ChevronDown, ChevronRight, ShoppingCart } from 'lucide-react'
+
+interface ReorderItem {
+  product_id: string
+  name: string
+  stock: number
+  price: number
+  cost_price: number | null
+  supplier_code: string
+}
+
+interface ReorderGroup {
+  supplier: { id: string; name: string; contact_name: string | null; contact_email: string | null; contact_phone: string | null }
+  items: ReorderItem[]
+}
+
+interface ReorderSuggestions {
+  threshold: number
+  groups: ReorderGroup[]
+  total_products: number
+}
 
 const STATUS_LABELS: Record<string, { label: string; icon: React.ReactNode; cls: string }> = {
   draft: { label: 'Borrador', icon: <Clock className="w-3.5 h-3.5" />, cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
@@ -29,6 +49,9 @@ export default function ComprasPage() {
   const [page, setPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '')
   const [supplierFilter, setSupplierFilter] = useState(searchParams.get('supplier_id') || '')
+  const [suggestions, setSuggestions] = useState<ReorderSuggestions | null>(null)
+  const [showSuggestions, setShowSuggestions] = useState(true)
+  const [expandedSupplier, setExpandedSupplier] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setIsLoading(true)
@@ -51,6 +74,10 @@ export default function ComprasPage() {
   useEffect(() => {
     if (!user || user.role !== 'admin') { router.push('/'); return }
     supplierApi.list().then((d) => setSuppliers(d.suppliers)).catch(console.error)
+    fetch('/api/admin/inventory/reorder-suggestions')
+      .then((r) => r.json())
+      .then(setSuggestions)
+      .catch(console.error)
   }, [user, router])
 
   useEffect(() => { load() }, [load])
@@ -76,6 +103,96 @@ export default function ComprasPage() {
           Nueva compra
         </button>
       </div>
+
+      {/* Reorder Suggestions Banner */}
+      {suggestions && suggestions.total_products > 0 && (
+        <div className="rounded-2xl border-2 border-orange-200 dark:border-orange-800/50 bg-orange-50 dark:bg-orange-900/10 overflow-hidden">
+          <button
+            onClick={() => setShowSuggestions((v) => !v)}
+            className="w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-orange-100/50 dark:hover:bg-orange-900/20 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0" />
+              <span className="font-semibold text-orange-800 dark:text-orange-300">
+                {suggestions.total_products} producto{suggestions.total_products !== 1 ? 's' : ''} bajo stock mínimo ({suggestions.threshold} uds)
+              </span>
+              <span className="hidden sm:inline text-sm text-orange-600 dark:text-orange-400">
+                — {suggestions.groups.length} proveedor{suggestions.groups.length !== 1 ? 'es' : ''}
+              </span>
+            </div>
+            {showSuggestions
+              ? <ChevronDown className="w-4 h-4 text-orange-500 shrink-0" />
+              : <ChevronRight className="w-4 h-4 text-orange-500 shrink-0" />
+            }
+          </button>
+
+          {showSuggestions && (
+            <div className="border-t border-orange-200 dark:border-orange-800/50 divide-y divide-orange-100 dark:divide-orange-800/30">
+              {suggestions.groups.map((group) => (
+                <div key={group.supplier.id}>
+                  <button
+                    onClick={() => setExpandedSupplier(expandedSupplier === group.supplier.id ? null : group.supplier.id)}
+                    className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-orange-100/40 dark:hover:bg-orange-900/20 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <ShoppingCart className="w-4 h-4 text-orange-400 shrink-0" />
+                      <span className="font-medium text-slate-800 dark:text-slate-200">{group.supplier.name}</span>
+                      <span className="text-xs text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/40 px-2 py-0.5 rounded-full">
+                        {group.items.length} ítem{group.items.length !== 1 ? 's' : ''}
+                      </span>
+                      {group.supplier.contact_email && (
+                        <span className="hidden md:inline text-xs text-slate-500 dark:text-slate-400 truncate">{group.supplier.contact_email}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          router.push(`/admin/compras/nueva?supplier_id=${group.supplier.id}`)
+                        }}
+                        className="text-xs font-medium px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+                      >
+                        + Nueva OC
+                      </button>
+                      {expandedSupplier === group.supplier.id
+                        ? <ChevronDown className="w-4 h-4 text-slate-400" />
+                        : <ChevronRight className="w-4 h-4 text-slate-400" />
+                      }
+                    </div>
+                  </button>
+
+                  {expandedSupplier === group.supplier.id && (
+                    <div className="px-5 pb-3">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-xs text-slate-500 dark:text-slate-400 border-b border-orange-100 dark:border-orange-800/30">
+                            <th className="text-left py-1.5 font-medium">Producto</th>
+                            <th className="text-left py-1.5 font-medium">Código prov.</th>
+                            <th className="text-right py-1.5 font-medium">Stock actual</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {group.items.map((item) => (
+                            <tr key={item.product_id} className="border-b border-orange-50 dark:border-orange-900/20 last:border-0">
+                              <td className="py-1.5 text-slate-700 dark:text-slate-300 pr-4">{item.name}</td>
+                              <td className="py-1.5 text-slate-500 dark:text-slate-400 font-mono text-xs pr-4">{item.supplier_code}</td>
+                              <td className="py-1.5 text-right">
+                                <span className={`font-semibold ${item.stock === 0 ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'}`}>
+                                  {item.stock === 0 ? 'Agotado' : `${item.stock} uds`}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">

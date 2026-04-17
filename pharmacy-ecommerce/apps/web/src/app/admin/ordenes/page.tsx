@@ -202,31 +202,13 @@ export default function AdminOrdersPage() {
   const hasActiveFilters = filterStatus.length > 0 || filterProvider || dateFrom || dateTo || minAmount || maxAmount || searchQuery;
 
   const exportToCSV = () => {
-    const headers = ['ID', 'Fecha', 'Cliente', 'Email', 'Teléfono', 'Estado', 'Pago', 'Total', 'Código Retiro', 'Dirección', 'Notas'];
-    const rows = filteredOrders.map((o) => [
-      o.id,
-      new Date(o.created_at).toLocaleDateString('es-CL'),
-      getCustomerName(o),
-      getCustomerEmail(o),
-      o.customer_phone || '',
-      STATUS_CONFIG[o.status]?.label || o.status,
-      o.payment_provider === 'webpay' ? 'Webpay Plus' : o.payment_provider === 'store' ? 'Retiro en tienda' : o.payment_provider === 'pos_cash' ? 'POS Efectivo' : o.payment_provider === 'pos_debit' ? 'POS Débito' : o.payment_provider === 'pos_credit' ? 'POS Crédito' : o.payment_provider || '',
-      o.total,
-      o.pickup_code || '',
-      o.shipping_address || '',
-      o.notes || '',
-    ]);
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
-    ].join('\n');
-
-    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `ordenes_${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
+    // Server-side export with line items — passes active filters
+    const params = new URLSearchParams();
+    if (filterStatus.length === 1) params.set('status', filterStatus[0]);
+    if (filterProvider) params.set('channel', filterProvider === 'pos' ? 'pos' : filterProvider === 'webpay' ? 'online' : filterProvider);
+    if (dateFrom) params.set('from', dateFrom);
+    if (dateTo) params.set('to', dateTo);
+    window.location.href = `/api/admin/orders/export?${params.toString()}`;
   };
 
   if (!user || user.role !== 'admin') return null;
