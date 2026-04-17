@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
     }
     if (search) {
       where.OR = [
+        { id: { startsWith: search } },
         { guest_name: { contains: search, mode: 'insensitive' } },
         { guest_surname: { contains: search, mode: 'insensitive' } },
         { guest_email: { contains: search, mode: 'insensitive' } },

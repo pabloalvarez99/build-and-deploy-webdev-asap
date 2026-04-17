@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/auth'
 import { productApi, Category } from '@/lib/api'
 import {
   ShoppingCart, Search, Plus, Minus, Trash2, CreditCard, Banknote,
-  CheckCircle2, X, Receipt, Loader2, SmartphoneNfc, ScanLine, CheckCircle, AlertCircle, User, History, BarChart3,
+  CheckCircle2, X, Receipt, Loader2, SmartphoneNfc, ScanLine, CheckCircle, AlertCircle, User, History, BarChart3, Store,
 } from 'lucide-react'
 
 interface CartItem {
@@ -78,6 +78,21 @@ export default function POSPage() {
     top_products?: string[]; recent_orders?: { date: string; total: number; items: string }[];
   } | null>(null)
   const [historyLoading, setHistoryLoading] = useState(false)
+
+  // Pickup lookup
+  const [showPickupModal, setShowPickupModal] = useState(false)
+  const [pickupCode, setPickupCode] = useState('')
+  const [pickupOrder, setPickupOrder] = useState<{
+    id: string; status: string; total: string; guest_name: string | null; guest_surname: string | null;
+    guest_email: string | null; customer_phone: string | null; pickup_code: string | null;
+    reservation_expires_at: string | null;
+    items: { product_name: string; quantity: number; price_at_purchase: string }[];
+  } | null>(null)
+  const [pickupLoading, setPickupLoading] = useState(false)
+  const [pickupError, setPickupError] = useState<string | null>(null)
+  const [pickupApproving, setPickupApproving] = useState(false)
+  const [pickupApproved, setPickupApproved] = useState(false)
+  const pickupInputRef = useRef<HTMLInputElement>(null)
 
   const loadTodayStats = () => {
     // Compute today in Santiago local time (UTC-3 / UTC-4 depending on DST)
@@ -330,6 +345,41 @@ export default function POSPage() {
     }
   }
 
+  const lookupPickup = async () => {
+    const code = pickupCode.trim()
+    if (!/^\d{6}$/.test(code)) { setPickupError('Ingresa el código de 6 dígitos'); return }
+    setPickupLoading(true)
+    setPickupError(null)
+    setPickupOrder(null)
+    setPickupApproved(false)
+    try {
+      const r = await fetch(`/api/admin/pos/pickup?code=${code}`, { credentials: 'include' })
+      const data = await r.json()
+      if (!r.ok) { setPickupError(data.error || 'Reserva no encontrada'); return }
+      setPickupOrder(data)
+    } catch { setPickupError('Error al buscar la reserva') }
+    finally { setPickupLoading(false) }
+  }
+
+  const approvePickup = async () => {
+    if (!pickupOrder) return
+    setPickupApproving(true)
+    try {
+      const r = await fetch(`/api/admin/orders/${pickupOrder.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'approve_reservation' }),
+        credentials: 'include',
+      })
+      const data = await r.json()
+      if (!r.ok) { setPickupError(data.error || 'Error al aprobar'); return }
+      setPickupApproved(true)
+      setPickupOrder({ ...pickupOrder, status: 'processing' })
+      loadTodayStats()
+    } catch { setPickupError('Error al aprobar la reserva') }
+    finally { setPickupApproving(false) }
+  }
+
   const printReceipt = () => window.print()
 
   if (successOrder) {
@@ -420,9 +470,18 @@ export default function POSPage() {
         <div className="flex items-center gap-3 flex-wrap">
           <Receipt className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Punto de Venta</h1>
-          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-full ml-auto">
-            <ScanLine className="w-3.5 h-3.5" />
-            <span>Lector de barras activo</span>
+          <div className="flex items-center gap-2 ml-auto">
+            <button
+              onClick={() => { setShowPickupModal(true); setPickupCode(''); setPickupOrder(null); setPickupError(null); setPickupApproved(false); setTimeout(() => pickupInputRef.current?.focus(), 50) }}
+              className="flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-2.5 py-1 rounded-full hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+            >
+              <Store className="w-3.5 h-3.5" />
+              Retiro
+            </button>
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-full">
+              <ScanLine className="w-3.5 h-3.5" />
+              <span>Lector de barras activo</span>
+            </div>
           </div>
         </div>
 
@@ -826,6 +885,109 @@ export default function POSPage() {
                 <><CheckCircle2 className="w-5 h-5" /> Confirmar venta</>
               )}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Pickup code lookup modal */}
+      {showPickupModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+              <div className="flex items-center gap-2">
+                <Store className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                <h2 className="font-bold text-slate-900 dark:text-white">Buscar reserva</h2>
+              </div>
+              <button onClick={() => setShowPickupModal(false)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Code input */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Código de retiro (6 dígitos)</label>
+                <div className="flex gap-2">
+                  <input
+                    ref={pickupInputRef}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={pickupCode}
+                    onChange={(e) => { setPickupCode(e.target.value.replace(/\D/g, '')); setPickupError(null) }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') lookupPickup() }}
+                    placeholder="000000"
+                    className="flex-1 text-center text-2xl font-mono tracking-[0.4em] px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none"
+                  />
+                  <button
+                    onClick={lookupPickup}
+                    disabled={pickupLoading || pickupCode.length !== 6}
+                    className="px-4 py-3 bg-amber-600 text-white rounded-xl font-semibold hover:bg-amber-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+                  >
+                    {pickupLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Error */}
+              {pickupError && (
+                <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-xl">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {pickupError}
+                </div>
+              )}
+
+              {/* Order card */}
+              {pickupOrder && (
+                <div className="space-y-3">
+                  <div className={`rounded-xl p-4 space-y-2 border-2 ${pickupApproved ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20' : pickupOrder.status === 'reserved' ? 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/10' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30'}`}>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs text-slate-400">#{pickupOrder.id.slice(0, 8).toUpperCase()}</span>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${pickupApproved || pickupOrder.status === 'processing' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : pickupOrder.status === 'reserved' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' : 'bg-slate-100 text-slate-600'}`}>
+                        {pickupApproved ? 'Aprobada' : pickupOrder.status === 'reserved' ? 'Pendiente aprobación' : pickupOrder.status === 'processing' ? 'Aprobada' : pickupOrder.status}
+                      </span>
+                    </div>
+                    {(pickupOrder.guest_name || pickupOrder.guest_surname) && (
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                        {[pickupOrder.guest_name, pickupOrder.guest_surname].filter(Boolean).join(' ')}
+                      </p>
+                    )}
+                    {pickupOrder.guest_email && <p className="text-xs text-slate-500">{pickupOrder.guest_email}</p>}
+                    {pickupOrder.customer_phone && <p className="text-xs text-slate-500">{pickupOrder.customer_phone}</p>}
+                    <div className="border-t border-slate-200 dark:border-slate-600 pt-2 space-y-1">
+                      {pickupOrder.items.map((item, i) => (
+                        <div key={i} className="flex justify-between text-xs">
+                          <span className="text-slate-600 dark:text-slate-400 flex-1 truncate pr-2">{item.quantity}× {item.product_name}</span>
+                          <span className="font-medium text-slate-900 dark:text-white shrink-0">{formatCLP(Number(item.price_at_purchase) * item.quantity)}</span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between text-sm font-bold pt-1 border-t border-slate-200 dark:border-slate-600">
+                        <span className="text-slate-900 dark:text-white">Total</span>
+                        <span className="text-emerald-600 dark:text-emerald-400">{formatCLP(Number(pickupOrder.total))}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Approve / already approved */}
+                  {pickupApproved ? (
+                    <div className="flex items-center justify-center gap-2 py-3 text-emerald-600 dark:text-emerald-400 font-semibold">
+                      <CheckCircle2 className="w-5 h-5" />
+                      Reserva aprobada — stock descontado
+                    </div>
+                  ) : pickupOrder.status === 'reserved' ? (
+                    <button
+                      onClick={approvePickup}
+                      disabled={pickupApproving}
+                      className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                      {pickupApproving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                      Aprobar retiro
+                    </button>
+                  ) : (
+                    <p className="text-center text-sm text-slate-400">Esta reserva ya fue procesada</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
