@@ -102,6 +102,8 @@ export default function AdminProductsPage() {
  // Stock inline editing
  const [editingStockId, setEditingStockId] = useState<string | null>(null);
  const [editingStockValue, setEditingStockValue] = useState<string>('');
+ const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
+ const [editingPriceValue, setEditingPriceValue] = useState<string>('');
  const [stockModalProduct, setStockModalProduct] = useState<{ id: string; name: string; stock: number } | null>(null);
 
  // Identificadores POS — external_id y barcodes son editables en create y edit
@@ -418,6 +420,27 @@ export default function AdminProductsPage() {
    setProducts(prev => prev ? { ...prev, products: prev.products.map(p => p.id === productId ? { ...p, stock: newQty } : p) } : prev);
   } catch { /* silently fail */ }
   setEditingStockId(null);
+ };
+
+ const handlePriceSave = async (productId: string) => {
+  const newPrice = parseFloat(editingPriceValue);
+  if (isNaN(newPrice) || newPrice <= 0) { setEditingPriceId(null); return; }
+  const currentPrice = products?.products.find(p => p.id === productId)?.price;
+  if (String(currentPrice) === String(newPrice) || Number(currentPrice) === newPrice) { setEditingPriceId(null); return; }
+  try {
+   const res = await fetch(`/api/admin/products/${productId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ price: newPrice }),
+   });
+   if (res.ok) {
+    setProducts(prev => prev ? {
+     ...prev,
+     products: prev.products.map(p => p.id === productId ? { ...p, price: String(newPrice) as any } : p),
+    } : prev);
+   }
+  } catch { /* silently fail */ }
+  setEditingPriceId(null);
  };
 
  const handleStockModalUpdate = (productId: string, newStock: number) => {
@@ -2041,8 +2064,30 @@ export default function AdminProductsPage() {
  <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400 truncate max-w-[150px]">
  {product.laboratory || '-'}
  </td>
- <td className="px-4 py-3 text-right text-slate-900 dark:text-slate-100 font-medium">
- {formatPrice(product.price)}
+ <td className="px-4 py-3 text-right">
+ {editingPriceId === product.id ? (
+  <input
+  type="number"
+  min="1"
+  autoFocus
+  value={editingPriceValue}
+  onChange={(e) => setEditingPriceValue(e.target.value)}
+  onBlur={() => handlePriceSave(product.id)}
+  onKeyDown={(e) => {
+   if (e.key === 'Enter') handlePriceSave(product.id);
+   if (e.key === 'Escape') setEditingPriceId(null);
+  }}
+  className="w-28 px-2 py-1 text-sm border-2 border-emerald-400 rounded-lg font-mono text-right focus:outline-none"
+  />
+ ) : (
+  <button
+  onClick={() => { setEditingPriceId(product.id); setEditingPriceValue(String(Math.round(parseFloat(product.price as any)))); }}
+  title="Click para editar precio"
+  className="font-medium text-slate-900 dark:text-slate-100 hover:text-emerald-600 dark:hover:text-emerald-400 hover:ring-2 hover:ring-emerald-400 rounded px-1 transition-all cursor-text"
+  >
+  {formatPrice(product.price)}
+  </button>
+ )}
  </td>
  <td className="px-4 py-3 text-right">
  {(() => {
