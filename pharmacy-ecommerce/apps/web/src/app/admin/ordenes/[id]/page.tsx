@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { orderApi, OrderWithItems } from '@/lib/api';
-import { ArrowLeft, Package, MapPin, FileText, User, Mail, Printer, Check, Clock, Truck, CheckCircle, XCircle, Store, Phone, CreditCard } from 'lucide-react';
+import { ArrowLeft, Package, MapPin, FileText, User, Mail, Printer, Check, Clock, Truck, CheckCircle, XCircle, Store, Phone, CreditCard, Pencil, Save } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 const statusOptions = [
@@ -122,6 +122,9 @@ export default function AdminOrderDetailPage() {
  const [order, setOrder] = useState<OrderWithItems | null>(null);
  const [isLoading, setIsLoading] = useState(true);
  const [isProcessing, setIsProcessing] = useState(false);
+ const [isEditingNotes, setIsEditingNotes] = useState(false);
+ const [notesValue, setNotesValue] = useState('');
+ const [isSavingNotes, setIsSavingNotes] = useState(false);
 
  useEffect(() => {
  if (!user || user.role !== 'admin') {
@@ -139,6 +142,25 @@ export default function AdminOrderDetailPage() {
  console.error('Error loading order:', error);
  } finally {
  setIsLoading(false);
+ }
+ };
+
+ const handleSaveNotes = async () => {
+ if (!order) return;
+ setIsSavingNotes(true);
+ try {
+  const res = await fetch(`/api/admin/orders/${order.id}`, {
+   method: 'PUT',
+   headers: { 'Content-Type': 'application/json' },
+   body: JSON.stringify({ notes: notesValue.trim() }),
+  });
+  if (!res.ok) { alert('Error al guardar notas'); return; }
+  setIsEditingNotes(false);
+  loadOrder();
+ } catch {
+  alert('Error al guardar notas');
+ } finally {
+  setIsSavingNotes(false);
  }
  };
 
@@ -465,15 +487,52 @@ export default function AdminOrderDetailPage() {
  )}
 
  {/* Notes */}
- {order.notes && (
  <div className="card p-6">
- <div className="flex items-center gap-3 mb-4">
- <FileText className="w-5 h-5 text-emerald-600" />
- <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Notas</h2>
+ <div className="flex items-center justify-between mb-4">
+  <div className="flex items-center gap-3">
+   <FileText className="w-5 h-5 text-emerald-600" />
+   <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Notas internas</h2>
+  </div>
+  {!isEditingNotes && (
+   <button
+    onClick={() => { setNotesValue(order.notes ?? ''); setIsEditingNotes(true); }}
+    className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+   >
+    <Pencil className="w-3.5 h-3.5" />
+    {order.notes ? 'Editar' : 'Agregar nota'}
+   </button>
+  )}
  </div>
- <p className="text-slate-600 dark:text-slate-300">{order.notes}</p>
- </div>
+ {isEditingNotes ? (
+  <div className="space-y-2">
+   <textarea
+    rows={3}
+    value={notesValue}
+    onChange={e => setNotesValue(e.target.value)}
+    placeholder="Notas internas sobre esta orden..."
+    className="w-full text-sm border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
+    autoFocus
+   />
+   <div className="flex gap-2 justify-end">
+    <button onClick={() => setIsEditingNotes(false)} className="text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 px-3 py-1.5">
+     Cancelar
+    </button>
+    <button
+     onClick={handleSaveNotes}
+     disabled={isSavingNotes}
+     className="flex items-center gap-1.5 text-sm bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-40"
+    >
+     <Save className="w-3.5 h-3.5" />
+     {isSavingNotes ? 'Guardando...' : 'Guardar'}
+    </button>
+   </div>
+  </div>
+ ) : order.notes ? (
+  <p className="text-slate-600 dark:text-slate-300 text-sm whitespace-pre-wrap">{order.notes}</p>
+ ) : (
+  <p className="text-slate-400 dark:text-slate-500 text-sm italic">Sin notas</p>
  )}
+ </div>
  </div>
 
  {/* Summary */}

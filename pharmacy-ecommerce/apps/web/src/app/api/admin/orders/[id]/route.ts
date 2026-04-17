@@ -46,6 +46,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     if (body.action === 'approve_reservation') return approveReservation(db, id)
     if (body.action === 'reject_reservation') return rejectReservation(db, id)
 
+    // Notes-only update (no status change required)
+    if (body.notes !== undefined && body.status === undefined) {
+      const updated = await db.orders.update({ where: { id }, data: { notes: body.notes || null } })
+      return NextResponse.json({ ...updated, total: updated.total.toString() })
+    }
+
     if (!VALID_STATUSES.includes(body.status)) {
       return errorResponse(`Estado inválido. Debe ser uno de: ${VALID_STATUSES.join(', ')}`, 400)
     }
