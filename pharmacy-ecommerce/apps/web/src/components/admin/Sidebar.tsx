@@ -20,6 +20,7 @@ import {
   ClipboardList,
   Receipt,
   ArrowUpDown,
+  Warehouse,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -40,6 +41,7 @@ const navItems = [
   { href: '/admin/proveedores', icon: Truck, label: 'Proveedores' },
   { href: '/admin/compras', icon: ClipboardList, label: 'Compras' },
   { href: '/admin/stock', icon: ArrowUpDown, label: 'Stock' },
+  { href: '/admin/inventario', icon: Warehouse, label: 'Inventario' },
   { href: '/admin/reportes', icon: BarChart2, label: 'Reportes' },
   { href: '/admin/configuracion', icon: Settings, label: 'Configuración' },
 ];
