@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
@@ -53,7 +53,7 @@ export default function InventarioPage() {
   const [summary, setSummary] = useState<InventorySummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'' | 'low' | 'out' | 'no_cost'>('');
+  const [filter, setFilter] = useState<'' | 'low' | 'out' | 'no_cost' | 'slow'>('');
   const [sortField, setSortField] = useState<SortField>('retail_value');
   const [sortAsc, setSortAsc] = useState(false);
   const [activeTab, setActiveTab] = useState<'valorization' | 'reorder'>('valorization');
@@ -63,13 +63,24 @@ export default function InventarioPage() {
 
   useEffect(() => {
     if (!user || user.role !== 'admin') { router.push('/'); return; }
-    loadInventory();
+    loadInventory('');
   }, [user, router]);
 
-  const loadInventory = async () => {
+  // Re-fetch from server when slow filter changes (requires DB cross-reference)
+  const prevFilterRef = useRef(filter);
+  useEffect(() => {
+    const prev = prevFilterRef.current;
+    prevFilterRef.current = filter;
+    if (filter === 'slow') { loadInventory('slow'); return; }
+    // If switching away from slow, reload all items
+    if (prev === 'slow') loadInventory('');
+  }, [filter]);
+
+  const loadInventory = async (serverFilter?: string) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/inventory', { credentials: 'include' });
+      const qs = serverFilter ? `?filter=${serverFilter}` : '';
+      const res = await fetch(`/api/admin/inventory${qs}`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setSummary(data.summary);
@@ -115,6 +126,7 @@ export default function InventarioPage() {
     if (filter === 'low') arr = arr.filter(i => i.low_stock && i.stock > 0);
     else if (filter === 'out') arr = arr.filter(i => i.stock === 0);
     else if (filter === 'no_cost') arr = arr.filter(i => i.cost_price === null);
+    // 'slow' is handled server-side; items array already contains the filtered set
 
     return [...arr].sort((a, b) => {
       let va: number | string = 0, vb: number | string = 0;
@@ -342,20 +354,21 @@ export default function InventarioPage() {
             </button>
           )}
         </div>
-        {(['', 'low', 'out', 'no_cost'] as const).map((f) => (
+        {([
+          { id: '', label: `Todos (${items.length})`, activeClass: 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' },
+          { id: 'low', label: `Bajo mínimo (${lowStock})`, activeClass: 'border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400' },
+          { id: 'out', label: `Sin stock (${outOfStock})`, activeClass: 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' },
+          { id: 'slow', label: 'Movimiento lento (60d)', activeClass: 'border-purple-400 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400' },
+          { id: 'no_cost', label: `Sin costo (${noCost})`, activeClass: 'border-slate-400 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300' },
+        ] as { id: '' | 'low' | 'out' | 'slow' | 'no_cost'; label: string; activeClass: string }[]).map(({ id, label, activeClass }) => (
           <button
-            key={f}
-            onClick={() => setFilter(f)}
+            key={id}
+            onClick={() => setFilter(id)}
             className={`px-3 py-2 rounded-xl text-sm font-medium border-2 transition-colors whitespace-nowrap ${
-              filter === f
-                ? f === '' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
-                           : f === 'out' ? 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
-                           : f === 'low' ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
-                           : 'border-slate-400 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
-                : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+              filter === id ? activeClass : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
             }`}
           >
-            {f === '' ? `Todos (${items.length})` : f === 'low' ? `Bajo mínimo (${lowStock})` : f === 'out' ? `Sin stock (${outOfStock})` : `Sin costo (${noCost})`}
+            {label}
           </button>
         ))}
       </div>

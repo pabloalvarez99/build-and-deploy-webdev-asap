@@ -22,6 +22,24 @@ export async function GET(request: NextRequest) {
       where.stock = { gt: 0, lte: threshold };
     } else if (filter === 'out') {
       where.stock = 0;
+    } else if (filter === 'slow') {
+      // Products with stock > 0 but no sales in the last 60 days
+      where.stock = { gt: 0 };
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 60);
+      const activeSoldIds = await db.order_items.findMany({
+        where: {
+          product_id: { not: null },
+          orders: {
+            created_at: { gte: cutoff },
+            status: { notIn: ['cancelled', 'pending'] },
+          },
+        },
+        select: { product_id: true },
+        distinct: ['product_id'],
+      });
+      const soldIds = activeSoldIds.map((i) => i.product_id).filter(Boolean) as string[];
+      where.id = soldIds.length > 0 ? { notIn: soldIds } : undefined;
     }
     if (search) {
       where.name = { contains: search, mode: 'insensitive' };

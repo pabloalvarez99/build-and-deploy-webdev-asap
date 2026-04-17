@@ -1,6 +1,17 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: ERP COMPLETO ✅ — Barcodes y external_id editables en admin (Abril 2026)
+## Estado actual: ERP COMPLETO ✅ — Inventario valorizado, POS retiros, mejoras operacionales (Abril 2026)
+
+---
+
+## 2026-04-17 — Feat: Inventario, retiros en POS, mejoras operacionales
+
+- **Inventario (`/admin/inventario`)**: Nueva página con valorización de stock (retail + costo + margen), filtros por bajo stock / sin stock / sin costo, sorting multi-columna, export CSV. Tab "Sugerencias de reposición" agrupa productos bajo umbral por proveedor con link directo a contacto y OC.
+- **POS retiros**: Botón "Retiro" en POS abre modal para buscar reservas por código de 6 dígitos. Muestra detalles del pedido, permite aprobar con un clic → descuenta stock, envía email, actualiza stats del turno.
+- **Órdenes — expiry countdown**: Badge ⏱ en lista de órdenes para reservas pendientes (rojo si expirada, ámbar si < 6h).
+- **Búsqueda por ID**: Orders API `/api/admin/orders` ahora permite buscar por ID parcial (startsWith).
+- **Sidebar**: Agregado link "Inventario" (Warehouse icon) entre Stock y Reportes.
+- **API**: `GET /api/admin/pos/pickup?code=XXXXXX` busca orden por código de retiro.
 
 ---
 
