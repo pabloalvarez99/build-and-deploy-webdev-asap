@@ -7,6 +7,7 @@ import { purchaseOrderApi, type PurchaseOrder } from '@/lib/api'
 import {
   ClipboardList, ArrowLeft, CheckCircle2, Clock, XCircle,
   Package, Calendar, Hash, User, FileText, PackageCheck, Printer,
+  Pencil, Save, Trash2, X as XIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -30,6 +31,11 @@ export default function CompraDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isCancelling, setIsCancelling] = useState(false)
   const [isReceiving, setIsReceiving] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [isSavingEdit, setIsSavingEdit] = useState(false)
+  // editDraft: itemId → { quantity, unit_cost }
+  const [editDraft, setEditDraft] = useState<Record<string, { quantity: string; unit_cost: string }>>({})
+  const [deletingItem, setDeletingItem] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user || user.role !== 'admin') { router.push('/'); return }
@@ -45,6 +51,57 @@ export default function CompraDetailPage() {
       console.error(e)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  function startEdit() {
+    if (!order) return
+    const draft: Record<string, { quantity: string; unit_cost: string }> = {}
+    for (const item of order.items ?? []) {
+      draft[item.id] = {
+        quantity: String(item.quantity),
+        unit_cost: String(typeof item.unit_cost === 'string' ? parseInt(item.unit_cost) : Math.round(Number(item.unit_cost))),
+      }
+    }
+    setEditDraft(draft)
+    setIsEditing(true)
+  }
+
+  async function handleSaveEdit() {
+    if (!order) return
+    setIsSavingEdit(true)
+    try {
+      const items = Object.entries(editDraft).map(([id, v]) => ({
+        id,
+        quantity: Math.max(1, parseInt(v.quantity) || 1),
+        unit_cost: Math.max(0, parseInt(v.unit_cost) || 0),
+      }))
+      const res = await fetch(`/api/admin/purchase-orders/${order.id}/items`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items }),
+      })
+      if (!res.ok) { alert((await res.text()) || 'Error al guardar'); return }
+      setIsEditing(false)
+      await load()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al guardar')
+    } finally {
+      setIsSavingEdit(false)
+    }
+  }
+
+  async function handleDeleteItem(itemId: string, name: string) {
+    if (!order || !confirm(`¿Eliminar "${name}" de la OC?`)) return
+    setDeletingItem(itemId)
+    try {
+      const res = await fetch(`/api/admin/purchase-orders/${order.id}/items?item_id=${itemId}`, { method: 'DELETE' })
+      if (!res.ok) { alert((await res.text()) || 'Error al eliminar'); return }
+      await load()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al eliminar')
+    } finally {
+      setDeletingItem(null)
     }
   }
 
@@ -212,31 +269,102 @@ export default function CompraDetailPage() {
 
       {/* Items */}
       <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
           <h2 className="font-semibold text-slate-900 dark:text-white">
             Productos ({order.items?.length ?? 0})
           </h2>
+          {order.status === 'draft' && !isEditing && (
+            <button
+              onClick={startEdit}
+              className="print:hidden flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Editar
+            </button>
+          )}
+          {isEditing && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsEditing(false)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                <XIcon className="w-3.5 h-3.5" />
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={isSavingEdit}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-40"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {isSavingEdit ? 'Guardando...' : 'Guardar'}
+              </button>
+            </div>
+          )}
         </div>
         <div className="divide-y divide-slate-100 dark:divide-slate-700">
           {(order.items ?? []).map((item) => (
             <div key={item.id} className="px-6 py-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-slate-900 dark:text-white truncate">
-                    {item.products?.name ?? item.product_name_invoice ?? '—'}
-                  </p>
-                  {item.supplier_product_code && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Código proveedor: {item.supplier_product_code}</p>
-                  )}
-                  {!item.product_id && (
-                    <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full">Sin mapear</span>
-                  )}
+              {isEditing ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-slate-900 dark:text-white truncate text-sm">
+                      {item.products?.name ?? item.product_name_invoice ?? '—'}
+                    </p>
+                    {!item.product_id && (
+                      <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full">Sin mapear</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex flex-col items-end gap-1">
+                      <label className="text-xs text-slate-400">Cant.</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={editDraft[item.id]?.quantity ?? item.quantity}
+                        onChange={(e) => setEditDraft((d) => ({ ...d, [item.id]: { ...d[item.id], quantity: e.target.value } }))}
+                        className="w-16 text-right text-sm border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <label className="text-xs text-slate-400">Costo unit.</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editDraft[item.id]?.unit_cost ?? Math.round(Number(item.unit_cost))}
+                        onChange={(e) => setEditDraft((d) => ({ ...d, [item.id]: { ...d[item.id], unit_cost: e.target.value } }))}
+                        className="w-24 text-right text-sm border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <button
+                      onClick={() => handleDeleteItem(item.id, item.products?.name ?? item.product_name_invoice ?? 'este item')}
+                      disabled={deletingItem === item.id}
+                      className="mt-4 p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-40"
+                      title="Eliminar item"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{item.quantity} × {formatCLP(item.unit_cost)}</p>
-                  <p className="font-semibold text-slate-900 dark:text-white">{formatCLP(item.subtotal)}</p>
+              ) : (
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-slate-900 dark:text-white truncate">
+                      {item.products?.name ?? item.product_name_invoice ?? '—'}
+                    </p>
+                    {item.supplier_product_code && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Código proveedor: {item.supplier_product_code}</p>
+                    )}
+                    {!item.product_id && (
+                      <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full">Sin mapear</span>
+                    )}
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{item.quantity} × {formatCLP(item.unit_cost)}</p>
+                    <p className="font-semibold text-slate-900 dark:text-white">{formatCLP(item.subtotal)}</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           ))}
         </div>
@@ -251,7 +379,7 @@ export default function CompraDetailPage() {
         <div className="flex gap-3 print:hidden">
           <button
             onClick={handleReceive}
-            disabled={isReceiving || isCancelling}
+            disabled={isReceiving || isCancelling || isEditing}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors disabled:opacity-40"
           >
             <PackageCheck className="w-4 h-4" />
@@ -259,7 +387,7 @@ export default function CompraDetailPage() {
           </button>
           <button
             onClick={handleCancel}
-            disabled={isCancelling || isReceiving}
+            disabled={isCancelling || isReceiving || isEditing}
             className="px-4 py-3 border-2 border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-xl font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-40"
           >
             {isCancelling ? '...' : 'Cancelar'}
