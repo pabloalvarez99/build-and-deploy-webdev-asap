@@ -38,6 +38,10 @@ export default function StockMovementsPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [reasonFilter, setReasonFilter] = useState('')
+  const [productSearch, setProductSearch] = useState('')
+  const [productFilter, setProductFilter] = useState<{ id: string; name: string } | null>(null)
+  const [productSearchResults, setProductSearchResults] = useState<{ id: string; name: string }[]>([])
+  const [productSearching, setProductSearching] = useState(false)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'movimientos' | 'inventario'>('movimientos')
   const [invFilter, setInvFilter] = useState<'all' | 'low' | 'out'>('all')
@@ -84,6 +88,19 @@ export default function StockMovementsPage() {
     }, 300)
     return () => clearTimeout(t)
   }, [adjSearch])
+
+  useEffect(() => {
+    if (!productSearch.trim()) { setProductSearchResults([]); return }
+    const t = setTimeout(async () => {
+      setProductSearching(true)
+      try {
+        const res = await productApi.list({ search: productSearch, limit: 8, active_only: false })
+        setProductSearchResults(res.products.map(p => ({ id: p.id, name: p.name })))
+      } catch { setProductSearchResults([]) }
+      finally { setProductSearching(false) }
+    }, 300)
+    return () => clearTimeout(t)
+  }, [productSearch])
 
   async function loadInventory(filter = invFilter, search = invSearch) {
     setInventoryLoading(true)
@@ -155,6 +172,7 @@ export default function StockMovementsPage() {
     try {
       const qs = new URLSearchParams({ page: String(page), limit: '50' })
       if (reasonFilter) qs.set('reason', reasonFilter)
+      if (productFilter) qs.set('product_id', productFilter.id)
       const res = await fetch(`/api/admin/stock-movements?${qs}`)
       if (!res.ok) return
       const data = await res.json()
@@ -166,7 +184,7 @@ export default function StockMovementsPage() {
     } finally {
       setLoading(false)
     }
-  }, [page, reasonFilter])
+  }, [page, reasonFilter, productFilter])
 
   useEffect(() => { load() }, [load])
 
@@ -412,7 +430,44 @@ export default function StockMovementsPage() {
       {/* ── TAB: MOVIMIENTOS (filters + table) ── */}
       {activeTab === 'movimientos' && <>
       {/* Filters */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2 flex-wrap items-start">
+        {/* Product search filter */}
+        <div className="relative">
+          {productFilter ? (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-300 dark:border-emerald-700 rounded-lg text-sm text-emerald-800 dark:text-emerald-300">
+              <Package className="w-3.5 h-3.5 shrink-0" />
+              <span className="max-w-[160px] truncate">{productFilter.name}</span>
+              <button onClick={() => { setProductFilter(null); setProductSearch('') }} className="ml-1 hover:text-red-500">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Filtrar por producto..."
+                value={productSearch}
+                onChange={e => setProductSearch(e.target.value)}
+                className="pl-8 pr-3 py-1.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white w-48 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              {productSearching && <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-slate-400" />}
+              {productSearchResults.length > 0 && productSearch && (
+                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg z-20 w-64 max-h-48 overflow-y-auto">
+                  {productSearchResults.map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => { setProductFilter(p); setProductSearch(''); setProductSearchResults([]); setPage(1) }}
+                      className="w-full text-left px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 truncate"
+                    >
+                      {p.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         {REASONS.map((r) => {
           const cfg = r ? REASON_CONFIG[r] : null
           return (
