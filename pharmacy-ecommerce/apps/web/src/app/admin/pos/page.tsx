@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/auth'
 import { productApi, Category } from '@/lib/api'
 import {
   ShoppingCart, Search, Plus, Minus, Trash2, CreditCard, Banknote,
-  CheckCircle2, X, Receipt, Loader2, SmartphoneNfc, ScanLine, CheckCircle, AlertCircle, User, History,
+  CheckCircle2, X, Receipt, Loader2, SmartphoneNfc, ScanLine, CheckCircle, AlertCircle, User, History, BarChart3,
 } from 'lucide-react'
 
 interface CartItem {
@@ -66,7 +66,13 @@ export default function POSPage() {
   const [searchError, setSearchError] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState('')
   const [categories, setCategories] = useState<Category[]>([])
-  const [todayStats, setTodayStats] = useState<{ count: number; revenue: number } | null>(null)
+  const [todayStats, setTodayStats] = useState<{
+    count: number; revenue: number;
+    cash: { count: number; amount: number };
+    debit: { count: number; amount: number };
+    credit: { count: number; amount: number };
+  } | null>(null)
+  const [showShiftSummary, setShowShiftSummary] = useState(false)
   const [customerHistory, setCustomerHistory] = useState<{
     found: boolean; name?: string | null; visit_count?: number;
     top_products?: string[]; recent_orders?: { date: string; total: number; items: string }[];
@@ -78,11 +84,17 @@ export default function POSPage() {
     const todayCL = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Santiago' })
     fetch(`/api/admin/orders?from=${todayCL}&to=${todayCL}&channel=pos&status=completed&limit=500`, { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
-      .then((data: { orders?: { total: string | number }[] } | null) => {
+      .then((data: { orders?: { total: string | number; payment_provider?: string | null }[] } | null) => {
         if (!data?.orders) return
+        const orders = data.orders
+        const sum = (pp: string) => orders.filter(o => o.payment_provider === pp).reduce((s, o) => s + parseFloat(String(o.total)), 0)
+        const cnt = (pp: string) => orders.filter(o => o.payment_provider === pp).length
         setTodayStats({
-          count: data.orders.length,
-          revenue: data.orders.reduce((s: number, o: { total: string | number }) => s + parseFloat(String(o.total)), 0),
+          count: orders.length,
+          revenue: orders.reduce((s, o) => s + parseFloat(String(o.total)), 0),
+          cash: { count: cnt('pos_cash'), amount: sum('pos_cash') },
+          debit: { count: cnt('pos_debit'), amount: sum('pos_debit') },
+          credit: { count: cnt('pos_credit'), amount: sum('pos_credit') },
         })
       })
       .catch(() => {})
@@ -654,7 +666,16 @@ export default function POSPage() {
         {/* Today's summary */}
         {todayStats !== null && (
           <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-700">
-            <p className="text-[10px] uppercase font-semibold text-slate-400 dark:text-slate-500 mb-1.5">Ventas hoy</p>
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-[10px] uppercase font-semibold text-slate-400 dark:text-slate-500">Ventas hoy</p>
+              <button
+                onClick={() => setShowShiftSummary(true)}
+                className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline"
+              >
+                <BarChart3 className="w-3 h-3" />
+                Resumen
+              </button>
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-2 text-center">
                 <p className="text-lg font-bold text-slate-900 dark:text-white">{todayStats.count}</p>
@@ -805,6 +826,60 @@ export default function POSPage() {
                 <><CheckCircle2 className="w-5 h-5" /> Confirmar venta</>
               )}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Shift summary modal */}
+      {showShiftSummary && todayStats && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <h2 className="font-bold text-slate-900 dark:text-white">Resumen del turno</h2>
+              </div>
+              <button onClick={() => setShowShiftSummary(false)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Total */}
+              <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-4 text-center">
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wide">Total recaudado</p>
+                <p className="text-3xl font-bold text-emerald-700 dark:text-emerald-300 mt-1">{formatCLP(todayStats.revenue)}</p>
+                <p className="text-xs text-slate-400 mt-1">{todayStats.count} venta{todayStats.count !== 1 ? 's' : ''} · ticket promedio {todayStats.count > 0 ? formatCLP(todayStats.revenue / todayStats.count) : '—'}</p>
+              </div>
+
+              {/* Payment method breakdown */}
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Por método de pago</p>
+                {[
+                  { label: 'Efectivo', icon: <Banknote className="w-4 h-4" />, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20', data: todayStats.cash },
+                  { label: 'Débito', icon: <SmartphoneNfc className="w-4 h-4" />, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20', data: todayStats.debit },
+                  { label: 'Crédito', icon: <CreditCard className="w-4 h-4" />, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20', data: todayStats.credit },
+                ].map(({ label, icon, color, bg, data }) => (
+                  <div key={label} className={`flex items-center justify-between rounded-xl px-4 py-3 ${bg}`}>
+                    <div className={`flex items-center gap-2 ${color}`}>
+                      {icon}
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{label}</span>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{data.count > 0 ? formatCLP(data.amount) : '—'}</p>
+                      {data.count > 0 && <p className="text-[10px] text-slate-400">{data.count} venta{data.count !== 1 ? 's' : ''}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => { setShowShiftSummary(false); window.print() }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                <Receipt className="w-4 h-4" />
+                Imprimir resumen
+              </button>
+            </div>
           </div>
         </div>
       )}
