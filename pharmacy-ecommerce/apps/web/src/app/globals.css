@@ -96,6 +96,24 @@ html {
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 
+/* POS receipt: when receipt is on screen, print ONLY the receipt (80mm thermal paper) */
+@media print {
+  body:has(#pos-receipt) * { visibility: hidden; }
+  body:has(#pos-receipt) #pos-receipt,
+  body:has(#pos-receipt) #pos-receipt * { visibility: visible; }
+  body:has(#pos-receipt) #pos-receipt {
+    position: fixed;
+    top: 0; left: 0;
+    width: 72mm;
+    font-size: 11px;
+    line-height: 1.4;
+    border: none !important;
+    padding: 4mm !important;
+    border-radius: 0 !important;
+  }
+  @page { size: 80mm auto; margin: 0; }
+}
+
 /* Reduced motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

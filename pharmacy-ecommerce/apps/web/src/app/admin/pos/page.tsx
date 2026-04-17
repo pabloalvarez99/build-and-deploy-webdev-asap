@@ -50,7 +50,10 @@ export default function POSPage() {
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
-  const [successOrder, setSuccessOrder] = useState<{ id: string; total: number } | null>(null)
+  const [successOrder, setSuccessOrder] = useState<{
+    id: string; total: number; items: CartItem[]; method: PaymentMethod;
+    customer: string; change: number; date: string;
+  } | null>(null)
   const [showPayModal, setShowPayModal] = useState(false)
   const [cashReceived, setCashReceived] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
@@ -233,7 +236,15 @@ export default function POSPage() {
         return
       }
       const data = await res.json()
-      setSuccessOrder({ id: data.id, total })
+      const saleDate = new Date().toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' })
+      setSuccessOrder({
+        id: data.id, total,
+        items: [...cart],
+        method: paymentMethod,
+        customer: customerName,
+        change: paymentMethod === 'pos_cash' && cashReceived ? Math.max(0, parseFloat(cashReceived) - total) : 0,
+        date: saleDate,
+      })
       setCart([])
       setSearch('')
       setProducts([])
@@ -248,29 +259,79 @@ export default function POSPage() {
     }
   }
 
+  const printReceipt = () => window.print()
+
   if (successOrder) {
+    const methodLabel = PAYMENT_METHODS.find(m => m.value === successOrder.method)?.label || successOrder.method
     return (
-      <div className="max-w-md mx-auto mt-20 text-center space-y-6 px-4">
-        <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto">
-          <CheckCircle2 className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
+      <div className="max-w-sm mx-auto mt-8 space-y-4 px-4">
+        {/* Screen: success header */}
+        <div className="text-center space-y-2 print:hidden">
+          <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Venta completada</h2>
+          <p className="text-slate-500 dark:text-slate-400">Total: {formatCLP(successOrder.total)}</p>
         </div>
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Venta completada</h2>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Total cobrado: {formatCLP(successOrder.total)}</p>
-          <p className="text-xs text-slate-400 mt-1">ID: {successOrder.id.slice(0, 8)}...</p>
+
+        {/* Receipt — visible on screen + print */}
+        <div id="pos-receipt" className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-4 font-mono text-sm print:border-0 print:p-0 print:rounded-none">
+          <div className="text-center mb-3 space-y-0.5">
+            <p className="font-bold text-base">Tu Farmacia</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Coquimbo, Chile</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{successOrder.date}</p>
+            {successOrder.customer && <p className="text-xs font-medium">Cliente: {successOrder.customer}</p>}
+          </div>
+          <div className="border-t border-dashed border-slate-300 dark:border-slate-600 my-2" />
+          <div className="space-y-1">
+            {successOrder.items.map(item => (
+              <div key={item.product_id} className="flex justify-between gap-2">
+                <span className="truncate text-xs">{item.quantity}× {item.product_name}</span>
+                <span className="shrink-0 text-xs">{formatCLP(item.price * item.quantity)}</span>
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-dashed border-slate-300 dark:border-slate-600 my-2" />
+          <div className="flex justify-between font-bold">
+            <span>TOTAL</span>
+            <span>{formatCLP(successOrder.total)}</span>
+          </div>
+          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400 space-y-0.5">
+            <div className="flex justify-between">
+              <span>Pago</span><span>{methodLabel}</span>
+            </div>
+            {successOrder.change > 0 && (
+              <div className="flex justify-between">
+                <span>Vuelto</span><span>{formatCLP(successOrder.change)}</span>
+              </div>
+            )}
+            <p className="text-center mt-2 text-[11px]">#{successOrder.id.slice(0, 8).toUpperCase()}</p>
+          </div>
+          <p className="text-center text-xs mt-3 text-slate-400">¡Gracias por su compra!</p>
         </div>
-        <button
-          onClick={() => { setSuccessOrder(null); searchRef.current?.focus() }}
-          className="w-full py-3 bg-emerald-600 text-white rounded-2xl font-semibold hover:bg-emerald-700 transition-colors"
-        >
-          Nueva venta
-        </button>
-        <button
-          onClick={() => router.push('/admin/ordenes')}
-          className="w-full py-3 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-        >
-          Ver en órdenes
-        </button>
+
+        {/* Action buttons (hidden on print) */}
+        <div className="space-y-2 print:hidden">
+          <button
+            onClick={printReceipt}
+            className="w-full py-3 bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+          >
+            <Receipt className="w-5 h-5" />
+            Imprimir recibo
+          </button>
+          <button
+            onClick={() => { setSuccessOrder(null); searchRef.current?.focus() }}
+            className="w-full py-3 bg-emerald-600 text-white rounded-2xl font-semibold hover:bg-emerald-700 transition-colors"
+          >
+            Nueva venta
+          </button>
+          <button
+            onClick={() => router.push('/admin/ordenes')}
+            className="w-full py-3 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          >
+            Ver en órdenes
+          </button>
+        </div>
       </div>
     )
   }
