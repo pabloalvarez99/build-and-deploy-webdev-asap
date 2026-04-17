@@ -52,6 +52,17 @@ function getCustomerEmail(order: Order): string {
   return order.guest_email || '';
 }
 
+function getReservationExpiry(order: Order): { hoursLeft: number; isExpired: boolean; label: string } | null {
+  if (order.status !== 'reserved' || !order.reservation_expires_at) return null;
+  const expiresAt = new Date(order.reservation_expires_at);
+  const now = new Date();
+  const diffMs = expiresAt.getTime() - now.getTime();
+  const hoursLeft = diffMs / (1000 * 60 * 60);
+  if (hoursLeft <= 0) return { hoursLeft: 0, isExpired: true, label: 'Expirada' };
+  if (hoursLeft < 1) return { hoursLeft, isExpired: false, label: `${Math.round(hoursLeft * 60)}min` };
+  return { hoursLeft, isExpired: false, label: `${Math.round(hoursLeft)}h` };
+}
+
 export default function AdminOrdersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -458,9 +469,14 @@ export default function AdminOrdersPage() {
                         <p className="text-xs text-slate-500 dark:text-slate-400">{customerEmail}</p>
                       )}
                     </div>
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 ${cfg?.color || 'bg-slate-100 text-slate-800'}`}>
-                      {cfg?.label || order.status}
-                    </span>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 ${cfg?.color || 'bg-slate-100 text-slate-800'}`}>
+                        {cfg?.label || order.status}
+                      </span>
+                      {(() => { const expiry = getReservationExpiry(order); return expiry ? (
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${expiry.isExpired ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : expiry.hoursLeft < 6 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'}`}>⏱ {expiry.label}</span>
+                      ) : null; })()}
+                    </div>
                   </div>
                   <div className="flex items-center justify-between mb-3 text-sm">
                     <span className="text-slate-400 dark:text-slate-500">{date}</span>
@@ -597,19 +613,24 @@ export default function AdminOrdersPage() {
                       </td>
                       <td className="px-4 py-3">
                         {order.status === 'reserved' ? (
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              onClick={() => handleApproveReservation(order.id)}
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors"
-                            >
-                              <CheckCircle className="w-3.5 h-3.5" /> Aprobar
-                            </button>
-                            <button
-                              onClick={() => handleRejectReservation(order.id)}
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
-                            >
-                              <XCircle className="w-3.5 h-3.5" /> Rechazar
-                            </button>
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleApproveReservation(order.id)}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors"
+                              >
+                                <CheckCircle className="w-3.5 h-3.5" /> Aprobar
+                              </button>
+                              <button
+                                onClick={() => handleRejectReservation(order.id)}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                              >
+                                <XCircle className="w-3.5 h-3.5" /> Rechazar
+                              </button>
+                            </div>
+                            {(() => { const expiry = getReservationExpiry(order); return expiry ? (
+                              <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium w-fit ${expiry.isExpired ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : expiry.hoursLeft < 6 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'}`}>⏱ {expiry.label}</span>
+                            ) : null; })()}
                           </div>
                         ) : (
                           <div className="relative w-fit">
