@@ -31,6 +31,8 @@ export default function AdminProductsPage() {
  // Selection for bulk actions
  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+ const [showBulkDiscountModal, setShowBulkDiscountModal] = useState(false);
+ const [bulkDiscountValue, setBulkDiscountValue] = useState('');
 
  // Filters — initialize from URL params so external links (dashboard, NotificationBell) land with filters pre-applied
  const [searchTerm, setSearchTerm] = useState(() => searchParams.get('search') || '');
@@ -547,6 +549,24 @@ export default function AdminProductsPage() {
  alert('Error al eliminar productos');
  } finally {
  setBulkActionLoading(false);
+ }
+ };
+
+ const handleBulkDiscount = async () => {
+ const pct = parseInt(bulkDiscountValue);
+ if (isNaN(pct) || pct < 0 || pct > 100) { alert('Ingresa un valor entre 0 y 100'); return; }
+ if (!confirm(`¿Aplicar ${pct}% de descuento a ${selectedProducts.size} producto(s)?`)) return;
+ setBulkActionLoading(true);
+ setShowBulkDiscountModal(false);
+ setBulkDiscountValue('');
+ try {
+  await Promise.all(Array.from(selectedProducts).map(id => productApi.update(id, { discount_percent: pct })));
+  clearSelection();
+  loadProducts();
+ } catch {
+  alert('Error al aplicar descuento');
+ } finally {
+  setBulkActionLoading(false);
  }
  };
 
@@ -1163,6 +1183,34 @@ export default function AdminProductsPage() {
  <Package className="w-4 h-4" />
  Etiquetas
  </button>
+ <div className="relative">
+ <button
+  onClick={() => setShowBulkDiscountModal(v => !v)}
+  disabled={bulkActionLoading}
+  className="btn btn-secondary flex items-center gap-2 text-sm py-2"
+ >
+  <TrendingDown className="w-4 h-4" />
+  Descuento
+ </button>
+ {showBulkDiscountModal && (
+  <div className="absolute right-0 top-full mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg p-3 z-10 w-52">
+  <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-2">Descuento para {selectedProducts.size} prod.</p>
+  <div className="flex gap-2">
+   <input
+   type="number" min="0" max="100" placeholder="0-100"
+   value={bulkDiscountValue}
+   onChange={e => setBulkDiscountValue(e.target.value)}
+   onKeyDown={e => e.key === 'Enter' && handleBulkDiscount()}
+   className="flex-1 text-sm border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+   autoFocus
+   />
+   <span className="self-center text-sm text-slate-500">%</span>
+   <button onClick={handleBulkDiscount} className="btn btn-primary text-xs px-3 py-1.5">OK</button>
+  </div>
+  <p className="text-[10px] text-slate-400 mt-1.5">Pon 0 para quitar el descuento</p>
+  </div>
+ )}
+ </div>
  <button
  onClick={() => handleBulkActivate(true)}
  disabled={bulkActionLoading}
