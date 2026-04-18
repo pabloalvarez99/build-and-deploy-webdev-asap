@@ -74,8 +74,8 @@ export default function POSPage() {
   } | null>(null)
   const [showShiftSummary, setShowShiftSummary] = useState(false)
   const [customerHistory, setCustomerHistory] = useState<{
-    found: boolean; name?: string | null; visit_count?: number;
-    top_products?: string[]; recent_orders?: { date: string; total: number; items: string }[];
+    found: boolean; name?: string | null; user_id?: string | null; loyalty_points?: number | null;
+    visit_count?: number; top_products?: string[]; recent_orders?: { date: string; total: number; items: string }[];
   } | null>(null)
   const [historyLoading, setHistoryLoading] = useState(false)
 
@@ -306,6 +306,7 @@ export default function POSPage() {
           payment_method: paymentMethod,
           customer_name: customerName || undefined,
           customer_phone: customerPhone || undefined,
+          customer_user_id: customerHistory?.user_id || undefined,
           discount_amount: discountAmount > 0 ? discountAmount : undefined,
           notes: discountAmount > 0
             ? `Descuento ${discountType === '%' ? discountNum + '%' : formatCLP(discountAmount)} aplicado`
@@ -859,6 +860,15 @@ export default function POSPage() {
                     <History className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
                     <p className="text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed line-clamp-2">
                       {customerHistory.top_products.join(' · ')}
+                    </p>
+                  </div>
+                )}
+                {customerHistory.loyalty_points !== null && customerHistory.loyalty_points !== undefined && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs">⭐</span>
+                    <p className="text-xs text-amber-700 dark:text-amber-400 font-semibold">
+                      {customerHistory.loyalty_points} puntos acumulados
+                      {customerHistory.loyalty_points > 0 ? ` (= $${(customerHistory.loyalty_points * 100).toLocaleString('es-CL')})` : ''}
                     </p>
                   </div>
                 )}

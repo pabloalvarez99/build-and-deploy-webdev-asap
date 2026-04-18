@@ -34,6 +34,17 @@ export async function GET(request: NextRequest) {
       ? `${latest.guest_name} ${latest.guest_surname || ''}`.trim()
       : null;
 
+    // Find registered user_id from any order with this phone
+    const registeredOrder = orders.find((o) => o.user_id !== null);
+    const user_id = registeredOrder?.user_id ?? null;
+
+    // Get loyalty points if registered
+    let loyalty_points: number | null = null;
+    if (user_id) {
+      const profile = await db.profiles.findUnique({ where: { id: user_id }, select: { loyalty_points: true } });
+      loyalty_points = profile?.loyalty_points ?? 0;
+    }
+
     // Tally top products across all orders
     const productCount: Record<string, { name: string; count: number }> = {};
     for (const order of orders) {
@@ -59,6 +70,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       found: true,
       name,
+      user_id,
+      loyalty_points,
       visit_count: orders.length,
       top_products: topProducts,
       recent_orders: recentOrders,
