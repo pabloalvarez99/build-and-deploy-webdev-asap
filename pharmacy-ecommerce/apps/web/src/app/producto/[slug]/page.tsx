@@ -364,7 +364,7 @@ export default function ProductPage() {
         {relatedProducts.length > 0 && (
           <div className="mt-8 sm:mt-12">
             <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Productos relacionados</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {relatedProducts.map((rp) => (
                 <Link
                   key={rp.id}
@@ -377,29 +377,29 @@ export default function ProductPage() {
                         src={rp.image_url}
                         alt={rp.name}
                         fill
-                        sizes="(max-width: 640px) 50vw, 25vw"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                         className="object-contain p-2"
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center text-slate-300 dark:text-slate-600">
-                        <Package className="w-10 h-10" />
+                        <Package className="w-12 h-12" />
                       </div>
                     )}
                     {rp.discount_percent && (
-                      <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-black px-2 py-1 rounded-lg">
+                      <div className="absolute top-2 left-2 bg-red-500 text-white text-sm font-black px-2 py-1 rounded-lg">
                         -{rp.discount_percent}%
                       </div>
                     )}
                   </div>
-                  <div className="p-2.5">
-                    <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm leading-snug line-clamp-2 min-h-[2.5rem]">{rp.name}</h3>
+                  <div className="p-3.5">
+                    <h3 className="font-bold text-slate-800 dark:text-slate-200 text-base leading-snug line-clamp-2 min-h-[3rem]">{rp.name}</h3>
                     {rp.discount_percent ? (
-                      <div className="mt-1">
-                        <span className="text-xs text-slate-400 dark:text-slate-500 line-through">{formatPrice(rp.price)}</span>
-                        <span className="text-base font-black text-emerald-700 dark:text-emerald-400 block">{formatPrice(discountedPrice(Number(rp.price), rp.discount_percent))}</span>
+                      <div className="mt-2">
+                        <span className="text-sm text-slate-400 dark:text-slate-500 line-through">{formatPrice(rp.price)}</span>
+                        <span className="text-xl font-black text-emerald-700 dark:text-emerald-400 block">{formatPrice(discountedPrice(Number(rp.price), rp.discount_percent))}</span>
                       </div>
                     ) : (
-                      <span className="text-base font-black text-emerald-700 dark:text-emerald-400 block mt-1">{formatPrice(rp.price)}</span>
+                      <span className="text-xl font-black text-emerald-700 dark:text-emerald-400 block mt-2">{formatPrice(rp.price)}</span>
                     )}
                   </div>
                 </Link>

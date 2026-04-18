@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { formatPrice } from '@/lib/format';
-import { Download, TrendingUp, ShoppingBag, Calculator, Package, TrendingDown, Store, Globe } from 'lucide-react';
+import { Download, TrendingUp, ShoppingBag, Calculator, Package, TrendingDown, Store, Globe, Users, UserCheck, UserX } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -52,6 +52,16 @@ interface ReportData {
     has_cost: boolean; category: string; margin: number | null; margin_pct: number | null;
   }[];
   byCategory: { name: string; revenue: number; units: number; cost: number; margin: number }[];
+  customerMetrics?: {
+    totalUniqueCustomers: number;
+    uniqueRegistered: number;
+    uniqueGuests: number;
+    registeredOrderCount: number;
+    guestOrderCount: number;
+    avgOrdersPerCustomer: number;
+    avgRevenuePerCustomer: number;
+    topCustomers: { name: string; spend: number; orders: number }[];
+  };
 }
 
 const PERIODS = [
@@ -64,6 +74,7 @@ const PERIODS = [
 const TABS = [
   { id: 'ventas', label: 'Ventas' },
   { id: 'financiero', label: 'Financiero' },
+  { id: 'clientes', label: 'Clientes' },
 ];
 
 const COLORS = ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#06B6D4', '#84CC16', '#F97316'];
@@ -100,7 +111,7 @@ export default function AdminReportesPage() {
   const [period, setPeriod] = useState(30);
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
-  const [activeTab, setActiveTab] = useState<'ventas' | 'financiero'>('ventas');
+  const [activeTab, setActiveTab] = useState<'ventas' | 'financiero' | 'clientes'>('ventas');
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDark, setIsDark] = useState(false);
@@ -215,7 +226,7 @@ export default function AdminReportesPage() {
         {TABS.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as 'ventas' | 'financiero')}
+            onClick={() => setActiveTab(tab.id as 'ventas' | 'financiero' | 'clientes')}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
               activeTab === tab.id
                 ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
@@ -424,6 +435,95 @@ export default function AdminReportesPage() {
                   </table>
                 </div>
               </div>
+            </>
+          )}
+
+          {activeTab === 'clientes' && (
+            <>
+              {!data.customerMetrics ? (
+                <p className="text-slate-400 text-sm py-10 text-center">Sin datos de clientes para este período</p>
+              ) : (
+                <>
+                  {/* KPI row */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[
+                      { label: 'Clientes únicos', value: String(data.customerMetrics.totalUniqueCustomers), icon: Users, bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
+                      { label: 'Registrados', value: String(data.customerMetrics.uniqueRegistered), icon: UserCheck, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400' },
+                      { label: 'Invitados (guest)', value: String(data.customerMetrics.uniqueGuests), icon: UserX, bg: 'bg-slate-100 dark:bg-slate-700', color: 'text-slate-600 dark:text-slate-400' },
+                      { label: 'Ticket promedio/cliente', value: formatPrice(data.customerMetrics.avgRevenuePerCustomer), icon: Calculator, bg: 'bg-purple-100 dark:bg-purple-900/30', color: 'text-purple-600 dark:text-purple-400' },
+                    ].map((kpi) => (
+                      <div key={kpi.label} className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-5">
+                        <div className={`w-10 h-10 ${kpi.bg} rounded-xl flex items-center justify-center mb-3`}>
+                          <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{kpi.label}</p>
+                        <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-0.5">{kpi.value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Channel split */}
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-6">
+                      <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Distribución de órdenes</h3>
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="text-slate-600 dark:text-slate-400">Clientes registrados</span>
+                            <span className="font-semibold text-emerald-700 dark:text-emerald-400">{data.customerMetrics.registeredOrderCount} órdenes</span>
+                          </div>
+                          <div className="h-3 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+                            <div
+                              className="h-full bg-emerald-500 rounded-full"
+                              style={{ width: `${data.kpis.totalOrders > 0 ? (data.customerMetrics.registeredOrderCount / data.kpis.totalOrders) * 100 : 0}%` }}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="text-slate-600 dark:text-slate-400">Clientes invitados</span>
+                            <span className="font-semibold text-blue-700 dark:text-blue-400">{data.customerMetrics.guestOrderCount} órdenes</span>
+                          </div>
+                          <div className="h-3 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+                            <div
+                              className="h-full bg-blue-500 rounded-full"
+                              style={{ width: `${data.kpis.totalOrders > 0 ? (data.customerMetrics.guestOrderCount / data.kpis.totalOrders) * 100 : 0}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-4">
+                        Promedio: {data.customerMetrics.avgOrdersPerCustomer} órdenes/cliente
+                      </p>
+                    </div>
+
+                    {/* Top customers */}
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden">
+                      <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+                        <h3 className="font-semibold text-slate-900 dark:text-slate-100">Top 10 clientes registrados</h3>
+                      </div>
+                      {data.customerMetrics.topCustomers.length === 0 ? (
+                        <p className="text-slate-400 text-sm py-6 text-center">Sin datos de clientes registrados</p>
+                      ) : (
+                        <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                          {data.customerMetrics.topCustomers.map((c, i) => (
+                            <div key={i} className="flex items-center justify-between px-5 py-3">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span className="text-xs font-mono text-slate-400 w-5 flex-shrink-0">{i + 1}</span>
+                                <span className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{c.name}</span>
+                              </div>
+                              <div className="text-right flex-shrink-0 ml-3">
+                                <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">{formatPrice(c.spend)}</p>
+                                <p className="text-xs text-slate-400">{c.orders} orden{c.orders !== 1 ? 'es' : ''}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </>
           )}
 

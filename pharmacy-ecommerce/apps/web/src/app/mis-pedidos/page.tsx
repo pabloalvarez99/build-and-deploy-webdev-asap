@@ -9,13 +9,13 @@ import { Package, ChevronRight, Clock, CheckCircle, XCircle, Truck, Store, Star,
 import { formatPrice } from '@/lib/format';
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  pending: { label: 'Pendiente', color: 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400', icon: <Clock className="w-4 h-4" /> },
-  reserved: { label: 'Reservado', color: 'bg-amber-100 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400', icon: <Store className="w-4 h-4" /> },
-  paid: { label: 'Pagado', color: 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400', icon: <CheckCircle className="w-4 h-4" /> },
-  processing: { label: 'Procesando', color: 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400', icon: <Package className="w-4 h-4" /> },
-  shipped: { label: 'Enviado', color: 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-400', icon: <Truck className="w-4 h-4" /> },
-  delivered: { label: 'Entregado', color: 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400', icon: <CheckCircle className="w-4 h-4" /> },
-  cancelled: { label: 'Cancelado', color: 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400', icon: <XCircle className="w-4 h-4" /> },
+  pending: { label: 'Pendiente', color: 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400', icon: <Clock className="w-5 h-5" /> },
+  reserved: { label: 'Reservado', color: 'bg-amber-100 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400', icon: <Store className="w-5 h-5" /> },
+  paid: { label: 'Pagado', color: 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400', icon: <CheckCircle className="w-5 h-5" /> },
+  processing: { label: 'Procesando', color: 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400', icon: <Package className="w-5 h-5" /> },
+  shipped: { label: 'Enviado', color: 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-400', icon: <Truck className="w-5 h-5" /> },
+  delivered: { label: 'Entregado', color: 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400', icon: <CheckCircle className="w-5 h-5" /> },
+  cancelled: { label: 'Cancelado', color: 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400', icon: <XCircle className="w-5 h-5" /> },
 };
 
 export default function MyOrdersPage() {
@@ -160,20 +160,20 @@ export default function MyOrdersPage() {
                 <Link
                   key={order.id}
                   href={`/mis-pedidos/${order.id}`}
-                  className="card p-4 sm:p-6 hover:shadow-md transition-shadow block"
+                  className="card p-5 sm:p-6 hover:shadow-md transition-shadow block hover:border-emerald-200 dark:hover:border-emerald-700"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400">Pedido #{order.id.slice(0, 8)}</p>
-                      <p className="font-bold text-slate-900 dark:text-slate-100 mt-1">{formatPrice(total)}</p>
-                      <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1">{date}</p>
+                      <p className="text-base text-slate-500 dark:text-slate-400">Pedido #{order.id.slice(0, 8)}</p>
+                      <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1">{formatPrice(total)}</p>
+                      <p className="text-base text-slate-500 dark:text-slate-400 mt-1">{date}</p>
                     </div>
-                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap ${status.color}`}>
+                    <div className="flex flex-col items-end gap-3 flex-shrink-0">
+                      <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-bold whitespace-nowrap ${status.color}`}>
                         {status.icon}
                         {status.label}
                       </span>
-                      <ChevronRight className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+                      <ChevronRight className="w-6 h-6 text-slate-400 dark:text-slate-500" />
                     </div>
                   </div>
                 </Link>

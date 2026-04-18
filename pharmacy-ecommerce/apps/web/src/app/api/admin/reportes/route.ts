@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     const [orders, prevOrders] = await Promise.all([
       db.orders.findMany({
         where: buildOrderWhere(dateFilter),
-        select: { id: true, total: true, created_at: true, status: true, payment_provider: true },
+        select: { id: true, total: true, created_at: true, status: true, payment_provider: true, user_id: true, guest_email: true },
       }),
       db.orders.findMany({
         where: buildOrderWhere(prevDateFilter),
@@ -196,6 +196,55 @@ export async function GET(request: NextRequest) {
     });
     const salesByHour = Object.values(salesByHourMap).sort((a, b) => a.hour - b.hour);
 
+    // Customer analytics
+    const registeredOrderCount = orders.filter((o) => !!o.user_id).length;
+    const guestOrderCount = orders.filter((o) => !o.user_id).length;
+    const uniqueRegistered = new Set(orders.filter((o) => o.user_id).map((o) => o.user_id!)).size;
+    const uniqueGuests = new Set(orders.filter((o) => !o.user_id && o.guest_email).map((o) => o.guest_email!.toLowerCase())).size;
+    const totalUniqueCustomers = uniqueRegistered + uniqueGuests;
+    const avgOrdersPerCustomer = totalUniqueCustomers > 0 ? orders.length / totalUniqueCustomers : 0;
+    const avgRevenuePerCustomer = totalUniqueCustomers > 0 ? totalRevenue / totalUniqueCustomers : 0;
+
+    // Top customers by spend (registered only)
+    const customerSpend: Record<string, { user_id: string; spend: number; orders: number }> = {};
+    orders.filter((o) => o.user_id).forEach((o) => {
+      if (!customerSpend[o.user_id!]) customerSpend[o.user_id!] = { user_id: o.user_id!, spend: 0, orders: 0 };
+      customerSpend[o.user_id!].spend += Number(o.total);
+      customerSpend[o.user_id!].orders += 1;
+    });
+    // Fetch profile names for top customers
+    const topCustomerIds = Object.values(customerSpend)
+      .sort((a, b) => b.spend - a.spend)
+      .slice(0, 10)
+      .map((c) => c.user_id);
+    const profiles = topCustomerIds.length > 0
+      ? await db.profiles.findMany({
+          where: { id: { in: topCustomerIds } },
+          select: { id: true, name: true },
+        })
+      : [];
+    const profileMap = Object.fromEntries(profiles.map((p) => [p.id, p]));
+    const topCustomers = topCustomerIds.map((uid) => {
+      const c = customerSpend[uid];
+      const p = profileMap[uid];
+      return {
+        name: p?.name || `Cliente ${uid.slice(0, 8)}`,
+        spend: c.spend,
+        orders: c.orders,
+      };
+    });
+
+    const customerMetrics = {
+      totalUniqueCustomers,
+      uniqueRegistered,
+      uniqueGuests,
+      registeredOrderCount,
+      guestOrderCount,
+      avgOrdersPerCustomer: Math.round(avgOrdersPerCustomer * 10) / 10,
+      avgRevenuePerCustomer: Math.round(avgRevenuePerCustomer),
+      topCustomers,
+    };
+
     const prevKpis = computeKpis(prevOrders);
 
     return NextResponse.json({
@@ -207,6 +256,7 @@ export async function GET(request: NextRequest) {
       topProducts,
       topByMargin,
       byCategory,
+      customerMetrics,
     });
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);
