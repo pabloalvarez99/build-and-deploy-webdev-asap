@@ -73,6 +73,13 @@ export default function POSPage() {
     credit: { count: number; amount: number };
   } | null>(null)
   const [showShiftSummary, setShowShiftSummary] = useState(false)
+  const [rightTab, setRightTab] = useState<'cart' | 'history'>('cart')
+  const [todaySales, setTodaySales] = useState<{
+    id: string; created_at: string; total: string; payment_provider: string | null;
+    guest_name: string | null; customer_phone: string | null;
+    order_items: { product_name: string; quantity: number; price_at_purchase: string }[];
+  }[]>([])
+  const [historyLoaded, setHistoryLoaded] = useState(false)
   const [customerHistory, setCustomerHistory] = useState<{
     found: boolean; name?: string | null; user_id?: string | null; loyalty_points?: number | null;
     visit_count?: number; top_products?: string[]; recent_orders?: { date: string; total: number; items: string }[];
@@ -114,6 +121,24 @@ export default function POSPage() {
       })
       .catch(() => {})
   }
+
+  const loadTodaySales = () => {
+    const todayCL = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Santiago' })
+    fetch(`/api/admin/orders?from=${todayCL}&to=${todayCL}&channel=pos&status=completed&limit=100`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.orders) {
+          setTodaySales(data.orders)
+          setHistoryLoaded(true)
+        }
+      })
+      .catch(() => {})
+  }
+
+  // Load history when switching to tab
+  useEffect(() => {
+    if (rightTab === 'history' && !historyLoaded) loadTodaySales()
+  }, [rightTab])
 
   // Customer phone lookup with debounce
   useEffect(() => {
@@ -339,6 +364,7 @@ export default function POSPage() {
       setDiscountValue('')
       setShowPayModal(false)
       loadTodayStats()
+      setHistoryLoaded(false) // invalidate cache so history refreshes
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Error al procesar venta')
     } finally {
@@ -599,20 +625,75 @@ export default function POSPage() {
         </div>
       </div>
 
-      {/* Right: Cart */}
+      {/* Right: Cart / History */}
       <div className="lg:w-96 flex flex-col gap-3 bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-4 lg:h-full overflow-hidden">
-        <div className="flex items-center gap-2">
-          <ShoppingCart className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h2 className="font-bold text-slate-900 dark:text-white">Carrito</h2>
-          {cart.length > 0 && (
-            <span className="ml-auto text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full font-semibold">
-              {cart.reduce((s, i) => s + i.quantity, 0)} items
-            </span>
-          )}
+        {/* Tab header */}
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700 rounded-xl p-1">
+          <button
+            onClick={() => setRightTab('cart')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-sm font-medium transition-all ${rightTab === 'cart' ? 'bg-white dark:bg-slate-600 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+          >
+            <ShoppingCart className="w-4 h-4" />
+            Carrito
+            {cart.length > 0 && <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-1.5 rounded-full">{cart.reduce((s, i) => s + i.quantity, 0)}</span>}
+          </button>
+          <button
+            onClick={() => setRightTab('history')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-sm font-medium transition-all ${rightTab === 'history' ? 'bg-white dark:bg-slate-600 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+          >
+            <History className="w-4 h-4" />
+            Historial
+            {todayStats !== null && todayStats.count > 0 && <span className="text-xs bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300 px-1.5 rounded-full">{todayStats.count}</span>}
+          </button>
         </div>
 
-        {/* Cart items */}
-        <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
+        {/* History panel */}
+        {rightTab === 'history' && (
+          <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs text-slate-400 uppercase font-semibold">Ventas POS hoy</p>
+              <button onClick={() => { setHistoryLoaded(false); loadTodaySales(); }} className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
+                <Receipt className="w-3 h-3" />
+                Actualizar
+              </button>
+            </div>
+            {!historyLoaded ? (
+              <div className="text-center py-12 text-slate-400 animate-pulse text-sm">Cargando...</div>
+            ) : todaySales.length === 0 ? (
+              <div className="text-center py-12 text-slate-400 dark:text-slate-500">
+                <Receipt className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                <p className="text-sm">Sin ventas hoy</p>
+              </div>
+            ) : todaySales.map((sale) => {
+              const pmLabel: Record<string, string> = { pos_cash: 'Efectivo', pos_debit: 'Débito', pos_credit: 'Crédito' }
+              const pmColor: Record<string, string> = { pos_cash: 'text-amber-600 dark:text-amber-400', pos_debit: 'text-blue-600 dark:text-blue-400', pos_credit: 'text-purple-600 dark:text-purple-400' }
+              const pm = sale.payment_provider || ''
+              const time = new Date(sale.created_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago' })
+              return (
+                <div key={sale.id} className="border border-slate-100 dark:border-slate-700 rounded-xl p-3 text-sm">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-400 font-mono">{time}</span>
+                      <span className={`text-xs font-semibold ${pmColor[pm] || 'text-slate-500'}`}>{pmLabel[pm] || pm}</span>
+                    </div>
+                    <span className="font-bold text-emerald-700 dark:text-emerald-400">{formatCLP(parseFloat(sale.total))}</span>
+                  </div>
+                  {sale.guest_name && <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{sale.guest_name}</p>}
+                  <div className="space-y-0.5">
+                    {sale.order_items.map((item, i) => (
+                      <p key={i} className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                        {item.product_name} <span className="text-slate-400">×{item.quantity}</span>
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Cart items + cart footer */}
+        {rightTab === 'cart' && <><div className="flex-1 overflow-y-auto space-y-2 min-h-0">
           {cart.length === 0 && (
             <div className="text-center py-10 text-slate-400 dark:text-slate-500">
               <ShoppingCart className="w-10 h-10 mx-auto mb-2 opacity-30" />
@@ -651,7 +732,7 @@ export default function POSPage() {
           ))}
         </div>
 
-        {/* Total + Payment method */}
+        {/* Total + Payment method — cart tab only */}
         {cart.length > 0 && (
           <div className="space-y-3 border-t border-slate-100 dark:border-slate-700 pt-3">
             {/* Payment method selector */}
@@ -721,7 +802,7 @@ export default function POSPage() {
               Limpiar carrito
             </button>
           </div>
-        )}
+        )}</>}
 
         {/* Today's summary */}
         {todayStats !== null && (
