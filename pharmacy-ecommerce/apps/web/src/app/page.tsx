@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { productApi, PaginatedProducts, Category, Product } from '@/lib/api';
-import { Search, ShoppingCart, Check, X, ChevronUp, Package, ChevronDown, Pill, Heart, Droplets, Apple, Stethoscope, Brain, Wind, Sparkles, Eye, Flower2, Shield, Droplet, Baby, Users, Activity, Leaf, TrendingUp, MessageCircle, FileText } from 'lucide-react';
+import { Search, ShoppingCart, Check, X, ChevronUp, Package, ChevronDown, Pill, Heart, Droplets, Apple, Stethoscope, Brain, Wind, Sparkles, Eye, Flower2, Shield, Droplet, Baby, Users, Activity, Leaf, TrendingUp, MessageCircle, FileText, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCartStore } from '@/store/cart';
@@ -88,6 +88,7 @@ function HomeContent() {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [discountedProducts, setDiscountedProducts] = useState<Product[]>([]);
   const [topSellers, setTopSellers] = useState<Product[]>([]);
+  const [frequentProducts, setFrequentProducts] = useState<Product[]>([]);
   const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
   const [showDiscountOnly, setShowDiscountOnly] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -113,6 +114,15 @@ function HomeContent() {
     loadDiscountedProducts();
     loadTopSellers();
   }, []);
+
+  // Load frequent products when user logs in
+  useEffect(() => {
+    if (!user || user.role === 'admin') { setFrequentProducts([]); return; }
+    fetch('/api/products/frequent?limit=6')
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setFrequentProducts(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, [user]);
 
   // Debounced search
   useEffect(() => {
@@ -298,6 +308,73 @@ function HomeContent() {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+
+        {/* Compra Rápida — solo para usuarios con historial de compras */}
+        {user && frequentProducts.length > 0 && !selectedCategory && !searchTerm && !showDiscountOnly && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <RefreshCw className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Compra Rápida</h2>
+              <span className="text-sm text-slate-400 dark:text-slate-500 font-normal">Tus productos habituales</span>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+              {frequentProducts.map((product) => {
+                const finalPrice = product.discount_percent
+                  ? discountedPrice(Number(product.price), product.discount_percent)
+                  : Number(product.price);
+                return (
+                  <div
+                    key={product.id}
+                    className="flex-shrink-0 w-36 sm:w-44 bg-white dark:bg-slate-900 rounded-2xl border-2 border-emerald-200 dark:border-emerald-800 shadow-sm overflow-hidden flex flex-col"
+                  >
+                    <Link href={`/producto/${product.slug}`} className="block relative">
+                      <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
+                        {product.image_url && !brokenImages.has(product.id) ? (
+                          <Image
+                            src={product.image_url}
+                            alt={product.name}
+                            fill
+                            sizes="(max-width: 640px) 144px, 176px"
+                            className="object-contain p-2"
+                            onError={() => setBrokenImages(prev => new Set(prev).add(product.id))}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-slate-300">
+                            <Package className="w-10 h-10" />
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                    <div className="p-2.5 flex flex-col flex-1">
+                      <Link href={`/producto/${product.slug}`}>
+                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-snug line-clamp-2 mb-1 min-h-[2.5rem]">
+                          {product.name}
+                        </h3>
+                      </Link>
+                      <div className="mt-auto">
+                        {product.discount_percent && (
+                          <span className="text-xs text-slate-400 dark:text-slate-500 line-through block">{formatPrice(product.price)}</span>
+                        )}
+                        <span className="text-base font-black text-emerald-700 dark:text-emerald-400 block mb-2">{formatPrice(finalPrice)}</span>
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          disabled={addingId === product.id}
+                          className={`w-full flex items-center justify-center gap-1 py-2.5 rounded-xl font-bold text-sm transition-all border-2 border-emerald-600 ${
+                            addingId === product.id
+                              ? 'bg-emerald-600 text-white scale-95'
+                              : 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95'
+                          }`}
+                        >
+                          {addingId === product.id ? <Check className="w-4 h-4" /> : <><ShoppingCart className="w-3.5 h-3.5" /><span>Agregar</span></>}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Más Vendidos Section */}
         {topSellers.length > 0 && !selectedCategory && !searchTerm && !showDiscountOnly && (
