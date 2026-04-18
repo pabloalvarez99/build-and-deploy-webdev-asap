@@ -49,6 +49,7 @@ interface Stats {
  totalRevenue: number;
  todayRevenue: number;
  todayOrders: number;
+ yesterdayRevenue: number;
 }
 
 interface LowStockProduct {
@@ -219,6 +220,10 @@ export default function AdminPage() {
  const todayRevenue = todayEntry ? Math.round((todayEntry.ventas ?? 0) + (todayEntry.ventas_pos ?? 0)) : 0;
  const todayOrders = todayEntry ? ((todayEntry.ordenes ?? 0) + (todayEntry.ordenes_pos ?? 0)) : 0;
 
+ const yesterdayStr = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split('T')[0];
+ const yesterdayEntry = (reportData?.salesByDay ?? []).find((d: { date: string }) => d.date === yesterdayStr);
+ const yesterdayRevenue = yesterdayEntry ? Math.round((yesterdayEntry.ventas ?? 0) + (yesterdayEntry.ventas_pos ?? 0)) : 0;
+
  // Top products
  const topProductsList: TopProduct[] = (reportData?.topProducts || []).slice(0, 5).map(
   (p: { name: string; units: number }) => ({
@@ -254,6 +259,7 @@ export default function AdminPage() {
  totalRevenue,
  todayRevenue,
  todayOrders,
+ yesterdayRevenue,
  });
 
  // Calculate status distribution
@@ -340,6 +346,7 @@ export default function AdminPage() {
   color: 'bg-teal-500',
   textColor: 'text-teal-600 dark:text-teal-400',
   subtitle: stats.todayOrders > 0 ? `${stats.todayOrders} orden(es)` : undefined,
+  yesterdayRevenue: stats.yesterdayRevenue,
   },
   {
   title: 'Ventas (30 días)',
@@ -404,6 +411,18 @@ export default function AdminPage() {
  <p className="text-sm text-slate-500 dark:text-slate-400">{stat.title}</p>
  <p className={`text-xl font-bold ${stat.textColor}`}>{stat.value}</p>
  {'subtitle' in stat && stat.subtitle && <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{stat.subtitle}</p>}
+ {'yesterdayRevenue' in stat && stat.yesterdayRevenue !== undefined && (() => {
+   const curr = stats!.todayRevenue;
+   const prev = stat.yesterdayRevenue as number;
+   if (prev === 0) return <p className="text-xs text-slate-400 mt-0.5">Ayer: $0</p>;
+   const delta = ((curr - prev) / prev) * 100;
+   const positive = delta >= 0;
+   return (
+     <p className={`text-xs font-semibold mt-0.5 ${positive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+       {positive ? '▲' : '▼'} {Math.abs(delta).toFixed(0)}% vs ayer
+     </p>
+   );
+ })()}
  </div>
  ))}
  </div>

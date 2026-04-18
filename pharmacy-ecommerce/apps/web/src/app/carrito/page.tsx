@@ -4,11 +4,14 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCartStore } from '@/store/cart';
-import { ShoppingBag, ArrowRight, Trash2, Plus, Minus, Package } from 'lucide-react';
+import { useAuthStore } from '@/store/auth';
+import { ShoppingBag, ArrowRight, Trash2, Plus, Minus, Package, Star } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
+import { calcPoints } from '@/lib/loyalty-utils';
 
 export default function CartPage() {
   const { cart, fetchCart, updateQuantity, removeFromCart, isLoading } = useCartStore();
+  const { user } = useAuthStore();
 
   useEffect(() => {
     fetchCart();
@@ -172,10 +175,29 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <div className="flex justify-between items-end mb-6">
+              <div className="flex justify-between items-end mb-4">
                 <span className="text-lg font-bold text-slate-900 dark:text-slate-100">Total</span>
                 <span className="text-3xl font-black text-emerald-700 dark:text-emerald-400">{formatPrice(parseFloat(cart.total))}</span>
               </div>
+
+              {/* Loyalty points preview */}
+              {user && calcPoints(parseFloat(cart.total)) > 0 && (
+                <div className="flex items-center gap-3 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-700 rounded-2xl px-4 py-3 mb-4">
+                  <Star className="w-5 h-5 text-amber-500 fill-amber-400 flex-shrink-0" />
+                  <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                    Ganarás <strong>{calcPoints(parseFloat(cart.total))} punto{calcPoints(parseFloat(cart.total)) !== 1 ? 's' : ''}</strong> con esta compra
+                  </p>
+                </div>
+              )}
+
+              {!user && (
+                <div className="flex items-center gap-3 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-700 rounded-2xl px-4 py-3 mb-4">
+                  <Star className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                  <p className="text-sm text-amber-800 dark:text-amber-300">
+                    <Link href="/auth/register" className="font-bold underline">Crea tu cuenta</Link> y gana {calcPoints(parseFloat(cart.total))} punto{calcPoints(parseFloat(cart.total)) !== 1 ? 's' : ''} con esta compra
+                  </p>
+                </div>
+              )}
 
               <Link
                 href="/checkout"
