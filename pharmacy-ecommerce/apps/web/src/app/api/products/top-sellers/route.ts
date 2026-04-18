@@ -57,7 +57,7 @@ export async function GET(request: Request) {
   // Fallback: productos con mayor stock e imagen
   if (topIds.length < 4) {
     const featured = await db.products.findMany({
-      where: { active: true, stock: { gt: 0 }, image_url: { not: null } },
+      where: { active: true, stock: { gt: 0 }, image_url: { not: null }, price: { gte: 1000 } },
       orderBy: { stock: 'desc' },
       take: limit,
       select: productSelect,
@@ -68,7 +68,7 @@ export async function GET(request: Request) {
   }
 
   const products = await db.products.findMany({
-    where: { id: { in: topIds }, active: true, stock: { gt: 0 } },
+    where: { id: { in: topIds }, active: true, stock: { gt: 0 }, price: { gte: 1000 } },
     select: productSelect,
   })
 

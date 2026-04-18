@@ -54,7 +54,7 @@ export default function InventarioPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'' | 'low' | 'out' | 'no_cost' | 'slow'>('');
-  const [sortField, setSortField] = useState<SortField>('retail_value');
+  const [sortField, setSortField] = useState<SortField>('stock');
   const [sortAsc, setSortAsc] = useState(false);
   const [activeTab, setActiveTab] = useState<'valorization' | 'reorder'>('valorization');
   const [reorderGroups, setReorderGroups] = useState<ReorderGroup[]>([]);
@@ -144,11 +144,11 @@ export default function InventarioPage() {
   }, [items, search, filter, sortField, sortAsc]);
 
   const exportCSV = () => {
-    const headers = ['Producto', 'Categoría', 'Proveedor', 'Stock', 'Precio Venta', 'Precio Costo', 'Valor Retail', 'Valor Costo', '% Margen'];
+    const headers = ['Producto', 'Categoría', 'Proveedor', 'Stock', 'Precio Venta', 'Precio Costo', 'Valor Costo', '% Margen'];
     const rows = filtered.map(i => [
       i.name, i.category, i.supplier?.name ?? '',
       i.stock, i.price, i.cost_price ?? '',
-      Math.round(i.retail_value), i.cost_value != null ? Math.round(i.cost_value) : '',
+      i.cost_value != null ? Math.round(i.cost_value) : '',
       i.margin_pct != null ? i.margin_pct.toFixed(1) + '%' : '',
     ]);
     const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
@@ -396,7 +396,6 @@ export default function InventarioPage() {
                       { key: 'stock', label: 'Stock' },
                       { key: 'price', label: 'P. Venta' },
                       { key: 'cost_price', label: 'P. Costo' },
-                      { key: 'retail_value', label: 'Valor Retail' },
                       { key: 'margin_pct', label: '% Margen' },
                     ] as { key: SortField | null; label: string }[]).map(({ key, label }) => (
                       <th
@@ -437,9 +436,6 @@ export default function InventarioPage() {
                       <td className="px-4 py-3 text-slate-700 dark:text-slate-300 whitespace-nowrap">{formatPrice(item.price)}</td>
                       <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">
                         {item.cost_price != null ? formatPrice(item.cost_price) : <span className="text-slate-300 dark:text-slate-600 text-xs">sin costo</span>}
-                      </td>
-                      <td className="px-4 py-3 font-semibold text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
-                        {formatPrice(item.retail_value)}
                       </td>
                       <td className="px-4 py-3 font-bold whitespace-nowrap">
                         {item.margin_pct != null ? (

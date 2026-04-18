@@ -1,6 +1,19 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: ERP COMPLETO ✅ — Inventario valorizado, POS retiros, mejoras operacionales (Abril 2026)
+## Estado actual: Tercera Edad UX + ERP Profesional (Abril 2026)
+
+---
+
+## 2026-04-17 — Feat: Tercera Edad UX + ERP ampliado
+
+- **Homepage (cliente)**: Grid de productos 1 col mobile / 2 col tablet / 3 col desktop. Nombres `text-lg`, precios `text-2xl`, tarjetas más grandes. Categorías 1 col mobile, botones 64px height.
+- **Carrito**: Nombre producto `text-base/text-lg`, precio unitario `text-base`, subtotal `text-xl` en verde.
+- **Mis Pedidos**: Precio orden `text-2xl font-black`, status badges más grandes (`text-sm`, iconos `w-5`).
+- **Producto detalle**: Productos relacionados 1 col mobile, precios `text-xl`, imágenes más grandes.
+- **Reportes ERP**: Nuevo tab "Clientes" — KPIs únicos, distribución registrados/guests, top 10 clientes por gasto. API agrega `customerMetrics`.
+- **Reportes ERP**: Gráfico de área "Ventas por hora del día" (UTC-4 Chile) para identificar picos de actividad. API agrega `salesByHour`.
+- **Configuración admin**: Sección "Información de la Farmacia" (nombre, dirección, teléfono, web) — datos dinámicos en cotizaciones.
+- **Cotización**: Carga datos de farmacia desde `admin_settings` en lugar de constantes hardcodeadas.
 
 ---
 

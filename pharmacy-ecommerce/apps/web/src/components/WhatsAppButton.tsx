@@ -15,6 +15,10 @@ export function WhatsAppButton() {
 
   const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
   const hasCartItems = cart && cart.item_count > 0;
+  const isHomepage = pathname === '/';
+
+  // On homepage with empty cart, cotizar button is at bottom-4 — push WhatsApp above it
+  const bottomClass = hasCartItems ? 'bottom-[7.5rem]' : isHomepage ? 'bottom-24' : 'bottom-6';
 
   return (
     <a
@@ -23,9 +27,7 @@ export function WhatsAppButton() {
       rel="noopener noreferrer"
       aria-label="Contáctanos por WhatsApp"
       title="Contáctanos por WhatsApp"
-      className={`fixed right-4 z-50 w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 opacity-90 hover:opacity-100 ${
-        hasCartItems ? 'bottom-[7.5rem]' : 'bottom-6'
-      }`}
+      className={`fixed right-4 z-50 w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 opacity-90 hover:opacity-100 ${bottomClass}`}
       style={{ backgroundColor: '#25D366' }}
     >
       <svg

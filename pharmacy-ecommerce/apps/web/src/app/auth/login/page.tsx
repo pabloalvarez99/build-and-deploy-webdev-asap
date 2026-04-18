@@ -35,9 +35,9 @@ function LoginContent() {
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="card p-5 sm:p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Iniciar Sesión</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2">
-            Ingresa tus credenciales para continuar
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Iniciar Sesión</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">
+            Ingresa tu email y contraseña
           </p>
         </div>
 
@@ -98,16 +98,16 @@ function LoginContent() {
           <button
             type="submit"
             disabled={isLoading}
-            className="btn btn-primary w-full py-3 disabled:opacity-50"
+            className="btn btn-primary w-full py-4 disabled:opacity-50 text-xl"
           >
-            {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+            {isLoading ? 'Iniciando sesión...' : 'Entrar'}
           </button>
         </form>
 
-        <p className="text-center text-slate-500 dark:text-slate-400 mt-6">
+        <p className="text-center text-slate-500 dark:text-slate-400 mt-6 text-base">
           ¿No tienes cuenta?{' '}
-          <Link href={registerHref} className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium">
-            Regístrate
+          <Link href={registerHref} className="text-emerald-600 dark:text-emerald-400 hover:underline font-semibold text-base">
+            Crear cuenta
           </Link>
         </p>
       </div>
