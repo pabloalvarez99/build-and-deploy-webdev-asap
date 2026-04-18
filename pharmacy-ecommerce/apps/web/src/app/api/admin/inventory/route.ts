@@ -66,6 +66,25 @@ export async function GET(request: NextRequest) {
       orderBy: { stock: 'asc' },
     });
 
+    // Sales velocity: units sold per product in the last 30 days (non-cancelled)
+    const cutoff30 = new Date();
+    cutoff30.setDate(cutoff30.getDate() - 30);
+    const salesData = await db.order_items.groupBy({
+      by: ['product_id'],
+      where: {
+        product_id: { not: null },
+        orders: {
+          created_at: { gte: cutoff30 },
+          status: { notIn: ['cancelled', 'pending'] },
+        },
+      },
+      _sum: { quantity: true },
+    });
+    const salesMap = new Map<string, number>();
+    for (const s of salesData) {
+      if (s.product_id) salesMap.set(s.product_id, s._sum.quantity ?? 0);
+    }
+
     let totalRetailValue = 0;
     let totalCostValue = 0;
     let productsWithCost = 0;
@@ -85,6 +104,12 @@ export async function GET(request: NextRequest) {
 
       const mapping = p.supplier_product_mappings[0];
 
+      // Days of inventory at current sales rate (30-day avg)
+      const unitsSold30d = salesMap.get(p.id) ?? 0;
+      const avgDailyUnits = unitsSold30d / 30;
+      const dias_inventario =
+        p.stock > 0 && avgDailyUnits > 0 ? Math.round(p.stock / avgDailyUnits) : null;
+
       return {
         id: p.id,
         name: p.name,
@@ -100,6 +125,8 @@ export async function GET(request: NextRequest) {
         supplier: mapping?.suppliers
           ? { id: mapping.suppliers.id, name: mapping.suppliers.name, code: mapping.supplier_code }
           : null,
+        dias_inventario,
+        units_sold_30d: unitsSold30d,
       };
     });
 

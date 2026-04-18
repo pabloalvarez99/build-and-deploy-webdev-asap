@@ -23,6 +23,8 @@ interface InventoryItem {
   category: string;
   low_stock: boolean;
   supplier: { id: string; name: string; code: string | null } | null;
+  dias_inventario: number | null;
+  units_sold_30d: number;
 }
 
 interface InventorySummary {
@@ -35,7 +37,7 @@ interface InventorySummary {
   low_stock_threshold: number;
 }
 
-type SortField = 'name' | 'stock' | 'price' | 'cost_price' | 'retail_value' | 'margin_pct';
+type SortField = 'name' | 'stock' | 'price' | 'cost_price' | 'retail_value' | 'margin_pct' | 'dias_inventario' | 'units_sold_30d';
 
 interface ReorderItem {
   product_id: string; name: string; stock: number;
@@ -53,7 +55,7 @@ export default function InventarioPage() {
   const [summary, setSummary] = useState<InventorySummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'' | 'low' | 'out' | 'no_cost' | 'slow'>('');
+  const [filter, setFilter] = useState<'' | 'low' | 'out' | 'no_cost' | 'slow' | 'critical'>('');
   const [sortField, setSortField] = useState<SortField>('stock');
   const [sortAsc, setSortAsc] = useState(false);
   const [activeTab, setActiveTab] = useState<'valorization' | 'reorder'>('valorization');
@@ -126,6 +128,7 @@ export default function InventarioPage() {
     if (filter === 'low') arr = arr.filter(i => i.low_stock && i.stock > 0);
     else if (filter === 'out') arr = arr.filter(i => i.stock === 0);
     else if (filter === 'no_cost') arr = arr.filter(i => i.cost_price === null);
+    else if (filter === 'critical') arr = arr.filter(i => i.dias_inventario !== null && i.dias_inventario <= 7);
     // 'slow' is handled server-side; items array already contains the filtered set
 
     return [...arr].sort((a, b) => {
@@ -137,6 +140,8 @@ export default function InventarioPage() {
         case 'cost_price': va = a.cost_price ?? -1; vb = b.cost_price ?? -1; break;
         case 'retail_value': va = a.retail_value; vb = b.retail_value; break;
         case 'margin_pct': va = a.margin_pct ?? -999; vb = b.margin_pct ?? -999; break;
+        case 'dias_inventario': va = a.dias_inventario ?? 999999; vb = b.dias_inventario ?? 999999; break;
+        case 'units_sold_30d': va = a.units_sold_30d; vb = b.units_sold_30d; break;
       }
       if (typeof va === 'string') return sortAsc ? va.localeCompare(vb as string) : (vb as string).localeCompare(va);
       return sortAsc ? (va as number) - (vb as number) : (vb as number) - (va as number);
@@ -144,12 +149,14 @@ export default function InventarioPage() {
   }, [items, search, filter, sortField, sortAsc]);
 
   const exportCSV = () => {
-    const headers = ['Producto', 'Categoría', 'Proveedor', 'Stock', 'Precio Venta', 'Precio Costo', 'Valor Costo', '% Margen'];
+    const headers = ['Producto', 'Categoría', 'Proveedor', 'Stock', 'Precio Venta', 'Precio Costo', 'Valor Costo', '% Margen', 'Días Stock', 'Uds. vendidas 30d'];
     const rows = filtered.map(i => [
       i.name, i.category, i.supplier?.name ?? '',
       i.stock, i.price, i.cost_price ?? '',
       i.cost_value != null ? Math.round(i.cost_value) : '',
       i.margin_pct != null ? i.margin_pct.toFixed(1) + '%' : '',
+      i.dias_inventario ?? '',
+      i.units_sold_30d,
     ]);
     const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
@@ -161,6 +168,7 @@ export default function InventarioPage() {
   const outOfStock = items.filter(i => i.stock === 0).length;
   const lowStock = items.filter(i => i.low_stock && i.stock > 0).length;
   const noCost = items.filter(i => i.cost_price === null).length;
+  const criticalDays = items.filter(i => i.dias_inventario !== null && i.dias_inventario <= 7).length;
 
   if (!user || user.role !== 'admin') return null;
 
@@ -356,11 +364,12 @@ export default function InventarioPage() {
         </div>
         {([
           { id: '', label: `Todos (${items.length})`, activeClass: 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' },
+          { id: 'critical', label: `Crítico ≤7d (${criticalDays})`, activeClass: 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' },
           { id: 'low', label: `Bajo mínimo (${lowStock})`, activeClass: 'border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400' },
           { id: 'out', label: `Sin stock (${outOfStock})`, activeClass: 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' },
           { id: 'slow', label: 'Movimiento lento (60d)', activeClass: 'border-purple-400 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400' },
           { id: 'no_cost', label: `Sin costo (${noCost})`, activeClass: 'border-slate-400 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300' },
-        ] as { id: '' | 'low' | 'out' | 'slow' | 'no_cost'; label: string; activeClass: string }[]).map(({ id, label, activeClass }) => (
+        ] as { id: '' | 'low' | 'out' | 'slow' | 'no_cost' | 'critical'; label: string; activeClass: string }[]).map(({ id, label, activeClass }) => (
           <button
             key={id}
             onClick={() => setFilter(id)}
@@ -394,6 +403,8 @@ export default function InventarioPage() {
                       { key: null, label: 'Categoría' },
                       { key: null, label: 'Proveedor' },
                       { key: 'stock', label: 'Stock' },
+                      { key: 'units_sold_30d', label: 'Vtas 30d' },
+                      { key: 'dias_inventario', label: 'Días stock' },
                       { key: 'price', label: 'P. Venta' },
                       { key: 'cost_price', label: 'P. Costo' },
                       { key: 'margin_pct', label: '% Margen' },
@@ -432,6 +443,26 @@ export default function InventarioPage() {
                         <span className={item.stock === 0 ? 'text-red-500 dark:text-red-400' : item.low_stock ? 'text-amber-600 dark:text-amber-400' : 'text-slate-900 dark:text-slate-100'}>
                           {item.stock}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 text-center font-mono text-sm">
+                        <span className={item.units_sold_30d > 0 ? 'text-slate-700 dark:text-slate-300' : 'text-slate-300 dark:text-slate-600'}>
+                          {item.units_sold_30d > 0 ? item.units_sold_30d : '—'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center whitespace-nowrap">
+                        {item.dias_inventario !== null ? (
+                          <span className={`inline-block font-bold text-sm px-2 py-0.5 rounded-full ${
+                            item.dias_inventario <= 7
+                              ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                              : item.dias_inventario <= 30
+                              ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                              : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                          }`}>
+                            {item.dias_inventario > 365 ? '>1 año' : `${item.dias_inventario}d`}
+                          </span>
+                        ) : (
+                          <span className="text-slate-300 dark:text-slate-600 text-xs">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-slate-700 dark:text-slate-300 whitespace-nowrap">{formatPrice(item.price)}</td>
                       <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">
