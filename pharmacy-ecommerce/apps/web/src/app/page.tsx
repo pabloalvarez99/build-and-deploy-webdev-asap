@@ -11,23 +11,23 @@ import { formatPrice, discountedPrice } from '@/lib/format';
 import { ReactNode } from 'react';
 // Lucide icons per category slug for professional visual recognition
 const categoryIcons: Record<string, ReactNode> = {
-  'dolor-fiebre': <Pill className="w-5 h-5" />,
-  'sistema-digestivo': <Stethoscope className="w-5 h-5" />,
-  'sistema-cardiovascular': <Heart className="w-5 h-5" />,
-  'sistema-nervioso': <Brain className="w-5 h-5" />,
-  'sistema-respiratorio': <Wind className="w-5 h-5" />,
-  'dermatologia': <Sparkles className="w-5 h-5" />,
-  'oftalmologia': <Eye className="w-5 h-5" />,
-  'salud-femenina': <Flower2 className="w-5 h-5" />,
-  'diabetes-metabolismo': <Droplets className="w-5 h-5" />,
-  'antibioticos-infecciones': <Shield className="w-5 h-5" />,
-  'vitaminas-suplementos': <Apple className="w-5 h-5" />,
-  'higiene-cuidado-personal': <Droplet className="w-5 h-5" />,
-  'bebes-ninos': <Baby className="w-5 h-5" />,
-  'adulto-mayor': <Users className="w-5 h-5" />,
-  'insumos-medicos': <Activity className="w-5 h-5" />,
-  'productos-naturales': <Leaf className="w-5 h-5" />,
-  'otros': <Package className="w-5 h-5" />,
+  'dolor-fiebre': <Pill className="w-6 h-6" />,
+  'sistema-digestivo': <Stethoscope className="w-6 h-6" />,
+  'sistema-cardiovascular': <Heart className="w-6 h-6" />,
+  'sistema-nervioso': <Brain className="w-6 h-6" />,
+  'sistema-respiratorio': <Wind className="w-6 h-6" />,
+  'dermatologia': <Sparkles className="w-6 h-6" />,
+  'oftalmologia': <Eye className="w-6 h-6" />,
+  'salud-femenina': <Flower2 className="w-6 h-6" />,
+  'diabetes-metabolismo': <Droplets className="w-6 h-6" />,
+  'antibioticos-infecciones': <Shield className="w-6 h-6" />,
+  'vitaminas-suplementos': <Apple className="w-6 h-6" />,
+  'higiene-cuidado-personal': <Droplet className="w-6 h-6" />,
+  'bebes-ninos': <Baby className="w-6 h-6" />,
+  'adulto-mayor': <Users className="w-6 h-6" />,
+  'insumos-medicos': <Activity className="w-6 h-6" />,
+  'productos-naturales': <Leaf className="w-6 h-6" />,
+  'otros': <Package className="w-6 h-6" />,
 };
 
 // Priority order: most relevant for elderly users first
@@ -458,15 +458,15 @@ function HomeContent() {
         {!selectedCategory && !searchTerm && (
           <div className="mb-6">
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-3">Categorías</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {visibleCategories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => handleCategoryChange(cat.slug)}
-                  className="flex items-center gap-2 sm:gap-2.5 justify-center text-center px-2 sm:px-3 py-3 sm:py-3.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-600 rounded-2xl text-sm sm:text-base font-semibold text-slate-700 dark:text-slate-300 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all min-h-[52px] sm:min-h-[56px] leading-tight"
+                  className="flex items-center gap-3 px-5 py-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-600 rounded-2xl text-base font-semibold text-slate-700 dark:text-slate-300 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all min-h-[64px] leading-tight text-left"
                 >
-                  <span className="text-emerald-600 flex-shrink-0">{categoryIcons[cat.slug] || <Package className="w-5 h-5" />}</span>
-                  <span>{cat.name}</span>
+                  <span className="text-emerald-600 flex-shrink-0">{categoryIcons[cat.slug] || <Package className="w-6 h-6" />}</span>
+                  <span className="text-base font-semibold">{cat.name}</span>
                 </button>
               ))}
             </div>
@@ -494,19 +494,20 @@ function HomeContent() {
 
         {/* Products Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-3 animate-pulse">
-                <div className="aspect-square bg-slate-100 dark:bg-slate-700 rounded-xl mb-3" />
-                <div className="h-4 bg-slate-100 dark:bg-slate-700 rounded w-3/4 mb-2" />
-                <div className="h-6 bg-slate-100 dark:bg-slate-700 rounded w-1/2 mb-3" />
-                <div className="h-11 bg-slate-100 dark:bg-slate-700 rounded-xl" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-4 animate-pulse">
+                <div className="aspect-square bg-slate-100 dark:bg-slate-700 rounded-xl mb-4" />
+                <div className="h-6 bg-slate-100 dark:bg-slate-700 rounded w-3/4 mb-2" />
+                <div className="h-4 bg-slate-100 dark:bg-slate-700 rounded w-1/2 mb-2" />
+                <div className="h-8 bg-slate-100 dark:bg-slate-700 rounded w-2/5 mb-4" />
+                <div className="h-14 bg-slate-100 dark:bg-slate-700 rounded-xl" />
               </div>
             ))}
           </div>
         ) : allProducts.length > 0 ? (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {allProducts.map((product) => (
                 <div
                   key={product.id}
@@ -545,9 +546,9 @@ function HomeContent() {
                   </Link>
 
                   {/* Info */}
-                  <div className="p-3 flex flex-col flex-1">
+                  <div className="p-4 flex flex-col flex-1">
                     <Link href={`/producto/${product.slug}`}>
-                      <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base leading-snug line-clamp-2 mb-1 min-h-[2.5rem]">
+                      <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-snug line-clamp-2 mb-2 min-h-[3.5rem]">
                         {product.name}
                       </h3>
                     </Link>
@@ -559,13 +560,13 @@ function HomeContent() {
                     <div className="mt-auto">
                       {product.discount_percent ? (
                         <>
-                          <span className="text-sm text-slate-400 dark:text-slate-500 line-through block">{formatPrice(product.price)}</span>
-                          <span className="text-xl font-black text-emerald-700 dark:text-emerald-400 block mb-2">
+                          <span className="text-base text-slate-400 dark:text-slate-500 line-through block">{formatPrice(product.price)}</span>
+                          <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400 block mb-3">
                             {formatPrice(discountedPrice(Number(product.price), product.discount_percent))}
                           </span>
                         </>
                       ) : (
-                        <span className="text-xl font-black text-emerald-700 dark:text-emerald-400 block mb-2">
+                        <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400 block mb-3">
                           {formatPrice(product.price)}
                         </span>
                       )}

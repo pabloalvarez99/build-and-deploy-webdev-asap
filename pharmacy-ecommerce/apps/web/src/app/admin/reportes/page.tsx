@@ -19,6 +19,8 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  AreaChart,
+  Area,
 } from 'recharts';
 
 interface ReportData {
@@ -40,6 +42,7 @@ interface ReportData {
     pos: { orders: number; revenue: number; cash: number; debit: number; credit: number };
   };
   salesByDay: { date: string; ventas: number; ordenes: number; ventas_pos: number; ordenes_pos: number }[];
+  salesByHour: { hour: number; ordenes: number; ventas: number }[];
   topProducts: {
     name: string; units: number; revenue: number; cost: number;
     has_cost: boolean; category: string; margin: number | null; margin_pct: number | null;
@@ -305,6 +308,36 @@ export default function AdminReportesPage() {
                         <Line type="monotone" dataKey="ventas" stroke="#3B82F6" strokeWidth={2} dot={false} name="Online" />
                         <Line type="monotone" dataKey="ventas_pos" stroke="#10B981" strokeWidth={2} dot={false} name="POS" />
                       </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
+
+              {/* Ventas por hora */}
+              <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-6">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Ventas por hora del día</h3>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">Hora local Chile (UTC-4) — identifica los picos de actividad</p>
+                {!data.salesByHour || data.salesByHour.every(h => h.ordenes === 0) ? (
+                  <p className="text-slate-400 text-sm py-10 text-center">Sin datos para este período</p>
+                ) : (
+                  <div className="h-52">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={data.salesByHour}>
+                        <defs>
+                          <linearGradient id="colorHour" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                        <XAxis dataKey="hour" stroke={axisColor} fontSize={11} tickFormatter={(h) => `${h}h`} />
+                        <YAxis stroke={axisColor} fontSize={11} />
+                        <Tooltip
+                          formatter={(v, name) => [v, name === 'ordenes' ? 'Órdenes' : 'Ventas']}
+                          labelFormatter={(h) => `${h}:00 – ${h}:59`}
+                        />
+                        <Area type="monotone" dataKey="ordenes" stroke="#10B981" strokeWidth={2} fill="url(#colorHour)" name="ordenes" />
+                      </AreaChart>
                     </ResponsiveContainer>
                   </div>
                 )}

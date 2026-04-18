@@ -184,6 +184,18 @@ export async function GET(request: NextRequest) {
       .map((c) => ({ ...c, margin: c.revenue - c.cost }))
       .sort((a, b) => b.revenue - a.revenue);
 
+    // Sales by hour of day (aggregated over the whole period, Chile time = UTC-4/-3)
+    const salesByHourMap: Record<number, { hour: number; ordenes: number; ventas: number }> = {};
+    for (let h = 0; h < 24; h++) salesByHourMap[h] = { hour: h, ordenes: 0, ventas: 0 };
+    orders.forEach((o) => {
+      // Adjust for Chile Standard Time (UTC-4); simple offset, doesn't need DST accuracy for reporting
+      const hourUTC = o.created_at.getUTCHours();
+      const hourCL = ((hourUTC - 4) + 24) % 24;
+      salesByHourMap[hourCL].ordenes += 1;
+      salesByHourMap[hourCL].ventas += Number(o.total);
+    });
+    const salesByHour = Object.values(salesByHourMap).sort((a, b) => a.hour - b.hour);
+
     const prevKpis = computeKpis(prevOrders);
 
     return NextResponse.json({
@@ -191,6 +203,7 @@ export async function GET(request: NextRequest) {
       prevKpis: { totalRevenue: prevKpis.totalRevenue, totalOrders: prevKpis.totalOrders, avgTicket: prevKpis.avgTicket },
       channelBreakdown,
       salesByDay: salesByDayArr,
+      salesByHour,
       topProducts,
       topByMargin,
       byCategory,
