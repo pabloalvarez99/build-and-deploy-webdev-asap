@@ -53,10 +53,14 @@ function RegisterContent() {
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="card p-5 sm:p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Crear Cuenta</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Crear Cuenta</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">
             Regístrate para empezar a comprar
           </p>
+          <div className="mt-3 inline-flex items-center gap-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-3 py-1.5">
+            <span className="text-amber-500">⭐</span>
+            <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">Gana puntos en cada compra</span>
+          </div>
         </div>
 
         {displayError && (
@@ -145,16 +149,16 @@ function RegisterContent() {
           <button
             type="submit"
             disabled={isLoading}
-            className="btn btn-primary w-full py-3 disabled:opacity-50"
+            className="btn btn-primary w-full py-4 text-xl disabled:opacity-50"
           >
             {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
           </button>
         </form>
 
-        <p className="text-center text-slate-500 dark:text-slate-400 mt-6">
+        <p className="text-center text-slate-500 dark:text-slate-400 mt-6 text-base">
           ¿Ya tienes cuenta?{' '}
-          <Link href={loginHref} className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium">
-            Inicia sesión
+          <Link href={loginHref} className="text-emerald-600 dark:text-emerald-400 hover:underline font-semibold text-base">
+            Iniciar sesión
           </Link>
         </p>
       </div>

@@ -232,7 +232,7 @@ export default function CheckoutPage() {
       <div className="max-w-lg mx-auto px-4 sm:px-6 py-4 sm:py-6">
         {/* Header */}
         <div className="text-center mb-5">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Finalizar pedido</h1>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Finalizar pedido</h1>
           {user && (
             <p className="text-slate-500 dark:text-slate-400 mt-1">
               Hola, <span className="font-semibold text-emerald-700 dark:text-emerald-400">{user.name || user.email}</span>
@@ -437,7 +437,7 @@ export default function CheckoutPage() {
         <button
           onClick={handleSubmit}
           disabled={isProcessing || !canSubmit}
-          className="w-full mt-4 py-4 px-4 font-bold text-lg rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-colors min-h-[64px] bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20"
+          className="w-full mt-4 py-4 px-4 font-bold text-xl rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-colors min-h-[64px] bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20"
         >
           {isProcessing ? (
             <><Loader2 className="w-6 h-6 animate-spin" />Procesando...</>

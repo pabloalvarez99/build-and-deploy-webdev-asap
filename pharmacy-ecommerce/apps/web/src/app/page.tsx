@@ -7,6 +7,7 @@ import { Search, ShoppingCart, Check, X, ChevronUp, Package, ChevronDown, Pill, 
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCartStore } from '@/store/cart';
+import { useAuthStore } from '@/store/auth';
 import { formatPrice, discountedPrice } from '@/lib/format';
 import { ReactNode } from 'react';
 // Lucide icons per category slug for professional visual recognition
@@ -80,6 +81,7 @@ function HomeContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const { addToCart, cart } = useCartStore();
+  const { user } = useAuthStore();
   const [addingId, setAddingId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -361,6 +363,23 @@ function HomeContent() {
               })}
             </div>
           </div>
+        )}
+
+        {/* Loyalty teaser — only for non-logged users on main view */}
+        {!user && !selectedCategory && !searchTerm && !showDiscountOnly && (
+          <Link
+            href="/auth/register"
+            className="flex items-center gap-4 bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 border-2 border-amber-200 dark:border-amber-700 rounded-2xl px-5 py-4 mb-6 hover:border-amber-400 dark:hover:border-amber-500 transition-colors group"
+          >
+            <div className="w-12 h-12 bg-amber-400 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md">
+              <span className="text-2xl">⭐</span>
+            </div>
+            <div className="flex-1">
+              <p className="font-black text-amber-900 dark:text-amber-300 text-lg leading-snug">Gana puntos en cada compra</p>
+              <p className="text-amber-700 dark:text-amber-400 text-base">Crea tu cuenta gratis y acumula descuentos</p>
+            </div>
+            <span className="text-amber-600 dark:text-amber-400 font-bold text-base group-hover:translate-x-1 transition-transform">→</span>
+          </Link>
         )}
 
         {/* Ofertas Section */}

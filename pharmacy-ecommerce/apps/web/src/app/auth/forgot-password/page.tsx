@@ -40,22 +40,22 @@ export default function ForgotPasswordPage() {
 
         {sent ? (
           <div className="text-center py-4">
-            <div className="bg-emerald-100 dark:bg-emerald-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+            <div className="bg-emerald-100 dark:bg-emerald-900/30 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5">
+              <CheckCircle className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3">Correo enviado</h1>
-            <p className="text-slate-600 dark:text-slate-300 text-base">
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-3">Correo enviado</h1>
+            <p className="text-slate-600 dark:text-slate-300 text-lg">
               Si existe una cuenta con <strong>{email}</strong>, recibirás un enlace para restablecer tu contraseña.
             </p>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-3">
+            <p className="text-slate-500 dark:text-slate-400 text-base mt-3">
               Revisa también tu carpeta de spam.
             </p>
           </div>
         ) : (
           <>
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">¿Olvidaste tu contraseña?</h1>
-              <p className="text-slate-500 dark:text-slate-400 mt-2">
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">¿Olvidaste tu contraseña?</h1>
+              <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">
                 Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña
               </p>
             </div>
@@ -88,9 +88,9 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="btn btn-primary w-full py-3 disabled:opacity-50"
+                className="btn btn-primary w-full py-4 text-xl disabled:opacity-50"
               >
-                {isLoading ? 'Enviando...' : 'Enviar enlace de recuperación'}
+                {isLoading ? 'Enviando...' : 'Enviar enlace'}
               </button>
             </form>
           </>

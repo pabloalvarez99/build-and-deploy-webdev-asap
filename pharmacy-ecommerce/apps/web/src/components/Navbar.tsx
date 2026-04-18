@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
-import { ShoppingCart, Package, LogOut, User as UserIcon, Loader2, Sun, Moon } from 'lucide-react';
+import { ShoppingCart, Package, LogOut, User as UserIcon, Loader2, Sun, Moon, Star } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from '@/hooks/useTheme';
@@ -16,11 +16,21 @@ export function Navbar() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { theme, toggleTheme, mounted } = useTheme();
+  const [loyaltyPoints, setLoyaltyPoints] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCart();
     checkAuth();
   }, [fetchCart, checkAuth]);
+
+  // Fetch loyalty points when user logs in (not for admins)
+  useEffect(() => {
+    if (!user || user.role === 'admin') { setLoyaltyPoints(null); return; }
+    fetch('/api/loyalty')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setLoyaltyPoints(data.points ?? 0); })
+      .catch(() => {});
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -106,6 +116,15 @@ export function Navbar() {
                       <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
                         <p className="font-bold text-slate-900 dark:text-slate-100">{user.name}</p>
                         <p className="text-base text-slate-500 dark:text-slate-400">{user.email}</p>
+                        {loyaltyPoints !== null && (
+                          <div className="flex items-center gap-1.5 mt-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-2.5 py-1.5">
+                            <Star className="w-4 h-4 text-amber-500 fill-amber-400 flex-shrink-0" />
+                            <span className="text-sm font-bold text-amber-700 dark:text-amber-400">{loyaltyPoints} punto{loyaltyPoints !== 1 ? 's' : ''}</span>
+                            {loyaltyPoints > 0 && (
+                              <span className="text-xs text-amber-600 dark:text-amber-500 ml-0.5">= {formatPrice(loyaltyPoints * 100)} desc.</span>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       {user.role === 'admin' && (
