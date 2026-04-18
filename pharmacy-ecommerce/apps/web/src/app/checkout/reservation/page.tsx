@@ -161,6 +161,14 @@ function ReservationContent() {
       >
         Seguir comprando
       </Link>
+      {orderId && !user && (
+        <Link
+          href={`/rastrear-pedido?id=${orderId.substring(0, 8)}`}
+          className="block text-center text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium text-sm py-2 mt-1"
+        >
+          Rastrear el estado de este pedido →
+        </Link>
+      )}
     </div>
   );
 }

@@ -116,9 +116,17 @@ function SuccessContent() {
         <Link href="/" className="btn btn-primary block text-center text-lg w-full min-h-[56px]">
           Seguir comprando
         </Link>
-        {orderId && (
+        {orderId && user && (
           <Link href="/mis-pedidos" className="block text-center text-emerald-600 dark:text-emerald-400 font-semibold hover:underline text-base py-2">
             Ver mis pedidos
+          </Link>
+        )}
+        {orderId && !user && (
+          <Link
+            href={`/rastrear-pedido?id=${orderId.substring(0, 8)}`}
+            className="block text-center text-emerald-600 dark:text-emerald-400 font-semibold hover:underline text-base py-2"
+          >
+            Rastrear este pedido →
           </Link>
         )}
       </div>
