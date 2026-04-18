@@ -13,32 +13,34 @@ export async function GET(_request: NextRequest) {
   const listResult = await adminAuth.listUsers(1000)
   const authUsers = listResult.users
 
-  // 2. Get order counts per user_id
+  // 2. Get order stats per user_id (count + total spend)
   const userOrders = await db.orders.findMany({
     where: { user_id: { not: null } },
-    select: { user_id: true, created_at: true },
+    select: { user_id: true, created_at: true, total: true, status: true },
   })
 
-  const userOrderMap: Record<string, { count: number; last: string }> = {}
+  const userOrderMap: Record<string, { count: number; last: string; total_spend: number }> = {}
   for (const o of userOrders) {
     if (!o.user_id) continue
     const uid = o.user_id
-    if (!userOrderMap[uid]) userOrderMap[uid] = { count: 0, last: o.created_at.toISOString() }
+    if (!userOrderMap[uid]) userOrderMap[uid] = { count: 0, last: o.created_at.toISOString(), total_spend: 0 }
     userOrderMap[uid].count++
+    if (!['cancelled', 'pending'].includes(o.status))
+      userOrderMap[uid].total_spend += Number(o.total)
     if (o.created_at.toISOString() > userOrderMap[uid].last)
       userOrderMap[uid].last = o.created_at.toISOString()
   }
 
-  // 3. Get unique guest customers
+  // 3. Get unique guest customers with spend data
   const registeredEmails = new Set(authUsers.map((u) => u.email?.toLowerCase()))
 
   const guestOrders = await db.orders.findMany({
     where: { guest_email: { not: null } },
-    select: { guest_email: true, guest_name: true, guest_surname: true, customer_phone: true, created_at: true },
+    select: { guest_email: true, guest_name: true, guest_surname: true, customer_phone: true, created_at: true, total: true, status: true },
     orderBy: { created_at: 'desc' },
   })
 
-  const guestMap: Record<string, { name: string; surname: string; phone: string | null; count: number; last: string }> = {}
+  const guestMap: Record<string, { name: string; surname: string; phone: string | null; count: number; last: string; total_spend: number }> = {}
   for (const o of guestOrders) {
     const emailLower = o.guest_email?.toLowerCase()
     if (!emailLower || registeredEmails.has(emailLower)) continue
@@ -49,9 +51,12 @@ export async function GET(_request: NextRequest) {
         phone: o.customer_phone || null,
         count: 0,
         last: o.created_at.toISOString(),
+        total_spend: 0,
       }
     }
     guestMap[emailLower].count++
+    if (!['cancelled', 'pending'].includes(o.status))
+      guestMap[emailLower].total_spend += Number(o.total)
     if (o.created_at.toISOString() > guestMap[emailLower].last)
       guestMap[emailLower].last = o.created_at.toISOString()
   }
@@ -65,6 +70,7 @@ export async function GET(_request: NextRequest) {
     created_at: u.metadata.creationTime,
     order_count: userOrderMap[u.uid]?.count ?? 0,
     last_order: userOrderMap[u.uid]?.last ?? null,
+    total_spend: userOrderMap[u.uid]?.total_spend ?? 0,
     type: 'registered' as const,
   }))
 
@@ -77,6 +83,7 @@ export async function GET(_request: NextRequest) {
     created_at: g.last,
     order_count: g.count,
     last_order: g.last,
+    total_spend: g.total_spend,
     type: 'guest' as const,
   }))
 

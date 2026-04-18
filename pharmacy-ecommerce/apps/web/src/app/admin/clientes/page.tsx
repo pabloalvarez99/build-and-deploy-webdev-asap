@@ -17,6 +17,7 @@ interface Customer {
   created_at: string;
   order_count: number;
   last_order: string | null;
+  total_spend: number;
   type: 'registered' | 'guest';
   loyalty_points?: number;
 }
@@ -69,6 +70,7 @@ export default function ClientesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'registered' | 'guest'>('all');
+  const [sortBy, setSortBy] = useState<'recent' | 'spend' | 'orders'>('recent');
 
   // Panel state
   const [selected, setSelected] = useState<CustomerDetail | null>(null);
@@ -104,7 +106,7 @@ export default function ClientesPage() {
       const all: Customer[] = [
         ...(data.registered || []),
         ...(data.guests || []),
-      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      ];
       setCustomers(all);
     } catch {
       // silently fail
@@ -244,17 +246,23 @@ export default function ClientesPage() {
     }
   };
 
-  const filtered = customers.filter((c) => {
-    if (filter !== 'all' && c.type !== filter) return false;
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    return (
-      c.email?.toLowerCase().includes(q) ||
-      c.name?.toLowerCase().includes(q) ||
-      c.surname?.toLowerCase().includes(q) ||
-      c.phone?.includes(q)
-    );
-  });
+  const filtered = customers
+    .filter((c) => {
+      if (filter !== 'all' && c.type !== filter) return false;
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      return (
+        c.email?.toLowerCase().includes(q) ||
+        c.name?.toLowerCase().includes(q) ||
+        c.surname?.toLowerCase().includes(q) ||
+        c.phone?.includes(q)
+      );
+    })
+    .sort((a, b) => {
+      if (sortBy === 'spend') return b.total_spend - a.total_spend;
+      if (sortBy === 'orders') return b.order_count - a.order_count;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
 
   const registered = customers.filter((c) => c.type === 'registered');
   const guests = customers.filter((c) => c.type === 'guest');
@@ -262,11 +270,12 @@ export default function ClientesPage() {
 
   const exportCSV = () => {
     const rows = [
-      ['Nombre', 'Apellido', 'Email', 'Teléfono', 'Tipo', 'N° Pedidos', 'Último pedido', 'Registrado'],
+      ['Nombre', 'Apellido', 'Email', 'Teléfono', 'Tipo', 'N° Pedidos', 'Total Compras', 'Último pedido', 'Registrado'],
       ...filtered.map((c) => [
         c.name, c.surname, c.email, c.phone || '',
         c.type === 'registered' ? 'Registrado' : 'Invitado',
         c.order_count,
+        Math.round(c.total_spend),
         c.last_order ? new Date(c.last_order).toLocaleDateString('es-CL') : '',
         new Date(c.created_at).toLocaleDateString('es-CL'),
       ]),
@@ -335,12 +344,24 @@ export default function ClientesPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nombre, email o teléfono..." className="input pl-10" />
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {(['all', 'registered', 'guest'] as const).map((f) => (
                 <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${filter === f ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'}`}>
                   {f === 'all' ? 'Todos' : f === 'registered' ? 'Registrados' : 'Invitados'}
                 </button>
               ))}
+              <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl px-2">
+                <span className="text-xs text-slate-400 mr-1">Ordenar:</span>
+                {([
+                  { id: 'recent', label: 'Recientes' },
+                  { id: 'spend', label: 'Mayor compra' },
+                  { id: 'orders', label: 'Más pedidos' },
+                ] as { id: 'recent' | 'spend' | 'orders'; label: string }[]).map((s) => (
+                  <button key={s.id} onClick={() => setSortBy(s.id)} className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${sortBy === s.id ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -362,7 +383,7 @@ export default function ClientesPage() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">
-                        {['Cliente', 'Teléfono', 'Tipo', 'Pedidos', 'Último pedido', 'Acciones'].map((h) => (
+                        {['Cliente', 'Teléfono', 'Tipo', 'Pedidos', 'Total compras', 'Último pedido', 'Acciones'].map((h) => (
                           <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{h}</th>
                         ))}
                       </tr>
@@ -395,6 +416,9 @@ export default function ClientesPage() {
                             </span>
                           </td>
                             <td className="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">{c.order_count}</td>
+                          <td className="px-4 py-3 font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                            {c.total_spend > 0 ? formatPrice(c.total_spend) : <span className="text-slate-300 dark:text-slate-600 font-normal text-xs">—</span>}
+                          </td>
                           <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1">
                             <Calendar className="w-3.5 h-3.5 text-slate-400" />{formatDate(c.last_order)}
                           </td>
@@ -436,7 +460,10 @@ export default function ClientesPage() {
                           </span>
                         </div>
                         <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{c.email}</p>
-                        <p className="text-sm text-slate-400 dark:text-slate-500">{c.order_count} pedido{c.order_count !== 1 ? 's' : ''} · Último: {formatDate(c.last_order)}</p>
+                        <p className="text-sm text-slate-400 dark:text-slate-500">
+                          {c.order_count} pedido{c.order_count !== 1 ? 's' : ''}
+                          {c.total_spend > 0 && <> · <span className="font-semibold text-emerald-600 dark:text-emerald-400">{formatPrice(c.total_spend)}</span></>}
+                        </p>
                       </div>
                       <ChevronRight className="w-5 h-5 text-slate-300 flex-shrink-0 mt-1" />
                     </div>
