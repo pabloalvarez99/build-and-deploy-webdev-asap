@@ -1,6 +1,19 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: Tercera Edad UX + ERP Profesional (Abril 2026)
+## Estado actual: Programa Fidelización Visible + Compra Rápida (Abril 2026)
+
+---
+
+## 2026-04-18 — Feat: Fidelización omnipresente + Compra Rápida + mejoras admin
+
+- **Carrito**: Preview "Ganarás X puntos" para usuarios registrados. CTA de registro con puntos estimados para usuarios anónimos.
+- **Admin dashboard**: Comparación "vs ayer" en el card "Ventas hoy" con badge ▲/▼ % delta.
+- **Homepage "Compra Rápida"**: Sección personalizada para usuarios con historial — muestra sus 6 productos más comprados con botón directo "Agregar". API nueva: `GET /api/products/frequent`.
+- **POS fidelización**: Customer history API ahora retorna `user_id` y `loyalty_points` cuando el teléfono corresponde a un usuario registrado. POS pasa `customer_user_id` al crear la venta → puntos acreditados en ventas presenciales. Badge de puntos visible en el panel de cliente del POS.
+- **Top sellers homepage**: Filtro mínimo $1.000 CLP aplicado. WhatsApp button reposicionado para no solapar "Cotizar".
+- **Inventario admin**: Columna "Valor Retail" eliminada de la tabla (solo queda en KPI summary).
+
+---
 
 ---
 
