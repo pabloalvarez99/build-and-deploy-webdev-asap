@@ -7,9 +7,13 @@ import { Printer, Plus, Minus, Trash2, Search, ArrowLeft, FileText } from 'lucid
 import Link from 'next/link';
 import { productApi, ProductWithCategory } from '@/lib/api';
 
-const PHARMACY_NAME = 'Tu Farmacia';
-const PHARMACY_ADDRESS = 'Coquimbo, Chile';
-const PHARMACY_PHONE = '+56 9 9364 9604';
+// Defaults — overridden by admin settings loaded at runtime
+const DEFAULT_PHARMACY = {
+  name: 'Tu Farmacia',
+  address: 'Coquimbo, Chile',
+  phone: '+56 9 9364 9604',
+  website: 'tu-farmacia.cl',
+};
 
 export default function CotizacionPage() {
   const { cart, fetchCart, addToCart, updateQuantity, removeFromCart } = useCartStore();
@@ -17,10 +21,26 @@ export default function CotizacionPage() {
   const [results, setResults] = useState<ProductWithCategory[]>([]);
   const [searching, setSearching] = useState(false);
   const [addedId, setAddedId] = useState<string | null>(null);
+  const [pharmacy, setPharmacy] = useState(DEFAULT_PHARMACY);
   const searchRef = useRef<HTMLInputElement>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { fetchCart(); }, [fetchCart]);
+
+  useEffect(() => {
+    fetch('/api/admin/settings')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data) return;
+        setPharmacy({
+          name: data.pharmacy_name || DEFAULT_PHARMACY.name,
+          address: data.pharmacy_address || DEFAULT_PHARMACY.address,
+          phone: data.pharmacy_phone || DEFAULT_PHARMACY.phone,
+          website: data.pharmacy_website || DEFAULT_PHARMACY.website,
+        });
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!search.trim()) { setResults([]); return; }
@@ -135,9 +155,10 @@ export default function CotizacionPage() {
           <div className="bg-emerald-600 text-white px-6 py-5">
             <div className="flex justify-between items-start">
               <div>
-                <h2 className="text-2xl font-black tracking-tight">{PHARMACY_NAME}</h2>
-                <p className="text-emerald-100 text-sm">{PHARMACY_ADDRESS}</p>
-                <p className="text-emerald-100 text-sm">{PHARMACY_PHONE}</p>
+                <h2 className="text-2xl font-black tracking-tight">{pharmacy.name}</h2>
+                <p className="text-emerald-100 text-sm">{pharmacy.address}</p>
+                <p className="text-emerald-100 text-sm">{pharmacy.phone}</p>
+                {pharmacy.website && <p className="text-emerald-100 text-sm">{pharmacy.website}</p>}
               </div>
               <div className="text-right">
                 <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider">Cotización</p>

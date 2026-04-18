@@ -17,7 +17,7 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-800 py-4 sm:py-6">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-6">Mi Carrito</h1>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-6">Mi Carrito</h1>
 
         {isLoading ? (
           <div className="space-y-4">
@@ -56,9 +56,9 @@ export default function CartPage() {
             <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden">
               <div className="divide-y divide-slate-100 dark:divide-slate-700">
                 {cart.items.map((item) => (
-                  <div key={item.product_id} className="p-3 sm:p-4 flex gap-3">
+                  <div key={item.product_id} className="p-4 sm:p-5 flex gap-4">
                     {/* Product Image */}
-                    <div className="w-20 h-20 sm:w-28 sm:h-28 bg-slate-50 dark:bg-slate-800 rounded-2xl flex-shrink-0 relative border-2 border-slate-100 dark:border-slate-700 overflow-hidden">
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 bg-slate-50 dark:bg-slate-800 rounded-2xl flex-shrink-0 relative border-2 border-slate-100 dark:border-slate-700 overflow-hidden">
                       {item.product_image ? (
                         <Image
                           src={item.product_image}
@@ -79,25 +79,25 @@ export default function CartPage() {
                       <div>
                         <Link
                           href={`/producto/${item.product_slug}`}
-                          className="font-bold text-slate-900 dark:text-slate-100 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors line-clamp-2 leading-snug"
+                          className="font-bold text-slate-900 dark:text-slate-100 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors line-clamp-2 leading-snug text-base sm:text-lg"
                         >
                           {item.product_name}
                         </Link>
                         {item.discount_percent && item.original_price ? (
-                          <div className="mt-1 flex items-center gap-2">
+                          <div className="mt-1.5 flex items-center gap-2 flex-wrap">
                             <span className="text-sm text-slate-400 dark:text-slate-500 line-through">{formatPrice(parseFloat(item.original_price))}</span>
-                            <span className="text-sm sm:text-base text-emerald-600 dark:text-emerald-400 font-semibold">{formatPrice(parseFloat(item.price))} c/u</span>
+                            <span className="text-base text-emerald-600 dark:text-emerald-400 font-semibold">{formatPrice(parseFloat(item.price))} c/u</span>
                             <span className="text-xs font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded">-{item.discount_percent}%</span>
                           </div>
                         ) : (
-                          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1">
+                          <p className="text-base text-slate-500 dark:text-slate-400 mt-1.5">
                             {formatPrice(parseFloat(item.price))} c/u
                           </p>
                         )}
                       </div>
 
                       {/* Price */}
-                      <span className="text-lg font-black text-slate-900 dark:text-slate-100 mt-2">
+                      <span className="text-xl font-black text-emerald-700 dark:text-emerald-400 mt-2">
                         {formatPrice(parseFloat(item.subtotal))}
                       </span>
 

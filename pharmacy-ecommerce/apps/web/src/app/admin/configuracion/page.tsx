@@ -3,13 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
-import { Save, Mail, AlertTriangle, CheckCircle, Monitor, Download } from 'lucide-react';
+import { Save, Mail, AlertTriangle, CheckCircle, Monitor, Download, Store, Phone, MapPin, Globe } from 'lucide-react';
 
 export default function AdminConfigPage() {
   const router = useRouter();
   const { user } = useAuthStore();
   const [alertEmail, setAlertEmail] = useState('');
   const [threshold, setThreshold] = useState('10');
+  // Pharmacy info
+  const [pharmacyName, setPharmacyName] = useState('');
+  const [pharmacyAddress, setPharmacyAddress] = useState('');
+  const [pharmacyPhone, setPharmacyPhone] = useState('');
+  const [pharmacyWebsite, setPharmacyWebsite] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -21,6 +26,10 @@ export default function AdminConfigPage() {
       .then(data => {
         setAlertEmail(data.alert_email || '');
         setThreshold(data.low_stock_threshold || '10');
+        setPharmacyName(data.pharmacy_name || '');
+        setPharmacyAddress(data.pharmacy_address || '');
+        setPharmacyPhone(data.pharmacy_phone || '');
+        setPharmacyWebsite(data.pharmacy_website || '');
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -33,7 +42,14 @@ export default function AdminConfigPage() {
       const res = await fetch('/api/admin/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ alert_email: alertEmail, low_stock_threshold: threshold }),
+        body: JSON.stringify({
+          alert_email: alertEmail,
+          low_stock_threshold: threshold,
+          pharmacy_name: pharmacyName,
+          pharmacy_address: pharmacyAddress,
+          pharmacy_phone: pharmacyPhone,
+          pharmacy_website: pharmacyWebsite,
+        }),
       });
       if (res.ok) {
         setSaved(true);
@@ -89,54 +105,116 @@ export default function AdminConfigPage() {
 
       {loading ? (
         <div className="card p-8 animate-pulse space-y-4">
-          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
-          <div className="h-10 bg-slate-200 dark:bg-slate-700 rounded" />
-          <div className="h-10 bg-slate-200 dark:bg-slate-700 rounded" />
+          {[...Array(4)].map((_, i) => <div key={i} className="h-10 bg-slate-200 dark:bg-slate-700 rounded" />)}
         </div>
       ) : (
-        <form onSubmit={handleSave} className="card p-6 space-y-6">
-          <h2 className="font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-700 pb-3">Alertas de Stock</h2>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Email para alertas de stock crítico
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
-              <input
-                type="email"
-                value={alertEmail}
-                onChange={e => setAlertEmail(e.target.value)}
-                className="input pl-10 w-full"
-                placeholder="admin@farmacia.com"
-              />
+        <form onSubmit={handleSave} className="space-y-6">
+          {/* Pharmacy info */}
+          <div className="card p-6 space-y-5">
+            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-3">
+              <Store className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <h2 className="font-semibold text-slate-900 dark:text-slate-100">Información de la Farmacia</h2>
             </div>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-              Recibirás un email cuando el stock de un producto baje del umbral al aprobar una reserva.
-            </p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 -mt-2">Estos datos aparecen en las cotizaciones generadas para clientes.</p>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nombre comercial</label>
+                <input
+                  type="text"
+                  value={pharmacyName}
+                  onChange={e => setPharmacyName(e.target.value)}
+                  className="input w-full"
+                  placeholder="Tu Farmacia"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Teléfono / WhatsApp</label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={pharmacyPhone}
+                    onChange={e => setPharmacyPhone(e.target.value)}
+                    className="input pl-10 w-full"
+                    placeholder="+56 9 9364 9604"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Dirección</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={pharmacyAddress}
+                    onChange={e => setPharmacyAddress(e.target.value)}
+                    className="input pl-10 w-full"
+                    placeholder="Coquimbo, Chile"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Sitio web</label>
+                <div className="relative">
+                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={pharmacyWebsite}
+                    onChange={e => setPharmacyWebsite(e.target.value)}
+                    className="input pl-10 w-full"
+                    placeholder="tu-farmacia.cl"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Umbral de stock crítico (unidades)
-            </label>
-            <div className="relative">
-              <AlertTriangle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
-              <input
-                type="number"
-                min="1"
-                max="100"
-                value={threshold}
-                onChange={e => setThreshold(e.target.value)}
-                className="input pl-10 w-32"
-              />
+          {/* Stock alerts */}
+          <div className="card p-6 space-y-5">
+            <h2 className="font-semibold text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-700 pb-3">Alertas de Stock</h2>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Email para alertas de stock crítico
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
+                <input
+                  type="email"
+                  value={alertEmail}
+                  onChange={e => setAlertEmail(e.target.value)}
+                  className="input pl-10 w-full"
+                  placeholder="admin@farmacia.com"
+                />
+              </div>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                Recibirás un email cuando el stock de un producto baje del umbral al aprobar una reserva.
+              </p>
             </div>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-              Productos con stock ≤ este número aparecen con alerta en el panel.
-            </p>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Umbral de stock crítico (unidades)
+              </label>
+              <div className="relative">
+                <AlertTriangle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={threshold}
+                  onChange={e => setThreshold(e.target.value)}
+                  className="input pl-10 w-32"
+                />
+              </div>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                Productos con stock ≤ este número aparecen con alerta en el panel.
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 pt-2 border-t border-slate-100 dark:border-slate-700">
+          <div className="flex items-center gap-3">
             <button type="submit" disabled={saving} className="btn btn-primary flex items-center gap-2 disabled:opacity-50">
               <Save className="w-4 h-4" />
               {saving ? 'Guardando...' : 'Guardar cambios'}
