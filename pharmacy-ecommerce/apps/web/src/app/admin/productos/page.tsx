@@ -101,6 +101,18 @@ export default function AdminProductsPage() {
  const [priceImportLoading, setPriceImportLoading] = useState(false);
  const [priceImportError, setPriceImportError] = useState<string | null>(null);
 
+ // Bulk price adjustment state
+ const [showBulkPriceModal, setShowBulkPriceModal] = useState(false);
+ const [bulkPriceAdjType, setBulkPriceAdjType] = useState<'%' | '$'>('%');
+ const [bulkPriceAdjDir, setBulkPriceAdjDir] = useState<'increase' | 'decrease'>('increase');
+ const [bulkPriceAdjValue, setBulkPriceAdjValue] = useState('');
+ const [bulkPriceRoundTo, setBulkPriceRoundTo] = useState<10 | 100 | 0>(10);
+ const [bulkPriceScope, setBulkPriceScope] = useState<'all' | 'category' | 'selected'>('all');
+ const [bulkPricePreview, setBulkPricePreview] = useState<{ total_products: number; will_change: number; avg_old_price: number; avg_new_price: number } | null>(null);
+ const [bulkPriceLoading, setBulkPriceLoading] = useState(false);
+ const [bulkPriceResult, setBulkPriceResult] = useState<{ updated: number; sample: { name: string; old_price: number; new_price: number }[] } | null>(null);
+ const [bulkPriceError, setBulkPriceError] = useState('');
+
  // Stock inline editing
  const [editingStockId, setEditingStockId] = useState<string | null>(null);
  const [editingStockValue, setEditingStockValue] = useState<string>('');
@@ -570,6 +582,59 @@ export default function AdminProductsPage() {
  }
  };
 
+ // ─── Bulk price adjustment handlers ───
+ const previewBulkPrice = async () => {
+  const val = parseFloat(bulkPriceAdjValue);
+  if (!val || val <= 0) { setBulkPriceError('Ingresa un valor mayor que 0'); return; }
+  setBulkPriceLoading(true);
+  setBulkPriceError('');
+  setBulkPricePreview(null);
+  try {
+   const params = new URLSearchParams({
+    adjustment_type: bulkPriceAdjType,
+    adjustment_value: String(val),
+    direction: bulkPriceAdjDir,
+    round_to: String(bulkPriceRoundTo),
+    ...(bulkPriceScope === 'category' && selectedCategory ? { category_id: '' } : {}),
+   });
+   // For category scope, we need to get the category_id from the name
+   const url = `/api/admin/products/bulk-price?${params.toString()}${bulkPriceScope === 'category' && selectedCategory ? `&category_id=${selectedCategory}` : ''}`;
+   const res = await fetch(url, { credentials: 'include' });
+   if (!res.ok) { const d = await res.json(); setBulkPriceError(d.error || 'Error'); return; }
+   setBulkPricePreview(await res.json());
+  } catch { setBulkPriceError('Error de conexión'); }
+  finally { setBulkPriceLoading(false); }
+ };
+
+ const applyBulkPrice = async () => {
+  if (!bulkPricePreview || bulkPricePreview.will_change === 0) return;
+  const val = parseFloat(bulkPriceAdjValue);
+  setBulkPriceLoading(true);
+  setBulkPriceError('');
+  try {
+   const body: Record<string, unknown> = {
+    adjustment_type: bulkPriceAdjType,
+    adjustment_value: val,
+    direction: bulkPriceAdjDir,
+    round_to: bulkPriceRoundTo,
+   };
+   if (bulkPriceScope === 'category' && selectedCategory) body.category_id = selectedCategory;
+   if (bulkPriceScope === 'selected' && selectedProducts.size > 0) body.product_ids = Array.from(selectedProducts);
+   const res = await fetch('/api/admin/products/bulk-price', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(body),
+   });
+   if (!res.ok) { const d = await res.json(); setBulkPriceError(d.error || 'Error'); return; }
+   const data = await res.json();
+   setBulkPriceResult(data);
+   setBulkPricePreview(null);
+   loadProducts();
+  } catch { setBulkPriceError('Error de conexión'); }
+  finally { setBulkPriceLoading(false); }
+ };
+
  // ─── Import handlers ───
  const resetImportState = () => {
  setSelectedFile(null);
@@ -763,6 +828,13 @@ export default function AdminProductsPage() {
  >
  <DollarSign className="w-5 h-5" />
  Importar Precios
+ </button>
+ <button
+ onClick={() => { setShowBulkPriceModal(true); setBulkPricePreview(null); setBulkPriceResult(null); setBulkPriceError(''); setBulkPriceAdjValue(''); }}
+ className="btn btn-secondary flex items-center gap-2"
+ >
+ <TrendingUp className="w-5 h-5" />
+ Ajuste Precios
  </button>
  <button
  onClick={exportToCSV}
@@ -2469,6 +2541,154 @@ export default function AdminProductsPage() {
    </div>
    )}
   </div>
+  </div>
+ )}
+
+ {/* ─── Bulk Price Adjustment Modal ─── */}
+ {showBulkPriceModal && (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+   <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+    <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+     <div className="flex items-center gap-2">
+      <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+      <h2 className="font-bold text-slate-900 dark:text-slate-100">Ajuste masivo de precios</h2>
+     </div>
+     <button onClick={() => { setShowBulkPriceModal(false); setBulkPriceResult(null); }} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+      <X className="w-4 h-4 text-slate-500" />
+     </button>
+    </div>
+
+    <div className="p-6 space-y-4">
+     {bulkPriceResult ? (
+      <div className="text-center space-y-4 py-4">
+       <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto">
+        <CheckCircle className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+       </div>
+       <div>
+        <p className="font-bold text-slate-900 dark:text-slate-100 text-lg">{bulkPriceResult.updated} precios actualizados</p>
+        {bulkPriceResult.sample.length > 0 && (
+         <div className="mt-3 text-left space-y-1.5 bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3">
+          {bulkPriceResult.sample.map((s, i) => (
+           <div key={i} className="flex items-center justify-between text-sm">
+            <span className="text-slate-600 dark:text-slate-400 truncate mr-2">{s.name}</span>
+            <span className="shrink-0 font-medium text-slate-900 dark:text-slate-100">
+             <span className="line-through text-slate-400 text-xs mr-1">${s.old_price.toLocaleString('es-CL')}</span>
+             ${s.new_price.toLocaleString('es-CL')}
+            </span>
+           </div>
+          ))}
+         </div>
+        )}
+       </div>
+       <button onClick={() => { setShowBulkPriceModal(false); setBulkPriceResult(null); }} className="btn btn-primary w-full">Cerrar</button>
+      </div>
+     ) : (
+      <>
+       {/* Scope */}
+       <div>
+        <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5 block">Alcance</label>
+        <div className="grid grid-cols-3 gap-2">
+         {([
+          { id: 'all', label: 'Todos' },
+          { id: 'category', label: selectedCategory ? `Categoría actual` : 'Categoría' },
+          { id: 'selected', label: selectedProducts.size > 0 ? `Selección (${selectedProducts.size})` : 'Selección' },
+         ] as { id: 'all' | 'category' | 'selected'; label: string }[]).map(({ id, label }) => (
+          <button
+           key={id}
+           onClick={() => setBulkPriceScope(id)}
+           disabled={id === 'category' && !selectedCategory || id === 'selected' && selectedProducts.size === 0}
+           className={`py-2 px-3 rounded-xl text-sm font-medium border-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed ${bulkPriceScope === id ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'}`}
+          >
+           {label}
+          </button>
+         ))}
+        </div>
+       </div>
+
+       {/* Direction + Type + Value */}
+       <div>
+        <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5 block">Ajuste</label>
+        <div className="flex gap-2">
+         <div className="flex rounded-xl border-2 border-slate-200 dark:border-slate-700 overflow-hidden">
+          <button onClick={() => setBulkPriceAdjDir('increase')} className={`px-3 py-2 text-sm font-medium transition-colors ${bulkPriceAdjDir === 'increase' ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>↑ Subir</button>
+          <button onClick={() => setBulkPriceAdjDir('decrease')} className={`px-3 py-2 text-sm font-medium transition-colors ${bulkPriceAdjDir === 'decrease' ? 'bg-red-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>↓ Bajar</button>
+         </div>
+         <button onClick={() => setBulkPriceAdjType(bulkPriceAdjType === '%' ? '$' : '%')} className="px-3 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors w-12 text-center">
+          {bulkPriceAdjType}
+         </button>
+         <input
+          type="number"
+          min="0"
+          step="0.01"
+          value={bulkPriceAdjValue}
+          onChange={(e) => { setBulkPriceAdjValue(e.target.value); setBulkPricePreview(null); }}
+          placeholder={bulkPriceAdjType === '%' ? 'ej: 5' : 'ej: 500'}
+          className="flex-1 px-3 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:border-emerald-500 focus:outline-none"
+         />
+        </div>
+       </div>
+
+       {/* Rounding */}
+       <div>
+        <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5 block">Redondeo</label>
+        <div className="flex gap-2">
+         {([0, 10, 100] as const).map((r) => (
+          <button key={r} onClick={() => setBulkPriceRoundTo(r)} className={`flex-1 py-2 rounded-xl text-sm font-medium border-2 transition-all ${bulkPriceRoundTo === r ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'}`}>
+           {r === 0 ? 'Sin redondeo' : `Cada $${r}`}
+          </button>
+         ))}
+        </div>
+       </div>
+
+       {/* Preview result */}
+       {bulkPricePreview && (
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4">
+         <div className="grid grid-cols-2 gap-3 text-center text-sm">
+          <div>
+           <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{bulkPricePreview.will_change}</p>
+           <p className="text-xs text-emerald-600 dark:text-emerald-500">productos afectados</p>
+          </div>
+          <div>
+           <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Precio promedio</p>
+           <p className="text-xs text-slate-500">
+            <span className="line-through">${bulkPricePreview.avg_old_price.toLocaleString('es-CL')}</span>
+            {' → '}
+            <span className={bulkPricePreview.avg_new_price > bulkPricePreview.avg_old_price ? 'text-emerald-700 dark:text-emerald-400 font-semibold' : 'text-red-600 dark:text-red-400 font-semibold'}>
+             ${bulkPricePreview.avg_new_price.toLocaleString('es-CL')}
+            </span>
+           </p>
+          </div>
+         </div>
+        </div>
+       )}
+
+       {bulkPriceError && (
+        <div className="flex items-center gap-2 text-sm text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-xl">
+         <XCircle className="w-4 h-4 shrink-0" />
+         {bulkPriceError}
+        </div>
+       )}
+
+       <div className="flex gap-2 pt-1">
+        {!bulkPricePreview ? (
+         <button onClick={previewBulkPrice} disabled={bulkPriceLoading || !bulkPriceAdjValue} className="flex-1 py-2.5 rounded-xl border-2 border-emerald-500 text-emerald-700 dark:text-emerald-400 font-semibold text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
+          {bulkPriceLoading ? <><RefreshCw className="w-4 h-4 animate-spin" />Calculando...</> : 'Vista previa'}
+         </button>
+        ) : (
+         <>
+          <button onClick={() => setBulkPricePreview(null)} className="flex-1 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+           Cambiar
+          </button>
+          <button onClick={applyBulkPrice} disabled={bulkPriceLoading || bulkPricePreview.will_change === 0} className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
+           {bulkPriceLoading ? <><RefreshCw className="w-4 h-4 animate-spin" />Aplicando...</> : `Aplicar a ${bulkPricePreview.will_change} productos`}
+          </button>
+         </>
+        )}
+       </div>
+      </>
+     )}
+    </div>
+   </div>
   </div>
  )}
  </div>

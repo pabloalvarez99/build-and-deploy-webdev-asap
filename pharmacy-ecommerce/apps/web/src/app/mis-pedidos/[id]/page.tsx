@@ -5,8 +5,9 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { orderApi, OrderWithItems } from '@/lib/api';
-import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck, MapPin, Store, Printer, MessageCircle, Check } from 'lucide-react';
+import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck, MapPin, Store, Printer, MessageCircle, Check, RefreshCw } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
+import { useCartStore } from '@/store/cart';
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   pending: { label: 'Pendiente', color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300', icon: <Clock className="w-5 h-5" /> },
@@ -118,9 +119,12 @@ export default function OrderDetailPage() {
   const orderId = params.id as string;
 
   const { user } = useAuthStore();
+  const { addToCart } = useCartStore();
 
   const [order, setOrder] = useState<OrderWithItems | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [reordering, setReordering] = useState(false);
+  const [reorderDone, setReorderDone] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -129,6 +133,24 @@ export default function OrderDetailPage() {
     }
     loadOrder();
   }, [user, router, orderId]);
+
+  const handleReorder = async () => {
+    if (!order) return;
+    setReordering(true);
+    // Add items sequentially to preserve quantities
+    for (const item of order.items) {
+      if (item.product_id) {
+        try {
+          await addToCart(item.product_id, item.quantity);
+        } catch {
+          // If a product no longer exists, skip silently
+        }
+      }
+    }
+    setReordering(false);
+    setReorderDone(true);
+    setTimeout(() => setReorderDone(false), 3000);
+  };
 
   const loadOrder = async () => {
     try {
@@ -319,6 +341,25 @@ export default function OrderDetailPage() {
               <span>Total</span>
               <span className="text-emerald-600 dark:text-emerald-400">{formatPrice(total)}</span>
             </div>
+
+            {/* Reorder button */}
+            <button
+              onClick={handleReorder}
+              disabled={reordering || reorderDone}
+              className={`flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl font-semibold min-h-[48px] transition-all mb-3 ${
+                reorderDone
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 hover:bg-slate-700 dark:hover:bg-slate-200'
+              } disabled:opacity-70`}
+            >
+              {reordering ? (
+                <><RefreshCw className="w-5 h-5 animate-spin" />Agregando al carrito...</>
+              ) : reorderDone ? (
+                <><CheckCircle className="w-5 h-5" />¡Agregado al carrito!</>
+              ) : (
+                <><RefreshCw className="w-5 h-5" />Volver a pedir</>
+              )}
+            </button>
 
             {/* WhatsApp Support */}
             <a
