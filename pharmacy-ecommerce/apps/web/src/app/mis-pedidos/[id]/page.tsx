@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { orderApi, OrderWithItems } from '@/lib/api';
-import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck, MapPin, Store, Printer, MessageCircle, Check, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck, MapPin, Store, Printer, MessageCircle, Check, RefreshCw, Star } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 import { useCartStore } from '@/store/cart';
 
@@ -220,10 +220,10 @@ export default function OrderDetailPage() {
 
       <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
         <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
             Pedido #{order.id.slice(0, 8)}
           </h1>
-          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1">{date}</p>
+          <p className="text-base text-slate-500 dark:text-slate-400 mt-1">{date}</p>
         </div>
         <span className={`inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium flex-shrink-0 whitespace-nowrap ${status.color}`}>
           {status.icon}
@@ -337,10 +337,20 @@ export default function OrderDetailPage() {
               </div>
             </div>
 
-            <div className="flex justify-between text-xl font-bold text-slate-900 dark:text-slate-100 mb-6">
+            <div className="flex justify-between text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">
               <span>Total</span>
               <span className="text-emerald-600 dark:text-emerald-400">{formatPrice(total)}</span>
             </div>
+
+            {/* Loyalty points earned */}
+            {['paid', 'completed', 'delivered', 'approved'].includes(order.status) && Math.floor(total / 1000) > 0 && (
+              <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-700 rounded-2xl px-3 py-2.5 mb-4">
+                <Star className="w-5 h-5 text-amber-500 fill-amber-400 flex-shrink-0" />
+                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                  Ganaste <strong>{Math.floor(total / 1000)} punto{Math.floor(total / 1000) !== 1 ? 's' : ''}</strong> con este pedido
+                </p>
+              </div>
+            )}
 
             {/* Reorder button */}
             <button

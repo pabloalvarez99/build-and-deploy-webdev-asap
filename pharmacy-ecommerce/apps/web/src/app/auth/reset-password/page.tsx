@@ -59,11 +59,11 @@ function ResetPasswordContent() {
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4">
         <div className="card p-5 sm:p-8 w-full max-w-md text-center py-4">
-          <div className="bg-emerald-100 dark:bg-emerald-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+          <div className="bg-emerald-100 dark:bg-emerald-900/30 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5">
+            <CheckCircle className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3">¡Contraseña actualizada!</h1>
-          <p className="text-slate-600 dark:text-slate-300">Redirigiendo al inicio de sesión...</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-3">¡Contraseña actualizada!</h1>
+          <p className="text-slate-600 dark:text-slate-300 text-lg">Redirigiendo al inicio de sesión...</p>
         </div>
       </div>
     )
@@ -96,8 +96,8 @@ function ResetPasswordContent() {
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="card p-5 sm:p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Nueva contraseña</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2">Ingresa tu nueva contraseña</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Nueva contraseña</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">Ingresa tu nueva contraseña</p>
         </div>
 
         {error && (
@@ -148,7 +148,7 @@ function ResetPasswordContent() {
           <button
             type="submit"
             disabled={isLoading}
-            className="btn btn-primary w-full py-3 disabled:opacity-50"
+            className="btn btn-primary w-full py-4 text-xl disabled:opacity-50"
           >
             {isLoading ? 'Actualizando...' : 'Actualizar contraseña'}
           </button>
