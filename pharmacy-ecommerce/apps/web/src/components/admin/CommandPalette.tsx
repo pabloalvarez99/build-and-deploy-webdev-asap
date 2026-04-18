@@ -14,6 +14,8 @@ import {
  X,
  ArrowRight,
  Clock,
+ Warehouse,
+ Users,
 } from 'lucide-react';
 import { productApi, orderApi, ProductWithCategory } from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
@@ -85,6 +87,22 @@ const quickActions: SearchResult[] = [
  title: 'Órdenes Pendientes',
  subtitle: 'Ver órdenes sin procesar',
  icon: <Clock className="w-5 h-5" />,
+ action: () => {},
+ },
+ {
+ type: 'navigation',
+ id: 'nav-inventory',
+ title: 'Ir a Inventario',
+ subtitle: 'Valorización y sugerencias de reposición',
+ icon: <Warehouse className="w-5 h-5" />,
+ action: () => {},
+ },
+ {
+ type: 'navigation',
+ id: 'nav-clientes',
+ title: 'Ir a Clientes',
+ subtitle: 'Gestión de clientes registrados y guests',
+ icon: <Users className="w-5 h-5" />,
  action: () => {},
  },
 ];
@@ -255,6 +273,14 @@ export function CommandPalette({ isOpen, onClose, onNewProduct }: CommandPalette
  break;
  case 'action-pending-orders':
  router.push('/admin/ordenes?status=pending');
+ onClose();
+ break;
+ case 'nav-inventory':
+ router.push('/admin/inventario');
+ onClose();
+ break;
+ case 'nav-clientes':
+ router.push('/admin/clientes');
  onClose();
  break;
  default:

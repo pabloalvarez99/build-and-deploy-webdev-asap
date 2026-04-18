@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
+import { awardLoyaltyPoints } from '@/lib/loyalty';
 
 async function checkAndAlertLowStock(db: Awaited<ReturnType<typeof getDb>>, productIds: string[]) {
   if (productIds.length === 0) return;
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest) {
       payment_method, // 'pos_cash' | 'pos_debit' | 'pos_credit'
       customer_name,
       customer_phone,
+      customer_user_id,
       discount_amount,
       notes,
     }: {
@@ -44,6 +46,7 @@ export async function POST(request: NextRequest) {
       payment_method: string;
       customer_name?: string;
       customer_phone?: string;
+      customer_user_id?: string;
       discount_amount?: number;
       notes?: string;
     } = body;
@@ -115,6 +118,11 @@ export async function POST(request: NextRequest) {
 
     // Fire-and-forget low stock check (same logic as online order approval)
     checkAndAlertLowStock(db, items.map((i) => i.product_id)).catch(() => {});
+
+    // Award loyalty points for registered customers (non-blocking)
+    if (customer_user_id) {
+      awardLoyaltyPoints(customer_user_id, order.id, total).catch(() => {});
+    }
 
     return NextResponse.json({
       id: order.id,

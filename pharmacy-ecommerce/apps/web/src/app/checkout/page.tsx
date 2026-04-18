@@ -6,7 +6,7 @@ import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
 import { orderApi } from '@/lib/api';
 import { calcPoints, POINTS_TO_CLP } from '@/lib/loyalty-utils';
-import { Loader2, ShieldCheck, Store, Phone, User, Mail, CreditCard, Check, MessageCircle, X, AlertCircle, Star } from 'lucide-react';
+import { Loader2, ShieldCheck, Store, Phone, User, Mail, CreditCard, Check, MessageCircle, X, AlertCircle, Star, Banknote } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 type PaymentMethod = 'store' | 'webpay';
@@ -314,9 +314,18 @@ export default function CheckoutPage() {
           )}
         </div>
 
+        {/* Pickup banner */}
+        <div className="mb-4 flex items-center gap-3 bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800 rounded-2xl px-4 py-3">
+          <Store className="w-6 h-6 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+          <div>
+            <p className="font-semibold text-emerald-800 dark:text-emerald-300 text-sm">Retiro en tienda</p>
+            <p className="text-xs text-emerald-600 dark:text-emerald-500">Tu pedido quedará reservado y lo retiras cuando quieras</p>
+          </div>
+        </div>
+
         {/* Payment method selector */}
         <div className="mb-4">
-          <h2 className="text-base font-semibold text-slate-700 dark:text-slate-300 mb-3">Método de pago</h2>
+          <h2 className="text-base font-semibold text-slate-700 dark:text-slate-300 mb-3">¿Cómo quieres pagar?</h2>
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
@@ -327,13 +336,13 @@ export default function CheckoutPage() {
                   : 'border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-500'
               }`}
             >
-              <Store className={`w-7 h-7 ${paymentMethod === 'store' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
+              <Banknote className={`w-7 h-7 ${paymentMethod === 'store' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
               <div className="text-center">
                 <p className={`text-sm font-semibold leading-tight ${paymentMethod === 'store' ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>
-                  Retiro en tienda
+                  Pagar en tienda
                 </p>
                 <p className={`text-xs mt-0.5 ${paymentMethod === 'store' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                  Pagas al retirar
+                  Al retirar tu pedido
                 </p>
               </div>
               {paymentMethod === 'store' && <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
@@ -351,10 +360,10 @@ export default function CheckoutPage() {
               <CreditCard className={`w-7 h-7 ${paymentMethod === 'webpay' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
               <div className="text-center">
                 <p className={`text-sm font-semibold leading-tight ${paymentMethod === 'webpay' ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>
-                  Webpay Plus
+                  Pagar con Webpay
                 </p>
                 <p className={`text-xs mt-0.5 ${paymentMethod === 'webpay' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                  Débito o crédito
+                  Débito o crédito online
                 </p>
               </div>
               {paymentMethod === 'webpay' && <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
@@ -433,16 +442,16 @@ export default function CheckoutPage() {
           {isProcessing ? (
             <><Loader2 className="w-6 h-6 animate-spin" />Procesando...</>
           ) : paymentMethod === 'webpay' ? (
-            <><CreditCard className="w-6 h-6" />Continuar con Webpay</>
+            <><CreditCard className="w-6 h-6" />Reservar y pagar con Webpay</>
           ) : (
-            <><Store className="w-6 h-6" />Reservar pedido</>
+            <><Store className="w-6 h-6" />Reservar pedido — pago en tienda</>
           )}
         </button>
 
         <div className="flex items-center justify-center gap-2 mt-3 text-slate-400 dark:text-slate-500">
           <ShieldCheck className="w-5 h-5" />
           <span className="text-sm">
-            {paymentMethod === 'webpay' ? 'Pago seguro con Webpay Plus' : 'Reserva válida por 24 horas — pagas al retirar'}
+            {paymentMethod === 'webpay' ? 'Pago seguro con Webpay Plus — retiras en tienda' : 'Reserva válida por 24 horas — pagas al retirar'}
           </span>
         </div>
 

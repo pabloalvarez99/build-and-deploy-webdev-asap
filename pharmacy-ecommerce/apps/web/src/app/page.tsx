@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { productApi, PaginatedProducts, Category, Product } from '@/lib/api';
-import { Search, ShoppingCart, Check, X, ChevronUp, Package, ChevronDown, Pill, Heart, Droplets, Apple, Stethoscope, Brain, Wind, Sparkles, Eye, Flower2, Shield, Droplet, Baby, Users, Activity, Leaf, TrendingUp, MessageCircle } from 'lucide-react';
+import { Search, ShoppingCart, Check, X, ChevronUp, Package, ChevronDown, Pill, Heart, Droplets, Apple, Stethoscope, Brain, Wind, Sparkles, Eye, Flower2, Shield, Droplet, Baby, Users, Activity, Leaf, TrendingUp, MessageCircle, FileText } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCartStore } from '@/store/cart';
@@ -259,8 +259,8 @@ function HomeContent() {
 
       {/* Search Bar - Siempre visible, grande */}
       <div className="bg-white dark:bg-slate-900 px-4 py-3 border-b border-slate-100 dark:border-slate-700">
-        <div className="max-w-7xl mx-auto">
-          <div className="relative" role="search">
+        <div className="max-w-7xl mx-auto flex gap-2 items-center">
+          <div className="flex-1 relative" role="search">
             <label htmlFor="search-products" className="sr-only">Buscar medicamentos</label>
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden="true" />
@@ -285,6 +285,13 @@ function HomeContent() {
               </button>
             )}
           </div>
+          <Link
+            href="/cotizacion"
+            className="flex-shrink-0 flex items-center gap-2 px-4 py-3 bg-slate-50 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-2xl font-semibold text-sm hover:border-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors whitespace-nowrap"
+          >
+            <FileText className="w-4 h-4" />
+            <span className="hidden sm:inline">Cotizar</span>
+          </Link>
         </div>
       </div>
 
@@ -641,22 +648,42 @@ function HomeContent() {
       </main>
 
       {/* Mobile Bottom Cart Bar - Grande y siempre visible */}
-      {cart && cart.item_count > 0 && (
+      {cart && cart.item_count > 0 ? (
         <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t-2 border-slate-200 dark:border-slate-700 p-3 pb-safe z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
-          <Link
-            href="/carrito"
-            className="flex items-center justify-between bg-emerald-600 text-white rounded-2xl px-5 py-4 shadow-lg"
-          >
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <ShoppingCart className="w-6 h-6" />
-                <span className="absolute -top-2 -right-2 w-5 h-5 bg-white text-emerald-600 text-xs font-bold flex items-center justify-center rounded-full">
-                  {cart.item_count}
-                </span>
+          <div className="flex gap-2">
+            <Link
+              href="/cotizacion"
+              className="flex items-center gap-2 px-4 py-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl font-semibold text-sm border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex-shrink-0"
+            >
+              <FileText className="w-5 h-5" />
+              Cotizar
+            </Link>
+            <Link
+              href="/carrito"
+              className="flex flex-1 items-center justify-between bg-emerald-600 text-white rounded-2xl px-5 py-4 shadow-lg"
+            >
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <ShoppingCart className="w-6 h-6" />
+                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-white text-emerald-600 text-xs font-bold flex items-center justify-center rounded-full">
+                    {cart.item_count}
+                  </span>
+                </div>
+                <span className="font-bold text-lg">Ver carrito</span>
               </div>
-              <span className="font-bold text-lg">Ver carrito</span>
-            </div>
-            <span className="font-black text-xl">{formatPrice(cart.total)}</span>
+              <span className="font-black text-xl">{formatPrice(cart.total)}</span>
+            </Link>
+          </div>
+        </div>
+      ) : (
+        /* Cotizar floating button when cart is empty */
+        <div className="fixed bottom-4 right-4 z-40">
+          <Link
+            href="/cotizacion"
+            className="flex items-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl font-semibold text-sm border-2 border-slate-200 dark:border-slate-700 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
+          >
+            <FileText className="w-5 h-5 text-emerald-600" />
+            Cotizar
           </Link>
         </div>
       )}

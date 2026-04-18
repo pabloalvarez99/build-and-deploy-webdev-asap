@@ -72,7 +72,8 @@ export async function GET(request: NextRequest) {
 
     const items = products.map((p) => {
       const price = Number(p.price);
-      const cost = p.cost_price != null ? Number(p.cost_price) : null;
+      const costRaw = p.cost_price != null ? Number(p.cost_price) : null;
+      const cost = costRaw != null && costRaw > 0 ? costRaw : null;
       const retailValue = price * p.stock;
       const costValue = cost != null ? cost * p.stock : null;
 

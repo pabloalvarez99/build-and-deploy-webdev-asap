@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Users, UserCheck, UserX, Search, Phone, Mail, ShoppingBag,
   Calendar, Download, X, Edit2, Trash2, ChevronRight, Package,
-  ArrowLeft, Save, AlertTriangle, Clock, CheckCircle,
+  ArrowLeft, Save, AlertTriangle, Clock, CheckCircle, Star, Plus, Minus,
 } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
@@ -45,6 +45,14 @@ interface CustomerDetail {
   orders: Order[];
 }
 
+interface LoyaltyTransaction {
+  id: string;
+  points: number;
+  reason: string;
+  order_id: string | null;
+  created_at: string;
+}
+
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   pending:    { label: 'Pendiente',     color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' },
   reserved:   { label: 'Reservado',     color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' },
@@ -78,6 +86,16 @@ export default function ClientesPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Loyalty state
+  const [loyaltyTransactions, setLoyaltyTransactions] = useState<LoyaltyTransaction[]>([]);
+  const [loyaltyLoading, setLoyaltyLoading] = useState(false);
+  const [showLoyaltyAdjust, setShowLoyaltyAdjust] = useState(false);
+  const [adjustType, setAdjustType] = useState<'add' | 'deduct'>('add');
+  const [adjustPoints, setAdjustPoints] = useState('');
+  const [adjustReason, setAdjustReason] = useState('');
+  const [isAdjusting, setIsAdjusting] = useState(false);
+  const [adjustError, setAdjustError] = useState('');
+
   const loadCustomers = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -97,11 +115,62 @@ export default function ClientesPage() {
 
   useEffect(() => { loadCustomers(); }, [loadCustomers]);
 
+  const loadLoyaltyHistory = async (userId: string) => {
+    setLoyaltyLoading(true);
+    try {
+      const res = await fetch(`/api/admin/loyalty?user_id=${userId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setLoyaltyTransactions(data.transactions || []);
+        // Update loyalty_points in selected customer
+        setSelected((prev) => prev ? { ...prev, customer: { ...prev.customer, loyalty_points: data.points } } : prev);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setLoyaltyLoading(false);
+    }
+  };
+
+  const submitLoyaltyAdjust = async () => {
+    if (!selected?.customer.id) return;
+    const pts = parseInt(adjustPoints);
+    if (!pts || pts <= 0) { setAdjustError('Ingresa una cantidad válida'); return; }
+    if (!adjustReason.trim()) { setAdjustError('Ingresa un motivo'); return; }
+    setIsAdjusting(true);
+    setAdjustError('');
+    try {
+      const points = adjustType === 'add' ? pts : -pts;
+      const res = await fetch('/api/admin/loyalty', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: selected.customer.id, points, reason: `admin_${adjustType}` }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setAdjustError(data.error || 'Error al ajustar puntos'); return; }
+      // Refresh loyalty data
+      setShowLoyaltyAdjust(false);
+      setAdjustPoints('');
+      setAdjustReason('');
+      loadLoyaltyHistory(selected.customer.id);
+      setCustomers((prev) => prev.map((c) => c.id === selected.customer.id ? { ...c, loyalty_points: data.new_balance } : c));
+    } catch {
+      setAdjustError('Error de conexión');
+    } finally {
+      setIsAdjusting(false);
+    }
+  };
+
   const openCustomer = async (c: Customer) => {
     setSelected(null);
     setIsEditing(false);
     setShowDeleteConfirm(false);
     setEditError('');
+    setLoyaltyTransactions([]);
+    setShowLoyaltyAdjust(false);
+    setAdjustPoints('');
+    setAdjustReason('');
+    setAdjustError('');
     setIsPanelLoading(true);
 
     try {
@@ -115,6 +184,10 @@ export default function ClientesPage() {
       setEditName(data.customer.name);
       setEditSurname(data.customer.surname);
       setEditPhone(data.customer.phone || '');
+      // Load loyalty history for registered users
+      if (c.type === 'registered' && data.customer.id) {
+        loadLoyaltyHistory(data.customer.id);
+      }
     } catch {
       setSelected(null);
     } finally {
@@ -523,6 +596,107 @@ export default function ClientesPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Loyalty section — registered users only */}
+                {selected.customer.type === 'registered' && selected.customer.loyalty_points != null && (
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                        Puntos de fidelización
+                      </h3>
+                      <button
+                        onClick={() => { setShowLoyaltyAdjust((p) => !p); setAdjustError(''); }}
+                        className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 rounded-lg transition-colors"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Ajustar
+                      </button>
+                    </div>
+
+                    {/* Adjustment form */}
+                    {showLoyaltyAdjust && (
+                      <div className="mb-4 bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-4 space-y-3 border border-amber-200 dark:border-amber-700">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setAdjustType('add')}
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-sm font-medium transition-colors ${adjustType === 'add' ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'}`}
+                          >
+                            <Plus className="w-4 h-4" /> Agregar
+                          </button>
+                          <button
+                            onClick={() => setAdjustType('deduct')}
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-sm font-medium transition-colors ${adjustType === 'deduct' ? 'bg-red-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'}`}
+                          >
+                            <Minus className="w-4 h-4" /> Descontar
+                          </button>
+                        </div>
+                        <input
+                          type="number"
+                          value={adjustPoints}
+                          onChange={(e) => setAdjustPoints(e.target.value)}
+                          placeholder="Cantidad de puntos"
+                          min="1"
+                          className="input text-sm"
+                        />
+                        <input
+                          type="text"
+                          value={adjustReason}
+                          onChange={(e) => setAdjustReason(e.target.value)}
+                          placeholder="Motivo (ej: compensación, corrección)"
+                          maxLength={50}
+                          className="input text-sm"
+                        />
+                        {adjustError && <p className="text-red-600 dark:text-red-400 text-xs">{adjustError}</p>}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => { setShowLoyaltyAdjust(false); setAdjustError(''); }}
+                            className="flex-1 py-2 text-sm rounded-xl border-2 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            onClick={submitLoyaltyAdjust}
+                            disabled={isAdjusting}
+                            className={`flex-1 py-2 text-sm rounded-xl text-white font-medium disabled:opacity-50 ${adjustType === 'add' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'}`}
+                          >
+                            {isAdjusting ? '…' : adjustType === 'add' ? 'Agregar puntos' : 'Descontar puntos'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Transaction history */}
+                    {loyaltyLoading ? (
+                      <div className="text-center py-4 text-slate-400 text-sm">Cargando historial...</div>
+                    ) : loyaltyTransactions.length === 0 ? (
+                      <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-2">Sin movimientos de puntos</p>
+                    ) : (
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {loyaltyTransactions.map((t) => {
+                          const reasonLabels: Record<string, string> = {
+                            purchase: 'Compra',
+                            redemption: 'Canje',
+                            redemption_restore: 'Restauración',
+                            admin_add: 'Ajuste manual (+)',
+                            admin_deduct: 'Ajuste manual (−)',
+                          };
+                          return (
+                            <div key={t.id} className="flex items-center justify-between text-sm py-1.5 border-b border-slate-100 dark:border-slate-700 last:border-0">
+                              <div>
+                                <span className="text-slate-700 dark:text-slate-300 text-xs font-medium">{reasonLabels[t.reason] || t.reason}</span>
+                                <p className="text-xs text-slate-400">{new Date(t.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                              </div>
+                              <span className={`font-bold text-sm ${t.points > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+                                {t.points > 0 ? '+' : ''}{t.points} pts
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Order history */}
                 <div>
