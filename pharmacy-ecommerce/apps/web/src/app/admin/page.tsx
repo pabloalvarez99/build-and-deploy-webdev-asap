@@ -331,6 +331,7 @@ export default function AdminPage() {
  icon: <Package className="w-6 h-6" />,
  color: 'bg-blue-500',
   textColor: 'text-blue-600 dark:text-blue-400',
+  href: '/admin/productos',
   },
   {
   title: 'Categorías',
@@ -338,6 +339,7 @@ export default function AdminPage() {
   icon: <Tags className="w-6 h-6" />,
   color: 'bg-purple-500',
   textColor: 'text-purple-600 dark:text-purple-400',
+  href: '/admin/categorias',
   },
   {
   title: 'Ventas hoy',
@@ -347,6 +349,7 @@ export default function AdminPage() {
   textColor: 'text-teal-600 dark:text-teal-400',
   subtitle: stats.todayOrders > 0 ? `${stats.todayOrders} orden(es)` : undefined,
   yesterdayRevenue: stats.yesterdayRevenue,
+  href: '/admin/reportes',
   },
   {
   title: 'Ventas (30 días)',
@@ -354,6 +357,7 @@ export default function AdminPage() {
   icon: <DollarSign className="w-6 h-6" />,
   color: 'bg-green-500',
   textColor: 'text-green-600 dark:text-green-400',
+  href: '/admin/reportes',
   },
   {
   title: 'Por atender',
@@ -361,6 +365,8 @@ export default function AdminPage() {
   icon: <Clock className="w-6 h-6" />,
   color: 'bg-yellow-500',
   textColor: 'text-yellow-600 dark:text-yellow-400',
+  href: '/admin/pedidos',
+  alert: stats.pendingOrders > 0,
   },
   {
   title: 'Stock Bajo (≤10)',
@@ -368,6 +374,8 @@ export default function AdminPage() {
   icon: <AlertTriangle className="w-6 h-6" />,
   color: 'bg-orange-500',
   textColor: 'text-orange-600 dark:text-orange-400',
+  href: '/admin/inventario',
+  alert: stats.lowStockProducts > 0,
   },
   {
   title: 'Agotados',
@@ -375,6 +383,8 @@ export default function AdminPage() {
   icon: <XCircle className="w-6 h-6" />,
   color: 'bg-red-500',
   textColor: 'text-red-600 dark:text-red-400',
+  href: '/admin/inventario',
+  alert: stats.outOfStockProducts > 0,
  },
  ]
  : [];
@@ -401,30 +411,37 @@ export default function AdminPage() {
  </div>
  ) : (
  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
- {statCards.map((stat) => (
- <div key={stat.title} className="card p-4">
- <div
- className={`w-10 h-10 ${stat.color} rounded-lg flex items-center justify-center text-white mb-3`}
- >
- {stat.icon}
- </div>
- <p className="text-sm text-slate-500 dark:text-slate-400">{stat.title}</p>
- <p className={`text-xl font-bold ${stat.textColor}`}>{stat.value}</p>
- {'subtitle' in stat && stat.subtitle && <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{stat.subtitle}</p>}
- {'yesterdayRevenue' in stat && stat.yesterdayRevenue !== undefined && (() => {
-   const curr = stats!.todayRevenue;
-   const prev = stat.yesterdayRevenue as number;
-   if (prev === 0) return <p className="text-xs text-slate-400 mt-0.5">Ayer: $0</p>;
-   const delta = ((curr - prev) / prev) * 100;
-   const positive = delta >= 0;
-   return (
-     <p className={`text-xs font-semibold mt-0.5 ${positive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
-       {positive ? '▲' : '▼'} {Math.abs(delta).toFixed(0)}% vs ayer
-     </p>
+ {statCards.map((stat) => {
+   const inner = (
+     <>
+       <div className={`w-10 h-10 ${stat.color} rounded-lg flex items-center justify-center text-white mb-3`}>
+         {stat.icon}
+       </div>
+       <p className="text-sm text-slate-500 dark:text-slate-400">{stat.title}</p>
+       <p className={`text-xl font-bold ${stat.textColor}`}>{stat.value}</p>
+       {'subtitle' in stat && stat.subtitle && <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{stat.subtitle}</p>}
+       {'yesterdayRevenue' in stat && stat.yesterdayRevenue !== undefined && (() => {
+         const curr = stats!.todayRevenue;
+         const prev = stat.yesterdayRevenue as number;
+         if (prev === 0) return <p className="text-xs text-slate-400 mt-0.5">Ayer: $0</p>;
+         const delta = ((curr - prev) / prev) * 100;
+         const positive = delta >= 0;
+         return (
+           <p className={`text-xs font-semibold mt-0.5 ${positive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+             {positive ? '▲' : '▼'} {Math.abs(delta).toFixed(0)}% vs ayer
+           </p>
+         );
+       })()}
+       {'alert' in stat && stat.alert && (
+         <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+       )}
+     </>
    );
- })()}
- </div>
- ))}
+   const baseClass = `card p-4 relative ${'href' in stat && stat.href ? 'hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer' : ''}`;
+   return 'href' in stat && stat.href
+     ? <Link key={stat.title} href={stat.href} className={baseClass}>{inner}</Link>
+     : <div key={stat.title} className={baseClass}>{inner}</div>;
+ })}
  </div>
  )}
  </div>

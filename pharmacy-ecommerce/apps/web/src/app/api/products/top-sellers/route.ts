@@ -54,10 +54,10 @@ export async function GET(request: Request) {
     .slice(0, limit)
     .map(([id]) => id)
 
-  // Fallback: productos con mayor stock e imagen
-  if (topIds.length < 4) {
+  // Fallback: no sales history at all
+  if (topIds.length === 0) {
     const featured = await db.products.findMany({
-      where: { active: true, stock: { gt: 0 }, image_url: { not: null }, price: { gte: 1000 } },
+      where: { active: true, stock: { gt: 0 }, image_url: { not: null } },
       orderBy: { stock: 'desc' },
       take: limit,
       select: productSelect,
@@ -68,7 +68,7 @@ export async function GET(request: Request) {
   }
 
   const products = await db.products.findMany({
-    where: { id: { in: topIds }, active: true, stock: { gt: 0 }, price: { gte: 1000 } },
+    where: { id: { in: topIds }, active: true, stock: { gt: 0 } },
     select: productSelect,
   })
 
@@ -76,6 +76,20 @@ export async function GET(request: Request) {
     .map((id) => products.find((p) => p.id === id))
     .filter(Boolean)
     .map((p) => ({ ...p!, price: p!.price.toString(), units_sold: unitsByProduct[p!.id] }))
+
+  // Pad with popular products if we don't have enough results
+  if (ordered.length < limit) {
+    const existingIds = ordered.map((p) => p.id)
+    const needed = limit - ordered.length
+    const padding = await db.products.findMany({
+      where: { active: true, stock: { gt: 0 }, image_url: { not: null }, id: { notIn: existingIds } },
+      orderBy: { stock: 'desc' },
+      take: needed,
+      select: productSelect,
+    })
+    const paddingMapped = padding.map((p) => ({ ...p, price: p.price.toString(), units_sold: 0 }))
+    ordered.push(...paddingMapped)
+  }
 
   return NextResponse.json(ordered)
 }
