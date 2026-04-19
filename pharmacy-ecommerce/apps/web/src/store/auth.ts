@@ -16,7 +16,7 @@ interface AuthState {
   error: string | null
   initialized: boolean
   login: (email: string, password: string) => Promise<void>
-  register: (email: string, password: string, name?: string) => Promise<void>
+  register: (email: string, password: string, name?: string, rut?: string) => Promise<void>
   logout: () => Promise<void>
   checkAuth: () => Promise<void>
   clearError: () => void
@@ -64,14 +64,14 @@ export const useAuthStore = create<AuthState>()((set) => ({
     }
   },
 
-  register: async (email: string, password: string, name?: string) => {
+  register: async (email: string, password: string, name?: string, rut?: string) => {
     set({ isLoading: true, error: null })
     try {
       // Use API route so Firebase Admin can set displayName and auto-confirm
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ email, password, name, rut }),
       })
       if (!res.ok) {
         const err = await res.json()

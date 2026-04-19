@@ -9,6 +9,7 @@ datasource db {
 model profiles {
   id                   String                 @id @db.Uuid
   name                 String?                @db.VarChar(255)
+  rut                  String?                @db.VarChar(20)
   phone                String?                @db.VarChar(20)
   role                 String?                @default("user") @db.VarChar(50)
   loyalty_points       Int                    @default(0)

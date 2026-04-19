@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth } from '@/lib/firebase/admin'
+import { getDb } from '@/lib/db'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name, surname, phone } = await request.json()
+    const { email, password, name, surname, phone, rut } = await request.json()
 
     if (!email || !password || !name) {
       return NextResponse.json({ error: 'Faltan datos requeridos' }, { status: 400 })
@@ -25,7 +26,16 @@ export async function POST(request: NextRequest) {
       phoneNumber: phone ? `+56${phone.replace(/\D/g, '')}` : undefined,
     })
 
-    // Default role is 'user' — no custom claim needed (admin set manually)
+    // Create profile with RUT for loyalty program
+    if (rut || name) {
+      const db = await getDb()
+      await db.profiles.upsert({
+        where: { id: user.uid },
+        update: { name: displayName || undefined, rut: rut || undefined },
+        create: { id: user.uid, name: displayName || null, rut: rut || null },
+      })
+    }
+
     return NextResponse.json({ success: true, user_id: user.uid })
   } catch (err: unknown) {
     const code = (err as { code?: string }).code || ''

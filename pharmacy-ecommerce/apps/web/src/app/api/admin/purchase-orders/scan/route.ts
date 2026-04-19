@@ -72,44 +72,61 @@ function parseInvoiceLines(fullText: string): Omit<ScannedLine, 'product_id' | '
   return results;
 }
 
+async function ocrImage(apiKey: string, base64Content: string): Promise<string> {
+  const res = await fetch(
+    `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [{ image: { content: base64Content }, features: [{ type: 'TEXT_DETECTION', maxResults: 1 }] }],
+      }),
+    }
+  );
+  if (!res.ok) throw new Error(`Vision API error: ${await res.text()}`);
+  const data = await res.json();
+  return data.responses?.[0]?.fullTextAnnotation?.text ?? '';
+}
+
+async function ocrPdf(apiKey: string, base64Content: string): Promise<string> {
+  const res = await fetch(
+    `https://vision.googleapis.com/v1/files:annotate?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [{
+          inputConfig: { content: base64Content, mimeType: 'application/pdf' },
+          features: [{ type: 'DOCUMENT_TEXT_DETECTION' }],
+          pages: [1, 2, 3, 4, 5], // first 5 pages
+        }],
+      }),
+    }
+  );
+  if (!res.ok) throw new Error(`Vision API error: ${await res.text()}`);
+  const data = await res.json();
+  const pages = data.responses?.[0]?.responses ?? [];
+  return pages.map((p: { fullTextAnnotation?: { text: string } }) => p.fullTextAnnotation?.text ?? '').join('\n');
+}
+
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   try {
     const admin = await getAdminUser();
     if (!admin) return errorResponse('Unauthorized', 403);
 
     const body = await request.json();
-    const { image_base64, supplier_id } = body;
+    const { image_base64, pdf_base64, supplier_id } = body;
 
-    if (!image_base64) return errorResponse('image_base64 is required', 400);
+    if (!image_base64 && !pdf_base64) return errorResponse('image_base64 or pdf_base64 is required', 400);
 
     const apiKey = process.env.GOOGLE_CLOUD_VISION_API_KEY;
     if (!apiKey) return errorResponse('Vision API not configured', 500);
 
-    // Llamar Google Cloud Vision API — TextDetection
-    const visionRes = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requests: [
-            {
-              image: { content: image_base64 },
-              features: [{ type: 'TEXT_DETECTION', maxResults: 1 }],
-            },
-          ],
-        }),
-      }
-    );
-
-    if (!visionRes.ok) {
-      const err = await visionRes.text();
-      return errorResponse(`Vision API error: ${err}`, 502);
-    }
-
-    const visionData = await visionRes.json();
-    const fullText: string =
-      visionData.responses?.[0]?.fullTextAnnotation?.text ?? '';
+    const fullText = pdf_base64
+      ? await ocrPdf(apiKey, pdf_base64)
+      : await ocrImage(apiKey, image_base64);
 
     if (!fullText) {
       return NextResponse.json({ lines: [], ocr_raw: '' });

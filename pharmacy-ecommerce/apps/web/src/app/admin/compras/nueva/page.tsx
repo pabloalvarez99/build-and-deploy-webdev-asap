@@ -9,7 +9,7 @@ import {
 } from '@/lib/api'
 import {
   Truck, Camera, Scan, CheckCircle2, AlertCircle, Search,
-  ChevronRight, ChevronLeft, Loader2, X, Link2,
+  ChevronRight, ChevronLeft, Loader2, X, Link2, FileText,
 } from 'lucide-react'
 
 type Step = 'proveedor' | 'foto' | 'ocr' | 'confirmar'
@@ -27,10 +27,12 @@ export default function NuevaCompraPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null)
 
-  // Foto
+  // Foto / PDF
   const fileRef = useRef<HTMLInputElement>(null)
+  const pdfRef = useRef<HTMLInputElement>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [pdfFile, setPdfFile] = useState<File | null>(null)
   const [isScanning, setIsScanning] = useState(false)
   const [ocrRaw, setOcrRaw] = useState('')
 
@@ -63,31 +65,53 @@ export default function NuevaCompraPage() {
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    setPdfFile(null)
     setImageFile(file)
     const url = URL.createObjectURL(file)
     setImagePreview(url)
   }
 
+  function handlePdfChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImageFile(null)
+    setImagePreview(null)
+    setPdfFile(file)
+  }
+
+  function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve((reader.result as string).split(',')[1])
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
   async function handleScan() {
-    if (!imageFile) return
+    if (!imageFile && !pdfFile) return
     setIsScanning(true)
     try {
-      // Convertir imagen a base64
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => {
-          const result = reader.result as string
-          // Quitar el prefijo data:image/...;base64,
-          resolve(result.split(',')[1])
-        }
-        reader.onerror = reject
-        reader.readAsDataURL(imageFile)
-      })
+      const file = (pdfFile || imageFile)!
+      const base64 = await fileToBase64(file)
+      const isPdf = file.type === 'application/pdf'
 
-      const data = await purchaseOrderApi.scan(base64, selectedSupplier?.id)
+      const res = await fetch('/api/admin/purchase-orders/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...(isPdf ? { pdf_base64: base64 } : { image_base64: base64 }),
+          supplier_id: selectedSupplier?.id,
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Error al escanear' }))
+        throw new Error(err.error || `Error ${res.status}`)
+      }
+      const data = await res.json()
       setOcrRaw(data.ocr_raw)
       setLines(
-        data.lines.map((l) => ({
+        data.lines.map((l: ScannedLine) => ({
           ...l,
           _mapped: l.product_id !== null,
         }))
@@ -185,7 +209,7 @@ export default function NuevaCompraPage() {
         {(['proveedor', 'foto', 'ocr', 'confirmar'] as Step[]).map((s, i, arr) => (
           <div key={s} className="flex items-center gap-2">
             <span className={`font-medium capitalize ${step === s ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`}>
-              {i + 1}. {s === 'proveedor' ? 'Proveedor' : s === 'foto' ? 'Foto' : s === 'ocr' ? 'Revisar' : 'Confirmar'}
+              {i + 1}. {s === 'proveedor' ? 'Proveedor' : s === 'foto' ? 'Factura' : s === 'ocr' ? 'Revisar' : 'Confirmar'}
             </span>
             {i < arr.length - 1 && <ChevronRight className="w-4 h-4 text-slate-300" />}
           </div>
@@ -236,19 +260,19 @@ export default function NuevaCompraPage() {
         </div>
       )}
 
-      {/* ── STEP 2: Foto ── */}
+      {/* ── STEP 2: Foto / PDF ── */}
       {step === 'foto' && (
         <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-6 space-y-5">
           <div className="flex items-center gap-3">
             <Camera className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             <div>
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Foto de factura</h2>
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Factura</h2>
               <p className="text-sm text-slate-500 dark:text-slate-400">Proveedor: <strong>{selectedSupplier?.name}</strong></p>
             </div>
           </div>
 
-          {/* Preview */}
-          {imagePreview ? (
+          {/* Preview — Image */}
+          {imagePreview && (
             <div className="relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={imagePreview} alt="Factura" className="w-full rounded-xl object-contain max-h-64 bg-slate-50 dark:bg-slate-900" />
@@ -259,33 +283,53 @@ export default function NuevaCompraPage() {
                 <X className="w-4 h-4 text-slate-500" />
               </button>
             </div>
-          ) : (
-            <div
-              onClick={() => fileRef.current?.click()}
-              className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-12 text-center cursor-pointer hover:border-emerald-400 dark:hover:border-emerald-600 transition-colors"
-            >
-              <Camera className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-              <p className="text-slate-600 dark:text-slate-400 font-medium">Tomar foto o subir imagen</p>
-              <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">JPG, PNG — la cámara se abre en mobile</p>
+          )}
+
+          {/* Preview — PDF */}
+          {pdfFile && !imagePreview && (
+            <div className="relative flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-4">
+              <FileText className="w-10 h-10 text-blue-500 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-slate-900 dark:text-white truncate">{pdfFile.name}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{(pdfFile.size / 1024).toFixed(0)} KB — PDF</p>
+              </div>
+              <button
+                onClick={() => setPdfFile(null)}
+                className="p-1 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-full"
+              >
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
             </div>
           )}
 
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handleFileChange}
-            className="hidden"
-          />
+          {/* Upload zone — show when no file selected */}
+          {!imagePreview && !pdfFile && (
+            <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-10 text-center">
+              <Camera className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+              <p className="text-slate-600 dark:text-slate-400 font-medium">Sube una foto o PDF de la factura</p>
+              <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">JPG, PNG o PDF</p>
+            </div>
+          )}
 
-          {!imagePreview && (
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="w-full flex items-center justify-center gap-2 border-2 border-emerald-500 text-emerald-600 dark:text-emerald-400 px-4 py-3 rounded-xl font-medium hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
-            >
-              <Camera className="w-5 h-5" /> Seleccionar imagen
-            </button>
+          <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" />
+          <input ref={pdfRef} type="file" accept="application/pdf" onChange={handlePdfChange} className="hidden" />
+
+          {/* Action buttons */}
+          {!imagePreview && !pdfFile && (
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="flex items-center justify-center gap-2 border-2 border-emerald-500 text-emerald-600 dark:text-emerald-400 px-4 py-3 rounded-xl font-medium hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+              >
+                <Camera className="w-5 h-5" /> Foto / Imagen
+              </button>
+              <button
+                onClick={() => pdfRef.current?.click()}
+                className="flex items-center justify-center gap-2 border-2 border-blue-500 text-blue-600 dark:text-blue-400 px-4 py-3 rounded-xl font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+              >
+                <FileText className="w-5 h-5" /> Importar PDF
+              </button>
+            </div>
           )}
 
           <div className="flex gap-3">
@@ -296,7 +340,7 @@ export default function NuevaCompraPage() {
               <ChevronLeft className="w-4 h-4" /> Atrás
             </button>
             <button
-              disabled={!imageFile || isScanning}
+              disabled={(!imageFile && !pdfFile) || isScanning}
               onClick={handleScan}
               className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white px-4 py-3 rounded-xl font-medium transition-colors"
             >
