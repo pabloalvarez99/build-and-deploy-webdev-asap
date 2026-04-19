@@ -76,6 +76,7 @@ const TABS = [
   { id: 'financiero', label: 'Financiero' },
   { id: 'clientes', label: 'Clientes' },
   { id: 'compras', label: 'Compras' },
+  { id: 'fidelidad', label: 'Fidelidad' },
 ];
 
 const COLORS = ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#06B6D4', '#84CC16', '#F97316'];
@@ -112,7 +113,7 @@ export default function AdminReportesPage() {
   const [period, setPeriod] = useState(30);
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
-  const [activeTab, setActiveTab] = useState<'ventas' | 'financiero' | 'clientes' | 'compras'>('ventas');
+  const [activeTab, setActiveTab] = useState<'ventas' | 'financiero' | 'clientes' | 'compras' | 'fidelidad'>('ventas');
   const [comprasData, setComprasData] = useState<{
     kpis: { total_pos: number; received_pos: number; total_spend: number; pending_spend: number; avg_po_value: number };
     by_status: Record<string, number>;
@@ -121,6 +122,13 @@ export default function AdminReportesPage() {
     by_week: { week: string; po_count: number; spend: number }[];
   } | null>(null);
   const [comprasLoading, setComprasLoading] = useState(false);
+  const [fidelidadData, setFidelidadData] = useState<{
+    kpis: { awarded: number; redeemed: number; net: number; unique_earners: number; unique_redeemers: number; clp_awarded: number; clp_redeemed: number };
+    by_reason: { reason: string; count: number; points: number }[];
+    by_week: { week: string; awarded: number; redeemed: number }[];
+    top_holders: { id: string; name: string; loyalty_points: number; clp_value: number }[];
+  } | null>(null);
+  const [fidelidadLoading, setFidelidadLoading] = useState(false);
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDark, setIsDark] = useState(false);
@@ -163,9 +171,21 @@ export default function AdminReportesPage() {
     loadData();
   }, [user, router, loadData]);
 
+  const loadFidelidad = useCallback(async () => {
+    setFidelidadLoading(true);
+    try {
+      const from = period === 0 ? (customFrom || getFromDate(30)) : getFromDate(period);
+      const to = period === 0 ? (customTo || new Date().toISOString().split('T')[0]) : new Date().toISOString().split('T')[0];
+      const res = await fetch(`/api/admin/reportes/fidelidad?from=${from}&to=${to}`);
+      if (res.ok) setFidelidadData(await res.json());
+    } catch { /* silent */ }
+    finally { setFidelidadLoading(false); }
+  }, [period, customFrom, customTo]);
+
   useEffect(() => {
     if (activeTab === 'compras') loadCompras();
-  }, [activeTab, loadCompras]);
+    if (activeTab === 'fidelidad') loadFidelidad();
+  }, [activeTab, loadCompras, loadFidelidad]);
 
   const exportCSV = () => {
     if (!data) return;
@@ -250,7 +270,7 @@ export default function AdminReportesPage() {
         {TABS.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as 'ventas' | 'financiero' | 'clientes')}
+            onClick={() => setActiveTab(tab.id as 'ventas' | 'financiero' | 'clientes' | 'compras' | 'fidelidad')}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
               activeTab === tab.id
                 ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
@@ -756,6 +776,100 @@ export default function AdminReportesPage() {
         <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-12 text-center text-slate-400 dark:text-slate-500">
           No hay datos para el período seleccionado
         </div>
+      )}
+
+      {/* ───────────── TAB: FIDELIDAD ───────────── */}
+      {activeTab === 'fidelidad' && (
+        <>
+          {fidelidadLoading ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse" />)}
+            </div>
+          ) : !fidelidadData ? (
+            <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-12 text-center text-slate-400">
+              Sin datos de fidelidad para el período seleccionado
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {/* KPI row */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: 'Puntos otorgados', value: fidelidadData.kpis.awarded.toLocaleString('es-CL'), sub: formatPrice(fidelidadData.kpis.clp_awarded) + ' en valor', color: 'text-amber-600 dark:text-amber-400' },
+                  { label: 'Puntos canjeados', value: fidelidadData.kpis.redeemed.toLocaleString('es-CL'), sub: formatPrice(fidelidadData.kpis.clp_redeemed) + ' en descuentos', color: 'text-rose-600 dark:text-rose-400' },
+                  { label: 'Clientes activos', value: fidelidadData.kpis.unique_earners.toLocaleString('es-CL'), sub: `${fidelidadData.kpis.unique_redeemers} canjearon`, color: 'text-violet-600 dark:text-violet-400' },
+                  { label: 'Puntos netos', value: fidelidadData.kpis.net.toLocaleString('es-CL'), sub: 'otorgados − canjeados', color: 'text-emerald-600 dark:text-emerald-400' },
+                ].map((kpi) => (
+                  <div key={kpi.label} className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-5">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{kpi.label}</p>
+                    <p className={`text-3xl font-bold mt-1 ${kpi.color}`}>{kpi.value}</p>
+                    <p className="text-xs text-slate-400 mt-1">{kpi.sub}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Trend chart */}
+              {fidelidadData.by_week.length > 1 && (
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-5">
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Evolución semanal de puntos</h3>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={fidelidadData.by_week}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#f1f5f9'} />
+                      <XAxis dataKey="week" tick={{ fontSize: 11, fill: isDark ? '#94a3b8' : '#64748b' }} />
+                      <YAxis tick={{ fontSize: 11, fill: isDark ? '#94a3b8' : '#64748b' }} />
+                      <Tooltip contentStyle={{ background: isDark ? '#1e293b' : '#fff', border: 'none', borderRadius: 12 }} />
+                      <Legend />
+                      <Bar dataKey="awarded" name="Otorgados" fill="#f59e0b" radius={[4,4,0,0]} />
+                      <Bar dataKey="redeemed" name="Canjeados" fill="#8b5cf6" radius={[4,4,0,0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              <div className="grid sm:grid-cols-2 gap-5">
+                {/* By reason */}
+                {fidelidadData.by_reason.length > 0 && (
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-5">
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-3">Movimientos por motivo</h3>
+                    <div className="space-y-2">
+                      {fidelidadData.by_reason.map((r) => (
+                        <div key={r.reason} className="flex items-center justify-between text-sm">
+                          <span className="text-slate-600 dark:text-slate-400 capitalize">{r.reason}</span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-slate-400">{r.count} movs.</span>
+                            <span className={`font-bold tabular-nums ${r.points >= 0 ? 'text-amber-600 dark:text-amber-400' : 'text-violet-600 dark:text-violet-400'}`}>
+                              {r.points >= 0 ? '+' : ''}{r.points.toLocaleString('es-CL')} pts
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Top holders */}
+                {fidelidadData.top_holders.length > 0 && (
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-5">
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-3">Top clientes por puntos acumulados</h3>
+                    <div className="space-y-2">
+                      {fidelidadData.top_holders.map((h, i) => (
+                        <div key={h.id} className="flex items-center gap-3 text-sm">
+                          <span className="text-xs font-bold text-slate-400 w-5 text-right">{i + 1}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-slate-800 dark:text-slate-100 truncate">{h.name}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-amber-600 dark:text-amber-400">{h.loyalty_points.toLocaleString('es-CL')} pts</p>
+                            <p className="text-xs text-slate-400">{formatPrice(h.clp_value)}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
