@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { webpayTransaction } from '@/lib/transbank'
-import { sendWebpayConfirmation, sendLowStockAlert } from '@/lib/email'
+import { sendWebpayConfirmation, sendLowStockAlert, sendNewOrderAlert } from '@/lib/email'
 import { awardLoyaltyPoints } from '@/lib/loyalty'
 import { adminAuth } from '@/lib/firebase/admin'
 
@@ -53,7 +53,7 @@ async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
     // Find pending webpay order matching the buy_order prefix
     const pendingOrders = await db.orders.findMany({
       where: { payment_provider: 'webpay', status: 'pending' },
-      select: { id: true, total: true, user_id: true, guest_email: true, guest_name: true, guest_surname: true },
+      select: { id: true, total: true, user_id: true, guest_email: true, guest_name: true, guest_surname: true, payment_provider: true },
     })
 
     const order = pendingOrders.find((o) =>
@@ -137,6 +137,9 @@ async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
       checkLowStock(db, productIds).catch(() => {})
     }
 
+    // New order alert to admin (non-blocking)
+    notifyAdminNewOrder(db, order, orderItems).catch(() => {})
+
     return NextResponse.redirect(
       `${BASE_URL}/checkout/reservation?order_id=${order.id}&code=${pickupCode}&expires=${encodeURIComponent(pickupExpires.toISOString())}&total=${order.total}&paid=webpay`,
       { status: 303 }
@@ -160,4 +163,32 @@ async function checkLowStock(db: Awaited<ReturnType<typeof getDb>>, productIds: 
   if (lowStock.length > 0) {
     await sendLowStockAlert(alertEmail, lowStock, threshold)
   }
+}
+
+async function notifyAdminNewOrder(
+  db: Awaited<ReturnType<typeof getDb>>,
+  order: { id: string; total: unknown; guest_name: string | null; guest_surname: string | null; user_id: string | null; payment_provider: string | null },
+  items: { product_name: string; quantity: number; price_at_purchase: { toString(): string } }[]
+) {
+  const settings = await db.admin_settings.findMany({ select: { key: true, value: true } })
+  const map = Object.fromEntries(settings.map((s) => [s.key, s.value]))
+  const alertEmail = map.alert_email
+  if (!alertEmail) return
+
+  const customerName = order.guest_name
+    ? `${order.guest_name} ${order.guest_surname ?? ''}`.trim()
+    : 'Cliente registrado'
+
+  await sendNewOrderAlert({
+    toEmail: alertEmail,
+    orderId: order.id,
+    customerName,
+    total: Number(order.total),
+    paymentMethod: order.payment_provider === 'store' ? 'Retiro en tienda' : 'Webpay',
+    items: items.map(i => ({
+      product_name: i.product_name,
+      quantity: i.quantity,
+      price: parseFloat(i.price_at_purchase.toString()),
+    })),
+  })
 }

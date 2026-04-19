@@ -358,6 +358,39 @@ export async function sendDailyReport(opts: {
   });
 }
 
+export async function sendNewOrderAlert(opts: {
+  toEmail: string;
+  orderId: string;
+  customerName: string;
+  total: number;
+  paymentMethod: string;
+  items: { product_name: string; quantity: number; price: number }[];
+}) {
+  if (!process.env.RESEND_API_KEY || !opts.toEmail) return;
+
+  const itemsList = opts.items
+    .map(i => `- ${i.product_name} x${i.quantity} — ${formatCLP(i.price * i.quantity)}`)
+    .join('\n');
+
+  await getResend().emails.send({
+    from: 'Tu Farmacia Admin <onboarding@resend.dev>',
+    to: opts.toEmail,
+    subject: `🛒 Nueva orden #${opts.orderId.slice(0, 8).toUpperCase()} — ${formatCLP(opts.total)}`,
+    text: [
+      `Se ha recibido un nuevo pedido en Tu Farmacia.`,
+      '',
+      `Cliente: ${opts.customerName}`,
+      `Monto: ${formatCLP(opts.total)}`,
+      `Método de pago: ${opts.paymentMethod}`,
+      '',
+      `Productos:`,
+      itemsList,
+      '',
+      `Ver pedido: ${BASE}/admin/ordenes/${opts.orderId}`,
+    ].join('\n'),
+  });
+}
+
 export async function sendLowStockAlert(
   toEmail: string,
   products: LowStockProduct[],
