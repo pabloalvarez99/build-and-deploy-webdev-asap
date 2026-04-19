@@ -23,6 +23,7 @@ import {
   Warehouse,
   Tag,
   Calculator,
+  PackageSearch,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -46,6 +47,7 @@ const navItems = [
   { href: '/admin/descuentos', icon: Tag, label: 'Descuentos' },
   { href: '/admin/stock', icon: ArrowUpDown, label: 'Stock' },
   { href: '/admin/inventario', icon: Warehouse, label: 'Inventario' },
+  { href: '/admin/reposicion', icon: PackageSearch, label: 'Reposición' },
   { href: '/admin/reportes', icon: BarChart2, label: 'Reportes' },
   { href: '/admin/configuracion', icon: Settings, label: 'Configuración' },
 ];
