@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { orderApi, OrderWithItems } from '@/lib/api';
-import { ArrowLeft, Package, MapPin, FileText, User, Mail, Printer, Check, Clock, Truck, CheckCircle, XCircle, Store, Phone, CreditCard, Pencil, Save } from 'lucide-react';
+import { ArrowLeft, Package, MapPin, FileText, User, Mail, Printer, Check, Clock, Truck, CheckCircle, XCircle, Store, Phone, CreditCard, Pencil, Save, RotateCcw } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 const statusOptions = [
@@ -16,6 +16,7 @@ const statusOptions = [
  { value: 'shipped',    label: 'Enviado',    color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300' },
  { value: 'delivered',  label: 'Entregado',  color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' },
  { value: 'cancelled',  label: 'Cancelado',  color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' },
+ { value: 'refunded',   label: 'Devuelto',   color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300' },
 ];
 
 // Flujo para despacho a domicilio
@@ -45,6 +46,7 @@ const statusIcons: Record<string, React.ReactNode> = {
  shipped: <Truck className="w-5 h-5" />,
  delivered: <CheckCircle className="w-5 h-5" />,
  cancelled: <XCircle className="w-5 h-5" />,
+ refunded: <RotateCcw className="w-5 h-5" />,
 };
 
 function OrderTimeline({ currentStatus, isPickup, isWebpay }: { currentStatus: string; isPickup: boolean; isWebpay: boolean }) {
@@ -203,6 +205,30 @@ export default function AdminOrderDetailPage() {
  alert(error instanceof Error ? error.message : 'Error al rechazar la reserva');
  } finally {
  setIsProcessing(false);
+ }
+ };
+
+ const handleRefund = async () => {
+ if (!order) return;
+ const notes = prompt('Motivo de la devolución (opcional):') ?? undefined;
+ if (notes === null) return; // user cancelled prompt
+ setIsProcessing(true);
+ try {
+  const res = await fetch(`/api/admin/orders/${order.id}`, {
+   method: 'PUT',
+   credentials: 'include',
+   headers: { 'Content-Type': 'application/json' },
+   body: JSON.stringify({ action: 'refund', notes }),
+  });
+  if (!res.ok) {
+   const err = await res.json();
+   throw new Error(err.error || 'Error al procesar devolución');
+  }
+  loadOrder();
+ } catch (error) {
+  alert(error instanceof Error ? error.message : 'Error al procesar devolución');
+ } finally {
+  setIsProcessing(false);
  }
  };
 
@@ -568,9 +594,21 @@ export default function AdminOrderDetailPage() {
  {/* Quick Actions */}
  <div className="pt-4 border-t border-slate-100 dark:border-slate-700 space-y-2">
  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-3">Acciones rápidas</p>
+ {/* Refund button — shown for paid/completed orders not yet refunded */}
+ {['paid', 'processing', 'shipped', 'delivered', 'completed'].includes(order.status) && (
+  <button
+   onClick={handleRefund}
+   disabled={isProcessing}
+   className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 hover:opacity-80 transition-opacity mb-2 disabled:opacity-50"
+  >
+   <RotateCcw className="w-3.5 h-3.5" />
+   Procesar devolución
+  </button>
+ )}
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
  {statusOptions
   .filter((opt) => {
+    if (opt.value === 'refunded') return false; // handled separately
     if (isPickup && opt.value === 'shipped') return false;
     if (isWebpay && ['shipped', 'pending', 'reserved'].includes(opt.value)) return false;
     return true;

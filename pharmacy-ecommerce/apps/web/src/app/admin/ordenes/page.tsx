@@ -38,6 +38,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string 
   delivered:  { label: 'Entregado',   color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',       dot: 'bg-green-500' },
   cancelled:  { label: 'Cancelado',   color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',               dot: 'bg-red-400' },
   completed:  { label: 'Completado',  color: 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300',             dot: 'bg-teal-500' },
+  refunded:   { label: 'Devuelto',    color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300',     dot: 'bg-orange-400' },
 };
 
 const PAGE_SIZE = 20;

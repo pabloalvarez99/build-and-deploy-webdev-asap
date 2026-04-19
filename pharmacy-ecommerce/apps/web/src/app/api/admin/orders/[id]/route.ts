@@ -3,8 +3,8 @@ import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers'
 import { getDb } from '@/lib/db'
 import { awardLoyaltyPoints, restoreLoyaltyPoints } from '@/lib/loyalty'
 
-const VALID_STATUSES = ['pending', 'reserved', 'paid', 'processing', 'shipped', 'delivered', 'cancelled']
-const STOCK_DEDUCTED_STATUSES = ['paid', 'processing', 'shipped', 'delivered']
+const VALID_STATUSES = ['pending', 'reserved', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded']
+const STOCK_DEDUCTED_STATUSES = ['paid', 'processing', 'shipped', 'delivered', 'completed']
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -45,6 +45,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     if (body.action === 'approve_reservation') return approveReservation(db, id)
     if (body.action === 'reject_reservation') return rejectReservation(db, id)
+    if (body.action === 'refund') return processRefund(db, id, body.notes)
 
     // Notes-only update (no status change required)
     if (body.notes !== undefined && body.status === undefined) {
@@ -173,6 +174,58 @@ async function rejectReservation(db: Awaited<ReturnType<typeof getDb>>, orderId:
       orderId: order.id,
     }).catch(() => {})
   }
+
+  return NextResponse.json({ ...updated, total: updated.total.toString() })
+}
+
+async function processRefund(db: Awaited<ReturnType<typeof getDb>>, orderId: string, notes?: string) {
+  const order = await db.orders.findUnique({
+    where: { id: orderId },
+    select: { id: true, status: true, total: true, user_id: true },
+  })
+  if (!order) return errorResponse('Order not found', 404)
+  const refundableStatuses = ['paid', 'processing', 'shipped', 'delivered', 'completed']
+  if (!refundableStatuses.includes(order.status)) {
+    return errorResponse(`No se puede devolver una orden en estado "${order.status}"`, 400)
+  }
+
+  const items = await db.order_items.findMany({
+    where: { order_id: orderId },
+    select: { product_id: true, quantity: true },
+  })
+
+  // Restore stock
+  await db.$transaction(async (tx: Parameters<Parameters<typeof db.$transaction>[0]>[0]) => {
+    for (const item of items) {
+      if (item.product_id) {
+        await tx.products.update({
+          where: { id: item.product_id },
+          data: { stock: { increment: item.quantity } },
+        })
+      }
+    }
+    // Log stock movement
+    for (const item of items) {
+      if (item.product_id) {
+        await tx.stock_movements.create({
+          data: {
+            product_id: item.product_id,
+            delta: item.quantity,
+            reason: 'devolucion',
+            admin_id: 'system',
+          },
+        })
+      }
+    }
+  })
+
+  // Restore loyalty points if user earned them
+  restoreLoyaltyPoints(orderId).catch(() => {})
+
+  const updated = await db.orders.update({
+    where: { id: orderId },
+    data: { status: 'refunded', notes: notes ? `[DEVOLUCIÓN] ${notes}` : '[DEVOLUCIÓN]' },
+  })
 
   return NextResponse.json({ ...updated, total: updated.total.toString() })
 }
