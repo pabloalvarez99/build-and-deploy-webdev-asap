@@ -75,6 +75,7 @@ const TABS = [
   { id: 'ventas', label: 'Ventas' },
   { id: 'financiero', label: 'Financiero' },
   { id: 'clientes', label: 'Clientes' },
+  { id: 'compras', label: 'Compras' },
 ];
 
 const COLORS = ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#06B6D4', '#84CC16', '#F97316'];
@@ -111,7 +112,15 @@ export default function AdminReportesPage() {
   const [period, setPeriod] = useState(30);
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
-  const [activeTab, setActiveTab] = useState<'ventas' | 'financiero' | 'clientes'>('ventas');
+  const [activeTab, setActiveTab] = useState<'ventas' | 'financiero' | 'clientes' | 'compras'>('ventas');
+  const [comprasData, setComprasData] = useState<{
+    kpis: { total_pos: number; received_pos: number; total_spend: number; pending_spend: number; avg_po_value: number };
+    by_status: Record<string, number>;
+    by_supplier: { name: string; spend: number; po_count: number }[];
+    top_products: { name: string; units: number; cost: number }[];
+    by_week: { week: string; po_count: number; spend: number }[];
+  } | null>(null);
+  const [comprasLoading, setComprasLoading] = useState(false);
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDark, setIsDark] = useState(false);
@@ -138,10 +147,25 @@ export default function AdminReportesPage() {
     }
   }, [period, customFrom, customTo]);
 
+  const loadCompras = useCallback(async () => {
+    setComprasLoading(true);
+    try {
+      const from = period === 0 ? (customFrom || getFromDate(30)) : getFromDate(period);
+      const to = period === 0 ? (customTo || new Date().toISOString().split('T')[0]) : new Date().toISOString().split('T')[0];
+      const res = await fetch(`/api/admin/reportes/compras?from=${from}&to=${to}`);
+      if (res.ok) setComprasData(await res.json());
+    } catch { /* silent */ }
+    finally { setComprasLoading(false); }
+  }, [period, customFrom, customTo]);
+
   useEffect(() => {
     if (!user || user.role !== 'admin') { router.push('/'); return; }
     loadData();
   }, [user, router, loadData]);
+
+  useEffect(() => {
+    if (activeTab === 'compras') loadCompras();
+  }, [activeTab, loadCompras]);
 
   const exportCSV = () => {
     if (!data) return;
@@ -626,6 +650,105 @@ export default function AdminReportesPage() {
                   </table>
                 </div>
               </div>
+            </>
+          )}
+
+          {activeTab === 'compras' && (
+            <>
+              {comprasLoading ? (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {[...Array(4)].map((_, i) => <div key={i} className="animate-pulse h-24 bg-slate-100 dark:bg-slate-700 rounded-2xl" />)}
+                </div>
+              ) : !comprasData ? (
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-12 text-center text-slate-400">
+                  Sin datos de compras para el período
+                </div>
+              ) : (
+                <>
+                  {/* KPIs */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {[
+                      { label: 'Órdenes creadas', value: comprasData.kpis.total_pos, sub: `${comprasData.kpis.received_pos} recibidas`, color: 'text-blue-600 dark:text-blue-400' },
+                      { label: 'Gasto recibido', value: formatPrice(comprasData.kpis.total_spend), sub: 'OC recibidas', color: 'text-emerald-700 dark:text-emerald-400' },
+                      { label: 'Pendiente de recibir', value: formatPrice(comprasData.kpis.pending_spend), sub: 'OC abiertas', color: 'text-amber-600 dark:text-amber-400' },
+                      { label: 'Ticket promedio OC', value: comprasData.kpis.avg_po_value > 0 ? formatPrice(comprasData.kpis.avg_po_value) : '—', sub: 'por orden recibida', color: 'text-purple-600 dark:text-purple-400' },
+                    ].map(({ label, value, sub, color }) => (
+                      <div key={label} className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-5">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{label}</p>
+                        <p className={`text-xl font-bold ${color}`}>{value}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">{sub}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Status breakdown */}
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-6">
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Estado de órdenes de compra</h3>
+                    <div className="flex flex-wrap gap-3">
+                      {Object.entries(comprasData.by_status).map(([status, count]) => {
+                        const statusLabels: Record<string, { label: string; color: string }> = {
+                          pending: { label: 'Borrador', color: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400' },
+                          ordered: { label: 'Pedido', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' },
+                          received: { label: 'Recibido', color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' },
+                          cancelled: { label: 'Cancelado', color: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' },
+                        };
+                        const s = statusLabels[status] || { label: status, color: 'bg-slate-100 text-slate-600' };
+                        return (
+                          <div key={status} className={`flex items-center gap-2 px-4 py-2 rounded-xl ${s.color}`}>
+                            <span className="font-bold text-lg">{count}</span>
+                            <span className="text-sm font-medium">{s.label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Spend by supplier */}
+                  {comprasData.by_supplier.length > 0 && (
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-6">
+                      <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Gasto por proveedor (OC recibidas)</h3>
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={comprasData.by_supplier} layout="vertical" margin={{ left: 0, right: 30 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#e2e8f0'} horizontal={false} />
+                            <XAxis type="number" stroke={isDark ? '#94a3b8' : '#64748b'} fontSize={11} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+                            <YAxis dataKey="name" type="category" width={140} stroke={isDark ? '#94a3b8' : '#64748b'} fontSize={10} tickFormatter={(n: string) => n.length > 18 ? n.slice(0, 18) + '…' : n} />
+                            <Tooltip formatter={(v) => [formatPrice(Number(v)), 'Gasto']} />
+                            <Bar dataKey="spend" name="Gasto recibido" fill="#3B82F6" radius={[0, 4, 4, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Top purchased products */}
+                  {comprasData.top_products.length > 0 && (
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-6">
+                      <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Productos más comprados (OC recibidas)</h3>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-slate-100 dark:border-slate-700">
+                              {['Producto', 'Unidades', 'Costo total'].map(h => (
+                                <th key={h} className="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
+                            {comprasData.top_products.map((p, i) => (
+                              <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                                <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100 max-w-[250px] truncate">{p.name}</td>
+                                <td className="px-4 py-3 font-mono font-bold text-blue-600 dark:text-blue-400">{p.units}</td>
+                                <td className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">{p.cost > 0 ? formatPrice(p.cost) : '—'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </>
           )}
         </>

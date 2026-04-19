@@ -100,6 +100,7 @@ export default function POSPage() {
   const [pickupApproving, setPickupApproving] = useState(false)
   const [pickupApproved, setPickupApproved] = useState(false)
   const pickupInputRef = useRef<HTMLInputElement>(null)
+  const pickupDigitRefs = useRef<(HTMLInputElement | null)[]>(Array(6).fill(null))
 
   const loadTodayStats = () => {
     // Compute today in Santiago local time (UTC-3 / UTC-4 depending on DST)
@@ -499,7 +500,7 @@ export default function POSPage() {
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Punto de Venta</h1>
           <div className="flex items-center gap-2 ml-auto">
             <button
-              onClick={() => { setShowPickupModal(true); setPickupCode(''); setPickupOrder(null); setPickupError(null); setPickupApproved(false); setTimeout(() => pickupInputRef.current?.focus(), 50) }}
+              onClick={() => { setShowPickupModal(true); setPickupCode(''); setPickupOrder(null); setPickupError(null); setPickupApproved(false); setTimeout(() => pickupDigitRefs.current[0]?.focus(), 50) }}
               className="flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-2.5 py-1 rounded-full hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
             >
               <Store className="w-3.5 h-3.5" />
@@ -994,29 +995,65 @@ export default function POSPage() {
               </button>
             </div>
             <div className="p-6 space-y-4">
-              {/* Code input */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Código de retiro (6 dígitos)</label>
-                <div className="flex gap-2">
-                  <input
-                    ref={pickupInputRef}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    value={pickupCode}
-                    onChange={(e) => { setPickupCode(e.target.value.replace(/\D/g, '')); setPickupError(null) }}
-                    onKeyDown={(e) => { if (e.key === 'Enter') lookupPickup() }}
-                    placeholder="000000"
-                    className="flex-1 text-center text-2xl font-mono tracking-[0.4em] px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none"
-                  />
-                  <button
-                    onClick={lookupPickup}
-                    disabled={pickupLoading || pickupCode.length !== 6}
-                    className="px-4 py-3 bg-amber-600 text-white rounded-xl font-semibold hover:bg-amber-700 disabled:opacity-50 transition-colors flex items-center gap-2"
-                  >
-                    {pickupLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                  </button>
+              {/* Code input — OTP digit boxes */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-slate-500 dark:text-slate-400 text-center block">Ingresa el código de retiro</label>
+                <div className="flex justify-center gap-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <input
+                      key={i}
+                      ref={el => { pickupDigitRefs.current[i] = el }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={pickupCode[i] ?? ''}
+                      onChange={(e) => {
+                        const digit = e.target.value.replace(/\D/g, '').slice(-1)
+                        const arr = pickupCode.padEnd(6, '').split('')
+                        arr[i] = digit
+                        const next = arr.join('').replace(/\s/g, '')
+                        setPickupCode(next.slice(0, 6))
+                        setPickupError(null)
+                        if (digit && i < 5) pickupDigitRefs.current[i + 1]?.focus()
+                        if (next.replace(/\s/g,'').length === 6 && digit) setTimeout(lookupPickup, 80)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Backspace') {
+                          if (pickupCode[i]) {
+                            const arr = pickupCode.padEnd(6, '').split('')
+                            arr[i] = ''
+                            setPickupCode(arr.join('').slice(0, 6).replace(/\s/g,''))
+                          } else if (i > 0) {
+                            pickupDigitRefs.current[i - 1]?.focus()
+                          }
+                        } else if (e.key === 'Enter' && pickupCode.length === 6) {
+                          lookupPickup()
+                        }
+                      }}
+                      onPaste={(e) => {
+                        e.preventDefault()
+                        const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+                        setPickupCode(pasted)
+                        setPickupError(null)
+                        const focusIdx = Math.min(pasted.length, 5)
+                        pickupDigitRefs.current[focusIdx]?.focus()
+                        if (pasted.length === 6) setTimeout(lookupPickup, 80)
+                      }}
+                      className={`w-11 h-14 text-center text-2xl font-bold rounded-xl border-2 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none transition-all ${
+                        pickupCode[i]
+                          ? 'border-amber-500 dark:border-amber-400 shadow-sm shadow-amber-200 dark:shadow-amber-900'
+                          : 'border-slate-200 dark:border-slate-700 focus:border-amber-400'
+                      }`}
+                    />
+                  ))}
                 </div>
+                <button
+                  onClick={lookupPickup}
+                  disabled={pickupLoading || pickupCode.replace(/\s/g,'').length !== 6}
+                  className="w-full py-3 bg-amber-600 text-white rounded-xl font-semibold hover:bg-amber-700 disabled:opacity-40 transition-all flex items-center justify-center gap-2 text-sm"
+                >
+                  {pickupLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Buscando...</> : <><Search className="w-4 h-4" /> Buscar reserva</>}
+                </button>
               </div>
 
               {/* Error */}
