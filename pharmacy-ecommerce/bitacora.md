@@ -1,6 +1,38 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: Programa Fidelización Visible + Compra Rápida (Abril 2026)
+## Estado actual: Costos/Faltas/Vencimientos/POS mejoras (Abril 2026)
+
+---
+
+## 2026-04-19 — Feat: Fases A-D del plan Reemplazar Golan
+
+**FASE A — Análisis de Costos** (`/admin/costos`):
+- Calculadora de margen neto por producto incluyendo overhead operacional proporcional
+- Semáforo verde/amarillo/rojo según margen neto
+- Simulador de descuento: drag slider → ve qué pasa con los márgenes
+- Configuración de costos fijos: arriendo, sueldos, contador, ERP, otros
+- Exportar CSV
+
+**FASE B — Cuaderno de Faltas** (`/admin/faltas`):
+- Nueva tabla `faltas` en Cloud SQL
+- Registro de productos que clientes piden sin stock
+- Badge en sidebar con count pendiente
+- Auto-notificación: al recibir OC o ajustar stock positivo → falta → `notified`
+- Botón "Falta" en POS cuando producto tiene stock=0
+
+**FASE C — Vencimientos** (`/admin/vencimientos`):
+- Nueva tabla `product_batches` en Cloud SQL
+- KPIs: vencidos, vencen en 30d, 90d
+- Acción "Liquidar" → aplica discount_percent en producto
+- Acción "Dar de baja" → stock_movements reason=adjustment negativo
+- Alertas cron: email cuando productos vencen en < 7 días
+
+**FASE D — POS mejoras**:
+- Pago mixto (pos_mixed): efectivo + tarjeta separados, campos cash_amount/card_amount en orders
+- Bioequivalentes: botón "Alternativas" en productos con stock=0 → modal con mismo active_ingredient en stock
+- Botón "Falta" en productos sin stock → abre /admin/faltas
+
+**Nueva tabla**: `supplier_price_lists` (base para FASE E comparador de proveedores)
 
 ---
 
@@ -1448,6 +1480,56 @@ scripts/
 supabase/migrations/
 └── 20240101000000_initial_schema.sql  # Schema idempotente
 ```
+
+## REGISTRADO: Auditoría sistema previa a plan Golan (Abril 19, 2026)
+
+### Resumen
+Sesión de verificación y documentación del estado actual del sistema Tu Farmacia. Usuario solicito DETENER todo desarrollo y SOLO registrar hallazgos. Se confirmo que dos features solicitadas *ya estaban completamente implementadas* en producción:
+
+1. **RUT Obligatorio en Registro**: Campo RUT con validacion modulo-11 chileno, formato 12.345.678-9, aviso "Necesario para acumular puntos de fidelidad". Archivo: `src/app/auth/register/page.tsx` (RUT validacion, formateo) + `src/app/api/auth/register/route.ts` (API guarda rut en profiles.rut)
+
+2. **Importacion PDF Facturas**: Wizard 4-pasos en `src/app/admin/compras/nueva/page.tsx`:
+   - Paso 1: Seleccionar proveedor
+   - Paso 2: Subir foto JPEG/PNG o PDF de factura
+   - Paso 3: Revision OCR + mapeo de productos a catalogo
+   - Paso 4: Confirmar recepcion (stock++, cost_price, movimientos)
+   - Backend: `src/app/api/admin/purchase-orders/scan/route.ts` usa Google Cloud Vision API (tanto `images:annotate` para fotos como `files:annotate` para PDFs), parsea lineas con heuristica numerica, busca matches en `supplier_product_mappings`
+
+### Archivos inspeccionados
+- `src/app/auth/register/page.tsx` (243 lineas) — RUT input con formateo inline, validacion modulo-11
+- `src/app/api/auth/register/route.ts` (52 lineas) — POST route, recibe rut, valida, upsert profile
+- `src/app/admin/compras/nueva/page.tsx` (gran archivo) — Complete 4-step wizard for POs
+- `src/app/api/admin/purchase-orders/scan/route.ts` (169 lineas) — OCR endpoint, Vision API integration, parseInvoiceLines heuristic parser
+- `prisma/schema.prisma` — profiles.rut (String?, VarChar(20)), products.cost_price, purchase_order_items.unit_cost
+- `pharmacy-ecommerce/context.md` (183 lineas) — Sistema snapshots a abril 13, 2026 con todas las features completadas
+- `context.md` (raiz) (412 lineas) — Documentacion completa stack, infraestructura, credentials, arquitectura
+- `golan_info.md` — Extenso registro de features de Golan ERP a reemplazar
+
+### Hallazgos clave
+- **Sistema en produccion**: Webpay Plus activo con commerce code real (597053071888), Transbank integration completa
+- **RUT validation**: Implementa algoritmo modulo-11 correcto para RUTs chilenos (7-9 digitos + digito verificador)
+- **PDF OCR**: Google Cloud Vision API configurada para parsear facturas, extrae lineas de producto con cantidad/precio/subtotal via heuristica numerica
+- **POS completamente funcional**: Electron app + scanner HID, busqueda por barcode en product_barcodes
+- **Loyalty program**: Puntos por $1,000 CLP (1 punto = $100 descuento), sistema activo
+- **Email integrations**: Resend configurado, emails transaccionales para Webpay, reservas, alertas stock
+- **Admin features**: Reportes con Recharts, stock movements, supplier management, purchase orders, inventory valuation
+- **Context files**: Context.md y golan_info.md ya existen con documentacion exhaustiva
+
+### Plan para proxima sesion
+Usuario solicito documentacion para SIGUIENTE sesion crear plan completo reemplazo Golan ERP. Siguientes features pendientes (no implementadas aun):
+- Margen & Cost Analysis (precio vs costo vs margen para todos productos) — direcciona preocupacion Alex sobre viabilidad descuentos
+- Cotizaciones/Presupuestos (quotes formales para clientes institucionales)
+- Cuaderno de Faltas (logging de solicitudes out-of-stock)
+- Expiry date tracking + liquidation alerts
+
+### Notas tecnicas
+- RUT validation uses modulo-11 algorithm con multiplicadores 2-7 cycling
+- PDF OCR usa `vision.googleapis.com/v1/files:annotate` con type `DOCUMENT_TEXT_DETECTION` (no image:annotate)
+- parseInvoiceLines() heuristica: busca numeros en linea, asume ultimo=subtotal, penultimo=unit_cost, anterior=quantity si hay 3+ numeros
+- Supplier product mapping: tabla `supplier_product_mappings` con `(supplier_id, supplier_code)` composite key, lookup durante OCR review
+- Cost tracking: purchase_order_items.unit_cost guardado al recibir OC, productos.cost_price actualizado, movimientos registrados
+
+---
 
 ## Notas técnicas
 
