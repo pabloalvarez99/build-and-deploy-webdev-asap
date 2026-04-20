@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
   }
 
   const stockFilter = searchParams.get('stock_filter')
-  if (stockFilter === 'out') where.stock = 0
+  if (stockFilter === 'out') where.stock = { lte: 0 }
   if (stockFilter === 'low') where.stock = { gt: 0, lte: 10 }
 
   // Sorting

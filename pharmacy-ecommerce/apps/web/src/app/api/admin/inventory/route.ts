@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     if (filter === 'low') {
       where.stock = { gt: 0, lte: threshold };
     } else if (filter === 'out') {
-      where.stock = 0;
+      where.stock = { lte: 0 };
     } else if (filter === 'slow') {
       // Products with stock > 0 but no sales in the last 60 days
       where.stock = { gt: 0 };
