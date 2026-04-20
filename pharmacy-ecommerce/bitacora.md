@@ -1,6 +1,27 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: Costos/Faltas/Vencimientos/POS mejoras (Abril 2026)
+## Estado actual: Panel Fidelización completado (Abril 2026)
+
+---
+
+## 2026-04-20 — Feat: Panel Fidelización Admin
+
+**Panel `/admin/fidelidad`**:
+- API `GET /api/admin/loyalty/stats` — KPIs (miembros con puntos, puntos pendientes, valor CLP, tasa de canje), top 10 clientes por puntos, últimas 20 transacciones del programa, datos mensuales otorgados/canjeados (raw SQL, últimos 6 meses)
+- Página `/admin/fidelidad` — 4 KPI cards, BarChart Recharts (otorgados vs canjeados por mes), ranking top 10 clientes con medallas #1/#2/#3, feed últimas 20 transacciones con íconos +/- y fecha
+- Sidebar: link "Fidelización" con Star icon entre Clientes y Categorías
+
+---
+
+## 2026-04-19 — Feat: FASE E — Comparador de Precios Proveedores
+
+**FASE E — Comparador de Precios** (`/admin/compras/comparador`):
+- API `/api/admin/supplier-prices` GET+POST — lista y upsert precios por proveedor+producto
+- API `/api/admin/supplier-prices/import` POST — importa Excel con columnas `codigo`/`producto` + `precio`; mapea via `supplier_product_mappings` con fallback por nombre de producto
+- API `/api/admin/supplier-prices/compare` GET — agrupa todos los precios por producto, calcula mejor proveedor, peor precio, ahorro potencial (%)
+- Página `/admin/compras/comparador` — tabla expandible con precios por proveedor, badge "MEJOR", columna margen vs PVP, upload Excel por proveedor, modal para agregar precio manual con búsqueda de producto
+- Sidebar: nuevo link "Comparador" con ícono Scale entre Compras
+- Reposición integrada: cada producto en `/admin/reposicion` muestra "Mejor proveedor: X ($precio, N% ahorro)"
 
 ---
 
