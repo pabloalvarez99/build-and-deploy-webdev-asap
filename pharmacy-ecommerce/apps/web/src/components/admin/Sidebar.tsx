@@ -24,6 +24,9 @@ import {
   Tag,
   Calculator,
   PackageSearch,
+  TrendingUp,
+  BookX,
+  CalendarClock,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -31,6 +34,7 @@ interface SidebarProps {
   pendingReservations?: number;
   criticalStock?: number;
   draftPurchaseOrders?: number;
+  pendingFaltas?: number;
   onOpenCommandPalette?: () => void;
 }
 
@@ -48,11 +52,14 @@ const navItems = [
   { href: '/admin/stock', icon: ArrowUpDown, label: 'Stock' },
   { href: '/admin/inventario', icon: Warehouse, label: 'Inventario' },
   { href: '/admin/reposicion', icon: PackageSearch, label: 'Reposición' },
+  { href: '/admin/costos', icon: TrendingUp, label: 'Costos' },
+  { href: '/admin/faltas', icon: BookX, label: 'Faltas' },
+  { href: '/admin/vencimientos', icon: CalendarClock, label: 'Vencimientos' },
   { href: '/admin/reportes', icon: BarChart2, label: 'Reportes' },
   { href: '/admin/configuracion', icon: Settings, label: 'Configuración' },
 ];
 
-export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalStock = 0, draftPurchaseOrders = 0, onOpenCommandPalette }: SidebarProps) {
+export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalStock = 0, draftPurchaseOrders = 0, pendingFaltas = 0, onOpenCommandPalette }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -119,6 +126,7 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
           const showReservationBadge = item.href === '/admin/ordenes' && pendingReservations > 0;
           const showStockBadge = item.href === '/admin/productos' && criticalStock > 0;
           const showDraftPOBadge = item.href === '/admin/compras' && draftPurchaseOrders > 0;
+          const showFaltasBadge = item.href === '/admin/faltas' && pendingFaltas > 0;
 
           return (
             <Link
@@ -154,6 +162,11 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
                   {showDraftPOBadge && (
                     <span className="px-2 py-0.5 text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full">
                       {draftPurchaseOrders}
+                    </span>
+                  )}
+                  {showFaltasBadge && (
+                    <span className="px-2 py-0.5 text-xs font-bold bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 rounded-full">
+                      {pendingFaltas}
                     </span>
                   )}
                 </>
@@ -207,7 +220,8 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
           const hasBadge =
             (item.href === '/admin/ordenes' && (pendingOrders > 0 || pendingReservations > 0)) ||
             (item.href === '/admin/productos' && criticalStock > 0) ||
-            (item.href === '/admin/compras' && draftPurchaseOrders > 0);
+            (item.href === '/admin/compras' && draftPurchaseOrders > 0) ||
+            (item.href === '/admin/faltas' && pendingFaltas > 0);
           const badgeCount =
             item.href === '/admin/ordenes'
               ? pendingOrders + pendingReservations
@@ -215,6 +229,8 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
               ? criticalStock
               : item.href === '/admin/compras'
               ? draftPurchaseOrders
+              : item.href === '/admin/faltas'
+              ? pendingFaltas
               : 0;
 
           return (

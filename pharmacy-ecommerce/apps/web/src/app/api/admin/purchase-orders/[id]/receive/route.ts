@@ -79,6 +79,15 @@ export async function POST(
       });
     });
 
+    // Notificar faltas pendientes para los productos recibidos
+    const productIds = mappedItems.map((i) => i.product_id).filter(Boolean) as string[];
+    if (productIds.length > 0) {
+      await db.faltas.updateMany({
+        where: { product_id: { in: productIds }, status: 'pending' },
+        data: { status: 'notified', notified_at: new Date() },
+      });
+    }
+
     return NextResponse.json({
       success: true,
       items_updated: mappedItems.length,

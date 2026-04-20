@@ -39,6 +39,14 @@ export async function POST(request: NextRequest) {
       });
     });
 
+    // Notificar faltas pendientes si el ajuste subió stock
+    if (delta > 0) {
+      await db.faltas.updateMany({
+        where: { product_id, status: 'pending' },
+        data: { status: 'notified', notified_at: new Date() },
+      });
+    }
+
     return NextResponse.json({ success: true, new_stock: newStock, product_name: product.name });
   } catch (error) {
     console.error('Stock adjust error:', error);

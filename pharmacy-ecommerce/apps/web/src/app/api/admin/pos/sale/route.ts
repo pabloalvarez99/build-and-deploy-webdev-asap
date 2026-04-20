@@ -35,7 +35,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       items,
-      payment_method, // 'pos_cash' | 'pos_debit' | 'pos_credit'
+      payment_method, // 'pos_cash' | 'pos_debit' | 'pos_credit' | 'pos_mixed'
+      cash_amount,
+      card_amount,
       customer_name,
       customer_phone,
       customer_user_id,
@@ -44,6 +46,8 @@ export async function POST(request: NextRequest) {
     }: {
       items: SaleItem[];
       payment_method: string;
+      cash_amount?: number;
+      card_amount?: number;
       customer_name?: string;
       customer_phone?: string;
       customer_user_id?: string;
@@ -52,7 +56,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     if (!items || items.length === 0) return errorResponse('Items requeridos', 400);
-    if (!['pos_cash', 'pos_debit', 'pos_credit'].includes(payment_method)) {
+    if (!['pos_cash', 'pos_debit', 'pos_credit', 'pos_mixed'].includes(payment_method)) {
       return errorResponse('Método de pago inválido', 400);
     }
 
@@ -82,6 +86,8 @@ export async function POST(request: NextRequest) {
           status: 'completed',
           payment_provider: payment_method,
           total,
+          cash_amount: cash_amount ? Math.round(cash_amount) : null,
+          card_amount: card_amount ? Math.round(card_amount) : null,
           guest_name: customer_name || 'Venta POS',
           customer_phone: customer_phone || null,
           notes: notes || null,

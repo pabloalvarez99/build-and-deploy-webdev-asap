@@ -7,6 +7,7 @@ import { productApi, Category } from '@/lib/api'
 import {
   ShoppingCart, Search, Plus, Minus, Trash2, CreditCard, Banknote,
   CheckCircle2, X, Receipt, Loader2, SmartphoneNfc, ScanLine, CheckCircle, AlertCircle, User, History, BarChart3, Store,
+  BookX, Shuffle,
 } from 'lucide-react'
 
 interface CartItem {
@@ -27,12 +28,13 @@ interface Product {
   presentation?: string | null
 }
 
-type PaymentMethod = 'pos_cash' | 'pos_debit' | 'pos_credit'
+type PaymentMethod = 'pos_cash' | 'pos_debit' | 'pos_credit' | 'pos_mixed'
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: React.ReactNode }[] = [
   { value: 'pos_cash', label: 'Efectivo', icon: <Banknote className="w-5 h-5" /> },
   { value: 'pos_debit', label: 'Débito', icon: <SmartphoneNfc className="w-5 h-5" /> },
   { value: 'pos_credit', label: 'Crédito', icon: <CreditCard className="w-5 h-5" /> },
+  { value: 'pos_mixed', label: 'Mixto', icon: <Shuffle className="w-5 h-5" /> },
 ]
 
 function formatCLP(n: number) {
@@ -99,8 +101,28 @@ export default function POSPage() {
   const [pickupError, setPickupError] = useState<string | null>(null)
   const [pickupApproving, setPickupApproving] = useState(false)
   const [pickupApproved, setPickupApproved] = useState(false)
+  // Bioequivalentes
+  const [bioModal, setBioModal] = useState<{ name: string; active_ingredient: string } | null>(null)
+  const [bioResults, setBioResults] = useState<Product[]>([])
+  const [bioLoading, setBioLoading] = useState(false)
+  // Pago mixto
+  const [mixedCash, setMixedCash] = useState('')
+  const [mixedCard, setMixedCard] = useState('')
   const pickupInputRef = useRef<HTMLInputElement>(null)
   const pickupDigitRefs = useRef<(HTMLInputElement | null)[]>(Array(6).fill(null))
+
+  const loadBioEquivalents = async (activeIngredient: string) => {
+    setBioLoading(true)
+    setBioResults([])
+    try {
+      const res = await fetch(`/api/products?active_ingredient=${encodeURIComponent(activeIngredient)}&in_stock=true&limit=20&active_only=true`)
+      if (res.ok) {
+        const data = await res.json()
+        setBioResults(data.products || [])
+      }
+    } catch { /* ignore */ }
+    finally { setBioLoading(false) }
+  }
 
   const loadTodayStats = () => {
     // Compute today in Santiago local time (UTC-3 / UTC-4 depending on DST)
@@ -330,6 +352,8 @@ export default function POSPage() {
             price: i.price,
           })),
           payment_method: paymentMethod,
+          cash_amount: paymentMethod === 'pos_mixed' ? parseFloat(mixedCash) || 0 : undefined,
+          card_amount: paymentMethod === 'pos_mixed' ? parseFloat(mixedCard) || 0 : undefined,
           customer_name: customerName || undefined,
           customer_phone: customerPhone || undefined,
           customer_user_id: customerHistory?.user_id || undefined,
@@ -596,30 +620,57 @@ export default function POSPage() {
               const inCart = cart.find((i) => i.product_id === p.id)
               const outOfStock = p.stock <= 0
               return (
-                <button
-                  key={p.id}
-                  onClick={() => addToCart(p)}
-                  disabled={outOfStock || (!!inCart && inCart.quantity >= p.stock)}
-                  className={`group text-left p-3 rounded-xl border-2 transition-all ${
-                    outOfStock || (inCart && inCart.quantity >= p.stock)
-                      ? 'border-slate-100 dark:border-slate-800 opacity-50 cursor-not-allowed'
-                      : inCart
-                      ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20'
-                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-400 hover:shadow-md'
-                  }`}
-                >
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-2 leading-tight">{p.name}</p>
-                  {p.laboratory && <p className="text-xs text-slate-400 mt-0.5 truncate">{p.laboratory}</p>}
-                  <div className="mt-2 flex items-center justify-between">
-                    <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{formatCLP(p.price)}</span>
-                    <span className="text-xs text-slate-400">Stock: {p.stock}</span>
-                  </div>
-                  {inCart && (
-                    <div className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                      En carrito: {inCart.quantity}
+                <div key={p.id} className="relative">
+                  <button
+                    onClick={() => addToCart(p)}
+                    disabled={outOfStock || (!!inCart && inCart.quantity >= p.stock)}
+                    className={`w-full group text-left p-3 rounded-xl border-2 transition-all ${
+                      outOfStock || (inCart && inCart.quantity >= p.stock)
+                        ? 'border-slate-100 dark:border-slate-800 opacity-50 cursor-not-allowed'
+                        : inCart
+                        ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-400 hover:shadow-md'
+                    }`}
+                  >
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-2 leading-tight">{p.name}</p>
+                    {p.laboratory && <p className="text-xs text-slate-400 mt-0.5 truncate">{p.laboratory}</p>}
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{formatCLP(p.price)}</span>
+                      <span className={`text-xs ${outOfStock ? 'text-red-500' : 'text-slate-400'}`}>Stock: {p.stock}</span>
+                    </div>
+                    {inCart && (
+                      <div className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                        En carrito: {inCart.quantity}
+                      </div>
+                    )}
+                  </button>
+                  {/* Buttons for out-of-stock products */}
+                  {outOfStock && (
+                    <div className="flex gap-1 mt-1">
+                      {(p as Product & { active_ingredient?: string }).active_ingredient && (
+                        <button
+                          onClick={() => {
+                            const ai = (p as Product & { active_ingredient?: string }).active_ingredient!
+                            setBioModal({ name: p.name, active_ingredient: ai })
+                            loadBioEquivalents(ai)
+                          }}
+                          className="flex-1 flex items-center justify-center gap-1 py-1 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                        >
+                          <Shuffle className="w-3 h-3" /> Alternativas
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          const name = encodeURIComponent(p.name)
+                          window.open(`/admin/faltas?product_name=${name}&product_id=${p.id}`, '_blank')
+                        }}
+                        className="flex-1 flex items-center justify-center gap-1 py-1 text-xs bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30"
+                      >
+                        <BookX className="w-3 h-3" /> Falta
+                      </button>
                     </div>
                   )}
-                </button>
+                </div>
               )
             })}
           </div>
@@ -872,6 +923,36 @@ export default function POSPage() {
                 {PAYMENT_METHODS.find((m) => m.value === paymentMethod)?.label}
               </span>
             </div>
+
+            {/* Mixed payment fields */}
+            {paymentMethod === 'pos_mixed' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Pago mixto</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Efectivo</p>
+                    <input type="number" value={mixedCash} onChange={(e) => {
+                      setMixedCash(e.target.value)
+                      const cash = parseFloat(e.target.value) || 0
+                      setMixedCard(String(Math.max(0, total - cash)))
+                    }}
+                      className="w-full px-3 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Tarjeta</p>
+                    <input type="number" value={mixedCard} onChange={(e) => {
+                      setMixedCard(e.target.value)
+                      const card = parseFloat(e.target.value) || 0
+                      setMixedCash(String(Math.max(0, total - card)))
+                    }}
+                      className="w-full px-3 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm" />
+                  </div>
+                </div>
+                <p className={`text-xs ${Math.abs((parseFloat(mixedCash)||0) + (parseFloat(mixedCard)||0) - total) < 1 ? 'text-green-600' : 'text-red-500'}`}>
+                  Suma: {formatCLP((parseFloat(mixedCash)||0) + (parseFloat(mixedCard)||0))} / Total: {formatCLP(total)}
+                </p>
+              </div>
+            )}
 
             {/* Cash change calculator */}
             {paymentMethod === 'pos_cash' && (
@@ -1169,6 +1250,41 @@ export default function POSPage() {
                 <Receipt className="w-4 h-4" />
                 Imprimir resumen
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Bioequivalents modal */}
+      {bioModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setBioModal(null)}>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+              <div>
+                <h3 className="font-bold text-slate-900 dark:text-white">Alternativas bioequivalentes</h3>
+                <p className="text-xs text-slate-500 mt-0.5">{bioModal.name}</p>
+              </div>
+              <button onClick={() => setBioModal(null)} className="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-4 max-h-80 overflow-y-auto">
+              {bioLoading && <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-emerald-500" /></div>}
+              {!bioLoading && bioResults.length === 0 && (
+                <p className="text-center text-slate-500 py-8">Sin alternativas en stock</p>
+              )}
+              {bioResults.map((p) => (
+                <button key={p.id} onClick={() => { addToCart(p); setBioModal(null) }}
+                  className="w-full text-left p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-100 dark:border-slate-700 mb-2 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">{p.name}</p>
+                    {p.laboratory && <p className="text-xs text-slate-400">{p.laboratory}</p>}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-emerald-600">{formatCLP(p.price)}</p>
+                    <p className="text-xs text-slate-400">Stock: {p.stock}</p>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </div>

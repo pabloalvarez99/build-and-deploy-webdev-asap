@@ -23,6 +23,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
  const [pendingReservations, setPendingReservations] = useState(0);
  const [criticalStock, setCriticalStock] = useState(0);
  const [draftPurchaseOrders, setDraftPurchaseOrders] = useState(0);
+ const [pendingFaltas, setPendingFaltas] = useState(0);
  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
  const { theme, toggleTheme, mounted } = useTheme();
 
@@ -75,17 +76,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
  const loadStats = async () => {
  try {
- const [orders, reservations, lowStock, outStock, draftPOs] = await Promise.all([
+ const [orders, reservations, lowStock, outStock, draftPOs, faltasRes] = await Promise.all([
  orderApi.listAll({ status: 'pending', limit: 1 }),
  orderApi.listAll({ status: 'reserved', limit: 1 }),
  productApi.list({ limit: 1, active_only: true, stock_filter: 'low' }),
  productApi.list({ limit: 1, active_only: true, stock_filter: 'out' }),
  purchaseOrderApi.list({ status: 'draft', limit: 1 }),
+ fetch('/api/admin/faltas?status=pending').then((r) => r.json()).catch(() => ({ pendingCount: 0 })),
  ]);
  setPendingOrders(orders.total);
  setPendingReservations(reservations.total);
  setCriticalStock(lowStock.total + outStock.total);
  setDraftPurchaseOrders(draftPOs.total);
+ setPendingFaltas(faltasRes.pendingCount ?? 0);
  } catch (error) {
  console.error('Error loading admin stats:', error);
  }
@@ -114,6 +117,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
  pendingReservations={pendingReservations}
  criticalStock={criticalStock}
  draftPurchaseOrders={draftPurchaseOrders}
+ pendingFaltas={pendingFaltas}
  onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
  />
 

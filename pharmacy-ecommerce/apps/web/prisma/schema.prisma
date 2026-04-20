@@ -56,6 +56,9 @@ model products {
   purchase_order_items      purchase_order_items[]
   supplier_product_mappings supplier_product_mappings[]
   product_barcodes          product_barcodes[]
+  faltas                    faltas[]
+  batches                   product_batches[]
+  supplier_price_lists      supplier_price_lists[]
 }
 
 model barcode_catalog {
@@ -81,6 +84,8 @@ model orders {
   status                     String       @default("pending") @db.VarChar(50)
   total                      Decimal      @db.Decimal(10, 2)
   payment_provider           String?      @default("store") @db.VarChar(50)
+  cash_amount                Decimal?     @db.Decimal(10, 2)
+  card_amount                Decimal?     @db.Decimal(10, 2)
   guest_email                String?      @db.VarChar(255)
   guest_session_id           String?      @db.VarChar(255)
   guest_name                 String?      @db.VarChar(255)
@@ -147,6 +152,7 @@ model suppliers {
   updated_at                DateTime                    @default(now()) @updatedAt @db.Timestamptz(6)
   purchase_orders           purchase_orders[]
   supplier_product_mappings supplier_product_mappings[]
+  supplier_price_lists      supplier_price_lists[]
 }
 
 model purchase_orders {
@@ -199,6 +205,47 @@ model loyalty_transactions {
   reason     String   @db.VarChar(50)
   created_at DateTime @default(now()) @db.Timestamptz(6)
   profiles   profiles @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model faltas {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  product_id     String?   @db.Uuid
+  product_name   String    @db.VarChar(255)
+  customer_name  String?   @db.VarChar(255)
+  customer_phone String?   @db.VarChar(20)
+  quantity       Int       @default(1)
+  status         String    @default("pending") @db.VarChar(20)
+  notes          String?
+  notified_at    DateTime? @db.Timestamptz(6)
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  products       products? @relation(fields: [product_id], references: [id], onDelete: SetNull)
+}
+
+model product_batches {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  product_id  String   @db.Uuid
+  batch_code  String?  @db.VarChar(100)
+  expiry_date DateTime @db.Date
+  quantity    Int
+  notes       String?
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  products    products @relation(fields: [product_id], references: [id], onDelete: Cascade)
+}
+
+model supplier_price_lists {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  supplier_id String    @db.Uuid
+  product_id  String    @db.Uuid
+  unit_price  Decimal   @db.Decimal(10, 2)
+  valid_from  DateTime  @db.Date
+  valid_until DateTime? @db.Date
+  notes       String?
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  suppliers   suppliers @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
+  products    products  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@index([supplier_id])
+  @@index([product_id])
 }
 
 model caja_cierres {
