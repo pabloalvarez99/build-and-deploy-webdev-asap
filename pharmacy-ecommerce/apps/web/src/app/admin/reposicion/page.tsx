@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   RefreshCw, AlertTriangle, Loader2, CheckCircle2, AlertCircle,
   Package, TrendingDown, ShoppingCart, ChevronRight, X,
-  Sliders, ArrowRight, ExternalLink, Info,
+  Sliders, ArrowRight, ExternalLink, Info, Scale,
 } from 'lucide-react';
 
 interface Suggestion {
@@ -32,6 +32,13 @@ interface Data {
   meta: { total: number; critico: number; alto: number; medio: number; total_estimated_cost: number };
 }
 
+interface BestPrice {
+  product_id: string;
+  best_supplier: string;
+  best_price: number;
+  saving_pct: number;
+}
+
 function formatPrice(n: number) { return '$' + Math.round(n).toLocaleString('es-CL'); }
 
 const URGENCY = {
@@ -44,6 +51,7 @@ export default function ReposicionPage() {
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [bestPrices, setBestPrices] = useState<Map<string, BestPrice>>(new Map());
   const [targetDays, setTargetDays] = useState(30);
   const [thresholdDays, setThresholdDays] = useState(14);
   const [showConfig, setShowConfig] = useState(false);
@@ -61,10 +69,21 @@ export default function ReposicionPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/reposicion?target_days=${targetDays}&threshold_days=${thresholdDays}`, { credentials: 'include' });
-      if (!res.ok) throw new Error('Error al cargar datos');
-      setData(await res.json());
-      setSelected(new Map()); // clear on reload
+      const [reposRes, pricesRes] = await Promise.all([
+        fetch(`/api/admin/reposicion?target_days=${targetDays}&threshold_days=${thresholdDays}`, { credentials: 'include' }),
+        fetch('/api/admin/supplier-prices/compare', { credentials: 'include' }),
+      ]);
+      if (!reposRes.ok) throw new Error('Error al cargar datos');
+      setData(await reposRes.json());
+      setSelected(new Map());
+      if (pricesRes.ok) {
+        const priceData = await pricesRes.json();
+        const map = new Map<string, BestPrice>();
+        for (const row of priceData.rows ?? []) {
+          map.set(row.product_id, row as BestPrice);
+        }
+        setBestPrices(map);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error');
     } finally {
@@ -287,6 +306,16 @@ export default function ReposicionPage() {
                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                           <span className="text-xs text-slate-400">{s.category}</span>
                           {s.supplier && <span className="text-xs text-slate-400">· {s.supplier.name}</span>}
+                          {bestPrices.has(s.id) && (() => {
+                            const bp = bestPrices.get(s.id)!;
+                            return (
+                              <span className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                                <Scale className="w-3 h-3" />
+                                {bp.best_supplier}: {formatPrice(bp.best_price)}
+                                {bp.saving_pct > 0 && <span className="text-slate-400">({bp.saving_pct}% ahorro)</span>}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
 

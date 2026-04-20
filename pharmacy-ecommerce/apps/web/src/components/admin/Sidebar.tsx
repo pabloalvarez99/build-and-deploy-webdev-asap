@@ -27,6 +27,7 @@ import {
   TrendingUp,
   BookX,
   CalendarClock,
+  Scale,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -48,6 +49,7 @@ const navItems = [
   { href: '/admin/categorias', icon: Tags, label: 'Categorías' },
   { href: '/admin/proveedores', icon: Truck, label: 'Proveedores' },
   { href: '/admin/compras', icon: ClipboardList, label: 'Compras' },
+  { href: '/admin/compras/comparador', icon: Scale, label: 'Comparador' },
   { href: '/admin/descuentos', icon: Tag, label: 'Descuentos' },
   { href: '/admin/stock', icon: ArrowUpDown, label: 'Stock' },
   { href: '/admin/inventario', icon: Warehouse, label: 'Inventario' },
