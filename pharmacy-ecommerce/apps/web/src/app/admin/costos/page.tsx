@@ -133,8 +133,8 @@ export default function CostosPage() {
   }
 
   function statusBadge(status: CostItem['status']) {
-    if (status === 'green') return <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">OK</span>;
-    if (status === 'amber') return <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">Bajo</span>;
+    if (status === 'green') return <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">Buen margen</span>;
+    if (status === 'amber') return <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">Margen bajo</span>;
     if (status === 'red') return <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">Negativo</span>;
     return <span className="px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400">Sin costo</span>;
   }
@@ -194,45 +194,52 @@ export default function CostosPage() {
         </div>
         <div className="flex gap-2">
           <button onClick={() => setShowSettings(!showSettings)} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
-            <Settings className="w-4 h-4" /> Overhead
+            <Settings className="w-4 h-4" /> Costos fijos
           </button>
           <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
-            <Download className="w-4 h-4" /> CSV
+            <Download className="w-4 h-4" /> Exportar CSV
           </button>
         </div>
       </div>
 
-      {/* Overhead config panel */}
+      {/* Overhead config — modal overlay (no layout shift) */}
       {showSettings && (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
-          <h2 className="font-semibold text-slate-900 dark:text-slate-100">Costos Fijos Mensuales</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { key: 'overhead_rent', label: 'Arriendo' },
-              { key: 'overhead_golan', label: 'ERP (Golan)' },
-              { key: 'overhead_accountant', label: 'Contador' },
-              { key: 'overhead_salaries', label: 'Sueldos + imposiciones' },
-              { key: 'overhead_other', label: 'Otros fijos' },
-              { key: 'overhead_tax_rate', label: 'Tasa IVA (%)' },
-              { key: 'overhead_sales_target', label: 'Venta objetivo mensual' },
-              { key: 'overhead_margin_alert', label: 'Alerta margen mín. (%)' },
-            ].map(({ key, label }) => (
-              <div key={key}>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{label}</label>
-                <input
-                  type="number"
-                  value={settings[key as keyof OverheadSettings]}
-                  onChange={(e) => setSettings({ ...settings, [key]: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm"
-                />
-              </div>
-            ))}
-          </div>
-          <div className="flex gap-2 justify-end">
-            <button onClick={() => setShowSettings(false)} className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"><X className="w-4 h-4" /></button>
-            <button onClick={saveSettings} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-700 disabled:opacity-50">
-              <Save className="w-4 h-4" /> {saving ? 'Guardando...' : 'Guardar'}
-            </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowSettings(false)}>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 space-y-4 w-full max-w-2xl shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-slate-900 dark:text-slate-100">Costos Fijos Mensuales</h2>
+              <button onClick={() => setShowSettings(false)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { key: 'overhead_rent', label: 'Arriendo' },
+                { key: 'overhead_golan', label: 'ERP (Golan)' },
+                { key: 'overhead_accountant', label: 'Contador' },
+                { key: 'overhead_salaries', label: 'Sueldos + imposiciones' },
+                { key: 'overhead_other', label: 'Otros fijos' },
+                { key: 'overhead_tax_rate', label: 'Tasa IVA (%)' },
+                { key: 'overhead_sales_target', label: 'Venta objetivo mensual' },
+                { key: 'overhead_margin_alert', label: 'Alerta margen mín. (%)' },
+              ].map(({ key, label }) => (
+                <div key={key}>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{label}</label>
+                  <input
+                    type="number"
+                    value={settings[key as keyof OverheadSettings]}
+                    onChange={(e) => setSettings({ ...settings, [key]: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm"
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2 justify-end pt-2">
+              <button onClick={() => setShowSettings(false)} className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">Cancelar</button>
+              <button onClick={saveSettings} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-700 disabled:opacity-50">
+                <Save className="w-4 h-4" /> {saving ? 'Guardando...' : 'Guardar'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -299,7 +306,7 @@ export default function CostosPage() {
                 : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
             }`}
           >
-            {s === '' ? 'Todos' : s === 'green' ? '✓ OK' : s === 'amber' ? '⚠ Bajo' : s === 'red' ? '✗ Negativo' : 'Sin costo'}
+            {s === '' ? 'Todos' : s === 'green' ? '✓ Buen margen' : s === 'amber' ? '⚠ Margen bajo' : s === 'red' ? '✗ Negativo' : 'Sin costo'}
           </button>
         ))}
       </div>
@@ -319,7 +326,7 @@ export default function CostosPage() {
                 <th className="text-right px-4 py-3 text-slate-600 dark:text-slate-400 font-medium">
                   <button onClick={() => toggleSort('cost_price')} className="flex items-center gap-1 ml-auto">Costo <SortIcon field="cost_price" /></button>
                 </th>
-                <th className="text-right px-4 py-3 text-slate-600 dark:text-slate-400 font-medium">Overhead/u</th>
+                <th className="text-right px-4 py-3 text-slate-600 dark:text-slate-400 font-medium">G. fijos/u</th>
                 <th className="text-right px-4 py-3 text-slate-600 dark:text-slate-400 font-medium">
                   <button onClick={() => toggleSort('net_margin')} className="flex items-center gap-1 ml-auto">Margen neto <SortIcon field="net_margin" /></button>
                 </th>
