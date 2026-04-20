@@ -28,6 +28,7 @@ import {
   BookX,
   CalendarClock,
   Scale,
+  Star,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -46,6 +47,7 @@ const navItems = [
   { href: '/admin/productos', icon: Package, label: 'Productos' },
   { href: '/admin/ordenes', icon: ShoppingBag, label: 'Órdenes' },
   { href: '/admin/clientes', icon: Users, label: 'Clientes' },
+  { href: '/admin/fidelidad', icon: Star, label: 'Fidelización' },
   { href: '/admin/categorias', icon: Tags, label: 'Categorías' },
   { href: '/admin/proveedores', icon: Truck, label: 'Proveedores' },
   { href: '/admin/compras', icon: ClipboardList, label: 'Compras' },
