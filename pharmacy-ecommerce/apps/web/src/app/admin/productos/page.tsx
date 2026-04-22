@@ -51,6 +51,7 @@ export default function AdminProductsPage() {
  const [hasDiscount, setHasDiscount] = useState(false);
  const [noExternalId, setNoExternalId] = useState(false);
  const [noBarcode, setNoBarcode] = useState(false);
+ const [showInactive, setShowInactive] = useState(false);
 
  // Data completeness stats (loaded once on mount)
  const [productStats, setProductStats] = useState<{
@@ -208,7 +209,7 @@ export default function AdminProductsPage() {
  const data = await productApi.list({
  page: currentPage,
  limit: 20,
- active_only: false,
+ active_only: !showInactive,
  search: searchTerm || undefined,
  category: selectedCategory || undefined,
  laboratory: selectedLaboratory || undefined,
@@ -475,6 +476,7 @@ export default function AdminProductsPage() {
  setHasDiscount(false);
  setNoExternalId(false);
  setNoBarcode(false);
+ setShowInactive(false);
  setCurrentPage(1);
  window.history.replaceState({}, '', '/admin/productos');
  };
@@ -1196,6 +1198,18 @@ export default function AdminProductsPage() {
  Sin código de barra
  </span>
  {noBarcode && <span className="w-4 h-4 bg-cyan-400 rounded-full flex items-center justify-center text-white text-[10px]">✓</span>}
+ </button>
+ <button
+ onClick={() => { setShowInactive(!showInactive); setCurrentPage(1); }}
+ className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+ showInactive ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-400 dark:border-orange-600 text-orange-800 dark:text-orange-300' : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+ }`}
+ >
+ <span className="flex items-center gap-2">
+ <span className="text-orange-500 font-bold text-sm leading-none">○</span>
+ Incluir inactivos del catálogo
+ </span>
+ {showInactive && <span className="w-4 h-4 bg-orange-400 rounded-full flex items-center justify-center text-white text-[10px]">✓</span>}
  </button>
  </div>
  </div>
