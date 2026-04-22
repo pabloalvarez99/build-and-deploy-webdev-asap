@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-04-21 — Data: Import Catálogo Completo ERP (34,107 productos)
+
+**Script `pharmacy-ecommerce/scripts/import_backup_productos.mjs`**:
+- Parseó `BACKUP_PRODUCTOS.txt` (backup ERP Golan/EcoSur, 34,107 productos únicos)
+- Actualizó 1,504 productos existentes (name + price si backup tiene precio)
+- Insertó 32,603 nuevos productos con `external_id` del ERP
+- Activos (con PVP): 24,933 | Inactivos (sin precio): 9,176
+- `barcode_catalog`: 39,288 entradas (EAN completos para lookup POS sin FK)
+- `product_barcodes`: 39,288 entradas (vinculadas a products.id)
+- Multi-barcode correctamente separados por `|`
+
+---
+
 ## 2026-04-20 — Feat: Panel Fidelización Admin
 
 **Panel `/admin/fidelidad`**:
