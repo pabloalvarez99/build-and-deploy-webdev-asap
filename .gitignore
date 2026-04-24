@@ -57,3 +57,5 @@ coverage/
 *-service-account*.json
 *firebase-adminsdk*.json
 tu-farmacia-prod-*.json
+# Added by code-review-graph
+.code-review-graph/

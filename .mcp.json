@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "code-review-graph": {
+      "command": "uvx",
+      "args": ["code-review-graph", "serve"],
+      "type": "stdio"
+    },
+    "token-savior": {
+      "command": "uvx",
+      "args": ["--from", "token-savior-recall[mcp]", "token-savior"],
+      "type": "stdio",
+      "env": {
+        "WORKSPACE_ROOTS": "C:\\Users\\Admin\\Documents\\GitHub\\build-and-deploy-webdev-asap"
+      }
+    },
+    "context-mode": {
+      "command": "npx",
+      "args": ["-y", "context-mode"],
+      "type": "stdio"
+    },
+    "token-optimizer-mcp": {
+      "command": "node",
+      "args": ["C:\\Users\\Admin\\mcp-servers\\token-optimizer-mcp\\dist\\server\\index.js"],
+      "type": "stdio"
+    }
+  }
+}
