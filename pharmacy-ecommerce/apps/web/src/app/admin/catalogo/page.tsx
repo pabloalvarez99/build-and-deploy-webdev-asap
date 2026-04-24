@@ -184,7 +184,7 @@ function CatalogContent() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Catálogo ERP</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Base de datos completa importada desde Golan/EcoSur</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Base de datos de productos</p>
         </div>
       </div>
 
