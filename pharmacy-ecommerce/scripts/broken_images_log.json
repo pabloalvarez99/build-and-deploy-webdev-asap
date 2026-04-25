@@ -1,376 +1,26 @@
 [
   {
-    "id": "e022f0a3-58b1-49e7-bd1d-03821a6b3eb1",
-    "name": "AB ANTISEP.BUC.12COM.",
-    "broken_url": "https://www.faltasya.cl/wp-content/uploads/2020/09/6050-ab-clorhexidina-5-mg-12-comprimidos-masticable.jpg",
-    "status": 403,
-    "action": "nulled"
-  },
-  {
-    "id": "f983f84e-cb55-45ab-9121-87e30d1081cc",
-    "name": "AB ANTITUSIVO 12COM.",
-    "broken_url": "https://www.faltasya.cl/wp-content/uploads/2020/09/AB-ANTITUSIVO.jpg",
-    "status": 403,
-    "new_url": "https://www.farmaciasahumada.cl/dw/image/v2/BJVH_PRD/on/demandware.static/-/Sites-ahumada-master-catalog/default/dwb6b4aa7a/images/products/8568/8568.jpg?sw=525&sh=525&sm=fit",
-    "action": "fixed"
-  },
-  {
-    "id": "fc32cecb-39ff-4594-a14a-5acc73de2e19",
-    "name": "ABRILAR JBE.100ML",
-    "broken_url": "https://www.faltasya.cl/wp-content/uploads/2020/09/ABRILAR-JBE.jpg",
-    "status": 403,
-    "new_url": "https://www.faltasya.cl/wp-content/uploads/2020/09/ABRILAR-JBE.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "03e4631c-d4b6-4e40-9e40-7719cd5335f0",
-    "name": "ABRILAR JBE.100ML (copia)",
-    "broken_url": "https://www.faltasya.cl/wp-content/uploads/2020/09/ABRILAR-JBE.jpg",
-    "status": 403,
-    "new_url": "https://www.faltasya.cl/wp-content/uploads/2020/09/ABRILAR-JBE.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "24ebf2b7-2f50-4836-8317-44b3beb9e692",
-    "name": "ACEMUK PVO.JBE.100MG/5ML",
-    "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_151-0009.jpg",
-    "status": null,
-    "new_url": "https://cdn.shopify.com/s/files/1/0024/6058/1940/products/acemuk-polvo-para-jarabe-100-mg-5-ml-x-100-ml-deutsche-454247_1024x1024.webp?v=1680970266",
-    "action": "fixed"
-  },
-  {
-    "id": "01248439-8775-4a3d-85c9-80cda3d37629",
-    "name": "ACIDO MEFENAMICO 500MG.10COM.MINTLAB",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw1d4c2e22/images/large/199224-acido-mefenamico-comprimido-10-unidades-acido-mefenamico-500-mg.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw1d4c2e22/images/large/199224-acido-mefenamico-comprimido-10-unidades-acido-mefenamico-500-mg.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "b969cc96-c548-4226-b02f-a78c28f55fe5",
-    "name": "AGUA OXIG.10VOL.500ML. DIFEM",
-    "broken_url": "https://www.farmaciaspehuen.cl/web/image/product.product/26289/image_1024/[7801000001348]+Agua+Oxigenada+10+vol+SoluciÛn+TÛpica+500+mL+(G)+Difem+Care?unique=8a60a67",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "cb7c010b-2d08-4554-ac11-66deea5ee75d",
-    "name": "AGUALA GTS.0,75%10ML",
-    "broken_url": "https://farmam.cl/image/cache/cache/5001-6000/5608/main/79e1-179167-aguala-picosulfato-de-sodio-075-gotas-10-ml-0-4-500x500.jpg",
-    "status": 404,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw01d71f18/images/large/179167-3-aguala-picosulfato-de-sodio-075-gotas-10-ml.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "c10dae2c-c1f0-4bb2-938a-8d930d1e57f2",
-    "name": "AGUJA LAPIZ INSULINA 32G X 4MM",
-    "broken_url": "https://mtaconcagua.cl/wp-content/uploads/2025/08/Aguja-para-lapiz-inyector-de-insulina-ultra-fina.jpg",
-    "status": 403,
-    "new_url": "https://mtaconcagua.cl/wp-content/uploads/2025/08/Aguja-para-lapiz-inyector-de-insulina-ultra-fina.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "406b0fbf-78ca-4902-bd54-6f77f4905caf",
-    "name": "ALCANFOR 4UN.",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_849664-MLC69930466419_062023-O.webp",
-    "status": 405,
-    "action": "nulled"
-  },
-  {
-    "id": "5e188f05-862a-4494-ac61-d1bfe609a677",
-    "name": "ALCOHOL 70% ISOPROPILICO SPRAY X 290 CC DIFEM",
-    "broken_url": "https://nexodental.cl/wp-content/uploads/2025/09/ALCOHOL-CON-DISPENSADOR.webp",
-    "status": 403,
-    "action": "nulled"
-  },
-  {
-    "id": "5005d8b1-f9ed-4e39-b740-fa4bc6227978",
-    "name": "ALCOHOL DES.95% 1000ML",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwc6b1f0f5/images/large/292279-solucion-alcohol-1000-ml.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwc6b1f0f5/images/large/292279-solucion-alcohol-1000-ml.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "47b8832a-3506-42fc-97ef-981d8a6b98d8",
-    "name": "ALCOHOL DESNATURALIZADO 70% X 1000 ML",
-    "broken_url": "https://farmaciaszamarin.cl/wp-content/uploads/2024/06/Screen-Shot-2024-06-30-at-23.52.21.png",
-    "status": 403,
-    "new_url": "https://cdn.shopify.com/s/files/1/0024/6058/1940/products/alcohol-desnaturalizado-70deg-x-1000-ml-santepharma-340259_1024x1024.jpg?v=1660877653",
-    "action": "fixed"
-  },
-  {
-    "id": "81dc066e-57de-42b4-98e6-955f127eb3aa",
-    "name": "ALEXIA FORTE 180MG.30COM.",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwbaac0dcc/images/large/251066-alexia-forte-fexofenadina-180-mg-30-comprimidos-recubierto.jpg?sw=1000&sh=1000",
-    "status": null,
-    "new_url": "https://cdn.shopify.com/s/files/1/0520/3312/6568/products/alexiaforte_700x700.jpg?v=1671477565",
-    "action": "fixed"
-  },
-  {
-    "id": "39632836-9326-4859-865d-9ea1dbadb241",
-    "name": "ALFEXA 180 MG 30 COMP. REC (FEXOFENADINA)",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw09600313/images/large/384064-alfexa-180-fexofenadina-180-mg-30-comprimidos-recubiertos.jpg?sw=1000&sh=1000",
-    "status": null,
-    "new_url": "https://farmaciasgeminis.cl/wp-content/uploads/2024/10/Alfexa-180-Mg-x-30-Comprimidos-Recubiertos.png",
-    "action": "fixed"
-  },
-  {
-    "id": "bc6ab77f-3344-410b-9289-9dfff8d0642b",
-    "name": "ALGODON HIDROFILO ROLLO X 50 GR",
-    "broken_url": "https://botifarma.pe/wp-content/uploads/2025/07/ALGODON-HIDROFILO-BOTIFARMA.webp",
-    "status": 403,
-    "action": "nulled"
-  },
-  {
-    "id": "d1f13f73-954b-40b3-a596-8a45aec9841c",
-    "name": "ALGODON PRENSADO 250GR",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw91b57094/images/large/288335-algodon-set-algodon-250-gr.jpg",
-    "status": null,
-    "new_url": "https://www.farmaciasahumada.cl/on/demandware.static/-/Sites-ahumada-master-catalog/default/dw4a1f9797/images/products/74340/74340.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "b02d8187-908d-40f9-b61f-6f5819094478",
-    "name": "ALLEDRYL JBE.60ML",
-    "broken_url": "https://www.faltasya.cl/wp-content/uploads/2022/08/111022-alledryl-loratadina-5-mg-jarabe-60-ml.jpg",
-    "status": 403,
-    "action": "nulled"
-  },
-  {
-    "id": "775d64cd-8f14-421e-860b-90052a746e6c",
-    "name": "ALTAZINC GTAS 5MG.30ML.",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwb138bff1/images/large/258380-altazinc-gotas-30-ml-sulfato-de-zinc-5-mg-ml.jpg?sw=1000&sh=1000",
-    "status": null,
-    "new_url": "https://www.farmalisto.cl/5764-large_default/alta-zinc-zinc-5mg-ml-30ml-solucion-oral-para-gotas-lab-saval.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "270e8b14-5e0c-48a1-9aa8-6f4d56806ba1",
-    "name": "ALULA GOLD CONFORT 3 VAINILLA (1 A 3 A—OS) 900 GR",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwa5abb106/images/large/546737-2-formula-infantil-gold-comfort-etapa-3-900gr.jpg?sw=1000&sh=1000",
-    "status": null,
-    "new_url": "https://nutriway.cl/wp-content/uploads/2025/07/Latas_Alula_Premium_1000PX_AlulaC3_Frontal.png",
-    "action": "fixed"
-  },
-  {
-    "id": "8dbe315d-6931-4ce8-b6c8-2e1a57d7927a",
-    "name": "AMOVAL 500MG.21COM.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwc8f6641f/images/large/6093-amoval-amoxicilina-500-mg-21-comprimidos-recubierto.jpg",
-    "status": null,
-    "new_url": "https://farmex.cl/cdn/shop/products/amovalr-500-mg-x-21-comprimidos-saval-944604_1024x1024.jpg?v=1692989639",
-    "action": "fixed"
-  },
-  {
-    "id": "e2eccdd0-67e4-4bb0-9d24-3839d06bd9fa",
-    "name": "AMOVAL 750MG.21COM.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwf305cc45/images/large/6116-amoval-amoxicilina-750-mg-21-comprimidos.jpg",
-    "status": null,
-    "new_url": "https://www.farmalisto.cl/1041-large_default/amoval-amoxicilina-750-mg-21-comprimidos-recubiertos-labsaval.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "cba9fa4b-3283-4b4c-b89c-4ab0e85f673f",
-    "name": "AMOVAL DUO 800MG.SUSP.70ML.",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw7d52969f/images/large/6349-amoval-duo-suspension-70-ml-amoxicilina-800-mg-5ml.jpg?sw=1000&sh=1000",
-    "status": null,
-    "new_url": "https://www.ecofarmacias.cl/wp-content/uploads/2020/05/amoval-duo-800-mg_5-ml-x-70-ml-polvo-para-suspension-oral.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "82ee2660-6f3e-4103-ac83-d90da711c0e9",
-    "name": "AMOXICILINA SUSPENSION 250MG/5ML X 60 ML MDC",
-    "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_204-0746.jpg",
-    "status": null,
-    "new_url": "https://www.fraccion.cl/images/thumbs/0133223_Amoxicilina-suspension-250-mg5-ml-x-60-ml_550.webp",
-    "action": "fixed"
-  },
-  {
-    "id": "f43300b8-546b-4327-8808-468a02774915",
-    "name": "ANTIAX 6COM.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw64cef323/images/large/263178-antiax-magaldrate-480-mg-6-comprimidos-masticable.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "a2cec210-1506-4207-9b43-f61eb6c076d7",
-    "name": "ANTROFI CR.VAG.1%30G+20AP",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw20396f88/images/large/298572-antrofi-promestrieno-1-crema-vaginal-30-gr-+-20-aplicadores.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
     "id": "195c7bec-e2c4-4c05-86df-9a7748022125",
     "name": "APETIT-ON KIDS C/MIEL 125ML.JBE. SUPLALIM",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_850280-MLU74533157709_022024-O.webp",
-    "status": 405,
-    "action": "nulled"
+    "laboratory": "SUPLALIM LTDA",
+    "broken_url": "https://www.fraccion.cl/images/thumbs/0179846_550.webp",
+    "status": 403,
+    "new_url": "https://www.fraccion.cl/images/thumbs/0179846_550.webp",
+    "action": "fixed"
   },
   {
     "id": "e967e7c0-06d2-466b-9f42-620f1f7a94d9",
     "name": "AQUAF.MY BIG THEETH CEP.SUAVE 6+",
+    "laboratory": "GLAXO CONSUMO",
     "broken_url": "https://http2.mlstatic.com/D_NQ_NP_637301-MLU71232882918_082023-O.webp",
     "status": 405,
-    "new_url": "https://down-sg.img.susercontent.com/file/sg-11134207-7rbm6-lmd090z63lg975",
+    "new_url": "https://http2.mlstatic.com/D_NQ_NP_637301-MLU71232882918_082023-O.webp",
     "action": "fixed"
-  },
-  {
-    "id": "0bcac789-dda2-4953-b25d-f67ee3593ce5",
-    "name": "AQUAFRESH WHITE & SHINE CRE DEN X 100 GR",
-    "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_051-0045.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "1633ff82-7940-4bbf-99af-dc45e08c9e1e",
-    "name": "ASEPXIA CARB.LIM.EXF.120G",
-    "broken_url": "https://club.farmaleal.com.mx/cdn/shop/products/7798140259435_1_a426c613-4ab5-4b70-bc10-c9775a777f3d.jpg?v=1693535685",
-    "status": null,
-    "new_url": "https://jumboargentina.vtexassets.com/arquivos/ids/769766-800-auto?v=638120937978630000&width=800&height=auto&aspect=true",
-    "action": "fixed"
-  },
-  {
-    "id": "967d190f-a9b8-4c2c-8a69-0c5318b42b26",
-    "name": "ASEPXIA JAB.AZUFRE 100GR.",
-    "broken_url": "https://resources.claroshop.com/medios-plazavip/s2/12225/2721713/60c2682a46ed9-650240029479-1600x1600.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "05a9638c-27cc-4505-bbdf-374b631b6896",
-    "name": "ATENOLOL 50MG.20COM. (B.E) OPKO",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwb14bbc24/images/large/199152-1.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwb14bbc24/images/large/199152-1.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "0c3bb38e-8072-4855-9d69-88f67f6cba5a",
-    "name": "ATENOLOL 50MG.20COM. CHILE",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwb14bbc24/images/large/199152-1.jpg",
-    "status": null,
-    "new_url": "https://www.farmalisto.cl/5687-large_default/ATENOLOL-50-MG-20-COMPRIMIDOS-BIOEQUIVALENTE-LABORATORIO-CHILE.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "fb5915af-dc36-4d98-925b-62233801d12d",
-    "name": "AUTOTEST KIT VIH",
-    "broken_url": "https://farmasky.com/media/catalog/product/cache/ac76689d42105be4847f83d8c44b6bfe/f/c/fc020442_1-1708552886.jpg",
-    "status": 403,
-    "action": "nulled"
-  },
-  {
-    "id": "feac2854-6c4f-4670-9fe5-bd6bc650d0f3",
-    "name": "AZUL DE METILENO 20ML. VALMA",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw3f21f513/images/large/199022-azul-de-metileno-2-solucion-20-ml.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "d6b7959e-ab6e-47e7-b8e4-40c79e4583ef",
-    "name": "BAGOMIGRAL 2.5MG.2COM.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw457b6dde/images/large/260777-bagomigral-comprimido-recubierto-10-unidades-naratriptan-25-mg.jpg",
-    "status": null,
-    "new_url": "https://www.mercadofarma.cl/cdn/shop/files/Bagomigral2.5mg2Comprimidosrecubiertos.webp?v=1737377637",
-    "action": "fixed"
-  },
-  {
-    "id": "4e80a45a-87d4-439b-8e79-1f675e0a2f36",
-    "name": "BEPANTHOL REGENERADORA 30 G (DEXPANTENOL)",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw5af7199d/images/large/551918-2-bepanthol-pomada-regeneradora-para-la-piel-ung¸ento-30-gr.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw5af7199d/images/large/551918-2-bepanthol-pomada-regeneradora-para-la-piel-ung¸ento-30-gr.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "850107eb-5ed0-429c-a208-3065e04f9c04",
-    "name": "BEPANTHOL UNG X 30 GR",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw10ebfcac/images/large/551918-bepanthol-pomada-regeneradora-para-la-piel-ung¸ento-30-gr.jpg?sw=1000&sh=1000",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "91702e26-3710-4fa0-9c80-273867fcb28d",
-    "name": "BERODUAL HFA INH.BUC.200DS.",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw62ecc2d8/images/large/253574-2-berodual-hfa-inhalador-bucal-200-dosis-fenoterol-20-mcg-ds.jpg?sw=1000&sh=1000",
-    "status": null,
-    "new_url": "https://www.farmadon.com.ve/wp-content/uploads/2021/12/4048846001672-Berodual-HFA-Inhalador-20-50mcg-200-Dosis-Boehringer.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "6e079028-b27d-4cee-867f-496bb7cf065a",
-    "name": "BETACORT CASS.0,5MG/ML.30",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw96bf7488/images/large/296197-betacort-cassara-betametasona-05-mg--ml-solucion-oral-para-gotas-30-ml.jpg?sw=1000&sh=1000",
-    "status": null,
-    "new_url": "https://farmex.cl/cdn/shop/files/betacort-solucion-para-gotas-orales-05-mgml-x-30-ml-pablo-cassara-463886_grande.jpg?v=1725100335",
-    "action": "fixed"
-  },
-  {
-    "id": "823ef45e-11a8-44aa-96ff-f00178d32185",
-    "name": "BILIDREN 20MG 30COMP",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwa4fb6355/images/large/265519-bilidren-comprimido-30-unidades-bilastina-20-mg.jpg",
-    "status": null,
-    "new_url": "https://farmex.cl/cdn/shop/products/bilidren-20-mg-x-30-comprimidos-faes-farma-faes-farma-318264_1024x1024.jpg?v=1692989460",
-    "action": "fixed"
-  },
-  {
-    "id": "eab07ae4-e8ea-429f-9509-a884192314e8",
-    "name": "BILIDREN SOL ORAL 2,5 MG/ML X 120 ML",
-    "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_354-0017.jpg",
-    "status": null,
-    "new_url": "https://farmacialabotika.cl/cdn/shop/products/8436024613414_BILIDREN_SOL_ORAL_2.5MG_ML_X120_a30725ba-eab9-4a25-a024-d2d1a4e24fb7.jpg?v=1654110027&width=2084",
-    "action": "fixed"
-  },
-  {
-    "id": "e343faa8-e3ed-490f-a46b-05b7eeb1c573",
-    "name": "BIOFLORA 250MG 10 CAP.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwbda97ece/images/large/277284-bioflora-capsula-10-unidades-saccharomyces-250-mg.jpg",
-    "status": null,
-    "new_url": "https://www.farmalisto.cl/8845-large_default/bioflora-250-mg10-capsulas-laboratorio-maver.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "abffb5c3-20f2-4adb-9550-985a7fdba3ca",
-    "name": "BIOFLORA 250MG.10SOBRES",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw5ab9b115/images/large/277283-bioflora-sobres-suspension-oral-10-unidades-saccharomyces-250-mg.jpg",
-    "status": null,
-    "new_url": "https://www.mercadofarma.cl/cdn/shop/products/RC541.jpg?v=1608675412",
-    "action": "fixed"
-  },
-  {
-    "id": "2947fb38-4518-41c4-a822-dd1abde00c79",
-    "name": "BIOGEL SHA 1% X 150 ML",
-    "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_128-0113.jpg",
-    "status": null,
-    "new_url": "https://www.farmaciasahumada.cl/dw/image/v2/BJVH_PRD/on/demandware.static/-/Sites-ahumada-master-catalog/default/dw5951887f/images/products/89319/89319.jpg?sw=1050&sh=1050&sm=fit",
-    "action": "fixed"
-  },
-  {
-    "id": "2540cf23-13b6-4d0f-829f-7c0595d2f5b0",
-    "name": "BION 3 MINI COM MAS X 60",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_860566-MLC94010747626_102025-O.webp",
-    "status": 405,
-    "new_url": "https://farmex.cl/cdn/shop/files/multivitaminico-con-probioticos-bion3-por-60-comprimidos-procter-gamble-179112_1024x1024.jpg?v=1712183408",
-    "action": "fixed"
-  },
-  {
-    "id": "4516f73e-b207-4633-8efb-eb56ee836d09",
-    "name": "BIOSUL CAP X 30",
-    "broken_url": "https://www.fraccion.cl/images/thumbs/0179585_550.webp",
-    "status": 500,
-    "new_url": "https://www.farmalisto.cl/8819-large_default/biosul-d-colageno-nativo-40-mg-30-capsulas-laboratorio-itf-labomed.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "77b51905-c599-420f-a7d8-411a2fbdea00",
-    "name": "BIOXANTIN 60CAP.BL.",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_691985-MLC51554579773_092022-O.webp",
-    "status": 405,
-    "action": "nulled"
   },
   {
     "id": "78d6f5d0-9a94-4989-94c2-657d9493c2db",
     "name": "BIOZEN COM X 50 KNOP",
+    "laboratory": "KNOP",
     "broken_url": "https://r.btcdn.co/22994/large/810410-Biozen.jpg",
     "status": null,
     "new_url": "https://r.btcdn.co/22994/large/810410-Biozen.jpg",
@@ -379,1364 +29,341 @@
   {
     "id": "13a4aa93-120d-4851-864b-1199e778fee7",
     "name": "BLISTEX BALS.LAB.F-15 MINT",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_997173-MLU74098798741_012024-O.webp",
+    "laboratory": "SYNTHON",
+    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_614876-MLU75437533712_042024-O.webp",
     "status": 405,
-    "new_url": "https://http2.mlstatic.com/D_NQ_NP_673297-MLA82084696577_012025-O.webp",
-    "action": "fixed"
-  },
-  {
-    "id": "5c72712c-b899-4a74-9b89-5d1e034cb0ef",
-    "name": "BRONCOTUSILAN JBE.250MG/5ML.120ML.",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw761a71ba/images/large/253366-broncotusilan-carbocisteina-250-mg5ml-jarabe-120-ml.jpg?sw=1000&sh=1000",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "06550fad-5a6e-4a46-83a8-903bc0c012dc",
-    "name": "BROOKS TALCO 80GR",
-    "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_139-3169.jpg",
-    "status": null,
-    "new_url": "https://cdnx.jumpseller.com/max-limpio/image/42575800/resize/1200/1200?1700768653",
-    "action": "fixed"
-  },
-  {
-    "id": "598ae7c0-e900-45d7-87db-54fb1a13538e",
-    "name": "BUDESONIDA HFA-LA INH 200 MCG X 200 DSS FAES",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw4ab8cbc8/images/large/391809-budesynt-hfa-la-budesonida-200-mcg-aerosol-para-inhalacion-oral-200-dosis.jpg?sw=1000&sh=1000",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw4ab8cbc8/images/large/391809-budesynt-hfa-la-budesonida-200-mcg-aerosol-para-inhalacion-oral-200-dosis.jpg?sw=1000&sh=1000",
-    "action": "fixed"
-  },
-  {
-    "id": "198f4362-08b8-4058-b798-568afda4f491",
-    "name": "BURTEN SL 30MG.2COM.",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwb614e287/images/large/295758-burten-sl-ketorolaco-trometamol-30-mg-2-comprimidos-sub-linguales.jpg?sw=1000&sh=1000",
-    "status": null,
-    "new_url": "https://www.farmaciasahumada.cl/dw/image/v2/BJVH_PRD/on/demandware.static/-/Sites-ahumada-master-catalog/default/dw2a94d855/images/products/86706/86706.jpg?sw=525&sh=525&sm=fit",
-    "action": "fixed"
-  },
-  {
-    "id": "91db28ef-4a22-4f8a-99a1-f5b0b028c794",
-    "name": "BUSCAPINA PERLAS 10MG.10",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_668582-MLA81539415917_122024-O.webp",
-    "status": 405,
-    "action": "nulled"
-  },
-  {
-    "id": "084fce65-380a-4f54-980a-05b137ea1456",
-    "name": "CAFIASPIRINA 10COMP.TIRA",
-    "broken_url": "https://www.benavides.com.mx/media/catalog/product/cache/916b1717103e02d1e6f5096133d8b859/2/0/20240612_11754.jpg",
-    "status": 403,
-    "action": "nulled"
-  },
-  {
-    "id": "40bccb7a-4d39-47bf-b48d-86d48fbdcc02",
-    "name": "CARAMELOS DE PROPOLEO MENTA X 10 UNIDADES",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_945044-MLA83889917111_042025-O.webp",
-    "status": 405,
-    "action": "nulled"
-  },
-  {
-    "id": "40964c44-6bbd-4636-9424-110d661660fd",
-    "name": "CARAMELOS DE PROPOLEO MIEL X 10 UNIDADES",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_945044-MLA83889917111_042025-O.webp",
-    "status": 405,
-    "new_url": "https://farmex.cl/cdn/shop/products/propoleo-miel-x-10-caramelos-springlife-762650_1024x1024.jpg?v=1692989450",
-    "action": "fixed"
-  },
-  {
-    "id": "e7610d2e-04ec-4516-b0d6-017b69df0f6f",
-    "name": "CARDIOASPIRINA 100MG.20COM.",
-    "broken_url": "https://www.conosur.bayer.com/sites/conosur_bayer_com/files/inline-images/Packing-Cardioaspirina_pack.png",
-    "status": 403,
-    "new_url": "https://inventario.nibitha.cl/public/img/productos/3/3-21657-635.png",
-    "action": "fixed"
-  },
-  {
-    "id": "d26fadb2-b7e6-4264-b527-8090e6e8fb8d",
-    "name": "CARDIOASPIRINA-100EC 100MG 50 COMP",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw877c0216/images/large/3122-cardioaspirina-100-ec-comprimido-50-unidades-acido-acetilsalicilico-100-mg.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "dceff867-7ad8-453a-bc99-42afd9051f77",
-    "name": "CARDIPRES 20/5MG 30 COMP.REC.",
-    "broken_url": "https://www.fraccion.cl/images/thumbs/0182038_CARDIPRES_20_5_MG_X_30_COMP______________550.webp",
-    "status": 500,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw8ec42bb7/images/large/553945-3-cardipres-20mg5mg--30-comprimidos-recubiertos-.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "97ca6f70-6b33-40fd-94e7-0d82ac9588bf",
-    "name": "CARDIPRES COM 40/5 MG X 30",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwa8cacd75/images/large/553942-cardipres-40mg5mg--30-comprimidos-recubiertos-.jpg",
-    "status": null,
-    "new_url": "https://www.fraccion.cl/images/thumbs/0182039_CARDIPRES_40_5_MG_X_30_COMP__________550.webp",
+    "new_url": "https://http2.mlstatic.com/D_NQ_NP_614876-MLU75437533712_042024-O.webp",
     "action": "fixed"
   },
   {
     "id": "13a03e29-01dc-44d6-a493-ad71fa30d33a",
     "name": "CERAVE LOC.HID.P/SECA MUY SECA.236ML",
-    "broken_url": "https://www.farmatop.es/8773-large_default/cerave-locion-hidratante-para-piel-seca-a-muy-seca-236ml.jpg",
+    "laboratory": "VARIOS PERFUMERIA",
+    "broken_url": "https://www.farmatop.es/8773-thickbox_default/cerave-locion-hidratante-para-piel-seca-a-muy-seca-236ml.jpg",
     "status": 403,
-    "action": "nulled"
-  },
-  {
-    "id": "61874c51-6a21-4d6c-8219-87b39ac88715",
-    "name": "CICATRICURE GEL 30GR.",
-    "broken_url": "https://i0.wp.com/farmaciaseconomicas.com.gt/wp-content/uploads/2022/03/cicatricure-gel.png?w=1172&ssl=1",
-    "status": 404,
-    "action": "nulled"
-  },
-  {
-    "id": "cee3416d-0af0-4494-86ba-6d6a2c752233",
-    "name": "CIPROVAL GTS.OTICO.5ML.",
-    "broken_url": "https://www.puntofarma.com.py/imagenes/public/images/Ciproval-Otico-Solucion-esteril-de-5-mL-34721.jpg",
-    "status": 404,
-    "new_url": "https://www.puntofarma.com.py/imagenes/public/images/Ciproval-Otico-Solucion-esteril-de-5-mL-34721.jpg",
+    "new_url": "https://medypiel.com/wp-content/uploads/2022/08/NUEVOS-PARA-PAGINA-81-1.png",
     "action": "fixed"
-  },
-  {
-    "id": "0c8dc45f-5b07-4b47-9e44-9f0aa43788b8",
-    "name": "CLARITROMICINA 500MG.14COM (B.E) CHEMO PHARMA",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwf37c4362/images/large/199465-claritromicina-500-mg-bioequivalente-14-comprimidos.jpg",
-    "status": null,
-    "new_url": "https://farmaciaschilespa.cl/wp-content/uploads/2022/07/claritromicina-comp.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "7df277ce-043d-4e97-8971-bf800dca1527",
-    "name": "CLOFEXAN 30COM.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw0bd59375/images/large/9099-clofexan-comprimido-30-unidades-betametasona-2-mg.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "339c6ef9-205c-43ed-8cfd-dfa3360b6d8f",
-    "name": "CLOTRIMAZOL 1% CREMA 20GR",
-    "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_204-0765.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "1a6b3b9c-001d-40c7-95fa-59ed8c856e42",
-    "name": "CLOTRIMAZOL 500MG.1OV.PASTEUR",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw891f1a29/images/large/259415-fungos-ovulos-1-unidad-clotrimazol-500-mg.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "8d8e1c29-bf27-4c8c-9f70-a76d8bf06728",
-    "name": "CLOTRIMAZOL CR.1% 20GR.ASCEND",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw8c8d0af6/images/large/199034-1.jpg?sw=295&sh=295",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "6c16f02d-a01a-4ffa-aae8-fd083745a1ab",
-    "name": "CLOXACILINA 500MG.12COM. OPKO",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw36e9e1e2/images/large/199188-cloxacilina-capsula-12-unidades-cloxacilina-500-mg.jpg",
-    "status": null,
-    "new_url": "https://cdypos.nibitha.cl/public/img/productos/3/3-21826-990.png",
-    "action": "fixed"
-  },
-  {
-    "id": "7df8bbc5-13ac-4b9c-8b60-34285a321809",
-    "name": "COBEFEN JBE.120ML",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw60d8d9ad/images/large/12147-cobefen-jarabe-120-ml-betametasona-2-mg.jpg",
-    "status": null,
-    "new_url": "https://cdn.shopify.com/s/files/1/0581/6687/0176/products/7800038042200_COBEFEN_JBE_X120ML_1600x.jpg?v=1651524856",
-    "action": "fixed"
-  },
-  {
-    "id": "dc22b59f-c9c9-4d17-88bd-9677639c94df",
-    "name": "COLONIA 451 INGLESA 260ML",
-    "broken_url": "https://www.pamelita.cl/wp-content/uploads/7804945004115-1.jpg",
-    "status": 404,
-    "action": "nulled"
-  },
-  {
-    "id": "db37efdf-bbf3-41b0-9eec-24f93ed79940",
-    "name": "CRANBERRY PARCHE ADHESIVO REDONDO ESTERIL",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_922351-MLC45498505482_042021-O.webp",
-    "status": 405,
-    "action": "nulled"
-  },
-  {
-    "id": "9324807f-a407-48d7-bebd-e4b6120a7449",
-    "name": "CRANBERRY VITAMINA C Y E GOMITAS X 60",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw853529c2/images/large/535303-vitamin-choice-cranberry-con-vitamina-c-y-e-60-gomitas.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw853529c2/images/large/535303-vitamin-choice-cranberry-con-vitamina-c-y-e-60-gomitas.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "423ab001-539a-472a-81c4-e5e9805b20cc",
-    "name": "CREATINA PVO X 300 GR",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_625224-MLU74220063716_012024-O.webp",
-    "status": 405,
-    "new_url": "https://farmaciasgeminis.cl/wp-content/uploads/2025/05/INFOR-CREATINA-PVO-X-300-GRAMOS.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "cc098f81-0dd3-4822-903b-f81e0b4bac53",
-    "name": "CREVET LIGHT 100MG.100COM.",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw8baf6b26/images/large/111089-crevet-light-100-mg-100-comprimidos.jpg.jpg?sw=1000&sh=1000",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw8baf6b26/images/large/111089-crevet-light-100-mg-100-comprimidos.jpg.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "9a82122f-029e-460a-b17d-1cad1413b134",
-    "name": "DERMODAN 0,1% CR. 15GR.",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw2ab9b7d5/images/large/19121-dermodan-tretinoina-01-crema-topica-15-gr.jpg?sw=1000&sh=1000",
-    "status": null,
-    "new_url": "https://farmex.cl/cdn/shop/products/dermodan-crema-01-x-15-g-ift-labomed-482714_grande.jpg?v=1692989522",
-    "action": "fixed"
-  },
-  {
-    "id": "9b661357-7394-4463-b5a4-a77e0a13d93b",
-    "name": "DESLORATADINA 5 MG 30 COMP. REC",
-    "broken_url": "https://www.farmaciamix.com.br/imagens-complete/800x800/desloratadina-5mg-com-30-comprimidos-e9118091c0.jpg",
-    "status": 403,
-    "new_url": "https://farmex.cl/cdn/shop/files/desloratadina-5-mg-x-30-comprimidos-ley-cenabast-curae-spring-718706_1024x1024.jpg?v=1719881196",
-    "action": "fixed"
-  },
-  {
-    "id": "1a331c82-20bf-4cfb-8f2d-f3827014a822",
-    "name": "DETRUCALM 200MG.30COM.REC.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw3e830df8/images/large/268611-2-detrucalm-flavoxato-clorhidrato-200-mg-30-comprimidos.jpg",
-    "status": null,
-    "action": "nulled"
   },
   {
     "id": "af7f0215-2ce6-4e79-ba89-de8c65ed3c52",
     "name": "DICHLOREXAN 2% SOL ACUOSA X 250 CC DIFEM",
+    "laboratory": "DIFEM PHARMA",
     "broken_url": "https://http2.mlstatic.com/D_NQ_NP_823752-MLU73612662808_122023-O.webp",
     "status": 405,
-    "new_url": "https://www.ecofarmacias.cl/wp-content/uploads/2021/12/7801000260707-1-600x600.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "414fc11c-8d19-496f-b97f-5893568779f5",
-    "name": "DICLOFENACO 100MG.8CAP.LP. OPKO",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwdb04f530/images/large/199345.jpg",
-    "status": null,
-    "new_url": "https://www.acgrupoaconcagua.cl/260-large_default/diclofenaco-sodico-100mg-8-capsulas-opko.jpg",
+    "new_url": "https://http2.mlstatic.com/D_NQ_NP_823752-MLU73612662808_122023-O.webp",
     "action": "fixed"
   },
   {
     "id": "f125233a-2838-40a2-baa3-74a4a9ee87c4",
     "name": "DIFEMCARE A.OXIGENADA 110ML",
+    "laboratory": "SIN ASIGNACION",
     "broken_url": "https://http2.mlstatic.com/D_NQ_NP_848547-MLC73176250951_112023-O.webp",
     "status": 405,
     "new_url": "https://http2.mlstatic.com/D_NQ_NP_848547-MLC73176250951_112023-O.webp",
     "action": "fixed"
   },
   {
-    "id": "6f46b843-c4c6-432f-abf5-1c2962cca689",
-    "name": "DISFRUTA 1SOBRE LIMON",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw5c6a5d68/images/large/271509-disfruta-limon-bicarbonato-de-sodio-60-sobres.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
     "id": "d19a853d-5c2a-4a68-8955-9cac742fc079",
     "name": "DOLOMERPAL 20CAP.",
+    "laboratory": "PRATER",
     "broken_url": "https://www.fraccion.cl/images/thumbs/0174883_Dolomerpal-x-20-capsulas_550.webp",
-    "status": 500,
-    "new_url": "https://farmaciasdeldrsimicl.vtexassets.com/arquivos/ids/156282-800-auto?v=637964772955770000&width=800&height=auto&aspect=true",
+    "status": 403,
+    "new_url": "https://farmagran.cl/wp-content/uploads/2023/02/1006061-800x800.webp",
     "action": "fixed"
-  },
-  {
-    "id": "0f1b91f4-17c0-43f7-af26-0833048e0ba9",
-    "name": "DUBLINA 100MG.30COM.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw9480244c/images/large/262586-dublina-comprimido-30-unidades-ciprofibrato-100-mg.jpg",
-    "status": null,
-    "action": "nulled"
   },
   {
     "id": "18c2fe87-d968-4d2b-8252-f6f2cb49940a",
     "name": "DUREX CLASICO PRESERV. 3U",
+    "laboratory": "RECKITT BENCKISER CHILE",
     "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_202-0771.jpg",
-    "status": null,
-    "new_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_202-0771.jpg",
+    "status": 405,
+    "new_url": "https://drogueriasunoa.com/cdn/shop/products/2adfb7291527df081a5d7e21bae58c7c.jpg?v=1666707918",
     "action": "fixed"
   },
   {
-    "id": "24905c39-20d0-4c9c-87da-803d0a5f24c4",
-    "name": "ENSURE ADV.PVO.CHOCO.850GR.",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw4dbd047c/images/large/292712-ensure-alimento-en-polvo-850-gr.jpg?sw=295&sh=295",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "4c70c144-0cb4-48cc-8095-f67604d5f0a5",
-    "name": "ESOMEPRAZOL 40MG.30COM.REC.(B.E)OPKO",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw7cc7007c/images/large/16074-nexium-comprimido-recubierto-28-unidades-esomeprazol-40-mg.jpg",
-    "status": null,
-    "new_url": "https://www.farmaciasbuhler.cl/wp-content/uploads/2021/08/Esomeprazol-40-mg-x-30-comp-rec..jpg",
+    "id": "aa66276c-0a88-46db-afde-591534346cba",
+    "name": "DUREX CL√ÅSICO X 12 PRESERVATIVOS (DM)",
+    "laboratory": "RECKITT BENCKISER CHILE",
+    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_891683-MLC51357722871_082022-O.webp",
+    "status": 405,
+    "new_url": "https://http2.mlstatic.com/D_NQ_NP_891683-MLC51357722871_082022-O.webp",
     "action": "fixed"
   },
   {
     "id": "e846015f-48ad-478b-9c62-5a8da4f0f086",
     "name": "ETIQUET DAMA CR.60GR",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_690458-MLU78830817043_082024-O.webp",
+    "laboratory": "GLAXO CONSUMO",
+    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_919983-MLC50350899782_062022-O.webp",
     "status": 405,
-    "action": "nulled"
-  },
-  {
-    "id": "749deb48-aafd-469b-b7d0-fef71f4a35c4",
-    "name": "ETIQUET WOMEN DELICIOUS R-ON DES X 60 GR",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_778540-MLC74049229400_012024-O.webp",
-    "status": 405,
-    "new_url": "https://http2.mlstatic.com/D_NQ_NP_778540-MLC74049229400_012024-O.webp",
-    "action": "fixed"
-  },
-  {
-    "id": "a89e2e9a-17bd-4e1e-acfd-d54cc297d14b",
-    "name": "ETOVITAE COMPRIMIDOS 90 MG X 14",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwb3156e67/images/large/386656-etovitae-etoricoxib-90-mg-14-comprimidos-recubiertos.jpg?sw=1000&sh=1000",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "d172f423-c0f6-424d-b019-0191e4758eb3",
-    "name": "EUCERIN AQUAPHOR REPARACION DE LABIOS 10 ML",
-    "broken_url": "https://dermalife.co/wp-content/uploads/2022/01/638750340027aquaphorpomadareparadoralabiosblistertubo.jpeg",
-    "status": 404,
-    "new_url": "https://http2.mlstatic.com/D_NQ_NP_775282-MCO46923108073_072021-O.webp",
+    "new_url": "https://http2.mlstatic.com/D_NQ_NP_919983-MLC50350899782_062022-O.webp",
     "action": "fixed"
   },
   {
     "id": "5b83ba38-09c8-439e-8e84-c147fe7a0500",
     "name": "EUCERIN SUN FPS 50+ BODY SP X 200 ML",
+    "laboratory": "BEIERSDORF",
     "broken_url": "https://media02.farmaciaslider.com.ar/22168-thickbox_default/eucerin-sun-body-spray-transparente-fps-50-200-ml.jpg",
     "status": 403,
-    "new_url": "https://media02.farmaciaslider.com.ar/22168-thickbox_default/eucerin-sun-body-spray-transparente-fps-50-200-ml.jpg",
+    "new_url": "https://farmaciapesado.com.ar/wp-content/uploads/2024/06/imagen1_eucerin_sun_fps50_spray_transparente_imagen1.webp",
     "action": "fixed"
   },
   {
-    "id": "0ab377eb-ff11-4c7b-bce1-4f144f6be3f2",
-    "name": "EUTIROX 88MCG.50COM.",
-    "broken_url": "https://www.benavides.com.mx/media/catalog/product/cache/1e14d9bf4283b604380ef95a7c475a07/2/0/20240115_1016401.jpg",
-    "status": 403,
-    "action": "nulled"
-  },
-  {
-    "id": "6f642ddb-95e2-4761-b074-bb3c2d5e6d23",
-    "name": "FASARAX JBE.120ML.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwa1a407e8/images/large/111021.jpg",
+    "id": "21621d25-e059-4a0a-ad35-e0f484fdbcd8",
+    "name": "GLUCOMETRO KIT GLICEMIA DIABECHECK",
+    "laboratory": "INSUMOS MEDICOS",
+    "broken_url": "https://fritzsb.cl/wp-content/uploads/2024/04/D_NQ_NP_938217-MLU72648239606_112023-O.webp",
     "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "07c00dd8-039d-480a-8227-6b7132946c61",
-    "name": "FENITOINA SOD.PROMPT 100MG.30COM. CHILE",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw7a6f9586/images/large/2069-fenitoina-sodica-100-mg-30-comprimidos.jpg",
-    "status": null,
-    "new_url": "https://i5.walmartimages.com/asr/39ce2386-1576-443a-af42-fb2fd3b78e02.0f0b8cb2e49a2f4b97a81de91c1cb919.jpeg",
-    "action": "fixed"
-  },
-  {
-    "id": "8f56bfbd-3e70-4958-b0da-47f5153a550d",
-    "name": "FESEMA LF INH.200DS.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw462e4fc0/images/large/104023-fesema-lf-inhalador-bucal-200-dosis-salbutamol-100-mcg-ds.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw462e4fc0/images/large/104023-fesema-lf-inhalador-bucal-200-dosis-salbutamol-100-mcg-ds.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "15799b4f-8898-4b08-96f4-a32a8bbde2ca",
-    "name": "FLAPEX GTS 4% X 15 ML",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw2a4a4622/images/large/67072-flapex-simeticona-4-gotas-15-ml.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "f9cd306d-c741-446c-897c-b17205d52bfe",
-    "name": "FLECTANE 500/20MG.10COM.REC.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwc64772af/images/large/292505-sanitas-naproxeno-50020-10-comprimidos-con-recubierto-enterico.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "c2341f5b-0da9-48a7-9e39-e1e0cc8ecaf4",
-    "name": "FLECTOR GEL 1,29% 60 GRS",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwe7b7612a/images/large/250983-flector-gel-topico-60-gr-diclofenaco-epolamina-129.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "1a27c9c2-ccef-4dab-932d-69e1f0584ca6",
-    "name": "FLUCLOXACILINA CAP 500 MG X 12 MDC",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw587b09ce/images/large/2322-3-flucloxacilina-capsula-12-unidades-flucloxacilina-500-mg.jpg",
-    "status": null,
-    "new_url": "https://farmex.cl/cdn/shop/files/flucloxacilina-500-mg-x-12-capsulas-curaespring-curaespring-155666_1024x1024.jpg?v=1722572956",
-    "action": "fixed"
-  },
-  {
-    "id": "21376e8e-e617-4d49-a67a-c8bb022c5985",
-    "name": "FLUOXETINA 20MG.20COM.(B.E) CHILE",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwd84b7612/images/large/276309-fluoxetina-bioequivalente-comprimido-20-unidades-fluoxetina-20-mg.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwd84b7612/images/large/276309-fluoxetina-bioequivalente-comprimido-20-unidades-fluoxetina-20-mg.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "c2b7716e-fab9-442c-bd6d-9238fdcdd081",
-    "name": "FOILLE UNG.28GR",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw23f71294/images/large/33012-3-foille--benzocaina-4-unguento-25-gr.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "ed302322-e019-4ece-b616-5a0a29381483",
-    "name": "FOLISANIN 1MG.30COM.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwe010119d/images/large/12078-folisanin-comprimido-30-unidades-acido-folico-1-mg.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "c9f020a6-92d2-4a8c-b591-e3d1d54b8fd8",
-    "name": "FOLISANIN 5MG.30COM.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwf6440638/images/large/12164-folisanin-comprimido-30-unidades-acido-folico-5-mg.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwf6440638/images/large/12164-folisanin-comprimido-30-unidades-acido-folico-5-mg.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "c6c7a7a1-b023-4cbe-b353-9e0ffe7e13c9",
-    "name": "FORXIGA 10MG.28COM.",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_841162-MLM77227075403_062024-O.webp",
-    "status": 405,
-    "new_url": "https://phemedica.com.mx/wp-content/uploads/2025/09/imgi_172_5000456076692_01.png",
-    "action": "fixed"
-  },
-  {
-    "id": "54480b56-92f6-4d30-a1a3-6735a2c72c44",
-    "name": "FREEGEN GEL SOL.OFT.1%15M",
-    "broken_url": "https://api.redfarma.cl/web/v1.4/Articulo/imagen_160-0032.jpg",
-    "status": null,
-    "new_url": "https://cdn.shopify.com/s/files/1/0520/3312/6568/products/freegengel_1414x1414.jpg?v=1677101440",
-    "action": "fixed"
-  },
-  {
-    "id": "f1f28c8b-0946-41e8-88b0-3e77ba9b6a70",
-    "name": "GASTROLEN 30COM.R.E.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw72cb4084/images/large/12174-gastrolen-comprimido-recubierto-30-unidades-clordiazepoxido-5-mg.jpg",
-    "status": null,
-    "new_url": "https://farmex.cl/cdn/shop/products/gastrolen-x-30-comprimidos-chemopharma-993907_1024x1024.jpg?v=1692989477",
-    "action": "fixed"
-  },
-  {
-    "id": "b43f87b6-62b6-40d0-9fb5-f13fd3e50fa1",
-    "name": "GAVISCON MENTA 8COM.MAST.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwc693a102/images/large/261770-gaviscon-menta-comprimido-masticable-8-unidades-alginato-250-mg.jpg?sw=295&sh=295",
-    "status": null,
-    "new_url": "https://www.mercadofarma.cl/cdn/shop/files/Gavisconsabormenta8Comprimidosmasticables.webp?v=1692285076",
-    "action": "fixed"
-  },
-  {
-    "id": "0d4e8a98-af9c-4005-8c15-7f98bbcaf947",
-    "name": "GEMFIBROZILO 600MG.20COM.REC.CHILE",
-    "broken_url": "https://drogueriascomfenalco.com/image/cache/catalog/FOTOS/LINEA+GENERICA(VENTA+LIBRE)/AMERICAN+GENERICS(LA+FRANCOL)/GEMFIBROZILO_5271_0292-600x600.PNG",
-    "status": 404,
-    "action": "nulled"
-  },
-  {
-    "id": "1a5815c6-3a41-42b7-967f-a681eb2f6a41",
-    "name": "GENIOL FLU JBE.100ML",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwa75724d1/images/large/268732-geniol-flu-jarabe-100-ml-pseudoef-30-mg-5ml.jpg",
-    "status": null,
-    "new_url": "https://farmalife.vteximg.com.br/arquivos/ids/179630-1200-1200/7796285286804.jpg?v=638137043808070000",
-    "action": "fixed"
-  },
-  {
-    "id": "076c554b-8867-4707-bec8-3aa97c41248d",
-    "name": "GENIOL SOBRE DIA 5GR",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw57939d29/images/large/261528-2-geniol-niÒos-paracetamol-160-mg-16-comprimidos-masticables.jpg",
-    "status": null,
-    "new_url": "https://farmex.cl/cdn/shop/products/geniol-compuesto-caliente-dia-5-g-mintlab-834925_1024x1024.webp?v=1692989625",
-    "action": "fixed"
-  },
-  {
-    "id": "d203b90a-d1ee-4cea-9537-46609c0f6917",
-    "name": "GENIOL SOBRE NOCHE 5GR",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw57939d29/images/large/261528-2-geniol-niÒos-paracetamol-160-mg-16-comprimidos-masticables.jpg",
-    "status": null,
-    "new_url": "https://milab.cl/wp-content/uploads/2022/07/GENIOL-NOCHE-Oral-Sobre-600x600.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "c4bf6182-19f4-4f2e-9d1d-228db8ea31bd",
-    "name": "GESIDOL 1GR.20COM.(B.E)",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw0938b498/images/large/392102-gesidol-paracetamol-1-gr-20-comprimidos.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw0938b498/images/large/392102-gesidol-paracetamol-1-gr-20-comprimidos.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "b9a81d02-dbc0-42ef-92d9-c58f970f7444",
-    "name": "GESTEL 200MG.30CAP.",
-    "broken_url": "https://www.fraccion.cl/images/thumbs/0181743_550.webp",
-    "status": 500,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwfe220aa5/images/large/287846-gestel-progesterona-200-mg-30-capsulas-blandas.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "065c29eb-60f2-4c74-a7a5-b7228f20013a",
-    "name": "GLAUCOTENSIL SOL.OFT. 5ML",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw0ce2de2d/images/large/161161-glaucotensil-solucion-oftalmica-5-ml-dorzolamida-2.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "f35bdd06-b5d8-4e84-acaa-aff12a186bfd",
-    "name": "GLAUCOTENSIL T OFT 5ML",
-    "broken_url": "https://beta1.cruzverde.com.co/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Colombia/default/dw182dd167/images/large/33136-1-GLAUCOTENSIL-T-20MG+5MG-ML-SOL-OFT-FCO-X-5ML.jpg?sw=1000&sh=1000",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "84dfa486-5637-4a01-91fc-9329178cc54c",
-    "name": "GLIMEFOR XR COM.500MG.30",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwe1d3f25d/images/large/296291-glimefor-xr-metformina-500-mg-30-comprimidos.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw4ae0f370/images/large/400036-2-glimefor-xr-metformina-de-liberacion-prolongada-1000-mg-30-comprimidos.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "659cb63b-70c3-41b0-a46c-0037daf6d538",
-    "name": "GLUCOSAN XR COM 750 MG X 30",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw75505a92/images/large/391789-glucosan-xr-metfornica-clorhidrato-750-mg-60-comprimidos-recubiertos-de-liberacion-prolongada.jpg",
-    "status": null,
-    "new_url": "https://www.farmaciasahumada.cl/on/demandware.static/-/Sites-ahumada-master-catalog/default/dw25745334/images/products/88990/88990.jpg",
+    "new_url": "https://fritzsb.cl/wp-content/uploads/2024/04/D_NQ_NP_938217-MLU72648239606_112023-O.webp",
     "action": "fixed"
   },
   {
     "id": "c29a67b3-b80a-48b0-b397-ee5a49f60390",
     "name": "GOICOECHEA DIABET TX CR.HID. P/S 250GR",
+    "laboratory": "GENOMALAB",
     "broken_url": "https://http2.mlstatic.com/D_NQ_NP_907064-MLC48646728207_122021-O.webp",
     "status": 405,
-    "action": "nulled"
-  },
-  {
-    "id": "6a7a959e-42ce-48c6-ab68-ea28509a97ef",
-    "name": "GOTELY SOLI 0,4MG/6MG X 30 COM",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw853a97c7/images/large/573173.3.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw159f9e82/images/large/573173.1.jpg",
+    "new_url": "https://farmaciasvitasur.cl/wp-content/uploads/2024/11/goicoechea-diabet-tx-cr.hid_.p-s250gr.-.webp",
     "action": "fixed"
   },
   {
     "id": "96f20cb9-99c7-409b-be01-197cc3f1cadb",
     "name": "GP COPOS DE ALGODON 3G BOLSA 100 UN",
+    "laboratory": "GENERICOS",
     "broken_url": "https://http2.mlstatic.com/D_NQ_NP_629448-MLM54587547822_032023-O.webp",
     "status": 405,
-    "new_url": "https://farmaciaschilespa.cl/wp-content/uploads/2022/09/copos-algodon-x-100.png",
+    "new_url": "https://http2.mlstatic.com/D_NQ_NP_629448-MLM54587547822_032023-O.webp",
     "action": "fixed"
-  },
-  {
-    "id": "8e92676e-5b78-403a-8296-48aec61fd3a9",
-    "name": "GRIPAREX 180 MG 20 COMP (ECHINACEA PURPUREA)",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw2c601e6a/images/large/534236-2-griparex-echinacea-purpurea-180mg-20-comprimidos-recubiertos.jpg",
-    "status": null,
-    "action": "nulled"
   },
   {
     "id": "efea51a5-f740-4ca8-85c7-67389f9a0835",
     "name": "GUMMIES COLAGENO BIOTINA Y VIT C GOMITAS X 30",
+    "laboratory": "GREEN MEDICAL",
     "broken_url": "https://http2.mlstatic.com/D_NQ_NP_640053-MLC51540988801_092022-O.webp",
     "status": 405,
-    "action": "nulled"
-  },
-  {
-    "id": "135de432-5dcb-4185-b4c3-13c2bf139d32",
-    "name": "HEEL ENGYSTOL 50COM.SUBLING.",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_843070-MLA100060696651_122025-O.webp",
-    "status": 405,
-    "action": "nulled"
-  },
-  {
-    "id": "d49d08f0-d38b-4cf0-a363-d342d00b69a6",
-    "name": "IBUCALM CAP BLA 400 MG X 10 (BE)",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwa452af95/images/large/545276-ibucalm-ibuprofeno-400-mg-10-capsulas-blandas.jpg?sw=1000&sh=1000",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "aca87014-d707-44b1-b934-6fc3b695015a",
-    "name": "INFOR PRO3.30COM.REC.",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwde6c0a5e/images/large/261758-infor-pro-3-vitaminas-30-comprimidos.jpg?sw=1000&sh=1000",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "710de695-8fe0-4726-aebd-31dee2a13821",
-    "name": "JABON AFRECHO X 90 GR QUIMNATURA",
-    "broken_url": "https://biofar.cl/29113-product_zoom/jabÛn-afrecho-90g.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "9e993474-351a-494d-ba09-38941e268849",
-    "name": "JARDIANCE DUO 12.5/850MG.60COM.",
-    "broken_url": "https://pro.boehringer-ingelheim.com/br/sites/default/files/2024-11/Caixa+de+Jardiance+Duo.png",
-    "status": 404,
-    "action": "nulled"
+    "new_url": "https://http2.mlstatic.com/D_NQ_NP_640053-MLC51540988801_092022-O.webp",
+    "action": "fixed"
   },
   {
     "id": "e969cd9a-08b1-4fa5-b7b7-ef47f9f5f8dd",
     "name": "JERINGA 10 CC LOCK C/A 21 X 1 1/2",
+    "laboratory": "REUTTER",
     "broken_url": "https://http2.mlstatic.com/D_NQ_NP_986668-MLC69020485104_042023-O.webp",
     "status": 405,
-    "action": "nulled"
-  },
-  {
-    "id": "50c5f5b9-18a0-4412-9fa9-52c6a8960837",
-    "name": "JERINGA 3CC SLIP CON AGUJA 21X11/2",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_664784-MLC49793920430_042022-O.webp",
-    "status": 405,
-    "new_url": "https://www.diprolab.cl/docs/productos/MProducto_273185353074.png",
-    "action": "fixed"
-  },
-  {
-    "id": "d13bde5d-5197-4dda-bedd-3a365def8fc7",
-    "name": "KETOROLACO 10MG.10COM. MINTLAB",
-    "broken_url": "https://www.farmaciasgacema.cl/medios/2024/11/31067-KETOROLACO-10-MG-10-COMP-MINTLAB.png",
-    "status": 404,
-    "new_url": "https://www.ecofarmacias.cl/wp-content/uploads/2023/01/ketorolaco-10-x-10-480x480.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "b0f86fe4-beb6-4a96-9d0c-439e0e0a4b28",
-    "name": "KETOROLACO TROMETAMOL AMP 30 MG/1 ML",
-    "broken_url": "https://www.farmadon.com.ve/wp-content/uploads/2021/10/Ketorolaco-Ampolla-30mg1ml-I.MI_.V-ñ-Biosano.png",
-    "status": null,
-    "new_url": "https://cdn.shopify.com/s/files/1/0096/4411/3984/products/KETOROLACO_2100x.png?v=1657582134",
-    "action": "fixed"
-  },
-  {
-    "id": "ee9c4767-b4f8-4387-b284-8e0b6c15662c",
-    "name": "KNOP FENOKOMP 39.90COM.",
-    "broken_url": "https://r.btcdn.co/22994/large/809957-7803504002395.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "756f885d-101e-4370-971a-57e2ceec9552",
-    "name": "KOTEX NORMAL NOCHE C/A FEM TOA X 8",
-    "broken_url": "https://i0.wp.com/farmaciaseconomicas.com.gt/wp-content/uploads/2022/03/kotex-nocturnas-farmacias-economicas-xela.jpg",
-    "status": 404,
-    "new_url": "https://i0.wp.com/farmaciaseconomicas.com.gt/wp-content/uploads/2022/03/kotex-nocturnas-farmacias-economicas-xela.jpg",
+    "new_url": "https://deltamed.cl/tienda/wp-content/uploads/2020/12/aa-delta-73-300x300.jpg",
     "action": "fixed"
   },
   {
     "id": "c9eadcba-8e2f-46e1-a049-e1231d413071",
     "name": "KOTEX U/FINA C/A SUAVE X16",
+    "laboratory": "KIMBERLY CLARK",
     "broken_url": "https://r.btcdn.co/r/eyJzaG9wX2lkIjoyMzA1MywiZyI6IjEwMDB4In0/04e62ea480d338b/858108-TH-KOTEX-U.FINA-16U-SUAVE.png",
     "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "16cbfecf-1799-4c50-aa3a-e00bb36bbeb9",
-    "name": "LACSURE PVO 800 GR OPKO",
-    "broken_url": "https://www.parafarma24.com/imgs/productos_parafarmacia/resized/680x680/8414042005718.jpg",
-    "status": 403,
-    "action": "nulled"
+    "new_url": "https://r.btcdn.co/r/eyJzaG9wX2lkIjoyMzA1MywiZyI6IjEwMDB4In0/04e62ea480d338b/858108-TH-KOTEX-U.FINA-16U-SUAVE.png",
+    "action": "fixed"
   },
   {
     "id": "9e66e895-a32f-43c5-b2d8-89e427897f30",
     "name": "LEBLON EXTREME AE FPS50+ X 50 GR",
+    "laboratory": "MAVER",
     "broken_url": "https://www.fraccion.cl/images/thumbs/0179302_550.webp",
-    "status": 500,
+    "status": 403,
     "new_url": "https://www.fraccion.cl/images/thumbs/0179302_550.webp",
     "action": "fixed"
   },
   {
     "id": "8e5e132b-7f8c-44c3-8313-301d7b99d8c8",
     "name": "LECHUGA CR.60ML",
-    "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_102-0142.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "cefe98e7-1bb2-4722-981b-345f2d14b3b8",
-    "name": "LECITINA DE SOYA CAP X 100 GREEN MED",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_710981-MLC92705540985_092025-O.webp",
-    "status": 405,
-    "new_url": "https://http2.mlstatic.com/D_NQ_NP_710981-MLC92705540985_092025-O.webp",
-    "action": "fixed"
-  },
-  {
-    "id": "7ac0ea19-5eb8-4ef9-a0af-9a0434ad58cb",
-    "name": "LERITAC 500 MG X 30 COM",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw02309d57/images/large/547759-leritac-levetiracetam-500-mg-30-comprimidos-recubiertos.jpg",
-    "status": null,
-    "new_url": "https://farmaciaroraima.cl/wp-content/uploads/2024/09/7804620835775.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "197fab33-9711-4763-b4ce-d5c1abf5459c",
-    "name": "LEUKOPLAST ECO KIDS P/CURITA X 12 UND",
-    "broken_url": "https://comfandivirtual.com.co/296979-large_default/curas-leukoplast-eco-kids-caja-12und-bsn-medical-ltda.jpg",
-    "status": 403,
-    "new_url": "https://http2.mlstatic.com/D_NQ_NP_995555-MLU74255118507_012024-O.webp",
-    "action": "fixed"
-  },
-  {
-    "id": "c68c6809-215a-4320-8f6d-9cff83cf2c9b",
-    "name": "LIFESTYLE SKYN LARGO.3",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwc190e9fa/images/large/271270-skyn-largo-preservativo.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwc190e9fa/images/large/271270-skyn-largo-preservativo.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "4bcd8de4-9b9e-4914-9662-2d55cf1a385e",
-    "name": "LIFESTYLES ROUGH RIDER.12UN.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw2f992345/images/large/111122-lifestyles-preservativos-12-unidades.jpg",
-    "status": null,
-    "new_url": "https://www.farmaciasahumada.cl/on/demandware.static/-/Sites-ahumada-master-catalog/default/dw822bd7dd/images/products/3559/3559.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "0f0b9c5d-fbaf-4d44-bf6c-5865ee24b0ad",
-    "name": "LIFESTYLES SKIN.2+1UN.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw714bf8a7/images/large/268816-lifestyles-preservativos-6-unidades.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "343cb513-e138-4761-a545-2a0a1272bfbe",
-    "name": "LIMONADA CALIENTE SBR 5 GR VALMA",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_847411-MLC76847570333_062024-O-limonada-caliente-60-sobres-vitamina-c-propoleo-zinc-valma.webp",
-    "status": 405,
-    "new_url": "https://i.ytimg.com/vi/e6XCeL3dSkk/maxresdefault.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "59b5479f-7bb9-413c-8162-86f0548f7b86",
-    "name": "LORATADINA 10MG.30COM. CHILE",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwe085f136/images/large/273015-loratadina-bioequivalente-comprimido-30-unidades-loratadina-10-mg.jpg",
-    "status": null,
-    "new_url": "https://farmacialabotika.cl/cdn/shop/products/7800007649126_LORATADINA_CHILE_LAB_10_COMPX30.jpg?v=1653143906",
+    "laboratory": "ARENSBURG",
+    "broken_url": "https://lagosdistribuidores.cl/shop/lechuga-cr-multiproposito-vintage-60-intensiva-cuerpo-250/CPESLEC203_LECHUGA_CR._CORPORAL_INTENSIVA-1.jpg",
+    "status": 525,
+    "new_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_102-0142.jpg",
     "action": "fixed"
   },
   {
     "id": "64a075cc-12be-4c34-a918-2ff9be718983",
     "name": "MAGNESIO+COMPL B X 20 TABS EFER SB MANDARINA VITA ENERGY",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_623197-MLC84348797077_052025-O-vita-energy-magnesio-complejo-b-20-tabletas-efervescentes.webp",
+    "laboratory": "VITAENERGY",
+    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_942095-MLC83609053998_042025-O.webp",
     "status": 405,
-    "new_url": "https://http2.mlstatic.com/D_NQ_NP_942095-MLC83609053998_042025-O.webp",
-    "action": "fixed"
-  },
-  {
-    "id": "452d534a-d792-4390-afbb-303914a7d7d1",
-    "name": "MALTOFER COM MAS 100 MG X 30",
-    "broken_url": "https://cdypos.nibitha.cl/public/img/productos/3/3-15075-418.png",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwe3302a6a/images/large/257095-maltofer-fol-plus-comprimido-recubierto-30-unidades-hierro-100-mg.jpg",
+    "new_url": "https://vitaenergy.cl/wp-content/uploads/vitaenergy-magnesiocomplejo-b.png",
     "action": "fixed"
   },
   {
     "id": "3871ce6f-e587-4fa7-ae33-b3dedb53931f",
     "name": "MANTECA CACAO PLATANO VALMA",
+    "laboratory": "VALMA",
     "broken_url": "https://http2.mlstatic.com/D_NQ_NP_970703-MLC90379770698_082025-O-valma-barra-manteca-de-cacao-sabor-platano.webp",
     "status": 405,
     "new_url": "https://http2.mlstatic.com/D_NQ_NP_970703-MLC90379770698_082025-O-valma-barra-manteca-de-cacao-sabor-platano.webp",
     "action": "fixed"
   },
   {
-    "id": "6a4493de-2447-4d33-9f3f-48adc4800f7c",
-    "name": "MASCARILLAS 3P BLANCO/ELASTICO X 50 UND",
-    "broken_url": "https://http2.mlstatic.com/D_Q_NP_2X_902797-MLC93927437121_102025-P-mascarillas-certificadas-cranberry-95-elasticos-50-pack-3.webp",
-    "status": 405,
-    "new_url": "https://dojiw2m9tvv09.cloudfront.net/46114/product/aamasdes6446.png?140&time=1717194006",
-    "action": "fixed"
-  },
-  {
-    "id": "6508f770-cbaf-403b-b9b6-6cfd0281d16a",
-    "name": "MAYBE SUPER STAY VINYL INK PEPPY LABIAL LIQUIDO 4,14 ML",
-    "broken_url": "https://www.uomax.com.ar/13848-large_default/labial-lÌquido-superstay-vinyl-ink-peppy-maybelline.jpg",
-    "status": null,
-    "new_url": "https://product-data.raiadrogasil.io/images/3536415.webp?width=450&height=450&quality=85&type=resize",
-    "action": "fixed"
-  },
-  {
-    "id": "315501bc-b199-47e3-a237-666327e0d6e1",
-    "name": "MAYON CR.ADH.EX FTE.30GR.",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_655139-MLC74291903793_012024-O.webp",
-    "status": 405,
-    "new_url": "https://tienda.market-care.com/13359-large_default/MAYON-CRE-ADHE-EXT-FTE-X-30-GR.jpg",
-    "action": "fixed"
-  },
-  {
     "id": "af7b6fba-1ac7-4ae8-9db2-3d51a04ea5fd",
     "name": "MEDAZOL GEL 0,75% X 30 GR",
+    "laboratory": "EUROFARMA CHILE",
     "broken_url": "https://www.fraccion.cl/images/thumbs/0171861_Medazol-gel-075-x-30-g_550.webp",
-    "status": 500,
-    "action": "nulled"
-  },
-  {
-    "id": "7824d91a-a4bf-4818-975e-c95302503eba",
-    "name": "MELIPASS 60CAP.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw8e683070/images/large/158049-melipass-capsula-60-unidades-passiflora-1275-mg.jpg",
-    "status": null,
-    "new_url": "https://www.farmaciascurie.cl/cdn/shop/files/Melipass_1024x1024_6b12b4a3-1f56-4183-9f36-4e5d436c6c85.png?v=1720930502",
-    "action": "fixed"
-  },
-  {
-    "id": "1861c24f-b193-43c8-b478-a74ed9e900ae",
-    "name": "MENTHOLATUM INH.NASAL",
-    "broken_url": "https://farmaciaszamarin.cl/wp-content/uploads/2024/07/Screen-Shot-2024-07-03-at-22.39.41.png",
     "status": 403,
-    "new_url": "https://farmaciaszamarin.cl/wp-content/uploads/2024/07/Screen-Shot-2024-07-03-at-22.39.41-600x598.png",
-    "action": "fixed"
-  },
-  {
-    "id": "2dc498cd-16f5-4ec5-91f2-0935a3ddb5a2",
-    "name": "MENTHOLATUM LATA 12GR.",
-    "broken_url": "https://api.redfarma.cl/web/v1.4/Articulo/imagen_200-3139.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw208f28ff/images/large/271005-mentholatum-lata-mentol-135-unguento-12-gr.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "7d0670ff-6fbe-4f4c-a8a7-1fb6ff732069",
-    "name": "METOCLOPRAMIDA 10MG.24COM. (B.E) LCHILE",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw06526206/images/large/268208.1.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw6e1a8d81/images/large/268208-metoclopramida-10-mg-24-comprimidos.jpg",
+    "new_url": "https://www.farmaciasahumada.cl/dw/image/v2/BJVH_PRD/on/demandware.static/-/Sites-ahumada-master-catalog/default/dw2d026999/images/products/71277/71277.jpg?sw=1050&sh=1050&sm=fit",
     "action": "fixed"
   },
   {
     "id": "b82c5f45-7816-452e-9512-f23759eb2f64",
-    "name": "MICOLAC 5% LACA U—AS X 3 ML",
+    "name": "MICOLAC 5% LACA U√ëAS X 3 ML",
+    "laboratory": "D&M PHARMA S.A.",
     "broken_url": "https://www.fraccion.cl/images/thumbs/0025690_Micolac-5-laca-para-unas-x-3-ml_550.webp",
-    "status": 500,
+    "status": 403,
     "new_url": "https://www.fraccion.cl/images/thumbs/0025690_Micolac-5-laca-para-unas-x-3-ml_550.webp",
-    "action": "fixed"
-  },
-  {
-    "id": "a6a0be54-491a-4c94-a44b-eb0d94d65108",
-    "name": "MOVIDOL 200MG 30CAPS",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw3b50a6eb/images/large/272133-movidol-mebeverina-200-mg-30-capsulas-liberacion-prolongada.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "a2ae80a3-e6cd-4be5-b84f-68da108b1627",
-    "name": "MUNO 5 CAP X 30",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw7ee267ce/images/large/555314-3-muno-5-probiotico-suplemento-alimentario-30-capsulas.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "f5158e3a-4f38-424a-a586-d36b9ce5a76a",
-    "name": "MUPAX UNG.2% 7.5GR",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwff0e310e/images/large/286987-mupax-mupirocina-2-unguento-8-gr.jpg?sw=1000&sh=1000",
-    "status": null,
-    "new_url": "https://farmaciaroraima.cl/wp-content/uploads/2024/09/7795347982890.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "52830b46-b70e-4ef6-b66c-95b78d9dc537",
-    "name": "NAN 1 L-COMFORTIS PVO X 800 GR",
-    "broken_url": "https://www.farmaciaspehuen.cl/web/image/product.product/21199/image_1024/[7501058644107]+Nan+L-Comfortis+1+800+g+FÛrmula+L·ctea+0+a+6+Meses+NestlÈ?unique=fc23118",
-    "status": null,
-    "new_url": "https://www.farmaciasahumada.cl/on/demandware.static/-/Sites-ahumada-master-catalog/default/dw4cb9332b/images/products/92033/92033.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "2c1a4a57-7529-46ff-8e47-914369533f9d",
-    "name": "NASTIZOL COMP.10COM.REC.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwf4699ca2/images/large/9043-nastizol-jarabe-120-ml-pseudoefedrina-30-mg-5ml.jpg",
-    "status": null,
-    "new_url": "https://etifarma.cl/wp-content/uploads/2023/06/NASTIZOL-COMPT.-10-COMP.-REC.jpg",
     "action": "fixed"
   },
   {
     "id": "ad8af002-24da-4ed6-bccf-222339c9fefb",
     "name": "NATURALIST STEVIA 180ML",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_701996-MLC46951575248_082021-O.jpg",
-    "status": 405,
-    "action": "nulled"
-  },
-  {
-    "id": "6970f4e6-a8f0-416a-a8c1-7153956eeb73",
-    "name": "NATURALIST STEVIA 500COM.",
-    "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_128-0350.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw76ccd96e/images/large/264870-naturalist-stevia-500-tabletas.jpg?sw=1000&sh=1000",
+    "laboratory": "PRATER",
+    "broken_url": "https://www.fraccion.cl/images/thumbs/0177990_550.webp",
+    "status": 403,
+    "new_url": "https://www.fraccion.cl/images/thumbs/0177990_550.webp",
     "action": "fixed"
   },
   {
     "id": "2078e7d3-d068-468e-a3b2-1821cb328797",
     "name": "NATURALIST SUCRALOSA 180ML",
-    "broken_url": "https://api.redfarma.cl/web/v1.4/Articulo/imagen_128-0386.jpg",
-    "status": null,
-    "action": "nulled"
+    "laboratory": "PRATER",
+    "broken_url": "https://www.fraccion.cl/images/thumbs/0177188_naturalist-sucralosa-180-ml_550.webp",
+    "status": 403,
+    "new_url": "https://www.fraccion.cl/images/thumbs/0177188_naturalist-sucralosa-180-ml_550.webp",
+    "action": "fixed"
   },
   {
     "id": "72535ee4-2594-4bf5-b063-4eba4fb90da9",
     "name": "NATURALOE GEL AFTER SUN X 280 ML",
+    "laboratory": "SIN ASIGNACION",
     "broken_url": "https://www.fraccion.cl/images/thumbs/0175579_naturaloe-after-sun-gel-x-280-ml_550.webp",
-    "status": 500,
-    "action": "nulled"
+    "status": 403,
+    "new_url": "https://http2.mlstatic.com/D_NQ_NP_842529-MLC45823681703_052021-O.webp",
+    "action": "fixed"
   },
   {
     "id": "54d65e7e-1ee4-4ddb-a6f2-6d4628a272a5",
     "name": "NEFERSIL 125MG.10COM.",
+    "laboratory": "PHARMA INVESTI",
     "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_126-0025.jpg",
-    "status": null,
-    "new_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_126-0025.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "6f6c5eb3-45e2-41a0-b9c7-35f97340174b",
-    "name": "NEFEX DUO CAP 0,5/0,4 MG X 30",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw334f0efe/images/large/563380-nefex-duo-0,5-mg-0,4-mg-30-capsulas.jpg?sw=1000&sh=1000",
-    "status": null,
-    "new_url": "https://www.ecofarmacias.cl/wp-content/uploads/2022/07/Nefex-Duo-05-mg-04-mg-x-30.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "10332e58-f068-48da-af8c-839e3be378a3",
-    "name": "NEOLUCID LOC.LIMP.250ML.",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_968253-MLC44221671376_122020-O.webp",
     "status": 405,
-    "new_url": "https://http2.mlstatic.com/D_NQ_NP_968253-MLC44221671376_122020-O.webp",
+    "new_url": "https://cdn.shopify.com/s/files/1/0581/6687/0176/products/7730969300332_NEFERSIL_125MG_COMP_X10_a0093df6-95e8-4251-b730-1b4ed03863b4_1600x.jpg?v=1651596312",
     "action": "fixed"
   },
   {
     "id": "13e5d154-b6a5-4e09-8f0a-28f5bd996d61",
     "name": "NISTAGLOS CR.15GR.",
+    "laboratory": "ANDROMACO",
     "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_007-0077.jpg",
-    "status": null,
-    "new_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_007-0077.jpg",
+    "status": 405,
+    "new_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwe9cee5eb/images/large/15007-2-nistaglos-crema-topica-15-gr-achipoglos-62500-ui.jpg?sw=1000&sh=1000",
     "action": "fixed"
   },
   {
     "id": "f405ac5b-f420-4289-b8e6-e7f007a5f095",
     "name": "NITRATO PLATA LAPIZ",
-    "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_002-0030.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "1623a773-c41e-4e86-aeff-3aefd90cf5c7",
-    "name": "NITROFURANTOINA MACRO 100MG.10CAP.(B.E) MINTLAB",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw41ed808f/images/large/199269-nitrofurantoina-macrocristales-capsula-10-unidades-nitrofurantoina-100-mg.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw6240aeb3/images/large/199269.1.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "6fdeee90-746c-418f-b5a5-5bc975690089",
-    "name": "NIVEA FACE TOALLITAS DESMAQUILLANTES SUAVE",
-    "broken_url": "https://media03.farmaciaslider.com.ar/19218-thickbox_default/nivea-facial-toallitas-desmaquillantes-suaves-25-u.jpg",
-    "status": 403,
-    "new_url": "https://media03.farmaciaslider.com.ar/19218-thickbox_default/nivea-facial-toallitas-desmaquillantes-suaves-25-u.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "bb2a391f-e52d-4210-8b5c-84987af5a2cb",
-    "name": "NOSCAPINA 20MG.20COM.",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw4a876f30/images/large/199233-noscapina-20-mg-20-comprimidos.jpg?sw=1000&sh=1000",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw4a876f30/images/large/199233-noscapina-20-mg-20-comprimidos.jpg?sw=1000&sh=1000",
-    "action": "fixed"
-  },
-  {
-    "id": "ed2af2c1-4a99-46d1-88e9-518dcc16e4eb",
-    "name": "NOVAFEM JER.PRELLENADA",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwc13cee6a/images/large/67299-novafem-suspension-inyectable-jeringa-prellenada-ampolla-1-unidad-estradiol-25-mg.jpg",
-    "status": null,
-    "new_url": "https://www.ecofarmacias.cl/wp-content/uploads/2021/10/Pack-Novafem-Jeringa.jpg",
+    "laboratory": "MUNNICH",
+    "broken_url": "https://api.redfarma.cl/web/v1.4/Articulo/imagen_002-0030.jpg",
+    "status": 405,
+    "new_url": "https://gerimedical.com/24099-large_default/nitrato-de-plata-en-lapiz-para-verrugas-aga-cremas-sprays-y-polvos-podologicos.jpg",
     "action": "fixed"
   },
   {
     "id": "e49ac1bb-5d49-480a-8d12-f085362335cf",
     "name": "NP 27 30ML",
+    "laboratory": "FARMOQUIMICA DEL PACIFICO",
     "broken_url": "https://cdypos.nibitha.cl/public/img/productos/3/3-7270-594.png",
     "status": null,
-    "new_url": "https://farmaciaroraima.cl/wp-content/uploads/2024/09/7800057001776.jpg",
+    "new_url": "https://cdypos.nibitha.cl/public/img/productos/3/3-7270-594.png",
     "action": "fixed"
   },
   {
-    "id": "9409d2dd-b05f-4ed1-bf3d-8602b9186069",
-    "name": "OFTAFILM SP SOL.OFT.10ML",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw7cee58dd/images/large/276535-oftafilm-sp-solucion-oftalmica-10-ml-hialuronato-de-sodio-04.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw62406bdb/images/large/276535-oftafilm-sp-solucion-oftalmica-10-ml-hialuronato-de-sodio-04.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "461bda65-30b7-47b3-8bf9-bfba87866b5b",
-    "name": "OLMEPRESS COMREC.40MG.30",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw8e2281a7/images/large/298011-olmepress--olmesartan-medoxomilo-20-mg-30-comprimidos.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwe9c9f46b/images/large/298012-olmepress-olmesartan-40-mg-30-comprimidos-recubiertos.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "754cfea9-a4ff-48fe-9c02-d51fb93c0ad9",
-    "name": "OMEGA 3 CAP BLA X 60 GREEN MED",
-    "broken_url": "https://www.farmaciaspehuen.cl/web/image/product.product/84180/image_1024/[0764451423442]+Omega+3+Fish+Oil+60+C·psulas+Green+Medical?unique=167d57d",
-    "status": null,
-    "new_url": "https://cdn11.bigcommerce.com/s-1ckji0j190/images/stencil/1280x1280/products/2308/5366/OMEGA_3-6-9_CAPSULAS_x_60_FRASCO_SM__92759.1679672945.jpg?c=1",
-    "action": "fixed"
-  },
-  {
-    "id": "3637a9fa-ae46-4e20-9e16-09c420414474",
-    "name": "OPTI-FREE EXPRESS X 120 ML",
-    "broken_url": "https://www.fraccion.cl/images/thumbs/0168521_Opti-Free-Express-Solucion-x-120-ml_550.webp",
-    "status": 500,
-    "new_url": "https://farmex.cl/cdn/shop/products/opti-free-express-x-120-ml-alcon-444609_1024x1024.jpg?v=1692989586",
-    "action": "fixed"
-  },
-  {
-    "id": "61feff3a-39a4-4393-8c07-d84793842836",
-    "name": "ORALDENT CEPILLO SUAVE X 2 UND",
-    "broken_url": "https://www.mayordent.cl/wp-content/uploads/2020/10/Captura-de-pantalla-2025-06-09-112929.png",
+    "id": "87ee426b-5f9f-44fb-b2dd-87b06915d6f7",
+    "name": "NUTRUM SENIOR CAP 433 MG X 60 AURA",
+    "laboratory": "AURA VITALIS",
+    "broken_url": "https://rimage.ripley.cl/home.ripley/Attachment/MKP/8415/MPM10001721633/full_image-1.jpeg",
     "status": 403,
-    "new_url": "https://www.espol.cl/wp-content/uploads/2025/08/images_em71-80000_l_em71-80000-88bb761c-5979-4397-af9b-6130f28f7d40.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "46cb4bdb-280d-4b92-a07f-8e73378614a6",
-    "name": "ORALNE CAP.20MG.30",
-    "broken_url": "https://lookaside.instagram.com/seo/google_widget/crawler/?media_id=3424513641745563658",
-    "status": 403,
-    "action": "nulled"
-  },
-  {
-    "id": "ce0d8f7b-62bf-41e9-a09d-063422824b20",
-    "name": "OXIDO DE ZINC 10 GR",
-    "broken_url": "https://www.labscl.cl/wp-content/uploads/2021/11/Oxido-de-Zinc.png",
-    "status": null,
-    "new_url": "https://farmaciacoyoacan.com/cdn/shop/files/7506246000642_01.jpg?v=1723693846&width=1946",
-    "action": "fixed"
-  },
-  {
-    "id": "4d7ff69a-f9b7-46a2-8644-e9b07e16a303",
-    "name": "OXIDO DE ZINC SBR X 10 GR REUTER",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_727190-MLC77639474250_072024-O.webp",
-    "status": 405,
-    "action": "nulled"
-  },
-  {
-    "id": "3687632c-593b-4dc2-82d3-3aa19cd7a758",
-    "name": "PALDAR UNG.2%.5GR.",
-    "broken_url": "https://api.redfarma.cl/web/v1.4/Articulo/imagen_151-0005.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "dde8b66e-b7a5-4213-b2c3-408f145c4ccd",
-    "name": "PANTOCAL 40 MG X 28 COM",
-    "broken_url": "https://droxicolprd.vtexassets.com/arquivos/ids/173553-800-auto?v=638890709626600000&width=800&height=auto&aspect=true",
-    "status": 404,
-    "new_url": "https://www.farmaciasahumada.cl/dw/image/v2/BJVH_PRD/on/demandware.static/-/Sites-ahumada-master-catalog/default/dw18347f89/images/products/83501/83501.jpg?sw=525&sh=525&sm=fit",
+    "new_url": "https://rimage.ripley.cl/home.ripley/Attachment/MKP/8415/MPM10001721633/full_image-1.jpeg",
     "action": "fixed"
   },
   {
     "id": "7ad82ef4-1382-4568-8f7c-6ffb0b93f971",
     "name": "PAPINFLAM PLUS 300000 U.I. 30 COMP (PAPAINA)",
+    "laboratory": "GARDEN HOUSE",
     "broken_url": "https://www.fraccion.cl/images/thumbs/0177521_550.webp",
-    "status": 500,
-    "action": "nulled"
-  },
-  {
-    "id": "d164c7a7-baf7-46b3-8dfd-85e54f15c0a7",
-    "name": "PARACETAMOL 500MG.16COM.(B.E)ANDROMACO",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwe9364fa1/images/large/272241-1.jpg?sw=295&sh=295",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "c3c51e7c-38fd-481f-84e0-4cd9ecc7f33a",
-    "name": "PERFUNGOL PVO.80GR.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites/default/v7474c23a32d3141efa3d0adde228e87056abaceb/10-club.png",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "7f2bbde7-f114-45e9-9f47-c59f72e3bf71",
-    "name": "PIRETANYL 20COM.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw561fab51/images/large/41026-piretanyl-clorfen-322-mg-20-comprimidos.jpg",
-    "status": null,
-    "new_url": "https://farmex.cl/cdn/shop/products/piretanyl-x-20-comprimidos-pasteur-pasteur-788164_grande.jpg?v=1692989691",
-    "action": "fixed"
-  },
-  {
-    "id": "a2d1faa1-c5cc-40f1-9777-805e469de396",
-    "name": "PIRONAL FLU FTE.JBE.100ML",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw266b1338/images/large/257147-pironal-flu-ibuprofeno-15-mg5ml-suspension-100-ml.jpg",
-    "status": null,
-    "new_url": "https://www.bago.com.bo/wp-content/uploads/2021/10/Pironal-Flu-jarabe-web-800x800.png",
-    "action": "fixed"
-  },
-  {
-    "id": "324fd6d9-89f7-49eb-a3c7-67757803bb45",
-    "name": "POMADA ALCANFORADA 10%.25GR.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw46f93cd2/images/large/199090-pomada-alcanforada-alcanfor-10-unguento-25-gr.jpg",
-    "status": null,
-    "new_url": "https://http2.mlstatic.com/D_NQ_NP_718179-MLA82239706271_022025-O.webp",
-    "action": "fixed"
-  },
-  {
-    "id": "c737269a-ad18-48da-9099-68702bc0190e",
-    "name": "POSTPIL COM 1.5 MG X 1",
-    "broken_url": "https://d1gdxcnhvze1uh.cloudfront.net/catalogo/1697473905990-postpil.jpg",
-    "status": null,
-    "new_url": "https://www.ecofarmacias.cl/wp-content/uploads/2025/05/postpil-15-x-1.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "9c3f6890-6eea-4c68-a201-6723870201f3",
-    "name": "PREDUAL 10 COMP (PARACETAMOL+MEPIRAMINA+PAMABRON)",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw65e99042/images/large/13199-3-predual-10-comprimidos.jpg?sw=1000&sh=1000",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw9285c943/images/large/13199-predual-10-comprimidos.jpg?sw=1000&sh=1000",
-    "action": "fixed"
-  },
-  {
-    "id": "299ed49b-2fe6-48e5-9b99-71986c3dcbc9",
-    "name": "PRIMAQUIN 1MG.30COM.",
-    "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_136-7165.jpg",
-    "status": null,
-    "new_url": "https://www.farmaciasahumada.cl/on/demandware.static/-/Sites-ahumada-master-catalog/default/dw9411d247/images/products/11986/11986.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "2d85174c-e085-40a0-99b2-8816fc16d477",
-    "name": "PRIMAQUIN 2MG.30COM.",
-    "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_136-7166.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "53ef5a79-bbfc-4b28-a2e0-ce94b96a3d43",
-    "name": "PRO BIOTIX HIGH P.CAP.30",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_903785-MLC47654485066_092021-O.webp",
-    "status": 405,
-    "new_url": "https://farmex.cl/cdn/shop/files/probiotix-high-potency-x-30-capsulas-newscience-125009_grande.jpg?v=1704397829",
+    "status": 403,
+    "new_url": "https://www.fraccion.cl/images/thumbs/0177521_550.webp",
     "action": "fixed"
   },
   {
     "id": "26c6565d-2d20-4bcd-8450-08e1a36b963d",
     "name": "PROALID UNGUENTO 0,1% X 15 GR",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_672092-MLM74388403676_022024-O.webp",
-    "status": 405,
-    "new_url": "https://www.fraccion.cl/images/thumbs/0144545_Proalid-ung¸ento-01-x-15-g_550.webp",
+    "laboratory": "ROYALPHARMA",
+    "broken_url": "https://www.fraccion.cl/images/thumbs/0144545_Proalid-ung%C3%BCento-01-x-15-g_550.webp",
+    "status": 403,
+    "new_url": "https://www.fraccion.cl/images/thumbs/0144545_Proalid-ung%C3%BCento-01-x-15-g_550.webp",
     "action": "fixed"
   },
   {
     "id": "08e39ad3-cbfc-497b-984a-1ceffe3ba80c",
     "name": "PROBIOTICOS CAP X 30 PRANALAB",
+    "laboratory": "SIN ASIGNACION",
     "broken_url": "https://http2.mlstatic.com/D_NQ_NP_860845-MLC78823644330_092024-O-probiolab-proboticos-30-capsulas-pranalab.webp",
     "status": 405,
     "new_url": "https://http2.mlstatic.com/D_NQ_NP_860845-MLC78823644330_092024-O-probiolab-proboticos-30-capsulas-pranalab.webp",
     "action": "fixed"
   },
   {
-    "id": "8ebf5772-6562-4161-b31e-eee1219fc04b",
-    "name": "PROPRANOLOL 40MG.20COM. MINTLAB",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwf53ff36e/images/large/273864-propranolol-40-mg-20-comprimidos.jpg",
-    "status": null,
-    "new_url": "https://www.ecofarmacias.cl/wp-content/uploads/2025/08/Propranolol40mintlab.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "61778153-b72d-4877-974c-97cc44cbbc66",
-    "name": "PROZONE GEL X 100 GR",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwad1227f9/images/large/565638-prozone-gel-fotoprotector-fps-30-100-gr.jpg",
-    "status": null,
-    "new_url": "https://megaplace.cl/wp-content/uploads/2024/07/Prozone-100gr-800x800.jpg",
-    "action": "fixed"
-  },
-  {
     "id": "f3d54bf9-8bb8-457a-aee0-3e0a9425297c",
     "name": "Q-NAT JABON AZUFRE BARRA 90 GR",
+    "laboratory": "QUIMNATURA",
     "broken_url": "https://www.fraccion.cl/images/thumbs/0180147_quimnatura-jabon-azufre-barra-90-g_550.webp",
-    "status": 500,
+    "status": 403,
     "new_url": "https://www.fraccion.cl/images/thumbs/0180147_quimnatura-jabon-azufre-barra-90-g_550.webp",
     "action": "fixed"
   },
   {
     "id": "ca0d23f6-b9e2-4e8e-b4ad-1471f56cdb77",
     "name": "RECOVERY K TAPE NEGRO",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_742948-MLC71650255408_092023-O-recovery-k-tape-negro-5-cm-x-5-mt-precortada.webp",
-    "status": 405,
+    "laboratory": "COMERCIALIZADORA MARKETS CHILE SPA",
+    "broken_url": "https://falabella.scene7.com/is/image/Falabella/gsc_128352338_5165568_1?wid=800&hei=800&qlt=70",
+    "status": null,
     "new_url": "https://falabella.scene7.com/is/image/Falabella/gsc_128352338_5165568_1?wid=800&hei=800&qlt=70",
-    "action": "fixed"
-  },
-  {
-    "id": "aa30825c-f5c6-477b-942f-b0c10b729050",
-    "name": "RECOVERY RODILLERA DE COMP TM GRIS (DM)",
-    "broken_url": "https://www.recovery-chile.cl/wp-content/uploads/2023/09/Soporte-Gris-2-1024x1024.png",
-    "status": 404,
-    "new_url": "https://www.mercadofarma.cl/cdn/shop/products/WhatsAppImage2023-03-14at11.14.29.jpg?v=1678808125",
-    "action": "fixed"
-  },
-  {
-    "id": "5fc3d479-40f4-47af-807b-2af71d079812",
-    "name": "RECOVERY VENDA AUTOADH ROSADO 7.5CM X 4.5MTS",
-    "broken_url": "https://falabella.scene7.com/is/image/Falabella/gsc_128352342_5165570_1?wid=800&hei=800&qlt=70",
-    "status": null,
-    "new_url": "https://imagedelivery.net/4fYuQyy-r8_rpBpcY7lH_A/falabellaCL/128352343_01/w=800,h=800,fit=pad",
-    "action": "fixed"
-  },
-  {
-    "id": "18a7695b-8ae9-4b91-8a6f-6fe8ed9b8571",
-    "name": "REFLEXAN 10MG.20COM.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwb7115d43/images/large/161113-reflexan-comprimido-ranurado-20-unidades-ciclobenzaprina-10-mg.jpg",
-    "status": null,
-    "new_url": "https://farmacialabotika.cl/cdn/shop/products/7730969301018_REFLEXAN_10mg_Comp_Ranurados_x_20_1600x.jpg?v=1664377260",
     "action": "fixed"
   },
   {
     "id": "c3e71ae5-0b5c-4f64-b2ee-9521cc9d947e",
     "name": "REGENESIS MAX 30CAP.",
+    "laboratory": "EXELTIS CHILE",
     "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_385-0015.jpg",
-    "status": null,
+    "status": 405,
     "new_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_385-0015.jpg",
     "action": "fixed"
   },
   {
     "id": "66e9775f-985d-4bee-8bd1-5a6197ed8e22",
     "name": "REGENESIS ULTRA COM X 30",
-    "broken_url": "https://www.farmaloop.cl/_next/image/?url=https://farmaloop-publicos.s3.us-east-2.amazonaws.com/ecommerce/images/products/a595367f-a2a8-4056-95ba-78f2d147c02d-582059.webp&w=3840&q=75",
+    "laboratory": "EXELTIS CHILE",
+    "broken_url": "https://www.farmaloop.cl/_next/image/?url=https:%2F%2Ffarmaloop-publicos.s3.us-east-2.amazonaws.com%2Fecommerce%2Fimages%2Fproducts%2Fa595367f-a2a8-4056-95ba-78f2d147c02d-582059.webp&w=3840&q=75",
     "status": 404,
-    "new_url": "https://www.farmaloop.cl/_next/image/?url=https://farmaloop-publicos.s3.us-east-2.amazonaws.com/ecommerce/images/products/a595367f-a2a8-4056-95ba-78f2d147c02d-582059.webp&w=3840&q=75",
-    "action": "fixed"
-  },
-  {
-    "id": "258a72b5-c66c-4d2c-b559-8a947b002eb6",
-    "name": "REPELEX CR.80GR.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwcb8ed4ee/images/large/297383-2-repelex-crkids-80gr.jpg",
-    "status": null,
-    "new_url": "https://http2.mlstatic.com/D_NQ_NP_803909-MLC45216006753_032021-O.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "c811dca8-b377-4aa6-9620-af08da935bc4",
-    "name": "REPELEX CR.KIDS 80GR",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwcb8ed4ee/images/large/297383-2-repelex-crkids-80gr.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwcb8ed4ee/images/large/297383-2-repelex-crkids-80gr.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "696b545e-a19d-4bc1-8f89-6dffcebeddaa",
-    "name": "REPELEX FORTE SP.165ML",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw569e0420/images/large/277359-3-repelex-forte-dietiltoluamida-30-spray-165-ml.jpg",
-    "status": null,
-    "new_url": "https://jacky.cl/cdn/shop/files/Sintitulo_3.png?v=1713198951",
-    "action": "fixed"
-  },
-  {
-    "id": "7e75a1ab-8c13-42d8-8a9f-e9bad9a73bfd",
-    "name": "REXANEL COM.10MG. 30",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw1168e6ce/images/large/289529-rexanel-rupatadina-10-mg-30-comprimidos.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "a6445a60-b04b-4740-aefb-aa6501d61b7c",
-    "name": "RIPOL 50MG.1COM.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwe304ee4c/images/large/1484-ripol-comprimido-1-unidad-sildenafil-50-mg.jpg",
-    "status": null,
-    "new_url": "https://www.laboratoriochile.cl/wp-content/uploads/2019/03/Ripol_50MG_5C_BE_HD.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "89547249-a6f7-4ed5-a604-deb8845b46c2",
-    "name": "RISPYL COMREC.3MG.20",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwd5bc8666/images/large/266449-3-risperidona-3-mg-20-comprimidos.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwd037bb37/images/large/266449-risperidona-3-mg-20-comprimidos.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "974fcd9b-e4cb-4598-9a7a-21df476f3820",
-    "name": "RIVAROXABAN 20 MG 30 COMP. REC.",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw78e410d8/images/large/539241-3-xaroban-rivaroxaban-20-mg-30-comprimidos-recubiertos.jpg?sw=1000&sh=1000",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "1c719abd-3eec-4132-9180-05d0dcc02ea8",
-    "name": "ROSUVASTATINA 10MG.30COM.REC.(B.E)SEVENFARM",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw536a76ef/images/large/297510-forlip-rosuvastatina-10-mg-30-comprimidos.jpg",
-    "status": null,
-    "new_url": "https://farmaciacoyoacan.com/cdn/shop/files/7502226293738_01.jpg?v=1723698184&width=1946",
-    "action": "fixed"
-  },
-  {
-    "id": "64ab3636-eb6d-4f9e-ad25-2039114080bb",
-    "name": "SAL INGLESA 30GR",
-    "broken_url": "https://www.fraccion.cl/images/thumbs/0180137_quimnatura-sal-inglesa-bolsa-30-g_550.webp",
-    "status": 500,
-    "new_url": "https://www.fraccion.cl/images/thumbs/0180137_quimnatura-sal-inglesa-bolsa-30-g_550.webp",
-    "action": "fixed"
-  },
-  {
-    "id": "bb3e25f9-3a1b-4759-800b-b13cd3f45962",
-    "name": "SALBUTRAL AC.SF INH.250DS",
-    "broken_url": "https://farmaciasandaniel.cl/wp-content/uploads/2022/11/272083_SALB_SD.png",
-    "status": null,
-    "new_url": "https://laboratoriocassara.com.gt/wp-content/uploads/2021/08/Salbutral-AC1-972x1536.png",
-    "action": "fixed"
-  },
-  {
-    "id": "5ae83fe7-5b29-4db1-aef7-991a863880df",
-    "name": "SIMONDS ACEITE NI—OS 125ML",
-    "broken_url": "https://api.redfarma.cl/web/v1.4/Articulo/imagen_159-0263.jpg",
-    "status": null,
-    "new_url": "https://lagosdistribuidores.cl/sitio2019/wp-content/uploads/2020/10/BAOBSIM301_SIMONDS_ACEITE_PARA_NINOS_125-1.jpg",
+    "new_url": "https://inventario.nibitha.cl/public/img/productos/3/3-22287-967.png",
     "action": "fixed"
   },
   {
     "id": "2b166a15-e2d7-4795-91dd-62cc974f46e4",
     "name": "SIMONDS ESTUCHE RN",
+    "laboratory": "DURANDIN",
     "broken_url": "https://i.btcdn.co/r/czoyMzA1MyxnOjEwMDB4/38b9bb30/857839-Screenshot_1784.png",
     "status": null,
-    "new_url": "https://i.btcdn.co/r/czoyMzA1MyxnOjEwMDB4/38b9bb30/857839-Screenshot_1784.png",
-    "action": "fixed"
-  },
-  {
-    "id": "2d87dbcb-0a10-4174-9098-fe60aae3c32d",
-    "name": "SIMONDS JAB.GLICERINA 750ML",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_717916-MLC45216035551_032021-O.webp",
-    "status": 405,
-    "new_url": "https://cleanqueen.cl/wp-content/uploads/2022/03/jabon-liquido-glicerina-simonds-doypack-750-ml.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "b28ce09e-7b1b-4f45-a350-694e25499599",
-    "name": "SIMONDS JAB.LIQ.AVENA 1LT",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_922710-MLC45216034473_032021-O.webp",
-    "status": 405,
-    "new_url": "https://cleanqueen.cl/wp-content/uploads/2020/10/jabon-liquido-avena-simonds-dermocare-1-l-1.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "19c2421f-8cc3-4ecd-9d68-8be1be8f0ade",
-    "name": "SIMONDS PDA.COCEDURAS 30GR",
-    "broken_url": "https://sweetbabykid.cl/cdn/shop/files/1687195888403.jpg?v=1687197062&width=1946",
-    "status": null,
-    "new_url": "https://cdnx.jumpseller.com/distribuidora-pepito/image/62292217/resize/1996/1996?1744117921",
+    "new_url": "https://http2.mlstatic.com/D_NQ_NP_867453-MLC51203275998_082022-O-simonds-estuche-recien-nacido-x-1-pack.webp",
     "action": "fixed"
   },
   {
     "id": "4ca5eb83-4e3a-4dab-9ab3-e5ff442f39e3",
     "name": "SIMONDS UNG.LANOLINA 15GR.",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_798719-MLC77680993629_072024-O.webp",
+    "laboratory": "DURANDIN",
+    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_645774-MLC44402814760_122020-F.jpg",
     "status": 405,
     "new_url": "https://http2.mlstatic.com/D_NQ_NP_645774-MLC44402814760_122020-F.jpg",
     "action": "fixed"
@@ -1744,263 +371,46 @@
   {
     "id": "a122a6d9-9d5f-4e07-9d11-225ec4f022b0",
     "name": "SOLAR DERMOCREAM SPF50 HIDRATANTE 250 ML",
+    "laboratory": "SIMONDS",
     "broken_url": "https://http2.mlstatic.com/D_NQ_NP_872039-MLC80694411729_112024-O.webp",
     "status": 405,
     "new_url": "https://http2.mlstatic.com/D_NQ_NP_872039-MLC80694411729_112024-O.webp",
     "action": "fixed"
   },
   {
-    "id": "fcf9b69f-3792-4588-804e-66ab6e91720b",
-    "name": "SOLAR DERMOCREAM SPF50+ SENSITIVE 250 ML",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_987465-MLC80434252500_112024-O.webp",
-    "status": 405,
-    "new_url": "https://www.farmaciasahumada.cl/on/demandware.static/-/Sites-ahumada-master-catalog/default/dwcb41ede5/images/products/93915/93915.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "9b93074d-b070-49aa-b7ce-0351612c71d0",
-    "name": "SOLBIOT CAP X 30",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw54b39678/images/large/391794-2-solbiot-probioticos-30-capsulas.jpg?sw=1000&sh=1000",
-    "status": null,
-    "new_url": "https://farmaciaschilespa.cl/wp-content/uploads/2025/06/solbiot-1024x819.png",
-    "action": "fixed"
-  },
-  {
-    "id": "9eebce88-4d7f-4f09-84d8-26356586df49",
-    "name": "STICKER TERMOMETROX6 (12)",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw184e31a8/images/large/272658-sticker-termometro-adhesivo.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "fdd7f8f8-0b62-4f31-9ff0-48363753b9c0",
-    "name": "STREPFEN PAST.DIS8,75MG.8",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwaeb59bcc/images/large/266170-strepfen-flurbiprofeno-875-mg-miel-y-limon-8-pastillas.jpg",
-    "status": null,
-    "new_url": "https://www.pharmacieonline.lu/wp-content/uploads/2020/11/926b95fb7b5f43bf3681333ef2cb8579.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "a54a26cb-481c-45c5-8573-b6d43c156b49",
-    "name": "SUERO FISIOLOGICO 0.9%10ML. BIOSANO",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_614811-MLC52404830093_112022-O.webp",
-    "status": 405,
-    "action": "nulled"
-  },
-  {
-    "id": "ba2de236-0b83-49ab-8fa2-bff0162ade6b",
-    "name": "SULIX 0,4MG.30CAP.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwdbd20813/images/large/258271-sulix-capsulas-liberacion-prolongada-30-unidades-tamsulosina-04-mg.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "643db783-3f2f-405b-a98c-6bc97315ad33",
-    "name": "SYSTANE COMPLETE SP X 10 ML",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw088d4e74/images/large/573828.1.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "3470ba08-c176-40e0-8256-6a76fdbdb48f",
-    "name": "TAPSIN FORTE COM.REC.30",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwaadb86f2/images/large/299091-tapsin-forte-paracetamol-650-mg-30-comprimidos-recibiertos-con-tapa-de-seguridad-childproof.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwaadb86f2/images/large/299091-tapsin-forte-paracetamol-650-mg-30-comprimidos-recibiertos-con-tapa-de-seguridad-childproof.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "ea1b650b-ef62-41b3-8b81-d6906d19c3a7",
-    "name": "TAPSIN INF.160MG.16COM.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw008e3ebf/images/large/72127-3-tapsin-gotas-15-ml-paracetamol-100-mg-ml.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
     "id": "b5b72950-5b4e-43c7-9e67-dbef8b763893",
     "name": "TE PECTORAL BOLSA 15 G Q-NAT",
+    "laboratory": "QUIMNATURA",
     "broken_url": "https://www.fraccion.cl/images/thumbs/0178436_550.webp",
-    "status": 500,
+    "status": 403,
     "new_url": "https://www.fraccion.cl/images/thumbs/0178436_550.webp",
     "action": "fixed"
   },
   {
-    "id": "f997c640-9ed4-43e4-a2f6-c02fcb75be2a",
-    "name": "TEGADERM 10 CM X 25 CM (DM)",
-    "broken_url": "https://www.pharmacodel.com/61839-thickbox_default/tegaderm-3m-transparent-10-cm-x-25-cm-20.jpg",
-    "status": 404,
-    "action": "nulled"
-  },
-  {
-    "id": "224fedc0-95bb-4666-8ea8-dbf37853cb5c",
-    "name": "TEXINAL 40MG.30COM. (B.E)",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw45e5d1be/images/large/296003-texinal-40-telmisartan-80-mg-30-comprimidos.jpg",
+    "id": "7c8bcfb9-e233-4def-a0e0-ca1e6e8fbe6f",
+    "name": "TRIM C.U√ëAS CHICO MANOS",
+    "laboratory": "TRIM",
+    "broken_url": "https://farmacialenoier.com.ar/wp-content/uploads/2023/08/cortaunas-para-mano-trim.webp",
     "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw45e5d1be/images/large/296003-texinal-40-telmisartan-80-mg-30-comprimidos.jpg",
+    "new_url": "https://www.hofmannonline.cl/wp-content/uploads/2021/02/MYPALK015-1.jpg",
     "action": "fixed"
-  },
-  {
-    "id": "15579e89-da8c-45b1-bed4-2a6f288c4330",
-    "name": "TEXINAL 80 COM.80MG.30",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw48ad20f2/images/large/296004-texinal-80-telmisartan-80-mg-30-comprimidos.jpg",
-    "status": null,
-    "new_url": "https://api.cruzverde.cl/product-service/images/ribbons_bioequivalent.png",
-    "action": "fixed"
-  },
-  {
-    "id": "8a125f8d-1c5f-42ac-b7f0-84171bb98a74",
-    "name": "THYROZOL 10MG.50COM.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw78023b27/images/large/11158-thyrozol-comprimido-recubierto-50-unidades-tiamazol-10-mg.jpg",
-    "status": null,
-    "new_url": "https://beta1.cruzverde.com.co/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw78023b27/images/large/11158-thyrozol-comprimido-recubierto-50-unidades-tiamazol-10-mg.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "6b4c8e81-0997-4a23-badf-02d7233ac35d",
-    "name": "TINELLE 28COM.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw0cf186b5/images/large/260985-tinelle-comprimido-recubierto-28-unidades-dienogest-2-mg.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "58d37388-9060-4b3a-b058-402690feeac3",
-    "name": "TRAMADOL GTS.10ML.LCHILE",
-    "broken_url": "https://boticacentral.com/wp-content/uploads/2024/05/4582-1024x1024.png",
-    "status": null,
-    "new_url": "https://farmaciassimilaresmx.vtexassets.com/arquivos/ids/157851/1065.png?v=638152097940430000",
-    "action": "fixed"
-  },
-  {
-    "id": "2ca2b195-4b51-40a7-a208-1844db86012c",
-    "name": "URICONT 5MG.40COM.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwc3f7daab/images/large/260832-2-uricont-tu-forte-oxibutinina-clorhidrato-15-mg-30-comprimidos.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "fd0fd0ba-7e13-406c-b9b3-f0a33f84b35d",
-    "name": "URICONT-TU 10MG.30COM.",
-    "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_361-0002.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "d8ec6d5e-2fc7-46aa-861f-233866a77159",
-    "name": "VALAPLEX D 80/12,5MG.30COM.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw2f1c516e/images/large/250075-valaplex-d-80125-valsartan-80-mg-30-comprimidos-recubiertos.jpg?sw=295&sh=295",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "068d3bb5-0cd3-49ef-9515-2865d56eacb5",
-    "name": "VALMIRA COM 5/160 MG X 28",
-    "broken_url": "https://cdypos.nibitha.cl/public/img/productos/3/3-9275-957.png",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw27fafeab/images/large/403293-valmira-amlodipino-5-mg-valsartan-160-mg-28-comprimidos-recubiertos.jpg?sw=1000&sh=1000",
-    "action": "fixed"
-  },
-  {
-    "id": "f2c73e04-49b8-4921-9273-3db8fa2abc9a",
-    "name": "VANTUX MAX 60CAP.",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw42b9d34f/images/large/259839-vantux-max-capsula-60-unidades-biotina-015-mg.jpg?sw=1000&sh=1000",
-    "status": null,
-    "action": "nulled"
   },
   {
     "id": "3c01af7b-9874-4e28-b125-0a1b2e25dd83",
     "name": "VAPORUB UNG.POTE 12GR",
+    "laboratory": "CHILE",
     "broken_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_090-1440.jpg",
-    "status": null,
-    "new_url": "https://api.redfarma.cl/web/v1.5/Articulo/imagen_090-1440.jpg",
+    "status": 405,
+    "new_url": "https://www.belgochilena.cl/wp-content/uploads/2023/05/VICK-VAPORUB-5.261.33-UNG-CAJ-X-12POT-X-12GR-600x600.jpg",
     "action": "fixed"
-  },
-  {
-    "id": "34f245d5-c3fd-48b1-84a2-a82275f62634",
-    "name": "VENDA GASA DANAMULL 10 CM X 4 M",
-    "broken_url": "https://vanhoudt-medical.be/wp-content/uploads/2018/05/mediplast-danamull-10x4-1.jpg",
-    "status": null,
-    "action": "nulled"
   },
   {
     "id": "e2ad7971-9199-4e9d-9867-a02b2077aa95",
     "name": "VITABRAL 30CAP.BL.",
+    "laboratory": "MEDIPHARM S.A.",
     "broken_url": "https://http2.mlstatic.com/D_NQ_NP_812079-MLC49987940930_052022-O.jpg",
     "status": 405,
-    "action": "nulled"
-  },
-  {
-    "id": "24ca4a06-ed9f-4dab-a318-77eca98f26ab",
-    "name": "VITAMINA C + ZINC EFERV X 20 GERMAN ENERGY",
-    "broken_url": "https://www.fraccion.cl/images/thumbs/0177739_550.webp",
-    "status": 500,
-    "new_url": "https://cdn.tremus.cl/wp-content/uploads/2021/09/FRENTE-3010631-1.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "33d43b57-96f7-4f67-8712-31e70b614ff0",
-    "name": "VITAMINA C COM EFERV 1000 MG X 20 MDC",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_900297-MLU74087909214_012024-O.webp",
-    "status": 405,
-    "new_url": "https://farmex.cl/cdn/shop/products/vitamina-c-1000-mg-naranja-x-20-comprimidos-efervescentes-curae-spring-373417_1024x1024.jpg?v=1694767265",
-    "action": "fixed"
-  },
-  {
-    "id": "96d43d27-be81-4e7c-a50a-b56ad01d53e6",
-    "name": "VITAMINA C COM MAST 1000 MG X 30 MDC",
-    "broken_url": "https://http2.mlstatic.com/D_NQ_NP_900297-MLU74087909214_012024-O.webp",
-    "status": 405,
-    "action": "nulled"
-  },
-  {
-    "id": "32e16b33-df4f-430e-b71b-13e3e4b391df",
-    "name": "VITAMINA C TAB EFER 1000 MG BERRIES X 20 UND",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwf2f8f3ed/images/large/533475-vitamina-c-tabletas-efervecentes-sabor-berries-1000-mg-20-comprimidos.jpg",
-    "status": null,
-    "new_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwf2f8f3ed/images/large/533475-vitamina-c-tabletas-efervecentes-sabor-berries-1000-mg-20-comprimidos.jpg",
-    "action": "fixed"
-  },
-  {
-    "id": "8f9bcf20-f5e2-47f2-b6aa-d8df1f39824d",
-    "name": "WHEY PROT CHOCOLATE 850 GRS (25 PORCIONES)",
-    "broken_url": "https://wellstore.cl/wp-content/uploads/2023/09/whey-protein-chocolate.png",
-    "status": 403,
-    "new_url": "https://wellstore.cl/wp-content/uploads/2023/09/whey-protein-chocolate-1024x1024.png",
-    "action": "fixed"
-  },
-  {
-    "id": "89a4aa34-19e7-47f9-9e72-0617e32809cf",
-    "name": "XOLOF-D SOL.OFT.5ML",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw1ecb58b2/images/large/6363-xolof-d-solucion-oftalmica-5-ml-tobramicina-03.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "3ec29391-73bb-402f-b41a-669e439dd8ce",
-    "name": "YES! GEL LUBRICANTE X 30 ML",
-    "broken_url": "https://www.maicao.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwed860f35/images/large/266451-yes!-lubricante-30-ml.jpg?sw=1000&sh=1000",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "f4df9e39-cccb-4581-b8ba-7ee3fbb42da5",
-    "name": "ZINC SULFATO 15 MG 30 COMP",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw90f81da2/images/large/255163-num-zit-sulfato-de-zinc-15-mg-30-comprimidos.jpg",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "31261c79-1502-43e1-adb4-a227b8e0ce44",
-    "name": "ZOMEL-HP TRITERAPIA 28 DOSIS",
-    "broken_url": "https://beta.cruzverde.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwca7f0de9/images/large/269109-zomel-hp-triterapia-amoxicilina-1-gr-comprimido-28-dosis.jpg?sw=1000&sh=1000",
-    "status": null,
-    "action": "nulled"
-  },
-  {
-    "id": "3bc5c2c9-f276-4e8e-96f3-607645d641a3",
-    "name": "ZONIX 7.5MG.30COM.REC.",
-    "broken_url": "https://beta.cruzverde.cl/on/demandware.static/-/Sites-masterCatalog_Chile/default/dwb59d5458/images/large/260246-zopinom-comprimido-recubierto-30-unidades-eszopiclona-3-mg.jpg",
-    "status": null,
-    "new_url": "https://www.ecofarmacias.cl/wp-content/uploads/2023/02/zonix-75-x-30.jpg",
+    "new_url": "https://farmaciaelquimico.cl/cdn/shop/files/vitabral-60c.jpg?v=1731949278",
     "action": "fixed"
   }
 ]
