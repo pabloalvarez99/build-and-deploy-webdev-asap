@@ -13,7 +13,7 @@
     font-family: var(--font-sans);
   }
   body {
-    @apply bg-slate-50 text-slate-900 antialiased selection:bg-emerald-200 selection:text-emerald-900 dark:bg-slate-950 dark:text-slate-100 dark:selection:bg-emerald-700;
+    @apply bg-slate-50 text-slate-900 antialiased selection:bg-cyan-200 selection:text-cyan-900 dark:bg-slate-950 dark:text-slate-100 dark:selection:bg-cyan-700;
     overflow-x: hidden;
     scrollbar-gutter: stable;
   }
@@ -28,7 +28,7 @@
   }
 
   .btn-primary {
-    @apply bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-600/25 hover:shadow-emerald-600/40 focus:ring-emerald-500 border-2 border-transparent text-lg;
+    @apply bg-cyan-600 text-white hover:bg-cyan-700 shadow-lg shadow-cyan-600/25 hover:shadow-cyan-600/40 focus:ring-cyan-500 border-2 border-transparent text-lg;
   }
 
   .btn-secondary {
@@ -36,7 +36,7 @@
   }
 
   .btn-outline {
-    @apply border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 focus:ring-emerald-500 bg-transparent dark:hover:bg-emerald-900/30;
+    @apply border-2 border-cyan-600 text-cyan-600 hover:bg-cyan-50 focus:ring-cyan-500 bg-transparent dark:hover:bg-cyan-900/30;
   }
 
   .btn-ghost {
@@ -44,7 +44,7 @@
   }
 
   .input {
-    @apply w-full px-4 py-3.5 bg-white border-2 border-slate-200 rounded-xl text-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-200 min-h-[56px] dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder:text-slate-500;
+    @apply w-full px-4 py-3.5 bg-white border-2 border-slate-200 rounded-xl text-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 transition-all duration-200 min-h-[56px] dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder:text-slate-500;
   }
 
   .card {
@@ -90,7 +90,7 @@ html {
 
 /* Focus visible styles for keyboard navigation */
 *:focus-visible {
-  outline: 3px solid #059669;
+  outline: 3px solid #0891b2;
   outline-offset: 2px;
   border-radius: 8px;
 }

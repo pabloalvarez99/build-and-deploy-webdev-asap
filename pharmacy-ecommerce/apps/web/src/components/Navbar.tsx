@@ -13,7 +13,7 @@ function PharmacyLogo() {
   return (
     <Link href="/" className="flex items-center gap-2.5 group" aria-label="Tu Farmacia">
       {/* Logomark */}
-      <div className="relative w-9 h-9 rounded-xl flex items-center justify-center shadow-md flex-shrink-0 overflow-hidden bg-gradient-to-br from-teal-600 to-emerald-500 group-hover:shadow-emerald-500/40 transition-shadow">
+      <div className="relative w-9 h-9 rounded-xl flex items-center justify-center shadow-md flex-shrink-0 overflow-hidden bg-gradient-to-br from-cyan-600 to-cyan-500 group-hover:shadow-cyan-500/40 transition-shadow">
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
           <rect x="9" y="2" width="4" height="18" rx="1.5" fill="white" />
           <rect x="2" y="9" width="18" height="4" rx="1.5" fill="white" />
@@ -24,7 +24,7 @@ function PharmacyLogo() {
       <div className="leading-none">
         <div className="text-slate-900 dark:text-white font-black text-base tracking-tight">
           <span className="text-slate-400 dark:text-slate-500 font-semibold">tu</span
-          ><span className="text-emerald-600 dark:text-emerald-400">farmacia</span>
+          ><span className="text-cyan-600 dark:text-cyan-400">farmacia</span>
         </div>
         <div className="text-[9px] font-mono text-slate-400 dark:text-slate-600 tracking-widest uppercase mt-0.5">
           Sistema de Gestión
@@ -109,7 +109,7 @@ export function Navbar() {
                   aria-haspopup="true"
                   aria-label="Menú de usuario"
                 >
-                  <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-sm">
+                  <div className="w-7 h-7 rounded-full bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-400 flex items-center justify-center font-bold text-sm">
                     {user.name ? user.name[0].toUpperCase() : 'U'}
                   </div>
                   <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform hidden sm:block ${isMenuOpen ? 'rotate-180' : ''}`} />
@@ -137,7 +137,7 @@ export function Navbar() {
                         <Link
                           href="/admin/productos"
                           onClick={() => setIsMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-3 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors min-h-[48px] text-base"
+                          className="flex items-center gap-3 px-4 py-3 text-slate-700 dark:text-slate-300 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors min-h-[48px] text-base"
                         >
                           <Package className="w-4 h-4" />
                           Panel Admin
@@ -147,7 +147,7 @@ export function Navbar() {
                       <Link
                         href="/mis-pedidos"
                         onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors min-h-[48px] text-base"
+                        className="flex items-center gap-3 px-4 py-3 text-slate-700 dark:text-slate-300 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors min-h-[48px] text-base"
                       >
                         <UserIcon className="w-4 h-4" />
                         Mis Pedidos
@@ -194,8 +194,8 @@ export function Navbar() {
               aria-label={`Carrito${itemCount > 0 ? `, ${itemCount} producto${itemCount > 1 ? 's' : ''}` : ''}`}
               className={`relative flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all font-semibold text-sm min-h-[36px] ${
                 pathname === '/carrito'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
+                  ? 'bg-cyan-600 text-white'
+                  : 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800 hover:bg-cyan-100 dark:hover:bg-cyan-900/50'
               }`}
             >
               <ShoppingCart className="w-4 h-4 flex-shrink-0" />

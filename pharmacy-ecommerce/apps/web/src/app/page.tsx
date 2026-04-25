@@ -71,7 +71,7 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   return (
     <div className="fixed bottom-24 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-auto z-50">
       <div className="flex items-center gap-3 bg-slate-900 dark:bg-slate-700 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-white/10">
-        <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+        <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center flex-shrink-0">
           <Check className="w-3.5 h-3.5" />
         </div>
         <span className="font-medium text-base">{message}</span>
@@ -322,14 +322,14 @@ function HomeContent() {
                   onClick={() => handleCategoryChange('')}
                   className={`w-full flex items-center gap-2 px-2 py-2 rounded-xl text-sm font-medium transition-all text-left ${
                     !selectedCategory
-                      ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                      ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
-                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${!selectedCategory ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${!selectedCategory ? 'bg-cyan-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
                   Todos
                   {!selectedCategory && products && (
-                    <span className="ml-auto font-mono text-xs text-emerald-600 dark:text-emerald-500">{products.total.toLocaleString('es-CL')}</span>
+                    <span className="ml-auto font-mono text-xs text-cyan-600 dark:text-cyan-500">{products.total.toLocaleString('es-CL')}</span>
                   )}
                 </button>
                 {sortedCategories.map(cat => (
@@ -338,11 +338,11 @@ function HomeContent() {
                     onClick={() => handleCategoryChange(cat.slug)}
                     className={`w-full flex items-center gap-2 px-2 py-2 rounded-xl text-sm font-medium transition-all text-left ${
                       selectedCategory === cat.slug
-                        ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                        ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400'
                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
-                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${selectedCategory === cat.slug ? 'bg-emerald-500' : (categoryDot[cat.slug] || 'bg-slate-300 dark:bg-slate-600')}`} />
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${selectedCategory === cat.slug ? 'bg-cyan-500' : (categoryDot[cat.slug] || 'bg-slate-300 dark:bg-slate-600')}`} />
                     <span className="truncate">{cat.name}</span>
                   </button>
                 ))}
@@ -368,7 +368,7 @@ function HomeContent() {
                     placeholder="Buscar medicamentos, principio activo, laboratorio..."
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
-                    className="block w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-base text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
+                    className="block w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-base text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-400 transition-all"
                     autoComplete="off"
                   />
                   {searchInput && (
@@ -383,7 +383,7 @@ function HomeContent() {
                 </div>
                 <Link
                   href="/cotizacion"
-                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-medium text-sm hover:border-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
+                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-medium text-sm hover:border-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors"
                 >
                   <FileText className="w-4 h-4" />
                   <span className="hidden sm:inline">Cotizar</span>
@@ -412,7 +412,7 @@ function HomeContent() {
             {user && frequentProducts.length > 0 && !selectedCategory && !searchTerm && !showDiscountOnly && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <RefreshCw className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <RefreshCw className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
                   <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Compra Rápida</h2>
                   <span className="text-sm text-slate-400 font-normal">Tus productos habituales</span>
                 </div>
@@ -422,7 +422,7 @@ function HomeContent() {
                       ? discountedPrice(Number(product.price), product.discount_percent)
                       : Number(product.price);
                     return (
-                      <div key={product.id} className="flex-shrink-0 w-36 bg-white dark:bg-slate-900 rounded-2xl border border-emerald-200 dark:border-emerald-800 overflow-hidden flex flex-col shadow-sm">
+                      <div key={product.id} className="flex-shrink-0 w-36 bg-white dark:bg-slate-900 rounded-2xl border border-cyan-200 dark:border-cyan-800 overflow-hidden flex flex-col shadow-sm">
                         <Link href={`/producto/${product.slug}`} className="block">
                           <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                             {product.image_url && !brokenImages.has(product.id) ? (
@@ -438,7 +438,7 @@ function HomeContent() {
                             {product.discount_percent && <span className="text-xs text-slate-400 line-through block">{formatPrice(product.price)}</span>}
                             <span className="font-mono font-black text-emerald-700 dark:text-emerald-400 text-base block mb-2">{formatPrice(finalPrice)}</span>
                             <button onClick={() => handleAddToCart(product)} disabled={addingId === product.id}
-                              className={`w-full flex items-center justify-center gap-1 py-2.5 rounded-xl font-bold text-sm transition-all ${addingId === product.id ? 'bg-emerald-600 text-white scale-95' : 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95'}`}>
+                              className={`w-full flex items-center justify-center gap-1 py-2.5 rounded-xl font-bold text-sm transition-all ${addingId === product.id ? 'bg-cyan-600 text-white scale-95' : 'bg-cyan-600 text-white hover:bg-cyan-700 active:scale-95'}`}>
                               {addingId === product.id ? <Check className="w-4 h-4" /> : <><ShoppingCart className="w-3.5 h-3.5" /><span>Agregar</span></>}
                             </button>
                           </div>
@@ -454,7 +454,7 @@ function HomeContent() {
             {topSellers.length > 0 && !selectedCategory && !searchTerm && !showDiscountOnly && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <TrendingUp className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
                   <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Más vendidos</h2>
                 </div>
                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
@@ -477,7 +477,7 @@ function HomeContent() {
                             {product.discount_percent && <span className="text-xs text-slate-400 line-through block">{formatPrice(product.price)}</span>}
                             <span className="font-mono font-black text-emerald-700 dark:text-emerald-400 text-base block mb-2">{formatPrice(finalPrice)}</span>
                             <button onClick={() => handleAddToCart(product)} disabled={addingId === product.id}
-                              className={`w-full flex items-center justify-center gap-1 py-2.5 rounded-xl font-bold text-sm transition-all ${addingId === product.id ? 'bg-emerald-600 text-white scale-95' : 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95'}`}>
+                              className={`w-full flex items-center justify-center gap-1 py-2.5 rounded-xl font-bold text-sm transition-all ${addingId === product.id ? 'bg-cyan-600 text-white scale-95' : 'bg-cyan-600 text-white hover:bg-cyan-700 active:scale-95'}`}>
                               {addingId === product.id ? <Check className="w-4 h-4" /> : <><ShoppingCart className="w-3.5 h-3.5" /><span>Agregar</span></>}
                             </button>
                           </div>
@@ -497,7 +497,7 @@ function HomeContent() {
                     <BadgePercent className="w-4 h-4 text-red-500" />
                     <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Ofertas</h2>
                   </div>
-                  <Link href="/?discount=true" className="text-sm text-emerald-600 dark:text-emerald-400 font-semibold hover:underline">Ver todas →</Link>
+                  <Link href="/?discount=true" className="text-sm text-cyan-600 dark:text-cyan-400 font-semibold hover:underline">Ver todas →</Link>
                 </div>
                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
                   {discountedProducts.map((product) => {
@@ -520,7 +520,7 @@ function HomeContent() {
                             <span className="text-xs text-slate-400 line-through block">{formatPrice(product.price)}</span>
                             <span className="font-mono font-black text-emerald-700 dark:text-emerald-400 text-base block mb-2">{formatPrice(finalPrice)}</span>
                             <button onClick={() => handleAddToCart(product)} disabled={addingId === product.id}
-                              className={`w-full flex items-center justify-center gap-1 py-2.5 rounded-xl font-bold text-sm transition-all ${addingId === product.id ? 'bg-emerald-600 text-white scale-95' : 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95'}`}>
+                              className={`w-full flex items-center justify-center gap-1 py-2.5 rounded-xl font-bold text-sm transition-all ${addingId === product.id ? 'bg-cyan-600 text-white scale-95' : 'bg-cyan-600 text-white hover:bg-cyan-700 active:scale-95'}`}>
                               {addingId === product.id ? <Check className="w-4 h-4" /> : <><ShoppingCart className="w-3.5 h-3.5" /><span>Agregar</span></>}
                             </button>
                           </div>
@@ -543,7 +543,7 @@ function HomeContent() {
                 {selectedCategory && selectedCategoryName && (
                   <button
                     onClick={() => handleCategoryChange('')}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-lg font-medium border border-emerald-200 dark:border-emerald-800 text-sm"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 rounded-lg font-medium border border-cyan-200 dark:border-cyan-800 text-sm"
                   >
                     {selectedCategoryName}
                     <X className="w-3.5 h-3.5" />
@@ -566,11 +566,11 @@ function HomeContent() {
               {/* View toggle */}
               <div className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-1">
                 <button onClick={() => setViewMode('grid')} aria-label="Vista cuadrícula"
-                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}>
+                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}>
                   <LayoutGrid className="w-4 h-4" />
                 </button>
                 <button onClick={() => setViewMode('list')} aria-label="Vista lista"
-                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}>
+                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}>
                   <List className="w-4 h-4" />
                 </button>
               </div>
@@ -601,7 +601,7 @@ function HomeContent() {
                         ? discountedPrice(Number(product.price), product.discount_percent)
                         : Number(product.price);
                       return (
-                        <div key={product.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col hover:border-emerald-200 dark:hover:border-emerald-800 hover:shadow-md transition-all group">
+                        <div key={product.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col hover:border-cyan-200 dark:hover:border-cyan-800 hover:shadow-md transition-all group">
                           <Link href={`/producto/${product.slug}`} className="block">
                             <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                               {product.image_url && !brokenImages.has(product.id) ? (
@@ -632,7 +632,7 @@ function HomeContent() {
                             </div>
 
                             <Link href={`/producto/${product.slug}`}>
-                              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-snug line-clamp-2 mb-1 min-h-[3.5rem] hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">
+                              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-snug line-clamp-2 mb-1 min-h-[3.5rem] hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors">
                                 {product.name}
                               </h3>
                             </Link>
@@ -655,8 +655,8 @@ function HomeContent() {
                                   aria-label={`Agregar ${product.name} al carrito`}
                                   className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-lg transition-all min-h-[52px] ${
                                     addingId === product.id
-                                      ? 'bg-emerald-600 text-white scale-95'
-                                      : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm hover:shadow-emerald-600/20 active:scale-95'
+                                      ? 'bg-cyan-600 text-white scale-95'
+                                      : 'bg-cyan-600 text-white hover:bg-cyan-700 shadow-sm hover:shadow-cyan-600/20 active:scale-95'
                                   }`}
                                 >
                                   {addingId === product.id ? <Check className="w-5 h-5" /> : <><ShoppingCart className="w-4 h-4" /><span>Agregar</span></>}
@@ -692,7 +692,7 @@ function HomeContent() {
                               <StockBadge stock={product.stock} />
                             </div>
                             <Link href={`/producto/${product.slug}`}>
-                              <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-base leading-tight hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors truncate">{product.name}</h3>
+                              <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-base leading-tight hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors truncate">{product.name}</h3>
                             </Link>
                             {product.laboratory && <p className="text-sm text-slate-400 truncate">{product.laboratory}</p>}
                           </div>
@@ -705,7 +705,7 @@ function HomeContent() {
                               <button
                                 onClick={() => handleAddToCart(product)}
                                 disabled={addingId === product.id}
-                                className={`flex items-center justify-center w-10 h-10 rounded-xl font-bold transition-all ${addingId === product.id ? 'bg-emerald-600 text-white scale-95' : 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95'}`}
+                                className={`flex items-center justify-center w-10 h-10 rounded-xl font-bold transition-all ${addingId === product.id ? 'bg-cyan-600 text-white scale-95' : 'bg-cyan-600 text-white hover:bg-cyan-700 active:scale-95'}`}
                                 aria-label={`Agregar ${product.name}`}
                               >
                                 {addingId === product.id ? <Check className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
@@ -727,7 +727,7 @@ function HomeContent() {
                     <button
                       onClick={() => loadProducts(currentPage + 1, false)}
                       disabled={isLoadingMore}
-                      className="px-8 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold text-base hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-emerald-300 transition-all disabled:opacity-50 min-h-[48px]"
+                      className="px-8 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold text-base hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-cyan-300 transition-all disabled:opacity-50 min-h-[48px]"
                     >
                       {isLoadingMore ? 'Cargando...' : 'Cargar más'}
                     </button>
@@ -745,7 +745,7 @@ function HomeContent() {
                 )}
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   {(selectedCategory || searchTerm) && (
-                    <button onClick={() => { handleCategoryChange(''); setSearchInput(''); setSearchTerm(''); }} className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline text-lg">
+                    <button onClick={() => { handleCategoryChange(''); setSearchInput(''); setSearchTerm(''); }} className="text-cyan-600 dark:text-cyan-400 font-bold hover:underline text-lg">
                       Ver todos los productos
                     </button>
                   )}
@@ -787,7 +787,7 @@ function HomeContent() {
       ) : (
         <div className="fixed bottom-4 right-4 z-40">
           <Link href="/cotizacion" className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-medium text-sm border border-slate-200 dark:border-slate-700 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5">
-            <FileText className="w-4 h-4 text-emerald-600" />
+            <FileText className="w-4 h-4 text-cyan-600" />
             Cotizar
           </Link>
         </div>
@@ -809,7 +809,7 @@ function MobileCategoryGrid({ categories, onSelect }: { categories: Category[]; 
           <button
             key={cat.id}
             onClick={() => onSelect(cat.slug)}
-            className="flex items-center gap-2.5 px-4 py-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all min-h-[52px] text-left"
+            className="flex items-center gap-2.5 px-4 py-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:border-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-cyan-700 dark:hover:text-cyan-400 transition-all min-h-[52px] text-left"
           >
             <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${categoryDot[cat.slug] || 'bg-slate-300'}`} />
             <span className="truncate">{cat.name}</span>
@@ -819,7 +819,7 @@ function MobileCategoryGrid({ categories, onSelect }: { categories: Category[]; 
       {categories.length > 6 && (
         <button
           onClick={() => setShowAll(!showAll)}
-          className="mt-2 flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-sm px-2 min-h-[44px]"
+          className="mt-2 flex items-center gap-1 text-cyan-600 dark:text-cyan-400 font-semibold text-sm px-2 min-h-[44px]"
         >
           {showAll ? 'Ver menos' : `Ver todas (${categories.length})`}
           <ChevronDown className={`w-4 h-4 transition-transform ${showAll ? 'rotate-180' : ''}`} />
