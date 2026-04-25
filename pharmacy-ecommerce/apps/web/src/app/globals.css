@@ -3,15 +3,22 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --font-sans: var(--font-inter), system-ui, sans-serif;
+    --font-mono: var(--font-mono), 'JetBrains Mono', 'Fira Code', monospace;
+  }
   html {
     font-size: 18px;
     overflow-x: hidden;
+    font-family: var(--font-sans);
   }
   body {
-    @apply bg-white text-slate-900 antialiased selection:bg-emerald-200 selection:text-emerald-900 dark:bg-slate-900 dark:text-slate-100 dark:selection:bg-emerald-700;
+    @apply bg-slate-50 text-slate-900 antialiased selection:bg-emerald-200 selection:text-emerald-900 dark:bg-slate-950 dark:text-slate-100 dark:selection:bg-emerald-700;
     overflow-x: hidden;
-    /* Prevent layout shift from scrollbar appearing/disappearing */
     scrollbar-gutter: stable;
+  }
+  .font-mono, .tabular-nums {
+    font-family: var(--font-mono);
   }
 }
 
