@@ -26,6 +26,9 @@
 | **ERP Fase 2 — Punto de Venta (POS)** | ✅ Completo |
 | **ERP Fase 3 — Reportes Financieros** | ✅ Completo |
 | **Inventario valorizado + ajuste manual stock** | ✅ Completo |
+| **Fidelización (puntos + canje + POS)** | ✅ Completo (Abril 2026) |
+| **Catálogo ERP — 34,107 productos importados** | ✅ Completo (Abril 2026) |
+| **Fases A-E (costos, faltas, vencimientos, POS mixto, comparador proveedores)** | ✅ Completo (Abril 2026) |
 
 ---
 
@@ -303,14 +306,17 @@ tu-farmacia-prod-1d6e516dbae2.json    ← Service account key (GITIGNORED)
 
 | CLI | Versión | Notas |
 |---|---|---|
-| `node` | v24.x | Runtime |
-| `npm` | 11.x | Package manager |
-| `vercel` | 50.37.0 | Deploy + env vars |
-| `firebase` | 15.11.0 | Firebase CLI |
-| `gcloud` | 564.0.0 | **NO está en PATH** — usar path completo |
-| `git` | 2.x | Control de versiones |
-| `gh` | 2.89.0 | GitHub CLI |
-| `docker` | 29.x | Contenedores |
+| `node` | v24.15.0 | Runtime |
+| `npm` | 11.12.1 | Package manager |
+| `pnpm` | 10.33.2 | Package manager alternativo |
+| `vercel` | 52.0.0 | Deploy + env vars |
+| `firebase` | 15.15.0 | Firebase CLI |
+| `gcloud` | 565.0.0 | **NO está en PATH** — usar path completo `/c/Program Files (x86)/Google/Cloud SDK/google-cloud-sdk/bin/gcloud` |
+| `git` | 2.54.0 | Control de versiones |
+| `gh` | 2.91.0 | GitHub CLI (binario sistema, no npm) |
+| `code-review-graph` | 2.3.2 | Hooks PostToolUse + SessionStart — `pip install code-review-graph` |
+| `python` | 3.14.4 | Python runtime — `C:\Python314\` |
+| `pip` | 26.0.1 | Python package manager |
 
 ---
 
@@ -409,4 +415,4 @@ git push origin main
 
 ---
 
-*Última actualización: 2026-04-09 — ERP Fase 1 (Proveedores + Compras) en diseño.*
+*Última actualización: 2026-04-25 — Todas las fases ERP completas. Catálogo ERP 34,107 productos importados. Fidelización live.*
