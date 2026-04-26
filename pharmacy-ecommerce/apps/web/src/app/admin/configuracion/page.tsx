@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
-import { Save, Mail, AlertTriangle, CheckCircle, Monitor, Download, Store, Phone, MapPin, Globe } from 'lucide-react';
+import { Save, Mail, AlertTriangle, CheckCircle, Monitor, Download, Store, Phone, MapPin, Globe, TrendingUp } from 'lucide-react';
 
 export default function AdminConfigPage() {
   const router = useRouter();
@@ -15,6 +15,8 @@ export default function AdminConfigPage() {
   const [pharmacyAddress, setPharmacyAddress] = useState('');
   const [pharmacyPhone, setPharmacyPhone] = useState('');
   const [pharmacyWebsite, setPharmacyWebsite] = useState('');
+  const [dailyTarget, setDailyTarget] = useState('');
+  const [monthlyTarget, setMonthlyTarget] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -30,6 +32,8 @@ export default function AdminConfigPage() {
         setPharmacyAddress(data.pharmacy_address || '');
         setPharmacyPhone(data.pharmacy_phone || '');
         setPharmacyWebsite(data.pharmacy_website || '');
+        setDailyTarget(data.daily_sales_target || '');
+        setMonthlyTarget(data.monthly_sales_target || '');
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -49,6 +53,8 @@ export default function AdminConfigPage() {
           pharmacy_address: pharmacyAddress,
           pharmacy_phone: pharmacyPhone,
           pharmacy_website: pharmacyWebsite,
+          daily_sales_target: dailyTarget,
+          monthly_sales_target: monthlyTarget,
         }),
       });
       if (res.ok) {
@@ -213,6 +219,40 @@ export default function AdminConfigPage() {
               </p>
             </div>
           </div>
+
+          {/* Metas de ventas */}
+          <section className="border border-slate-200 dark:border-slate-700 rounded-2xl p-5 space-y-4">
+            <h2 className="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-emerald-600" /> Metas de Ventas
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-slate-600 dark:text-slate-400 mb-1 block">Meta diaria ($CLP)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1000"
+                  value={dailyTarget}
+                  onChange={e => setDailyTarget(e.target.value)}
+                  placeholder="Ej: 600000"
+                  className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-slate-600 dark:text-slate-400 mb-1 block">Meta mensual ($CLP)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="10000"
+                  value={monthlyTarget}
+                  onChange={e => setMonthlyTarget(e.target.value)}
+                  placeholder="Ej: 15000000"
+                  className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-slate-400">Si no hay meta configurada, las barras de progreso no aparecen en Operaciones.</p>
+          </section>
 
           <div className="flex items-center gap-3">
             <button type="submit" disabled={saving} className="btn btn-primary flex items-center gap-2 disabled:opacity-50">
