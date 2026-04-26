@@ -12,6 +12,7 @@ import { StockModal } from '@/components/admin/StockModal';
 import { ScanInvoiceModal } from '@/components/admin/ScanInvoiceModal';
 import type { ScannedProductData } from '@/lib/invoice-parser/types';
 import { formatPrice } from '@/lib/format';
+import { uploadProductImage } from '@/lib/firebase/storage';
 
 export default function AdminProductsPage() {
  const router = useRouter();
@@ -73,6 +74,11 @@ export default function AdminProductsPage() {
  };
  const [labSearchTerm, setLabSearchTerm] = useState('');
 
+ // Product image upload state
+ const [uploadingImage, setUploadingImage] = useState(false);
+ const [imageUploadError, setImageUploadError] = useState<string | null>(null);
+ const imageFileRef = useRef<HTMLInputElement>(null);
+
  // Scan invoice state
  const [showScanModal, setShowScanModal] = useState(false);
 
@@ -119,6 +125,8 @@ export default function AdminProductsPage() {
  const [editingStockValue, setEditingStockValue] = useState<string>('');
  const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
  const [editingPriceValue, setEditingPriceValue] = useState<string>('');
+ const [editingDiscountId, setEditingDiscountId] = useState<string | null>(null);
+ const [editingDiscountValue, setEditingDiscountValue] = useState<string>('');
  const [stockModalProduct, setStockModalProduct] = useState<{ id: string; name: string; stock: number } | null>(null);
 
  // Identificadores POS — external_id y barcodes son editables en create y edit
@@ -456,6 +464,27 @@ export default function AdminProductsPage() {
    }
   } catch { /* silently fail */ }
   setEditingPriceId(null);
+ };
+
+ const handleDiscountSave = async (productId: string) => {
+  const newDiscount = parseFloat(editingDiscountValue);
+  if (isNaN(newDiscount) || newDiscount < 0 || newDiscount > 100) { setEditingDiscountId(null); return; }
+  const currentDiscount = (products?.products.find(p => p.id === productId) as any)?.discount_percent;
+  if (Number(currentDiscount) === newDiscount) { setEditingDiscountId(null); return; }
+  try {
+   const res = await fetch(`/api/admin/products/${productId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ discount_percent: Math.round(newDiscount) }),
+   });
+   if (res.ok) {
+    setProducts(prev => prev ? {
+     ...prev,
+     products: prev.products.map(p => p.id === productId ? { ...p, discount_percent: Math.round(newDiscount) } as any : p),
+    } : prev);
+   }
+  } catch { /* silently fail */ }
+  setEditingDiscountId(null);
  };
 
  const handleStockModalUpdate = (productId: string, newStock: number) => {
@@ -1427,6 +1456,46 @@ export default function AdminProductsPage() {
  className="input"
  placeholder="https://..."
  />
+ <div className="mt-2 flex items-center gap-2">
+ <button
+ type="button"
+ disabled={uploadingImage}
+ onClick={() => { setImageUploadError(null); imageFileRef.current?.click(); }}
+ className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+ >
+ {uploadingImage ? (
+ <RefreshCw className="w-4 h-4 animate-spin" />
+ ) : (
+ <Upload className="w-4 h-4" />
+ )}
+ {uploadingImage ? 'Subiendo...' : 'Subir imagen'}
+ </button>
+ <input
+ ref={imageFileRef}
+ type="file"
+ accept="image/*"
+ className="hidden"
+ onChange={async (e) => {
+ const file = e.target.files?.[0];
+ if (!file) return;
+ setUploadingImage(true);
+ setImageUploadError(null);
+ try {
+ const productId = editingProduct ?? `new_${Date.now()}`;
+ const url = await uploadProductImage(file, productId);
+ setFormData((prev) => ({ ...prev, image_url: url }));
+ } catch (err) {
+ setImageUploadError(err instanceof Error ? err.message : 'Error al subir imagen');
+ } finally {
+ setUploadingImage(false);
+ e.target.value = '';
+ }
+ }}
+ />
+ </div>
+ {imageUploadError && (
+ <p className="mt-1 text-xs text-red-600 dark:text-red-400">{imageUploadError}</p>
+ )}
  {formData.image_url && (
  <div className="mt-2 relative h-20 w-20">
  <Image
@@ -2241,12 +2310,37 @@ export default function AdminProductsPage() {
  })()}
  </td>
  <td className="px-4 py-3 text-center">
- {(product as any).discount_percent ? (
- <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">
- -{(product as any).discount_percent}% OFF
- </span>
+ {editingDiscountId === product.id ? (
+  <input
+  type="number"
+  min="0"
+  max="100"
+  autoFocus
+  value={editingDiscountValue}
+  onChange={(e) => setEditingDiscountValue(e.target.value)}
+  onBlur={() => handleDiscountSave(product.id)}
+  onKeyDown={(e) => {
+   if (e.key === 'Enter') handleDiscountSave(product.id);
+   if (e.key === 'Escape') setEditingDiscountId(null);
+  }}
+  className="w-16 px-2 py-1 text-sm border-2 border-emerald-400 rounded-lg font-mono text-center focus:outline-none"
+  />
+ ) : (product as any).discount_percent ? (
+  <button
+  onClick={() => { setEditingDiscountId(product.id); setEditingDiscountValue(String((product as any).discount_percent)); }}
+  title="Click para editar descuento"
+  className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full hover:ring-2 hover:ring-red-400 transition-all cursor-text"
+  >
+  -{(product as any).discount_percent}% OFF
+  </button>
  ) : (
- <span className="text-slate-300">—</span>
+  <button
+  onClick={() => { setEditingDiscountId(product.id); setEditingDiscountValue('0'); }}
+  title="Click para agregar descuento"
+  className="text-slate-300 hover:text-slate-500 dark:hover:text-slate-400 transition-colors cursor-text"
+  >
+  —
+  </button>
  )}
  </td>
  <td className="px-4 py-3">
