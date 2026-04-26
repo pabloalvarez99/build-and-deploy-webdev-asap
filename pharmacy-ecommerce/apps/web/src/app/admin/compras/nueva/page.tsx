@@ -9,8 +9,9 @@ import {
 } from '@/lib/api'
 import {
   Truck, Camera, Scan, CheckCircle2, AlertCircle, Search,
-  ChevronRight, ChevronLeft, Loader2, X, Link2, FileText,
+  ChevronRight, ChevronLeft, Loader2, X, Link2, FileText, Upload,
 } from 'lucide-react'
+import { uploadInvoiceImage } from '@/lib/firebase/storage'
 
 type Step = 'proveedor' | 'foto' | 'ocr' | 'confirmar'
 
@@ -46,6 +47,10 @@ export default function NuevaCompraPage() {
   const [searchQuery, setSearchQuery] = useState<Record<number, string>>({})
   const [searchResults, setSearchResults] = useState<Record<number, ProductWithCategory[]>>({})
   const [searchingIdx, setSearchingIdx] = useState<number | null>(null)
+
+  // Firebase Storage upload
+  const [invoiceImageUrl, setInvoiceImageUrl] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
 
   // Confirmar
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -96,19 +101,37 @@ export default function NuevaCompraPage() {
       const base64 = await fileToBase64(file)
       const isPdf = file.type === 'application/pdf'
 
-      const res = await fetch('/api/admin/purchase-orders/scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...(isPdf ? { pdf_base64: base64 } : { image_base64: base64 }),
-          supplier_id: selectedSupplier?.id,
+      // Run OCR scan and Firebase Storage upload in parallel
+      const tempId = crypto.randomUUID()
+      const [ocrRes] = await Promise.all([
+        fetch('/api/admin/purchase-orders/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...(isPdf ? { pdf_base64: base64 } : { image_base64: base64 }),
+            supplier_id: selectedSupplier?.id,
+          }),
         }),
-      })
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: 'Error al escanear' }))
-        throw new Error(err.error || `Error ${res.status}`)
+        // Only upload images (not PDFs) to Storage; PDFs upload too
+        (async () => {
+          try {
+            setIsUploading(true)
+            const url = await uploadInvoiceImage(file, tempId)
+            setInvoiceImageUrl(url)
+          } catch (uploadErr) {
+            // Non-fatal: log but don't block the OCR flow
+            console.error('Error al subir imagen a Firebase Storage:', uploadErr)
+          } finally {
+            setIsUploading(false)
+          }
+        })(),
+      ])
+
+      if (!ocrRes.ok) {
+        const err = await ocrRes.json().catch(() => ({ error: 'Error al escanear' }))
+        throw new Error(err.error || `Error ${ocrRes.status}`)
       }
-      const data = await res.json()
+      const data = await ocrRes.json()
       setOcrRaw(data.ocr_raw)
       setLines(
         data.lines.map((l: ScannedLine) => ({
@@ -176,6 +199,7 @@ export default function NuevaCompraPage() {
         invoice_date: invoiceDate || undefined,
         notes: notes || undefined,
         ocr_raw: ocrRaw || undefined,
+        image_url: invoiceImageUrl || undefined,
         items: lines.map((l) => ({
           product_id: l.product_id || undefined,
           supplier_product_code: l.supplier_product_code || undefined,
@@ -329,6 +353,19 @@ export default function NuevaCompraPage() {
               >
                 <FileText className="w-5 h-5" /> Importar PDF
               </button>
+            </div>
+          )}
+
+          {invoiceImageUrl && (
+            <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg px-3 py-2">
+              <Upload className="w-3.5 h-3.5 shrink-0" />
+              Imagen subida a Firebase Storage
+            </div>
+          )}
+          {isUploading && (
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              Subiendo imagen...
             </div>
           )}
 

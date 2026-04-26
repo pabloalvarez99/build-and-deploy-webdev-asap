@@ -7,7 +7,7 @@ import { purchaseOrderApi, type PurchaseOrder } from '@/lib/api'
 import {
   ClipboardList, ArrowLeft, CheckCircle2, Clock, XCircle,
   Package, Calendar, Hash, User, FileText, PackageCheck, Printer,
-  Pencil, Save, Trash2, X as XIcon,
+  Pencil, Save, Trash2, X as XIcon, ImageIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -266,6 +266,36 @@ export default function CompraDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Invoice image */}
+      {order.image_url && (
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden print:hidden">
+          <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ImageIcon className="w-4 h-4 text-slate-400" />
+              <h2 className="font-semibold text-slate-900 dark:text-white">Imagen de Factura</h2>
+            </div>
+            <a
+              href={order.image_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
+            >
+              Ver imagen completa
+            </a>
+          </div>
+          <div className="p-4">
+            <a href={order.image_url} target="_blank" rel="noopener noreferrer">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={order.image_url}
+                alt="Factura"
+                className="w-full rounded-xl object-contain max-h-96 bg-slate-50 dark:bg-slate-900 cursor-zoom-in hover:opacity-90 transition-opacity"
+              />
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* Items */}
       <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden">

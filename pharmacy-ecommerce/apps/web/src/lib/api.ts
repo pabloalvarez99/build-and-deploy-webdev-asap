@@ -416,6 +416,7 @@ export const purchaseOrderApi = {
     invoice_date?: string
     notes?: string
     ocr_raw?: string
+    image_url?: string
     items: Array<{
       product_id?: string
       supplier_product_code?: string

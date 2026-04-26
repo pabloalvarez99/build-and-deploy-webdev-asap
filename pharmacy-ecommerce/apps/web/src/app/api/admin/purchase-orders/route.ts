@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
         total_cost,
         notes: body.notes?.trim() || null,
         ocr_raw: body.ocr_raw || null,
+        image_url: body.image_url || null,
         created_by: admin.email || admin.uid,
         items: {
           create: body.items.map((item: {

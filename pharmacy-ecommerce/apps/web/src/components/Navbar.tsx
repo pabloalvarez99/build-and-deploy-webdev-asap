@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
-import { ShoppingCart, Package, LogOut, User as UserIcon, Loader2, Sun, Moon, Star, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Package, LogOut, User as UserIcon, Loader2, Sun, Moon, Star, ChevronDown, UserCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from '@/hooks/useTheme';
@@ -185,14 +185,24 @@ export function Navbar() {
                       )}
 
                       {!isAdmin && (
-                        <Link
-                          href="/mis-pedidos"
-                          onClick={() => setIsMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-3 text-slate-700 dark:text-slate-300 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors min-h-[48px] text-base"
-                        >
-                          <UserIcon className="w-4 h-4" />
-                          Mis Pedidos
-                        </Link>
+                        <>
+                          <Link
+                            href="/mi-cuenta"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 text-slate-700 dark:text-slate-300 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors min-h-[48px] text-base"
+                          >
+                            <UserCircle className="w-4 h-4" />
+                            Mi Cuenta
+                          </Link>
+                          <Link
+                            href="/mis-pedidos"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 text-slate-700 dark:text-slate-300 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors min-h-[48px] text-base"
+                          >
+                            <UserIcon className="w-4 h-4" />
+                            Mis Pedidos
+                          </Link>
+                        </>
                       )}
 
                       <div className={`border-t mt-1 pt-1 ${isAdmin ? 'border-slate-700' : 'border-slate-100 dark:border-slate-800'}`}>
