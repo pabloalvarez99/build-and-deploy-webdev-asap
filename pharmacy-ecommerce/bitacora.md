@@ -1,6 +1,42 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: POS shift-awareness + arqueo caja en operaciones (Abril 2026)
+## Estado actual: Cierre de caja POS completo — pos_mixed + Z-report + shift awareness (Abril 2026)
+
+---
+
+## 2026-04-26 — Feat: Cierre de caja POS — plan completo (6 tareas)
+
+### Task 1: DB schema en producción
+- `caja_cierres` model verificado en `prisma/schema.prisma` — campos: `id`, `turno_inicio`, `turno_fin`, `fondo_inicial`, `ventas_efectivo`, `ventas_debito`, `ventas_credito`, `ventas_total`, `num_transacciones`, `efectivo_esperado`, `efectivo_contado`, `diferencia`, `notas`, `cerrado_por`, `created_at`
+- `prisma db push` aplicado a Cloud SQL producción (`tu-farmacia-prod:southamerica-east1:tu-farmacia-db`)
+
+### Task 2+3: pos_mixed en API arqueo + tipo ShiftData
+- `GET /api/admin/arqueo`: filtro `payment_provider` ampliado a `['pos_cash','pos_debit','pos_credit','pos_mixed']`
+- `select` incluye `cash_amount` y `card_amount` para splits de ventas mixtas
+- Cálculo: `pos_mixed` suma `cash_amount` a efectivo y `card_amount` a débito/crédito
+- `ShiftData.ventas.mixto: number` agregado al tipo en `arqueo/page.tsx`
+- Card "Mixto" (Shuffle icon, purple) en KPI row del arqueo
+
+### Task 4: Z-report imprimible
+- `arqueo/page.tsx`: botón `Printer` en header → `window.print()`
+- `<div id="zreport-print">`: oculto en pantalla, visible solo en `@media print` (posición fixed, fondo blanco, monospace)
+- Contenido: nombre farmacia, fecha, turno inicio→fin, quién cerró, fondo inicial, desglose ventas (efectivo/débito/crédito/mixto/total), efectivo esperado/contado/diferencia
+
+### Task 5: POS shift-awareness + prescription modal
+
+**`/admin/pos`:**
+- Banner ámbar cuando `fondo_inicial === 0` → "Configura el fondo antes de iniciar ventas" + link a Arqueo
+- Modal de confirmación de receta al agregar `prescription_type: 'required' | 'controlled'` al carrito (primera vez): muestra tipo, nombre, botones Cancelar / "Receta verificada ✓"
+- `addToCartDirect()` separado de `addToCart()` para bypass del modal en confirmación
+
+**`/admin/operaciones`:**
+- Card "Estado de caja": fondo inicial, hora inicio turno, ventas POS del día
+- Ícono ámbar si fondo=0, esmeralda si configurado; link a `/admin/arqueo`
+- `Promise.all` paralelo: operaciones + arqueo en un solo `load()`
+
+### Task 6: Build + deploy
+- Build limpio sin errores TypeScript
+- `git push origin main` → Vercel auto-deploy
 
 ---
 
