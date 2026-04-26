@@ -34,6 +34,7 @@ import {
   RotateCcw,
   ClipboardCheck,
   X,
+  Activity,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -51,6 +52,7 @@ interface SidebarProps {
 
 const navItems = [
   { href: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
+  { href: '/admin/operaciones', icon: Activity, label: 'Operaciones' },
   { href: '/admin/pos', icon: Receipt, label: 'POS' },
   { href: '/admin/arqueo', icon: Calculator, label: 'Arqueo de Caja' },
   { href: '/admin/productos', icon: Package, label: 'Productos' },
