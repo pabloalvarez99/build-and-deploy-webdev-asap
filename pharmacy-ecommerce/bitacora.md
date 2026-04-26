@@ -1,6 +1,23 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: Panel Fidelización completado (Abril 2026)
+## Estado actual: Image upload + inline edit + reorder list (Abril 2026)
+
+---
+
+## 2026-04-26 — Feat: Image upload, inline edit precio/descuento, repetir pedido en lista
+
+**Admin productos — upload imagen a Firebase Storage:**
+- `src/lib/firebase/storage.ts`: nueva función `uploadProductImage(file, productId)` → path `products/{id}/{ts}_{filename}`
+- `src/app/admin/productos/page.tsx`: botón "Subir imagen" con spinner, input file oculto, escribe URL Firebase en `formData.image_url` al completar
+
+**Admin productos — edición inline precio y descuento:**
+- Precio ya tenía inline edit (`editingPriceId`). Agregado `editingDiscountId` con misma lógica.
+- Click en badge descuento → input 0-100 → Enter/blur guarda via `PUT /api/admin/products/[id]`
+
+**Mis pedidos (lista) — botón "Repetir":**
+- `GET /api/orders` ahora incluye `order_items` (Prisma `include`)
+- `src/lib/api.ts`: tipo `OrderWithItems` para lista paginada
+- `src/app/mis-pedidos/page.tsx`: botón "Repetir" en cada card → `addToCart` por ítem → router `/carrito`
 
 ---
 
