@@ -4,6 +4,32 @@
 
 ---
 
+## Decisiones de producto (2026-04-26)
+
+**Sin delivery** — La farmacia no ofrece despacho a domicilio. Todos los pedidos son retiro en tienda o pago Webpay para retiro. No agregar flujo de delivery ni campo de dirección de envío.
+
+---
+
+## 2026-04-26 — Fix: Admin navbar — mobile drawer + desktop toggle unificado
+
+**Problema:** Bottom nav móvil tenía 22 items en `flex h-16` → inutilizable. Toggle desktop usaba sync frágil (2 estados separados + localStorage + custom events).
+
+**`src/components/admin/Sidebar.tsx`:**
+- Eliminado bottom nav móvil (22 items imposibles en una barra)
+- Nuevo slide-out drawer móvil: overlay backdrop, cierra con ESC/backdrop/navegación
+- Estado interno `isCollapsed` eliminado → ahora recibe props (`isCollapsed`, `onToggle`, `mobileOpen`, `onMobileClose`)
+- Toggle en header del sidebar (ChevronLeft/Right) para desktop
+- `NavItem` extraído como subcomponente local
+
+**`src/app/admin/layout.tsx`:**
+- Estado unificado: layout es owner de `sidebarCollapsed` + `mobileOpen`
+- Eliminada sincronización via custom events y `window.addEventListener('sidebar-collapse')`
+- `handleSidebarToggle()` único punto de escritura a localStorage
+- Botón hamburger `☰` (Menu icon) visible solo en mobile (`lg:hidden`)
+- Eliminado `pb-16` del main (ya no hay bottom nav)
+
+---
+
 ## 2026-04-26 — Feat: Image upload, inline edit precio/descuento, repetir pedido en lista
 
 **Admin productos — upload imagen a Firebase Storage:**
