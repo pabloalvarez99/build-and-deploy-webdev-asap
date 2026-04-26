@@ -30,6 +30,7 @@ import {
   CalendarClock,
   Scale,
   Star,
+  RotateCcw,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -60,6 +61,7 @@ const navItems = [
   { href: '/admin/reposicion', icon: PackageSearch, label: 'Reposición' },
   { href: '/admin/costos', icon: TrendingUp, label: 'Costos' },
   { href: '/admin/faltas', icon: BookX, label: 'Faltas' },
+  { href: '/admin/devoluciones', icon: RotateCcw, label: 'Devoluciones' },
   { href: '/admin/vencimientos', icon: CalendarClock, label: 'Vencimientos' },
   { href: '/admin/reportes', icon: BarChart2, label: 'Reportes' },
   { href: '/admin/configuracion', icon: Settings, label: 'Configuración' },
@@ -101,12 +103,6 @@ export function Sidebar({ pendingOrders = 0, pendingReservations = 0, criticalSt
             <span className="font-bold text-slate-900 dark:text-slate-100">Admin</span>
           </Link>
         )}
-        <button
-          onClick={handleCollapse}
-          className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hidden lg:flex"
-        >
-          <ChevronLeft className={`w-5 h-5 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} />
-        </button>
       </div>
 
       {/* Command Palette shortcut */}

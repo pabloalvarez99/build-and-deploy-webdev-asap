@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/auth';
 import { productApi, orderApi, purchaseOrderApi } from '@/lib/api';
 import { useAdminShortcuts } from '@/hooks/useAdminShortcuts';
 import { useTheme } from '@/hooks/useTheme';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, PanelLeftOpen, PanelLeftClose } from 'lucide-react';
 import { Sidebar } from '@/components/admin/Sidebar';
 import { CommandPalette } from '@/components/admin/CommandPalette';
 import { NotificationBell } from '@/components/admin/NotificationBell';
@@ -130,9 +130,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
  {/* Top bar */}
  <header className="sticky top-0 z-20 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700">
  <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
- {/* Left side - breadcrumbs */}
- <div className="flex-1">
- <Breadcrumbs />
+ {/* Left side - sidebar toggle + breadcrumbs */}
+ <div className="flex items-center gap-2 flex-1">
+   <button
+     onClick={() => {
+       const next = !sidebarCollapsed;
+       setSidebarCollapsed(next);
+       localStorage.setItem('admin-sidebar-collapsed', String(next));
+       window.dispatchEvent(new CustomEvent('sidebar-collapse', { detail: next }));
+     }}
+     className="hidden lg:flex p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors"
+     title={sidebarCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+   >
+     {sidebarCollapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
+   </button>
+   <Breadcrumbs />
  </div>
 
  {/* Right side - notifications */}
