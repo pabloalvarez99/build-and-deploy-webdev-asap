@@ -20,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         where: { active: true },
         select: { slug: true, updated_at: true },
         orderBy: { updated_at: 'desc' },
-        take: 500,
+        take: 50000,
       }),
       db.categories.findMany({ select: { slug: true } }),
     ]);
