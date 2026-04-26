@@ -62,6 +62,20 @@ interface DashData {
     pedidos_pendientes_webpay: number;
   };
   generado_en: string;
+  pl: {
+    costo_hoy: number;
+    margen_bruto_hoy: number;
+    margen_pct_hoy: number;
+    costo_calculable: boolean;
+  };
+  metas: {
+    diaria: number | null;
+    mensual: number | null;
+    ventas_mes: number;
+    ordenes_mes: number;
+    pct_diario: number | null;
+    pct_mensual: number | null;
+  };
 }
 
 function formatPrice(n: number) {
@@ -104,6 +118,25 @@ function DeltaBadge({ hoy, ayer }: { hoy: number; ayer: number }) {
       {up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
       {Math.abs(pct).toFixed(0)}%
     </span>
+  );
+}
+
+function MetaBar({ label, actual, meta, pct }: { label: string; actual: number; meta: number; pct: number }) {
+  const color = pct >= 80 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-400' : 'bg-red-500';
+  const textColor = pct >= 80 ? 'text-emerald-700 dark:text-emerald-300' : pct >= 50 ? 'text-amber-700 dark:text-amber-300' : 'text-red-700 dark:text-red-300';
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-slate-500 dark:text-slate-400">{label}</span>
+        <span className={`text-xs font-bold ${textColor}`}>{pct}%</span>
+      </div>
+      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">
+        {formatPrice(actual)} <span className="font-normal text-slate-400">/ {formatPrice(meta)}</span>
+      </p>
+      <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+        <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${Math.min(pct, 100)}%` }} />
+      </div>
+    </div>
   );
 }
 
@@ -235,6 +268,47 @@ export default function OperacionesPage() {
           <p className="text-xs text-slate-400 mt-0.5">{data.faltas_con_stock.length} con stock ya</p>
         </div>
       </div>
+
+      {/* Metas de ventas */}
+      {data.metas.diaria && (
+        <MetaBar
+          label="Meta diaria"
+          actual={kpis.ventas_hoy}
+          meta={data.metas.diaria}
+          pct={data.metas.pct_diario ?? 0}
+        />
+      )}
+      {data.metas.mensual && (
+        <MetaBar
+          label="Meta mensual"
+          actual={data.metas.ventas_mes}
+          meta={data.metas.mensual}
+          pct={data.metas.pct_mensual ?? 0}
+        />
+      )}
+
+      {/* P&L */}
+      {data.pl.costo_calculable ? (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4">
+            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Margen bruto hoy</div>
+            <p className={`text-xl font-bold ${data.pl.margen_bruto_hoy >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+              {formatPrice(data.pl.margen_bruto_hoy)}
+            </p>
+            <p className="text-xs text-slate-400 mt-0.5">{data.pl.margen_pct_hoy}% margen</p>
+          </div>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4">
+            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Costo ventas hoy</div>
+            <p className="text-xl font-bold text-slate-900 dark:text-white">{formatPrice(data.pl.costo_hoy)}</p>
+            <p className="text-xs text-slate-400 mt-0.5">solo productos con costo cargado</p>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-4 py-3">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          Carga <code className="font-mono mx-1">cost_price</code> en productos para ver margen bruto.
+        </div>
+      )}
 
       {/* Caja status */}
       {cajaData && (
