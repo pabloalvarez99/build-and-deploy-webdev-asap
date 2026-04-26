@@ -1,6 +1,20 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: Image upload + inline edit + reorder list (Abril 2026)
+## Estado actual: Dashboard Operacional Diario (Abril 2026)
+
+---
+
+## 2026-04-26 — Feat: Dashboard Operacional Diario
+
+**`/admin/operaciones`** — Vista matutina unificada para el dueño/farmacéutico:
+
+- **API `GET /api/admin/operaciones`**: un solo endpoint con `Promise.all` de 12 queries paralelas — reservas expiradas, reservas urgentes (<6h), vencidos con stock, lotes por vencer en 7d, faltas con stock disponible, OC borrador, counts de stock crítico/cero, KPIs hoy/ayer, webpay pendientes.
+- **Sección Crítico (rojo)**: reservas expiradas sin procesar + productos vencidos con stock. Cada item enlaza directo al detalle.
+- **Sección Urgente (amber)**: reservas por expirar pronto, faltas cuyo producto ya llegó al stock (con botón llamada directa al cliente), OC en borrador sin confirmar.
+- **Sección 7 días (naranja)**: lotes próximos a vencer.
+- **KPI cards**: ventas hoy vs ayer con badge ▲/▼ %, total pedidos, stock crítico count, faltas pendientes.
+- **Acciones rápidas**: 6 links con badges de alerta (POS, Órdenes, Arqueo, Reposición, Faltas, Vencimientos).
+- **Auto-refresh** cada 60s. Sidebar: nuevo link "Operaciones" (Activity icon) entre Dashboard y POS.
 
 ---
 
