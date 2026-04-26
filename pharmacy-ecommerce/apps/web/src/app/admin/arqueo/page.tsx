@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Banknote, CreditCard, SmartphoneNfc, Calculator, CheckCircle2,
   AlertCircle, Loader2, Clock, TrendingUp, Lock, RefreshCw,
-  ChevronDown, ChevronUp, Receipt, History, X, DollarSign, Info,
+  ChevronDown, ChevronUp, Receipt, History, X, DollarSign, Info, Shuffle, Printer,
 } from 'lucide-react';
 
 interface ShiftData {
@@ -14,6 +14,7 @@ interface ShiftData {
     efectivo: number;
     debito: number;
     credito: number;
+    mixto: number;
     total: number;
     num_transacciones: number;
   };
@@ -63,6 +64,7 @@ const PAYMENT_LABELS: Record<string, { label: string; color: string; icon: React
   pos_cash: { label: 'Efectivo', color: 'text-emerald-600 dark:text-emerald-400', icon: <Banknote className="w-4 h-4" /> },
   pos_debit: { label: 'Débito', color: 'text-blue-600 dark:text-blue-400', icon: <CreditCard className="w-4 h-4" /> },
   pos_credit: { label: 'Crédito', color: 'text-violet-600 dark:text-violet-400', icon: <SmartphoneNfc className="w-4 h-4" /> },
+  pos_mixed: { label: 'Mixto', color: 'text-amber-600 dark:text-amber-400', icon: <Shuffle className="w-4 h-4" /> },
 };
 
 export default function ArqueoPage() {
@@ -169,6 +171,36 @@ export default function ArqueoPage() {
   const diferenciaColor = Math.abs(diferencia) < 1 ? 'text-emerald-600 dark:text-emerald-400' : diferencia > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400';
 
   return (
+    <>
+    <style>{`
+      @media print {
+        body > * { display: none !important; }
+        #zreport-print { display: block !important; position: fixed; inset: 0; background: white; padding: 24px; font-family: monospace; }
+      }
+      #zreport-print { display: none; }
+    `}</style>
+    <div id="zreport-print">
+      <h2 style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 4 }}>Z-REPORT — Cierre de Turno</h2>
+      <p style={{ fontSize: 12, color: '#555', marginBottom: 4 }}>Turno desde: {formatTime(data.turno_inicio)}</p>
+      <p style={{ fontSize: 12, color: '#555', marginBottom: 8 }}>Impreso: {new Date().toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' })}</p>
+      <hr style={{ margin: '8px 0', borderColor: '#ccc' }} />
+      <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
+        <tbody>
+          <tr><td>Fondo inicial</td><td style={{ textAlign: 'right' }}>{formatPrice(data.fondo_inicial)}</td></tr>
+          <tr><td>Ventas efectivo</td><td style={{ textAlign: 'right' }}>{formatPrice(data.ventas.efectivo)}</td></tr>
+          <tr><td>Ventas débito</td><td style={{ textAlign: 'right' }}>{formatPrice(data.ventas.debito)}</td></tr>
+          <tr><td>Ventas crédito</td><td style={{ textAlign: 'right' }}>{formatPrice(data.ventas.credito)}</td></tr>
+          {data.ventas.mixto > 0 && (
+            <tr><td>Ventas mixto</td><td style={{ textAlign: 'right' }}>{formatPrice(data.ventas.mixto)}</td></tr>
+          )}
+          <tr style={{ fontWeight: 'bold', borderTop: '1px solid #ccc' }}>
+            <td>TOTAL VENTAS</td><td style={{ textAlign: 'right' }}>{formatPrice(data.ventas.total)}</td>
+          </tr>
+          <tr><td>N° transacciones</td><td style={{ textAlign: 'right' }}>{data.ventas.num_transacciones}</td></tr>
+          <tr style={{ borderTop: '1px solid #ccc' }}><td>Efectivo esperado en caja</td><td style={{ textAlign: 'right' }}>{formatPrice(data.efectivo_esperado)}</td></tr>
+        </tbody>
+      </table>
+    </div>
     <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -181,9 +213,14 @@ export default function ArqueoPage() {
             Turno desde <strong>{formatTime(data.turno_inicio)}</strong>
           </p>
         </div>
-        <button onClick={load} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Actualizar">
-          <RefreshCw className="w-5 h-5 text-slate-400" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => window.print()} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Imprimir Z-report">
+            <Printer className="w-5 h-5 text-slate-400" />
+          </button>
+          <button onClick={load} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Actualizar">
+            <RefreshCw className="w-5 h-5 text-slate-400" />
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -219,6 +256,14 @@ export default function ArqueoPage() {
           </div>
           <p className="text-2xl font-bold text-violet-700 dark:text-violet-300">{formatPrice(data.ventas.credito)}</p>
         </div>
+        {data.ventas.mixto > 0 && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-100 dark:border-amber-800/30 p-4">
+            <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 text-xs mb-1">
+              <Shuffle className="w-3.5 h-3.5" /> Mixto
+            </div>
+            <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{formatPrice(data.ventas.mixto)}</p>
+          </div>
+        )}
       </div>
 
       {/* Cash accounting */}
@@ -504,5 +549,6 @@ export default function ArqueoPage() {
         </div>
       )}
     </div>
+    </>
   );
 }

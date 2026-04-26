@@ -34,16 +34,25 @@ export async function GET() {
       where: {
         created_at: { gte: turnoInicio },
         status: 'completed',
-        payment_provider: { in: ['pos_cash', 'pos_debit', 'pos_credit'] },
+        payment_provider: { in: ['pos_cash', 'pos_debit', 'pos_credit', 'pos_mixed'] },
       },
-      select: { id: true, total: true, payment_provider: true, created_at: true, guest_name: true, guest_surname: true, guest_email: true },
+      select: { id: true, total: true, payment_provider: true, created_at: true, guest_name: true, guest_surname: true, guest_email: true, cash_amount: true, card_amount: true },
       orderBy: { created_at: 'desc' },
     });
 
-    const ventasEfectivo = posOrders.filter(o => o.payment_provider === 'pos_cash').reduce((s, o) => s + Number(o.total), 0);
-    const ventasDebito = posOrders.filter(o => o.payment_provider === 'pos_debit').reduce((s, o) => s + Number(o.total), 0);
+    const ventasEfectivo = posOrders.reduce((s, o) => {
+      if (o.payment_provider === 'pos_cash') return s + Number(o.total);
+      if (o.payment_provider === 'pos_mixed') return s + Number(o.cash_amount ?? 0);
+      return s;
+    }, 0);
+    const ventasDebito = posOrders.reduce((s, o) => {
+      if (o.payment_provider === 'pos_debit') return s + Number(o.total);
+      if (o.payment_provider === 'pos_mixed') return s + Number(o.card_amount ?? 0);
+      return s;
+    }, 0);
     const ventasCredito = posOrders.filter(o => o.payment_provider === 'pos_credit').reduce((s, o) => s + Number(o.total), 0);
-    const ventasTotal = ventasEfectivo + ventasDebito + ventasCredito;
+    const ventasMixto = posOrders.filter(o => o.payment_provider === 'pos_mixed').reduce((s, o) => s + Number(o.total), 0);
+    const ventasTotal = posOrders.reduce((s, o) => s + Number(o.total), 0);
     const efectivoEsperado = fondoInicial + ventasEfectivo;
 
     // Last 10 closes
@@ -59,6 +68,7 @@ export async function GET() {
         efectivo: ventasEfectivo,
         debito: ventasDebito,
         credito: ventasCredito,
+        mixto: ventasMixto,
         total: ventasTotal,
         num_transacciones: posOrders.length,
       },
@@ -139,15 +149,23 @@ export async function POST(request: NextRequest) {
         where: {
           created_at: { gte: turnoInicio },
           status: 'completed',
-          payment_provider: { in: ['pos_cash', 'pos_debit', 'pos_credit'] },
+          payment_provider: { in: ['pos_cash', 'pos_debit', 'pos_credit', 'pos_mixed'] },
         },
-        select: { total: true, payment_provider: true },
+        select: { total: true, payment_provider: true, cash_amount: true, card_amount: true },
       });
 
-      const ventasEfectivo = posOrders.filter(o => o.payment_provider === 'pos_cash').reduce((s, o) => s + Number(o.total), 0);
-      const ventasDebito = posOrders.filter(o => o.payment_provider === 'pos_debit').reduce((s, o) => s + Number(o.total), 0);
+      const ventasEfectivo = posOrders.reduce((s, o) => {
+        if (o.payment_provider === 'pos_cash') return s + Number(o.total);
+        if (o.payment_provider === 'pos_mixed') return s + Number(o.cash_amount ?? 0);
+        return s;
+      }, 0);
+      const ventasDebito = posOrders.reduce((s, o) => {
+        if (o.payment_provider === 'pos_debit') return s + Number(o.total);
+        if (o.payment_provider === 'pos_mixed') return s + Number(o.card_amount ?? 0);
+        return s;
+      }, 0);
       const ventasCredito = posOrders.filter(o => o.payment_provider === 'pos_credit').reduce((s, o) => s + Number(o.total), 0);
-      const ventasTotal = ventasEfectivo + ventasDebito + ventasCredito;
+      const ventasTotal = posOrders.reduce((s, o) => s + Number(o.total), 0);
       const efectivoEsperado = fondoInicial + ventasEfectivo;
       const diferencia = efectivo_contado - efectivoEsperado;
       const now = new Date();
