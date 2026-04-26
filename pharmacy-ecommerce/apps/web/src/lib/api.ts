@@ -212,9 +212,13 @@ export interface Product {
   created_at: string
 }
 
+export type MatchField = 'active_ingredient' | 'therapeutic_action' | 'laboratory' | null
+
 export interface ProductWithCategory extends Product {
   category_name: string | null
   category_slug: string | null
+  match_field?: MatchField
+  match_value?: string | null
 }
 
 export interface PaginatedProducts {
