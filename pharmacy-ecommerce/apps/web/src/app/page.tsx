@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { productApi, PaginatedProducts, Category, Product } from '@/lib/api';
+import { productApi, PaginatedProducts, Category, Product, ProductWithCategory } from '@/lib/api';
 import {
   Search, ShoppingCart, Check, X, ChevronUp, Package, ChevronDown,
   Pill, Heart, Droplets, Apple, Stethoscope, Brain, Wind, Sparkles,
@@ -304,6 +304,7 @@ function HomeContent() {
   }, []);
 
   const selectedCategoryName = categories.find(c => c.slug === selectedCategory)?.name;
+  const hasSemanticMatches = searchTerm.length > 0 && allProducts.some(p => (p as ProductWithCategory).match_field != null)
 
   const sortedCategories = [...categories].sort((a, b) => {
     const aIdx = prioritySlugs.indexOf(a.slug);
@@ -658,6 +659,13 @@ function HomeContent() {
               </div>
             </div>
 
+            {/* Semantic search banner */}
+            {hasSemanticMatches && (
+              <p className="text-sm text-slate-500 dark:text-slate-400 -mt-2">
+                Mostrando resultados con <strong>&ldquo;{searchTerm}&rdquo;</strong> en nombre, principio activo o acción terapéutica
+              </p>
+            )}
+
             {/* Products */}
             {isLoading ? (
               <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4' : 'space-y-2'}>
@@ -718,6 +726,13 @@ function HomeContent() {
                                 {product.name}
                               </h3>
                             </Link>
+                            {(product as ProductWithCategory).match_field && (
+                              <span className="inline-flex items-center text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-700 mb-1 max-w-full truncate">
+                                {(product as ProductWithCategory).match_field === 'active_ingredient' && `Principio: ${(product as ProductWithCategory).match_value}`}
+                                {(product as ProductWithCategory).match_field === 'therapeutic_action' && `Acción: ${(product as ProductWithCategory).match_value}`}
+                                {(product as ProductWithCategory).match_field === 'laboratory' && `Lab: ${(product as ProductWithCategory).match_value}`}
+                              </span>
+                            )}
                             {product.laboratory && (
                               <span className="text-sm text-slate-400 dark:text-slate-500 mb-3 truncate">{product.laboratory}</span>
                             )}
@@ -777,6 +792,13 @@ function HomeContent() {
                               <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-base leading-tight hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors truncate">{product.name}</h3>
                             </Link>
                             {product.laboratory && <p className="text-sm text-slate-400 truncate">{product.laboratory}</p>}
+                            {(product as ProductWithCategory).match_field && (
+                              <span className="inline-flex items-center text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-700 mt-0.5 max-w-full truncate">
+                                {(product as ProductWithCategory).match_field === 'active_ingredient' && `Principio: ${(product as ProductWithCategory).match_value}`}
+                                {(product as ProductWithCategory).match_field === 'therapeutic_action' && `Acción: ${(product as ProductWithCategory).match_value}`}
+                                {(product as ProductWithCategory).match_field === 'laboratory' && `Lab: ${(product as ProductWithCategory).match_value}`}
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center gap-3 flex-shrink-0">
                             <div className="text-right">
