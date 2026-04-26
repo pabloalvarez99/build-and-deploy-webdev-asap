@@ -1,6 +1,21 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: Dashboard Operacional Diario (Abril 2026)
+## Estado actual: POS shift-awareness + arqueo caja en operaciones (Abril 2026)
+
+---
+
+## 2026-04-26 — Feat: POS shift-awareness + caja status en operaciones
+
+**`/admin/pos`:**
+- Banner ámbar en POS cuando `fondo_inicial === 0` → alerta "Configura el fondo antes de iniciar ventas" con link a Arqueo
+- Modal de confirmación de receta al agregar medicamentos `required` o `controlled` al carrito (primera vez): muestra nombre, tipo de receta requerida, botones Cancelar / "Receta verificada ✓"
+- `addToCartDirect()` separado de `addToCart()` para que el modal confirme y llame directo
+
+**`/admin/operaciones`:**
+- Card "Estado de caja" con fondo inicial, hora de inicio de turno y resumen de ventas POS del día
+- Ícono Banknote ámbar si fondo=0, esmeralda si configurado
+- Clickeable → link a `/admin/arqueo`
+- `Promise.all` paralelo: operaciones + arqueo en un solo `load()`
 
 ---
 
