@@ -31,6 +31,7 @@ import {
   Scale,
   Star,
   RotateCcw,
+  ClipboardCheck,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -58,6 +59,7 @@ const navItems = [
   { href: '/admin/descuentos', icon: Tag, label: 'Descuentos' },
   { href: '/admin/stock', icon: ArrowUpDown, label: 'Stock' },
   { href: '/admin/inventario', icon: Warehouse, label: 'Inventario' },
+  { href: '/admin/catalogo-calidad', icon: ClipboardCheck, label: 'Calidad Catálogo' },
   { href: '/admin/reposicion', icon: PackageSearch, label: 'Reposición' },
   { href: '/admin/costos', icon: TrendingUp, label: 'Costos' },
   { href: '/admin/faltas', icon: BookX, label: 'Faltas' },
