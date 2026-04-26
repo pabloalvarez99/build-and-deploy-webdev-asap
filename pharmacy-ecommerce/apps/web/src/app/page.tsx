@@ -1,14 +1,14 @@
 'use client';
 
 import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { productApi, PaginatedProducts, Category, Product } from '@/lib/api';
 import {
   Search, ShoppingCart, Check, X, ChevronUp, Package, ChevronDown,
   Pill, Heart, Droplets, Apple, Stethoscope, Brain, Wind, Sparkles,
   Eye, Flower2, Shield, Droplet, Baby, Users, Activity, Leaf,
   TrendingUp, MessageCircle, FileText, RefreshCw, LayoutGrid, List,
-  BadgePercent, AlertCircle, Star,
+  BadgePercent, AlertCircle, Star, Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -134,6 +134,15 @@ function HomeContent() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const searchInputRef = useRef<HTMLInputElement>(null);
   const ITEMS_PER_PAGE = 20;
+  const router = useRouter();
+
+  // Autocomplete state
+  type AutocompleteProduct = { id: string; name: string; slug: string; price: string; discount_percent: number | null };
+  const [acSuggestions, setAcSuggestions] = useState<AutocompleteProduct[]>([]);
+  const [acLoading, setAcLoading] = useState(false);
+  const [acError, setAcError] = useState<string | null>(null);
+  const [acOpen, setAcOpen] = useState(false);
+  const acContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const cat = searchParams.get('category');
@@ -172,6 +181,48 @@ function HomeContent() {
     }, 400);
     return () => clearTimeout(timer);
   }, [searchInput]);
+
+  // Autocomplete debounced fetch
+  useEffect(() => {
+    if (searchInput.length < 2) {
+      setAcSuggestions([]);
+      setAcOpen(false);
+      setAcError(null);
+      return;
+    }
+    setAcLoading(true);
+    setAcError(null);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/products?search=${encodeURIComponent(searchInput)}&limit=6&active_only=true`
+        );
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        const data = await res.json();
+        setAcSuggestions(data.products ?? []);
+        setAcOpen(true);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Error desconocido';
+        console.error('[Autocomplete]', msg);
+        setAcError('Error al buscar');
+        setAcOpen(true);
+      } finally {
+        setAcLoading(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // Click-outside closes autocomplete
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (acContainerRef.current && !acContainerRef.current.contains(e.target as Node)) {
+        setAcOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   useEffect(() => {
     loadProducts(1, true);
@@ -325,10 +376,10 @@ function HomeContent() {
             {/* Search bar */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 px-4 py-3">
               <div className="flex gap-2 items-center">
-                <div className="flex-1 relative" role="search">
+                <div className="flex-1 relative" role="search" ref={acContainerRef}>
                   <label htmlFor="search-products" className="sr-only">Buscar medicamentos</label>
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Search className="h-4 h-4 text-slate-400 dark:text-slate-500" aria-hidden="true" />
+                    <Search className="h-4 w-4 text-slate-400 dark:text-slate-500" aria-hidden="true" />
                   </div>
                   <input
                     ref={searchInputRef}
@@ -337,17 +388,79 @@ function HomeContent() {
                     placeholder="Buscar medicamentos, principio activo, laboratorio..."
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') { setAcOpen(false); }
+                      if (e.key === 'Enter') { setAcOpen(false); }
+                    }}
+                    onFocus={() => {
+                      if (searchInput.length >= 2 && (acSuggestions.length > 0 || acError)) setAcOpen(true);
+                    }}
                     className="block w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-base text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-400 transition-all"
                     autoComplete="off"
+                    aria-autocomplete="list"
+                    aria-expanded={acOpen}
+                    aria-controls="ac-listbox"
                   />
                   {searchInput && (
                     <button
-                      onClick={() => { setSearchInput(''); setSearchTerm(''); searchInputRef.current?.focus(); }}
+                      onClick={() => {
+                        setSearchInput('');
+                        setSearchTerm('');
+                        setAcOpen(false);
+                        setAcSuggestions([]);
+                        searchInputRef.current?.focus();
+                      }}
                       className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-500 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
                       aria-label="Limpiar búsqueda"
                     >
                       <X className="w-4 h-4" />
                     </button>
+                  )}
+
+                  {/* Autocomplete dropdown */}
+                  {acOpen && (
+                    <div
+                      id="ac-listbox"
+                      role="listbox"
+                      className="absolute top-full left-0 right-0 mt-1.5 z-50 rounded-2xl border-2 border-slate-200 dark:border-slate-700 shadow-xl bg-white dark:bg-slate-900 overflow-hidden"
+                    >
+                      {acLoading ? (
+                        <div className="flex items-center justify-center gap-2 px-4 py-4 text-slate-400 dark:text-slate-500">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span className="text-base">Buscando...</span>
+                        </div>
+                      ) : acError ? (
+                        <div className="px-4 py-4 text-base text-red-500 dark:text-red-400">{acError}</div>
+                      ) : acSuggestions.length === 0 ? (
+                        <div className="px-4 py-4 text-base text-slate-500 dark:text-slate-400">
+                          Sin resultados para &ldquo;{searchInput}&rdquo;
+                        </div>
+                      ) : (
+                        acSuggestions.map((p) => {
+                          const displayPrice = p.discount_percent
+                            ? discountedPrice(Number(p.price), p.discount_percent)
+                            : Number(p.price);
+                          const displayName = p.name.length > 40 ? p.name.slice(0, 40) + '…' : p.name;
+                          return (
+                            <button
+                              key={p.id}
+                              role="option"
+                              aria-selected={false}
+                              onMouseDown={(e) => {
+                                // mousedown fires before blur; prevent input blur then navigate
+                                e.preventDefault();
+                                setAcOpen(false);
+                                router.push(`/producto/${p.slug}`);
+                              }}
+                              className="w-full flex items-center justify-between px-4 py-3 min-h-[56px] text-left hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-b-0 focus:outline-none focus:bg-emerald-50 dark:focus:bg-emerald-900/20"
+                            >
+                              <span className="text-base font-semibold text-slate-800 dark:text-slate-100 truncate pr-4">{displayName}</span>
+                              <span className="text-emerald-600 font-bold text-sm flex-shrink-0">{formatPrice(displayPrice)}</span>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
                   )}
                 </div>
                 <Link
