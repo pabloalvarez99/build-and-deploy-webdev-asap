@@ -27,6 +27,7 @@ interface Product {
   image_url?: string | null
   laboratory?: string | null
   presentation?: string | null
+  prescription_type?: string | null
 }
 
 type PaymentMethod = 'pos_cash' | 'pos_debit' | 'pos_credit' | 'pos_mixed'
@@ -113,6 +114,10 @@ export default function POSPage() {
   // Pago mixto
   const [mixedCash, setMixedCash] = useState('')
   const [mixedCard, setMixedCard] = useState('')
+  // Shift awareness
+  const [shiftFondo, setShiftFondo] = useState<number | null>(null)
+  // Prescription confirmation modal
+  const [prescriptionPending, setPrescriptionPending] = useState<Product | null>(null)
   const pickupInputRef = useRef<HTMLInputElement>(null)
   const pickupDigitRefs = useRef<(HTMLInputElement | null)[]>(Array(6).fill(null))
 
@@ -192,6 +197,11 @@ export default function POSPage() {
       .then(data => setCategories(data.sort((a, b) => a.name.localeCompare(b.name))))
       .catch(() => {})
     loadTodayStats()
+    // Shift awareness — check if fondo was set
+    fetch('/api/admin/arqueo', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setShiftFondo(data.fondo_inicial) })
+      .catch(() => {})
     // Fetch pharmacy info for receipts (cached in state for the session)
     fetch('/api/admin/settings', { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
@@ -316,7 +326,7 @@ export default function POSPage() {
     return () => clearTimeout(t)
   }, [search, selectedCategory, searchProducts])
 
-  function addToCart(p: Product) {
+  function addToCartDirect(p: Product) {
     setCart((prev) => {
       const existing = prev.find((i) => i.product_id === p.id)
       if (existing) {
@@ -328,6 +338,18 @@ export default function POSPage() {
       if (p.stock <= 0) return prev
       return [...prev, { product_id: p.id, product_name: p.name, price: p.price, quantity: 1, stock: p.stock }]
     })
+  }
+
+  function addToCart(p: Product) {
+    // Show prescription confirmation for controlled/required meds not yet in cart
+    if (
+      (p.prescription_type === 'required' || p.prescription_type === 'controlled') &&
+      !cart.find(i => i.product_id === p.id)
+    ) {
+      setPrescriptionPending(p)
+      return
+    }
+    addToCartDirect(p)
   }
 
   function updateQty(product_id: string, delta: number) {
@@ -617,6 +639,55 @@ export default function POSPage() {
   }
 
   return (
+    <>
+    {/* Shift awareness banner */}
+    {shiftFondo === 0 && (
+      <div className="bg-amber-500 text-white text-sm font-semibold px-4 py-2 flex items-center justify-between">
+        <span>⚠️ Fondo de caja: $0 — Configura el fondo antes de iniciar ventas</span>
+        <a href="/admin/arqueo" className="underline ml-4 hover:text-amber-100">Ir a Arqueo →</a>
+      </div>
+    )}
+
+    {/* Prescription confirmation modal */}
+    {prescriptionPending && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm shadow-2xl">
+          <div className="px-6 py-5 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/40 rounded-xl flex items-center justify-center shrink-0">
+                <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm">
+                  {prescriptionPending.prescription_type === 'controlled' ? 'Medicamento controlado' : 'Requiere receta médica'}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">{prescriptionPending.name}</p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              {prescriptionPending.prescription_type === 'controlled'
+                ? 'Este medicamento requiere Receta Cheque. Verifica que el cliente la presente antes de dispensar.'
+                : 'Este medicamento requiere receta médica válida. Verifica que el cliente la presente antes de dispensar.'}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setPrescriptionPending(null)}
+                className="flex-1 py-2.5 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-xl text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => { addToCartDirect(prescriptionPending); setPrescriptionPending(null) }}
+                className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-semibold transition-colors"
+              >
+                Receta verificada ��
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
     <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-8rem)]">
       {/* Left: Product search */}
       <div className="flex-1 flex flex-col gap-4 min-h-0">
@@ -1391,5 +1462,6 @@ export default function POSPage() {
         </div>
       )}
     </div>
+    </>
   )
 }

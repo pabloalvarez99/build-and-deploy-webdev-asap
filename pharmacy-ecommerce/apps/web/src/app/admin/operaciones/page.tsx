@@ -6,7 +6,7 @@ import {
   Clock, CheckCircle2, Loader2, RefreshCw,
   Package, BookX, ShoppingBag, ClipboardList, CalendarClock,
   Calculator, ArrowRight, PhoneCall, AlertCircle, TrendingUp,
-  TrendingDown, Activity,
+  TrendingDown, Activity, Banknote,
 } from 'lucide-react';
 
 interface ReservaItem {
@@ -120,16 +120,27 @@ function SectionHeader({ label, count, color }: { label: string; count: number; 
   );
 }
 
+interface CajaData {
+  fondo_inicial: number;
+  ventas: { total: number; num_transacciones: number };
+  turno_inicio: string;
+}
+
 export default function OperacionesPage() {
   const [data, setData] = useState<DashData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cajaData, setCajaData] = useState<CajaData | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/operaciones', { credentials: 'include' });
-      if (!res.ok) throw new Error('Error al cargar');
-      setData(await res.json());
+      const [opsRes, cajaRes] = await Promise.all([
+        fetch('/api/admin/operaciones', { credentials: 'include' }),
+        fetch('/api/admin/arqueo', { credentials: 'include' }),
+      ]);
+      if (!opsRes.ok) throw new Error('Error al cargar');
+      setData(await opsRes.json());
+      if (cajaRes.ok) setCajaData(await cajaRes.json());
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error');
@@ -224,6 +235,31 @@ export default function OperacionesPage() {
           <p className="text-xs text-slate-400 mt-0.5">{data.faltas_con_stock.length} con stock ya</p>
         </div>
       </div>
+
+      {/* Caja status */}
+      {cajaData && (
+        <Link href="/admin/arqueo" className="block bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 px-4 py-3 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${cajaData.fondo_inicial === 0 ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-emerald-100 dark:bg-emerald-900/30'}`}>
+                <Banknote className={`w-4 h-4 ${cajaData.fondo_inicial === 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`} />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Estado de caja — turno desde {new Date(cajaData.turno_inicio).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</p>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  {cajaData.fondo_inicial === 0
+                    ? '⚠️ Fondo no configurado'
+                    : `Fondo $${Math.round(cajaData.fondo_inicial).toLocaleString('es-CL')}`}
+                  {cajaData.ventas.num_transacciones > 0 && (
+                    <span className="text-slate-400 font-normal ml-2">· {cajaData.ventas.num_transacciones} ventas POS · ${Math.round(cajaData.ventas.total).toLocaleString('es-CL')}</span>
+                  )}
+                </p>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0" />
+          </div>
+        </Link>
+      )}
 
       {/* CRITICO */}
       {(data.reservas_expiradas.length > 0 || data.vencidos.length > 0) && (
