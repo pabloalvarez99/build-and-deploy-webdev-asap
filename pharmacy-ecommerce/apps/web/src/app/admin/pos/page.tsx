@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
 import { productApi, Category } from '@/lib/api'
+import { calcPoints } from '@/lib/loyalty-utils'
 import {
   ShoppingCart, Search, Plus, Minus, Trash2, CreditCard, Banknote,
   CheckCircle2, X, Receipt, Loader2, SmartphoneNfc, ScanLine, CheckCircle, AlertCircle, User, History, BarChart3, Store,
@@ -55,7 +56,11 @@ export default function POSPage() {
   const [successOrder, setSuccessOrder] = useState<{
     id: string; total: number; items: CartItem[]; method: PaymentMethod;
     customer: string; change: number; date: string; discountAmount: number;
+    loyaltyPointsEarned?: number;
   } | null>(null)
+  const [pharmacyInfo, setPharmacyInfo] = useState<{
+    name: string; address: string; phone: string;
+  }>({ name: 'Tu Farmacia', address: 'Coquimbo, Chile', phone: '' })
   const [showPayModal, setShowPayModal] = useState(false)
   const [cashReceived, setCashReceived] = useState('')
   const [discountType, setDiscountType] = useState<'%' | '$'>('%')
@@ -187,6 +192,18 @@ export default function POSPage() {
       .then(data => setCategories(data.sort((a, b) => a.name.localeCompare(b.name))))
       .catch(() => {})
     loadTodayStats()
+    // Fetch pharmacy info for receipts (cached in state for the session)
+    fetch('/api/admin/settings', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then((s: Record<string, string> | null) => {
+        if (!s) return
+        setPharmacyInfo({
+          name: s.pharmacy_name || 'Tu Farmacia',
+          address: s.pharmacy_address || 'Coquimbo, Chile',
+          phone: s.pharmacy_phone || '',
+        })
+      })
+      .catch(() => {})
   }, [user, router])
 
   // Barcode scanner: global capture listener — intercepts before element handlers
@@ -432,7 +449,89 @@ export default function POSPage() {
     finally { setPickupApproving(false) }
   }
 
-  const printReceipt = () => window.print()
+  const printReceipt = () => {
+    if (!successOrder) return
+    const methodLabel = PAYMENT_METHODS.find(m => m.value === successOrder.method)?.label || successOrder.method
+    const itemsHtml = successOrder.items.map(item =>
+      `<tr>
+        <td style="padding:2px 0;font-size:12px;">${item.quantity}&times; ${item.product_name}</td>
+        <td style="padding:2px 0;font-size:12px;text-align:right;">${formatCLP(item.price * item.quantity)}</td>
+      </tr>`
+    ).join('')
+    const discountRow = successOrder.discountAmount > 0
+      ? `<tr><td style="font-size:12px;color:#059669;">Descuento</td><td style="font-size:12px;text-align:right;color:#059669;">-${formatCLP(successOrder.discountAmount)}</td></tr>`
+      : ''
+    const changeRow = successOrder.change > 0
+      ? `<tr><td style="font-size:12px;">Vuelto</td><td style="font-size:12px;text-align:right;">${formatCLP(successOrder.change)}</td></tr>`
+      : ''
+    const customerRow = successOrder.customer
+      ? `<p style="font-size:12px;margin:2px 0;">Cliente: ${successOrder.customer}</p>`
+      : ''
+    const phoneRow = pharmacyInfo.phone
+      ? `<p style="font-size:11px;color:#64748b;margin:2px 0;">${pharmacyInfo.phone}</p>`
+      : ''
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Recibo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Courier New', Courier, monospace; width: 80mm; max-width: 80mm; padding: 8px; font-size: 12px; color: #000; }
+    h1 { font-size: 16px; font-weight: bold; text-align: center; margin-bottom: 2px; }
+    .center { text-align: center; }
+    .small { font-size: 11px; color: #444; }
+    .divider { border: none; border-top: 1px dashed #888; margin: 6px 0; }
+    table { width: 100%; border-collapse: collapse; }
+    .total-row td { font-weight: bold; font-size: 14px; padding-top: 4px; }
+    .footer { text-align: center; font-size: 11px; color: #555; margin-top: 10px; }
+    @media print {
+      body { margin: 0; padding: 4px; }
+      @page { margin: 4mm; size: 80mm auto; }
+    }
+  </style>
+</head>
+<body>
+  <h1>${pharmacyInfo.name}</h1>
+  <p class="center small">${pharmacyInfo.address}</p>
+  ${phoneRow}
+  <hr class="divider" />
+  <p class="small center">${successOrder.date}</p>
+  ${customerRow}
+  <hr class="divider" />
+  <table>
+    <tbody>
+      ${itemsHtml}
+    </tbody>
+  </table>
+  <hr class="divider" />
+  <table>
+    <tbody>
+      ${discountRow}
+      <tr class="total-row">
+        <td>TOTAL</td>
+        <td style="text-align:right;">${formatCLP(successOrder.total)}</td>
+      </tr>
+      <tr>
+        <td style="font-size:12px;">Pago</td>
+        <td style="font-size:12px;text-align:right;">${methodLabel}</td>
+      </tr>
+      ${changeRow}
+    </tbody>
+  </table>
+  <hr class="divider" />
+  <p class="center small" style="font-size:11px;color:#666;">#${successOrder.id.slice(0, 8).toUpperCase()}</p>
+  <p class="footer">¡Gracias por su compra!</p>
+</body>
+</html>`
+    const win = window.open('', '_blank', 'width=320,height=600,scrollbars=yes')
+    if (!win) return
+    win.document.write(html)
+    win.document.close()
+    win.focus()
+    win.print()
+    win.onafterprint = () => win.close()
+  }
 
   if (successOrder) {
     const methodLabel = PAYMENT_METHODS.find(m => m.value === successOrder.method)?.label || successOrder.method
@@ -450,8 +549,9 @@ export default function POSPage() {
         {/* Receipt — visible on screen + print */}
         <div id="pos-receipt" className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-4 font-mono text-sm print:border-0 print:p-0 print:rounded-none">
           <div className="text-center mb-3 space-y-0.5">
-            <p className="font-bold text-base">Tu Farmacia</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Coquimbo, Chile</p>
+            <p className="font-bold text-base">{pharmacyInfo.name}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{pharmacyInfo.address}</p>
+            {pharmacyInfo.phone && <p className="text-xs text-slate-500 dark:text-slate-400">{pharmacyInfo.phone}</p>}
             <p className="text-xs text-slate-500 dark:text-slate-400">{successOrder.date}</p>
             {successOrder.customer && <p className="text-xs font-medium">Cliente: {successOrder.customer}</p>}
           </div>
@@ -493,10 +593,11 @@ export default function POSPage() {
         <div className="space-y-2 print:hidden">
           <button
             onClick={printReceipt}
-            className="w-full py-3 bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+            className="w-full py-3 bg-emerald-600 text-white rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-emerald-700 transition-colors"
+            style={{ minHeight: '48px' }}
           >
             <Receipt className="w-5 h-5" />
-            Imprimir recibo
+            Imprimir Recibo
           </button>
           <button
             onClick={() => { setSuccessOrder(null); searchRef.current?.focus() }}
