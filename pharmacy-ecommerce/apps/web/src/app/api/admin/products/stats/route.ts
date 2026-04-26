@@ -14,7 +14,7 @@ export async function GET() {
       db.products.count({ where: { active: true, image_url: null } }),
       db.products.count({ where: { active: true, external_id: null } }),
       db.products.count({ where: { active: true, product_barcodes: { none: {} } } }),
-      db.products.count({ where: { active: true, stock: { lte: 0 } } }),
+      db.products.count({ where: { stock: { lte: 0 } } }),
       db.products.count({ where: { active: true, stock: { gt: 0, lte: 10 } } }),
     ]);
 

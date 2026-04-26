@@ -217,7 +217,7 @@ export default function AdminProductsPage() {
  const data = await productApi.list({
  page: currentPage,
  limit: 20,
- active_only: !showInactive,
+ active_only: stockFilter === 'out' ? false : !showInactive,
  search: searchTerm || undefined,
  category: selectedCategory || undefined,
  laboratory: selectedLaboratory || undefined,

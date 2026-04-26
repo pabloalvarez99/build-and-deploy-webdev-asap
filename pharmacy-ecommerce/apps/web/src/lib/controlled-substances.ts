@@ -12,7 +12,7 @@ const CONTROLLED = new Set([
 export function isControlledSubstance(activeIngredient: string | null | undefined): boolean {
   if (!activeIngredient) return false;
   const lower = activeIngredient.toLowerCase();
-  for (const s of CONTROLLED) {
+  for (const s of Array.from(CONTROLLED)) {
     if (lower.includes(s)) return true;
   }
   return false;
