@@ -6,6 +6,23 @@ function sanitizeImageUrl(url: string | null): string | null {
   return url.startsWith('http://') ? 'https://' + url.slice(7) : url
 }
 
+type MatchField = 'active_ingredient' | 'therapeutic_action' | 'laboratory' | null
+
+function getMatchField(
+  p: { name: string | null; active_ingredient: string | null; therapeutic_action: string | null; laboratory: string | null },
+  q: string
+): { match_field: MatchField; match_value: string | null } {
+  const lq = q.toLowerCase()
+  if (p.name?.toLowerCase().includes(lq)) return { match_field: null, match_value: null }
+  if (p.active_ingredient?.toLowerCase().includes(lq))
+    return { match_field: 'active_ingredient', match_value: p.active_ingredient }
+  if (p.therapeutic_action?.toLowerCase().includes(lq))
+    return { match_field: 'therapeutic_action', match_value: p.therapeutic_action }
+  if (p.laboratory?.toLowerCase().includes(lq))
+    return { match_field: 'laboratory', match_value: p.laboratory }
+  return { match_field: null, match_value: null }
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
   let db
@@ -111,28 +128,35 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Query failed', code: err?.code, detail: err?.message }, { status: 500 })
   }
 
-  const data = products.map((p) => ({
-    id: p.id,
-    name: p.name,
-    slug: p.slug,
-    description: p.description,
-    price: p.price.toString(),
-    stock: p.stock,
-    category_id: p.category_id,
-    image_url: sanitizeImageUrl(p.image_url),
-    active: p.active,
-    external_id: p.external_id,
-    laboratory: p.laboratory,
-    therapeutic_action: p.therapeutic_action,
-    active_ingredient: p.active_ingredient,
-    prescription_type: p.prescription_type,
-    presentation: p.presentation,
-    discount_percent: p.discount_percent,
-    cost_price: p.cost_price != null ? p.cost_price.toString() : null,
-    created_at: p.created_at.toISOString(),
-    category_name: p.categories?.name ?? null,
-    category_slug: p.categories?.slug ?? null,
-  }))
+  const searchQ = searchParams.get('search') ?? ''
+
+  const data = products.map((p) => {
+    const { match_field, match_value } = searchQ ? getMatchField(p, searchQ) : { match_field: null, match_value: null }
+    return {
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      description: p.description,
+      price: p.price.toString(),
+      stock: p.stock,
+      category_id: p.category_id,
+      image_url: sanitizeImageUrl(p.image_url),
+      active: p.active,
+      external_id: p.external_id,
+      laboratory: p.laboratory,
+      therapeutic_action: p.therapeutic_action,
+      active_ingredient: p.active_ingredient,
+      prescription_type: p.prescription_type,
+      presentation: p.presentation,
+      discount_percent: p.discount_percent,
+      cost_price: p.cost_price != null ? p.cost_price.toString() : null,
+      created_at: p.created_at.toISOString(),
+      category_name: p.categories?.name ?? null,
+      category_slug: p.categories?.slug ?? null,
+      match_field,
+      match_value,
+    }
+  })
 
   return NextResponse.json({ products: data, total, page, limit, total_pages: Math.ceil(total / limit) })
 }
