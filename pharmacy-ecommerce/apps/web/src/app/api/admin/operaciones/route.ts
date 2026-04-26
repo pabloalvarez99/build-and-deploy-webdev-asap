@@ -16,6 +16,7 @@ export async function GET() {
     todayStart.setHours(0, 0, 0, 0);
     const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
     const yesterdayEnd = new Date(todayStart.getTime() - 1);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const [
       reservasExpiradas,
@@ -30,6 +31,9 @@ export async function GET() {
       ventasHoy,
       ventasAyer,
       pedidosPendientes,
+      costoHoyRows,
+      ventasMes,
+      targetSettings,
     ] = await Promise.all([
       db.orders.findMany({
         where: { status: 'reserved', reservation_expires_at: { lt: now } },
@@ -136,7 +140,43 @@ export async function GET() {
       }),
 
       db.orders.count({ where: { status: 'pending', payment_provider: 'webpay' } }),
+
+      // Cost of sales today (only products with cost_price > 0)
+      db.$queryRaw<{ costo_hoy: string }[]>`
+        SELECT COALESCE(SUM(oi.quantity * p.cost_price), 0)::text AS costo_hoy
+        FROM order_items oi
+        JOIN products p ON oi.product_id = p.id
+        JOIN orders o ON oi.order_id = o.id
+        WHERE o.created_at >= ${todayStart}
+          AND o.status IN ('paid', 'completed')
+          AND p.cost_price > 0
+      `,
+
+      // Sales this month
+      db.orders.aggregate({
+        where: {
+          created_at: { gte: monthStart },
+          status: { in: ['paid', 'completed', 'reserved'] },
+        },
+        _sum: { total: true },
+        _count: { id: true },
+      }),
+
+      // Sales targets from admin_settings
+      db.admin_settings.findMany({
+        where: { key: { in: ['daily_sales_target', 'monthly_sales_target'] } },
+        select: { key: true, value: true },
+      }),
     ]);
+
+    const costoHoy = Number(costoHoyRows[0]?.costo_hoy ?? 0);
+    const ventasHoyNum = Number(ventasHoy._sum.total ?? 0);
+    const margenBrutoHoy = ventasHoyNum - costoHoy;
+    const costoCalculable = costoHoy > 0;
+    const targetsMap = Object.fromEntries(targetSettings.map((s: { key: string; value: string }) => [s.key, s.value]));
+    const metaDiaria = targetsMap['daily_sales_target'] ? Number(targetsMap['daily_sales_target']) : null;
+    const metaMensual = targetsMap['monthly_sales_target'] ? Number(targetsMap['monthly_sales_target']) : null;
+    const ventasMesNum = Number(ventasMes._sum.total ?? 0);
 
     return NextResponse.json({
       reservas_expiradas: reservasExpiradas.map(o => ({
@@ -196,6 +236,20 @@ export async function GET() {
         pedidos_pendientes_webpay: pedidosPendientes,
       },
       generado_en: now.toISOString(),
+      pl: {
+        costo_hoy: costoHoy,
+        margen_bruto_hoy: margenBrutoHoy,
+        margen_pct_hoy: ventasHoyNum > 0 ? Math.round((margenBrutoHoy / ventasHoyNum) * 100) : 0,
+        costo_calculable: costoCalculable,
+      },
+      metas: {
+        diaria: metaDiaria,
+        mensual: metaMensual,
+        ventas_mes: ventasMesNum,
+        ordenes_mes: ventasMes._count.id,
+        pct_diario: metaDiaria && metaDiaria > 0 ? Math.round((ventasHoyNum / metaDiaria) * 100) : null,
+        pct_mensual: metaMensual && metaMensual > 0 ? Math.round((ventasMesNum / metaMensual) * 100) : null,
+      },
     });
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);
