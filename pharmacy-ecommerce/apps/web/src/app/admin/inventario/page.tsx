@@ -47,6 +47,17 @@ interface ReorderGroup {
   supplier: { id: string; name: string; contact_name: string | null; contact_email: string | null; contact_phone: string | null };
   items: ReorderItem[];
 }
+interface ABCItem {
+  id: string; name: string; category: string;
+  revenue: number; units: number; stock: number;
+  stock_value: number; price: number; cost_price: number | null;
+  dias_stock: number | null; rotacion_30d: number;
+  clase: 'A' | 'B' | 'C'; revenue_pct: number; cumulative_pct: number;
+}
+interface ABCSummary {
+  total_products: number; clase_a: number; clase_b: number; clase_c: number;
+  total_revenue: number; days: number;
+}
 
 export default function InventarioPage() {
   const router = useRouter();
@@ -58,10 +69,16 @@ export default function InventarioPage() {
   const [filter, setFilter] = useState<'' | 'low' | 'out' | 'no_cost' | 'slow' | 'critical'>('');
   const [sortField, setSortField] = useState<SortField>('stock');
   const [sortAsc, setSortAsc] = useState(false);
-  const [activeTab, setActiveTab] = useState<'valorization' | 'reorder'>('valorization');
+  const [activeTab, setActiveTab] = useState<'valorization' | 'reorder' | 'abc'>('valorization');
   const [reorderGroups, setReorderGroups] = useState<ReorderGroup[]>([]);
   const [reorderThreshold, setReorderThreshold] = useState(10);
   const [reorderLoading, setReorderLoading] = useState(false);
+  const [abcItems, setAbcItems] = useState<ABCItem[]>([]);
+  const [abcSummary, setAbcSummary] = useState<ABCSummary | null>(null);
+  const [abcLoading, setAbcLoading] = useState(false);
+  const [abcDays, setAbcDays] = useState(90);
+  const [abcSearch, setAbcSearch] = useState('');
+  const [abcClase, setAbcClase] = useState<'' | 'A' | 'B' | 'C'>('');
 
   useEffect(() => {
     if (!user || user.role !== 'admin') { router.push('/'); return; }
@@ -107,7 +124,22 @@ export default function InventarioPage() {
 
   useEffect(() => {
     if (activeTab === 'reorder' && reorderGroups.length === 0 && !reorderLoading) loadReorder();
+    if (activeTab === 'abc' && abcItems.length === 0 && !abcLoading) loadABC();
   }, [activeTab]);
+
+  const loadABC = async (days?: number) => {
+    setAbcLoading(true);
+    try {
+      const d = days ?? abcDays;
+      const res = await fetch(`/api/admin/inventory/abc?days=${d}`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setAbcItems(data.items);
+        setAbcSummary(data.summary);
+      }
+    } catch { /* silent */ }
+    finally { setAbcLoading(false); }
+  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) setSortAsc(!sortAsc);
@@ -245,8 +277,9 @@ export default function InventarioPage() {
       <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1 w-fit">
         {([
           { id: 'valorization', label: 'Valorización' },
-          { id: 'reorder', label: `Sugerencias de reposición${reorderGroups.length > 0 ? ` (${reorderGroups.reduce((s, g) => s + g.items.length, 0)})` : ''}` },
-        ] as { id: 'valorization' | 'reorder'; label: string }[]).map((tab) => (
+          { id: 'reorder', label: `Reposición${reorderGroups.length > 0 ? ` (${reorderGroups.reduce((s, g) => s + g.items.length, 0)})` : ''}` },
+          { id: 'abc', label: 'Análisis ABC' },
+        ] as { id: 'valorization' | 'reorder' | 'abc'; label: string }[]).map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -514,6 +547,163 @@ export default function InventarioPage() {
               <AlertTriangle className="w-4 h-4" />
               {lowStock} bajo mínimo — gestionar
             </Link>
+          )}
+        </div>
+      )}
+
+      {/* ABC Tab */}
+      {activeTab === 'abc' && (
+        <div className="space-y-5">
+          {/* Controls */}
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+              {([90, 60, 30] as const).map(d => (
+                <button
+                  key={d}
+                  onClick={() => { setAbcDays(d); setAbcItems([]); loadABC(d); }}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    abcDays === d
+                      ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+                  }`}
+                >
+                  {d} días
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+              {([['', 'Todas'], ['A', 'Clase A'], ['B', 'Clase B'], ['C', 'Clase C']] as const).map(([v, l]) => (
+                <button
+                  key={v}
+                  onClick={() => setAbcClase(v as '' | 'A' | 'B' | 'C')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    abcClase === v
+                      ? v === 'A' ? 'bg-green-500 text-white shadow-sm'
+                        : v === 'B' ? 'bg-yellow-500 text-white shadow-sm'
+                        : v === 'C' ? 'bg-red-400 text-white shadow-sm'
+                        : 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+                  }`}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+            <div className="relative flex-1 min-w-40">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={abcSearch}
+                onChange={e => setAbcSearch(e.target.value)}
+                placeholder="Buscar producto..."
+                className="w-full pl-9 pr-3 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Summary badges */}
+          {abcSummary && (
+            <div className="flex flex-wrap gap-3">
+              <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                <span className="w-3 h-3 rounded-full bg-green-500" />
+                <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                  Clase A: {abcSummary.clase_a} productos → 80% ventas
+                </span>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
+                <span className="w-3 h-3 rounded-full bg-yellow-500" />
+                <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
+                  Clase B: {abcSummary.clase_b} productos → 15% ventas
+                </span>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 rounded-xl">
+                <span className="w-3 h-3 rounded-full bg-red-400" />
+                <span className="text-sm font-medium text-red-700 dark:text-red-400">
+                  Clase C: {abcSummary.clase_c} productos → 5% ventas
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Table */}
+          {abcLoading ? (
+            <div className="flex items-center justify-center py-20 text-slate-400">
+              <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mr-2" />
+              Calculando análisis ABC…
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-100 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                      <th className="text-left px-4 py-3">Clase</th>
+                      <th className="text-left px-4 py-3">Producto</th>
+                      <th className="text-right px-4 py-3">Ventas</th>
+                      <th className="text-right px-4 py-3">% revenue</th>
+                      <th className="text-right px-4 py-3">% acum.</th>
+                      <th className="text-right px-4 py-3">Unidades</th>
+                      <th className="text-right px-4 py-3">Stock</th>
+                      <th className="text-right px-4 py-3">Días stock</th>
+                      <th className="text-right px-4 py-3">Rot./30d</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50 dark:divide-slate-700">
+                    {abcItems
+                      .filter(i => (!abcClase || i.clase === abcClase) && (!abcSearch || i.name.toLowerCase().includes(abcSearch.toLowerCase())))
+                      .slice(0, 200)
+                      .map(item => (
+                        <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                          <td className="px-4 py-2.5">
+                            <span className={`inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold ${
+                              item.clase === 'A' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                              : item.clase === 'B' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
+                              : 'bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400'
+                            }`}>
+                              {item.clase}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2.5">
+                            <p className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-xs">{item.name}</p>
+                            <p className="text-xs text-slate-400">{item.category}</p>
+                          </td>
+                          <td className="px-4 py-2.5 text-right font-medium text-slate-700 dark:text-slate-300">
+                            {formatPrice(item.revenue)}
+                          </td>
+                          <td className="px-4 py-2.5 text-right text-slate-600 dark:text-slate-400">
+                            {item.revenue_pct.toFixed(2)}%
+                          </td>
+                          <td className="px-4 py-2.5 text-right text-slate-500 dark:text-slate-500 text-xs">
+                            {item.cumulative_pct.toFixed(1)}%
+                          </td>
+                          <td className="px-4 py-2.5 text-right text-slate-600 dark:text-slate-400">
+                            {item.units}
+                          </td>
+                          <td className="px-4 py-2.5 text-right text-slate-600 dark:text-slate-400">
+                            {item.stock}
+                          </td>
+                          <td className="px-4 py-2.5 text-right">
+                            {item.dias_stock === null ? (
+                              <span className="text-slate-300">—</span>
+                            ) : (
+                              <span className={`font-medium ${
+                                item.dias_stock <= 7 ? 'text-red-600 dark:text-red-400'
+                                : item.dias_stock <= 15 ? 'text-yellow-600 dark:text-yellow-400'
+                                : 'text-slate-600 dark:text-slate-400'
+                              }`}>
+                                {item.dias_stock}d
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2.5 text-right text-slate-600 dark:text-slate-400">
+                            {item.rotacion_30d > 0 ? item.rotacion_30d : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           )}
         </div>
       )}

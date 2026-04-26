@@ -76,7 +76,7 @@ function LoginContent() {
               </label>
               <Link
                 href="/auth/forgot-password"
-                className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
+                className="text-sm text-cyan-600 dark:text-cyan-400 hover:underline"
               >
                 ¿Olvidaste tu contraseña?
               </Link>
@@ -115,7 +115,7 @@ function LoginContent() {
 
         <p className="text-center text-slate-500 dark:text-slate-400 mt-6 text-base">
           ¿No tienes cuenta?{' '}
-          <Link href={registerHref} className="text-emerald-600 dark:text-emerald-400 hover:underline font-semibold text-base">
+          <Link href={registerHref} className="text-cyan-600 dark:text-cyan-400 hover:underline font-semibold text-base">
             Crear cuenta
           </Link>
         </p>

@@ -8,7 +8,7 @@ import {
   Pill, Heart, Droplets, Apple, Stethoscope, Brain, Wind, Sparkles,
   Eye, Flower2, Shield, Droplet, Baby, Users, Activity, Leaf,
   TrendingUp, MessageCircle, FileText, RefreshCw, LayoutGrid, List,
-  Tag, Boxes, BadgePercent, AlertCircle, Star,
+  BadgePercent, AlertCircle, Star,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -263,9 +263,6 @@ function HomeContent() {
     return a.name.localeCompare(b.name);
   });
 
-  const inStockCount = products?.total ?? 0;
-  const discountCount = discountedProducts.length;
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
@@ -285,34 +282,6 @@ function HomeContent() {
 
           {/* ── Sidebar (desktop only) ─────────────────────────── */}
           <aside className="hidden lg:flex flex-col w-56 flex-shrink-0 gap-4">
-
-            {/* Stats cards */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 space-y-3">
-              <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-600 uppercase tracking-widest">Inventario</p>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                    <Boxes className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>En stock</span>
-                  </div>
-                  <span className="font-mono text-sm font-bold text-slate-800 dark:text-slate-200">{inStockCount > 0 ? inStockCount.toLocaleString('es-CL') : '—'}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                    <Tag className="w-3.5 h-3.5 text-blue-500" />
-                    <span>Categorías</span>
-                  </div>
-                  <span className="font-mono text-sm font-bold text-slate-800 dark:text-slate-200">{categories.length}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                    <BadgePercent className="w-3.5 h-3.5 text-red-500" />
-                    <span>En oferta</span>
-                  </div>
-                  <span className="font-mono text-sm font-bold text-slate-800 dark:text-slate-200">{discountCount}</span>
-                </div>
-              </div>
-            </div>
 
             {/* Category nav */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 flex-1">

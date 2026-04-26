@@ -224,7 +224,7 @@ function RegisterContent() {
 
         <p className="text-center text-slate-500 dark:text-slate-400 mt-6 text-base">
           ¿Ya tienes cuenta?{' '}
-          <Link href={loginHref} className="text-emerald-600 dark:text-emerald-400 hover:underline font-semibold text-base">
+          <Link href={loginHref} className="text-cyan-600 dark:text-cyan-400 hover:underline font-semibold text-base">
             Iniciar sesión
           </Link>
         </p>

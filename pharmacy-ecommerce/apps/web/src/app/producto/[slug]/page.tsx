@@ -106,7 +106,7 @@ export default function ProductPage() {
         {/* Back button */}
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 font-semibold mb-4 min-h-[56px] px-1"
+          className="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 font-semibold mb-4 min-h-[56px] px-1"
         >
           <ArrowLeft className="w-5 h-5" />
           <span>Volver</span>
@@ -145,7 +145,7 @@ export default function ProductPage() {
           <div className="flex flex-col">
             <div className="mb-4">
               {product.laboratory && (
-                <span className="text-emerald-600 dark:text-emerald-400 font-semibold tracking-wide text-base mb-2 block">
+                <span className="text-cyan-600 dark:text-cyan-400 font-semibold tracking-wide text-base mb-2 block">
                   {product.laboratory}
                 </span>
               )}
@@ -238,7 +238,7 @@ export default function ProductPage() {
             {/* Shipping & security info */}
             <div className="border-t-2 border-b-2 border-slate-100 dark:border-slate-700 py-5 mb-6 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl text-emerald-600 dark:text-emerald-400">
+                <div className="p-2.5 bg-cyan-50 dark:bg-cyan-900/30 rounded-xl text-cyan-600 dark:text-cyan-400">
                   <Truck className="w-6 h-6" />
                 </div>
                 <span className="text-slate-700 dark:text-slate-300 font-medium">Envío disponible a todo Chile</span>
@@ -309,8 +309,8 @@ export default function ProductPage() {
                   disabled={isAdding || added}
                   className={`w-full py-5 px-8 rounded-2xl font-bold text-xl transition-all flex items-center justify-center gap-3 min-h-[64px] ${
                     added
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-600/25 active:scale-[0.98]'
+                      ? 'bg-cyan-600 text-white'
+                      : 'bg-cyan-600 text-white hover:bg-cyan-700 shadow-lg shadow-cyan-600/25 active:scale-[0.98]'
                   } disabled:opacity-70 disabled:cursor-not-allowed`}
                 >
                   {added ? (
@@ -369,7 +369,7 @@ export default function ProductPage() {
                 <Link
                   key={rp.id}
                   href={`/producto/${rp.slug}`}
-                  className="bg-slate-50 dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden hover:border-emerald-200 dark:hover:border-emerald-600 hover:shadow-md transition-all flex flex-col"
+                  className="bg-slate-50 dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden hover:border-cyan-200 dark:hover:border-cyan-600 hover:shadow-md transition-all flex flex-col"
                 >
                   <div className="aspect-square relative bg-white dark:bg-slate-700 overflow-hidden">
                     {rp.image_url ? (

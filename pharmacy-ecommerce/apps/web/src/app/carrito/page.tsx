@@ -47,7 +47,7 @@ export default function CartPage() {
             </p>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 bg-emerald-600 text-white px-8 py-4 rounded-2xl hover:bg-emerald-700 transition-colors font-bold text-lg min-h-[56px]"
+              className="inline-flex items-center gap-2 bg-cyan-600 text-white px-8 py-4 rounded-2xl hover:bg-cyan-700 transition-colors font-bold text-lg min-h-[56px]"
             >
               Ver catálogo
               <ArrowRight className="w-5 h-5" />
@@ -82,7 +82,7 @@ export default function CartPage() {
                       <div>
                         <Link
                           href={`/producto/${item.product_slug}`}
-                          className="font-bold text-slate-900 dark:text-slate-100 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors line-clamp-2 leading-snug text-base sm:text-lg"
+                          className="font-bold text-slate-900 dark:text-slate-100 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors line-clamp-2 leading-snug text-base sm:text-lg"
                         >
                           {item.product_name}
                         </Link>
@@ -201,7 +201,7 @@ export default function CartPage() {
 
               <Link
                 href="/checkout"
-                className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-4 px-4 rounded-2xl hover:bg-emerald-700 transition-colors font-bold text-lg shadow-lg shadow-emerald-600/20 min-h-[56px]"
+                className="w-full flex items-center justify-center gap-2 bg-cyan-600 text-white py-4 px-4 rounded-2xl hover:bg-cyan-700 transition-colors font-bold text-lg shadow-lg shadow-cyan-600/20 min-h-[56px]"
               >
                 Continuar al pago
                 <ArrowRight className="w-5 h-5" />
@@ -210,7 +210,7 @@ export default function CartPage() {
               <div className="mt-4 text-center">
                 <Link
                   href="/"
-                  className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline text-base"
+                  className="text-cyan-600 dark:text-cyan-400 font-semibold hover:underline text-base"
                 >
                   Seguir comprando
                 </Link>

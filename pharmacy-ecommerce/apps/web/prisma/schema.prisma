@@ -102,6 +102,7 @@ model orders {
   created_at                 DateTime     @default(now()) @db.Timestamptz(6)
   updated_at                 DateTime     @default(now()) @updatedAt @db.Timestamptz(6)
   order_items                order_items[]
+  devoluciones               devoluciones[]
 }
 
 model order_items {
@@ -264,4 +265,50 @@ model caja_cierres {
   notas             String?  @db.Text
   cerrado_por       String?  @db.VarChar(255)
   created_at        DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model devoluciones {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id         String?            @db.Uuid
+  tipo             String             @default("venta") @db.VarChar(20)
+  motivo           String             @db.VarChar(255)
+  notas            String?            @db.Text
+  total_devuelto   Decimal            @db.Decimal(10, 2)
+  metodo_reembolso String?            @db.VarChar(50)
+  procesado_por    String?            @db.VarChar(255)
+  created_at       DateTime           @default(now()) @db.Timestamptz(6)
+  orders           orders?            @relation(fields: [order_id], references: [id], onDelete: SetNull)
+  items            devolucion_items[]
+
+  @@index([order_id])
+  @@index([created_at(sort: Desc)])
+}
+
+model devolucion_items {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  devolucion_id String       @db.Uuid
+  product_id    String?      @db.Uuid
+  product_name  String       @db.VarChar(255)
+  quantity      Int
+  unit_price    Decimal      @db.Decimal(10, 2)
+  restock       Boolean      @default(true)
+  devoluciones  devoluciones @relation(fields: [devolucion_id], references: [id], onDelete: Cascade)
+
+  @@index([devolucion_id])
+}
+
+model audit_log {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_email  String   @db.VarChar(255)
+  action      String   @db.VarChar(50)
+  entity      String   @db.VarChar(100)
+  entity_id   String?  @db.VarChar(255)
+  entity_name String?  @db.VarChar(255)
+  changes     Json?
+  ip_address  String?  @db.VarChar(50)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([entity, entity_id])
+  @@index([user_email])
+  @@index([created_at(sort: Desc)])
 }

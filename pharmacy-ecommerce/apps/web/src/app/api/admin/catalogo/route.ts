@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
       price: string;
       active: boolean;
       stock: number;
+      image_url: string | null;
       barcode_count: number;
       barcodes: string[] | null;
     }>>(
@@ -70,12 +71,13 @@ export async function GET(request: NextRequest) {
          p.price::text,
          p.active,
          p.stock,
+         p.image_url,
          COUNT(pb.barcode)::int AS barcode_count,
          array_agg(pb.barcode ORDER BY pb.barcode) FILTER (WHERE pb.barcode IS NOT NULL) AS barcodes
        FROM products p
        LEFT JOIN product_barcodes pb ON pb.product_id = p.id
        WHERE ${whereClause}
-       GROUP BY p.id, p.external_id, p.name, p.price, p.active, p.stock
+       GROUP BY p.id, p.external_id, p.name, p.price, p.active, p.stock, p.image_url
        ORDER BY p.name ASC
        LIMIT ${limit} OFFSET ${offset}`,
       ...params
@@ -108,6 +110,7 @@ export async function GET(request: NextRequest) {
       products: rows.map((r) => ({
         ...r,
         price: parseFloat(r.price),
+        image_url: r.image_url ?? null,
         barcodes: r.barcodes ?? [],
       })),
       total,

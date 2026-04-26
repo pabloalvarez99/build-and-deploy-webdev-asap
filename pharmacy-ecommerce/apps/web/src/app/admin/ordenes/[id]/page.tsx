@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/auth';
 import { orderApi, OrderWithItems } from '@/lib/api';
 import { ArrowLeft, Package, MapPin, FileText, User, Mail, Printer, Check, Clock, Truck, CheckCircle, XCircle, Store, Phone, CreditCard, Pencil, Save, RotateCcw } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
+import DevolucionModal from '@/components/admin/DevolucionModal';
 
 const statusOptions = [
  { value: 'pending',    label: 'Pendiente',  color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' },
@@ -127,6 +128,7 @@ export default function AdminOrderDetailPage() {
  const [isEditingNotes, setIsEditingNotes] = useState(false);
  const [notesValue, setNotesValue] = useState('');
  const [isSavingNotes, setIsSavingNotes] = useState(false);
+ const [showDevolucionModal, setShowDevolucionModal] = useState(false);
 
  useEffect(() => {
  if (!user || user.role !== 'admin') {
@@ -208,28 +210,9 @@ export default function AdminOrderDetailPage() {
  }
  };
 
- const handleRefund = async () => {
- if (!order) return;
- const notes = prompt('Motivo de la devolución (opcional):') ?? undefined;
- if (notes === null) return; // user cancelled prompt
- setIsProcessing(true);
- try {
-  const res = await fetch(`/api/admin/orders/${order.id}`, {
-   method: 'PUT',
-   credentials: 'include',
-   headers: { 'Content-Type': 'application/json' },
-   body: JSON.stringify({ action: 'refund', notes }),
-  });
-  if (!res.ok) {
-   const err = await res.json();
-   throw new Error(err.error || 'Error al procesar devolución');
-  }
-  loadOrder();
- } catch (error) {
-  alert(error instanceof Error ? error.message : 'Error al procesar devolución');
- } finally {
-  setIsProcessing(false);
- }
+ const handleRefund = () => {
+  if (!order) return;
+  setShowDevolucionModal(true);
  };
 
  if (!user || user.role !== 'admin') {
@@ -277,6 +260,7 @@ export default function AdminOrderDetailPage() {
  });
 
  return (
+ <>
  <div className="max-w-4xl mx-auto">
  <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
  <div>
@@ -621,11 +605,11 @@ export default function AdminOrderDetailPage() {
  key={opt.value}
  onClick={() => handleStatusChange(opt.value)}
  disabled={order.status === opt.value}
- className={`px-3 py-2.5 rounded-lg text-xs font-medium transition-colors min-h-[44px] ${
- order.status === opt.value
- ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
- : `${opt.color} hover:opacity-80`
- }`}
+ className={'px-3 py-2.5 rounded-lg text-xs font-medium transition-colors min-h-[44px] ' + (
+   order.status === opt.value
+     ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+     : opt.color + ' hover:opacity-80'
+ )}
  >
  {displayLabel}
  </button>
@@ -637,5 +621,20 @@ export default function AdminOrderDetailPage() {
  </div>
  </div>
  </div>
+ {showDevolucionModal && order && (
+  <DevolucionModal
+   orderId={order.id}
+   orderItems={order.items.map(i => ({
+    id: i.id,
+    product_id: i.product_id ?? null,
+    product_name: i.product_name,
+    quantity: i.quantity,
+    price_at_purchase: Number(i.price_at_purchase),
+   }))}
+   onClose={() => setShowDevolucionModal(false)}
+   onSuccess={() => { setShowDevolucionModal(false); loadOrder(); }}
+  />
+ )}
+ </>
  );
 }

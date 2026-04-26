@@ -216,7 +216,7 @@ export default function CheckoutPage() {
 
             <button
               onClick={processWebpay}
-              className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-2xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-base transition-colors flex items-center justify-center gap-2"
             >
               <CreditCard className="w-5 h-5" />
               Ya confirmé — proceder al pago
@@ -332,20 +332,20 @@ export default function CheckoutPage() {
               onClick={() => setPaymentMethod('store')}
               className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${
                 paymentMethod === 'store'
-                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                  ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20'
                   : 'border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-500'
               }`}
             >
-              <Banknote className={`w-7 h-7 ${paymentMethod === 'store' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
+              <Banknote className={`w-7 h-7 ${paymentMethod === 'store' ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-400'}`} />
               <div className="text-center">
-                <p className={`text-sm font-semibold leading-tight ${paymentMethod === 'store' ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                <p className={`text-sm font-semibold leading-tight ${paymentMethod === 'store' ? 'text-cyan-700 dark:text-cyan-400' : 'text-slate-700 dark:text-slate-300'}`}>
                   Pagar en tienda
                 </p>
-                <p className={`text-xs mt-0.5 ${paymentMethod === 'store' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                <p className={`text-xs mt-0.5 ${paymentMethod === 'store' ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-400'}`}>
                   Al retirar tu pedido
                 </p>
               </div>
-              {paymentMethod === 'store' && <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
+              {paymentMethod === 'store' && <Check className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />}
             </button>
 
             <button
@@ -353,20 +353,20 @@ export default function CheckoutPage() {
               onClick={() => setPaymentMethod('webpay')}
               className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${
                 paymentMethod === 'webpay'
-                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                  ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20'
                   : 'border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-500'
               }`}
             >
-              <CreditCard className={`w-7 h-7 ${paymentMethod === 'webpay' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
+              <CreditCard className={`w-7 h-7 ${paymentMethod === 'webpay' ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-400'}`} />
               <div className="text-center">
-                <p className={`text-sm font-semibold leading-tight ${paymentMethod === 'webpay' ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                <p className={`text-sm font-semibold leading-tight ${paymentMethod === 'webpay' ? 'text-cyan-700 dark:text-cyan-400' : 'text-slate-700 dark:text-slate-300'}`}>
                   Pagar con Webpay
                 </p>
-                <p className={`text-xs mt-0.5 ${paymentMethod === 'webpay' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                <p className={`text-xs mt-0.5 ${paymentMethod === 'webpay' ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-400'}`}>
                   Débito o crédito online
                 </p>
               </div>
-              {paymentMethod === 'webpay' && <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
+              {paymentMethod === 'webpay' && <Check className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />}
             </button>
           </div>
 
@@ -394,21 +394,21 @@ export default function CheckoutPage() {
 
           <div>
             <label htmlFor="ck-name" className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300 mb-2">
-              <User className="w-5 h-5 text-emerald-600" />Nombre completo
+              <User className="w-5 h-5 text-cyan-600" />Nombre completo
             </label>
             <input id="ck-name" type="text" value={name} onChange={(e) => setName(e.target.value)}
               placeholder="Juan Pérez" className="input" autoComplete="name" />
           </div>
           <div>
             <label htmlFor="ck-phone" className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300 mb-2">
-              <Phone className="w-5 h-5 text-emerald-600" />Teléfono
+              <Phone className="w-5 h-5 text-cyan-600" />Teléfono
             </label>
             <input id="ck-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
               placeholder="9 1234 5678" className="input" autoComplete="tel" />
           </div>
           <div>
             <label htmlFor="ck-email" className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300 mb-2">
-              <Mail className="w-5 h-5 text-emerald-600" />
+              <Mail className="w-5 h-5 text-cyan-600" />
               Email
               {paymentMethod === 'store' && !user && (
                 <span className="text-slate-400 dark:text-slate-500 font-normal text-sm">(opcional)</span>
@@ -423,7 +423,7 @@ export default function CheckoutPage() {
           {!user && (
             <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
               ¿Ya tienes cuenta?{' '}
-              <a href="/auth/login" className="text-emerald-700 dark:text-emerald-400 font-semibold hover:underline">Inicia sesión</a>
+              <a href="/auth/login" className="text-cyan-700 dark:text-cyan-400 font-semibold hover:underline">Inicia sesión</a>
             </p>
           )}
         </div>
@@ -437,7 +437,7 @@ export default function CheckoutPage() {
         <button
           onClick={handleSubmit}
           disabled={isProcessing || !canSubmit}
-          className="w-full mt-4 py-4 px-4 font-bold text-xl rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-colors min-h-[64px] bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20"
+          className="w-full mt-4 py-4 px-4 font-bold text-xl rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-colors min-h-[64px] bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-600/20"
         >
           {isProcessing ? (
             <><Loader2 className="w-6 h-6 animate-spin" />Procesando...</>
@@ -456,7 +456,7 @@ export default function CheckoutPage() {
         </div>
 
         <div className="mt-3 text-center">
-          <button onClick={() => router.push('/carrito')} className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline text-base">
+          <button onClick={() => router.push('/carrito')} className="text-cyan-600 dark:text-cyan-400 font-semibold hover:underline text-base">
             Volver al carrito
           </button>
         </div>
