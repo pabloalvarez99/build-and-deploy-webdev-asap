@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
+import type { MatchField } from '@/lib/api'
 
 function sanitizeImageUrl(url: string | null): string | null {
   if (!url) return null
   return url.startsWith('http://') ? 'https://' + url.slice(7) : url
 }
-
-type MatchField = 'active_ingredient' | 'therapeutic_action' | 'laboratory' | null
 
 function getMatchField(
   p: { name: string | null; active_ingredient: string | null; therapeutic_action: string | null; laboratory: string | null },
