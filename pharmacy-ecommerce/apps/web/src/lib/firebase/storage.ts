@@ -38,3 +38,24 @@ export async function uploadInvoiceImage(file: File, tempId: string): Promise<st
   const downloadUrl = await getDownloadURL(snapshot.ref)
   return downloadUrl
 }
+
+/**
+ * Uploads a product image to Firebase Storage.
+ * Path: products/{productId}/{timestamp}_{filename}
+ * Returns the public download URL.
+ *
+ * NOTE: Firebase Storage rules must allow authenticated admin writes to "products/**".
+ * If uploads fail with a permission error, update Storage rules in the Firebase console:
+ *   match /products/{allPaths=**} {
+ *     allow read, write: if request.auth != null;
+ *   }
+ */
+export async function uploadProductImage(file: File, productId: string): Promise<string> {
+  const storage = getFirebaseStorage()
+  const timestamp = Date.now()
+  const safeFilename = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+  const path = `products/${productId}/${timestamp}_${safeFilename}`
+  const storageRef = ref(storage, path)
+  const snapshot = await uploadBytes(storageRef, file)
+  return getDownloadURL(snapshot.ref)
+}

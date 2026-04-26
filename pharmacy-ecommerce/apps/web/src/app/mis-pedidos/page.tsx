@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { orderApi, PaginatedOrders } from '@/lib/api';
-import { Package, ChevronRight, Clock, CheckCircle, XCircle, Truck, Store, Star, ChevronDown } from 'lucide-react';
+import { useCartStore } from '@/store/cart';
+import { Package, ChevronRight, Clock, CheckCircle, XCircle, Truck, Store, Star, ChevronDown, RotateCcw } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -21,10 +22,12 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.R
 export default function MyOrdersPage() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const { addToCart } = useCartStore();
 
   const [orders, setOrders] = useState<PaginatedOrders | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [reordering, setReordering] = useState<string | null>(null);
   const [loyaltyPoints, setLoyaltyPoints] = useState<number | null>(null);
   const [loyaltyValue, setLoyaltyValue] = useState<number>(0);
   const [loyaltyTxs, setLoyaltyTxs] = useState<Array<{ id: string; points: number; reason: string; created_at: string }>>([]);
@@ -49,6 +52,21 @@ export default function MyOrdersPage() {
         setLoyaltyTxs(data.transactions ?? []);
       }
     } catch {}
+  };
+
+  const handleReorder = async (orderId: string, items: Array<{ product_id: string | null; quantity: number }>) => {
+    setReordering(orderId);
+    for (const item of items) {
+      if (item.product_id) {
+        try {
+          await addToCart(item.product_id, item.quantity);
+        } catch {
+          // skip products that no longer exist
+        }
+      }
+    }
+    setReordering(null);
+    router.push('/carrito');
   };
 
   const loadOrders = async () => {
@@ -157,10 +175,9 @@ export default function MyOrdersPage() {
               });
 
               return (
-                <Link
+                <div
                   key={order.id}
-                  href={`/mis-pedidos/${order.id}`}
-                  className="card p-5 sm:p-6 hover:shadow-md transition-shadow block hover:border-emerald-200 dark:hover:border-emerald-700"
+                  className="card p-5 sm:p-6 hover:shadow-md transition-shadow hover:border-emerald-200 dark:hover:border-emerald-700"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
@@ -173,10 +190,26 @@ export default function MyOrdersPage() {
                         {status.icon}
                         {status.label}
                       </span>
-                      <ChevronRight className="w-6 h-6 text-slate-400 dark:text-slate-500" />
                     </div>
                   </div>
-                </Link>
+                  <div className="flex items-center gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                    <button
+                      onClick={() => handleReorder(order.id, order.items)}
+                      disabled={reordering === order.id}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 hover:bg-slate-700 dark:hover:bg-slate-200 disabled:opacity-60 min-h-[44px] transition-colors"
+                    >
+                      <RotateCcw className={`w-4 h-4 ${reordering === order.id ? 'animate-spin' : ''}`} />
+                      {reordering === order.id ? 'Agregando...' : 'Repetir'}
+                    </button>
+                    <Link
+                      href={`/mis-pedidos/${order.id}`}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border-2 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-emerald-400 dark:hover:border-emerald-600 hover:text-emerald-700 dark:hover:text-emerald-400 min-h-[44px] transition-colors"
+                    >
+                      Ver detalles
+                      <ChevronRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </div>
               );
             })}
           </div>

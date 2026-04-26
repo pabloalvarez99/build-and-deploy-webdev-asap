@@ -303,7 +303,7 @@ export interface OrderWithItems extends Order {
 }
 
 export interface PaginatedOrders {
-  orders: Order[]
+  orders: OrderWithItems[]
   total: number
   page: number
   limit: number

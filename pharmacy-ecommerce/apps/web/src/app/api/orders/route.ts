@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
       orderBy: { created_at: 'desc' },
       skip: offset,
       take: limit,
+      include: { order_items: true },
     }),
     db.orders.count({ where }),
   ])
@@ -32,6 +33,14 @@ export async function GET(request: NextRequest) {
       total: o.total.toString(),
       created_at: o.created_at.toISOString(),
       reservation_expires_at: o.reservation_expires_at?.toISOString() ?? null,
+      items: o.order_items.map((i) => ({
+        id: i.id,
+        order_id: i.order_id,
+        product_id: i.product_id,
+        product_name: i.product_name,
+        quantity: i.quantity,
+        price_at_purchase: i.price_at_purchase.toString(),
+      })),
     })),
     total,
     page,
