@@ -4,6 +4,17 @@
 
 ---
 
+## 2026-04-26 — Feat: Búsqueda semántica por principio activo / acción terapéutica
+
+- `GET /api/products?search=X` ya buscaba en `name`, `active_ingredient`, `therapeutic_action`, `laboratory`
+- Nuevo: cada producto en el response incluye `match_field` (`'active_ingredient' | 'therapeutic_action' | 'laboratory' | null`) y `match_value` (valor del campo)
+- Homepage: badge azul en cada card indicando por qué coincidió (solo cuando `match_field ≠ null`, es decir, no es match por nombre)
+- Homepage: banner de contexto encima de resultados cuando hay matches semánticos
+- Badge visible en vista grid y vista lista
+- Sin cambio de schema DB — ILIKE en 4 campos, anotación en JS post-fetch
+
+---
+
 ## 2026-04-26 — Feat: Dashboard Operacional Diario
 
 **`/admin/operaciones`** — Vista matutina unificada para el dueño/farmacéutico:
