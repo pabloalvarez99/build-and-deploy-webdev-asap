@@ -250,10 +250,11 @@ export async function POST(request: NextRequest) {
             updated++;
             const existing = existingMap.get(externalId);
             if (existing && newStock !== existing.stock) {
+              const wentOutOfStock = existing.stock > 0 && newStock <= 0;
               stockMovements.push({
                 product_id: existing.id,
                 delta: newStock - existing.stock,
-                reason: 'import_excel',
+                reason: wentOutOfStock ? 'agotado_excel' : 'import_excel',
                 admin_id: admin.uid,
               });
             }
