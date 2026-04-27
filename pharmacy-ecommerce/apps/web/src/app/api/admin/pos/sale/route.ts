@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
       customer_user_id,
       discount_amount,
       notes,
+      prescription_records,
     }: {
       items: SaleItem[];
       payment_method: string;
@@ -53,6 +54,19 @@ export async function POST(request: NextRequest) {
       customer_user_id?: string;
       discount_amount?: number;
       notes?: string;
+      prescription_records?: Array<{
+        product_id?: string;
+        product_name: string;
+        quantity: number;
+        prescription_number?: string;
+        patient_name: string;
+        patient_rut?: string;
+        doctor_name?: string;
+        medical_center?: string;
+        prescription_date?: string;
+        is_controlled?: boolean;
+        dispensed_by?: string;
+      }>;
     } = body;
 
     if (!items || items.length === 0) return errorResponse('Items requeridos', 400);
@@ -121,6 +135,26 @@ export async function POST(request: NextRequest) {
 
       return newOrder;
     });
+
+    // Persist prescription records (blocking — required for ISP compliance)
+    if (prescription_records && prescription_records.length > 0) {
+      await db.prescription_records.createMany({
+        data: prescription_records.map(pr => ({
+          order_id: order.id,
+          product_id: pr.product_id || null,
+          product_name: pr.product_name,
+          quantity: pr.quantity,
+          prescription_number: pr.prescription_number || null,
+          patient_name: pr.patient_name,
+          patient_rut: pr.patient_rut || null,
+          doctor_name: pr.doctor_name || null,
+          medical_center: pr.medical_center || null,
+          prescription_date: pr.prescription_date ? new Date(pr.prescription_date) : null,
+          is_controlled: pr.is_controlled ?? false,
+          dispensed_by: pr.dispensed_by || null,
+        })),
+      });
+    }
 
     // Fire-and-forget low stock check (same logic as online order approval)
     checkAndAlertLowStock(db, items.map((i) => i.product_id)).catch(() => {});
