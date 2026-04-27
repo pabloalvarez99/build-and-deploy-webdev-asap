@@ -10,6 +10,7 @@ import {
   CheckCircle2, X, Receipt, Loader2, SmartphoneNfc, ScanLine, CheckCircle, AlertCircle, User, History, BarChart3, Store,
   BookX, Shuffle,
 } from 'lucide-react'
+import { isControlledSubstance } from '@/lib/controlled-substances'
 
 interface CartItem {
   product_id: string
@@ -28,6 +29,7 @@ interface Product {
   laboratory?: string | null
   presentation?: string | null
   prescription_type?: string | null
+  active_ingredient?: string | null
 }
 
 type PaymentMethod = 'pos_cash' | 'pos_debit' | 'pos_credit' | 'pos_mixed'
@@ -116,8 +118,12 @@ export default function POSPage() {
   const [mixedCard, setMixedCard] = useState('')
   // Shift awareness
   const [shiftFondo, setShiftFondo] = useState<number | null>(null)
-  // Prescription confirmation modal
-  const [prescriptionPending, setPrescriptionPending] = useState<Product | null>(null)
+  // Prescription data-capture modal (triggered at sale time, not cart-add)
+  const [prescriptionModal, setPrescriptionModal] = useState<{
+    items: Array<{ product_id: string; product_name: string; quantity: number; active_ingredient?: string | null; is_controlled: boolean }>
+    forms: Array<{ patient_name: string; patient_rut: string; doctor_name: string; medical_center: string; prescription_number: string; prescription_date: string; is_controlled: boolean }>
+    currentIdx: number
+  } | null>(null)
   const pickupInputRef = useRef<HTMLInputElement>(null)
   const pickupDigitRefs = useRef<(HTMLInputElement | null)[]>(Array(6).fill(null))
 
@@ -341,14 +347,6 @@ export default function POSPage() {
   }
 
   function addToCart(p: Product) {
-    // Show prescription confirmation for controlled/required meds not yet in cart
-    if (
-      (p.prescription_type === 'required' || p.prescription_type === 'controlled') &&
-      !cart.find(i => i.product_id === p.id)
-    ) {
-      setPrescriptionPending(p)
-      return
-    }
     addToCartDirect(p)
   }
 
@@ -378,6 +376,41 @@ export default function POSPage() {
 
   async function handleSale() {
     if (cart.length === 0) return
+
+    // Check if any cart item requires a prescription
+    const prescriptionItems = cart.filter(item => {
+      const product = products.find(p => p.id === item.product_id)
+      return product?.prescription_type === 'retenida' || product?.prescription_type === 'magistral'
+    })
+
+    if (prescriptionItems.length > 0 && !prescriptionModal) {
+      const pharmacistName = typeof window !== 'undefined' ? localStorage.getItem('pharmacist_name') || '' : ''
+      void pharmacistName
+      setPrescriptionModal({
+        items: prescriptionItems.map(item => {
+          const product = products.find(p => p.id === item.product_id)
+          return {
+            product_id: item.product_id,
+            product_name: item.product_name,
+            quantity: item.quantity,
+            active_ingredient: product?.active_ingredient,
+            is_controlled: isControlledSubstance(product?.active_ingredient),
+          }
+        }),
+        forms: prescriptionItems.map(item => {
+          const product = products.find(p => p.id === item.product_id)
+          return {
+            patient_name: '', patient_rut: '', doctor_name: '',
+            medical_center: '', prescription_number: '', prescription_date: '',
+            is_controlled: isControlledSubstance(product?.active_ingredient),
+          }
+        }),
+        currentIdx: 0,
+      })
+      setIsProcessing(false)
+      return
+    }
+
     setIsProcessing(true)
     try {
       const res = await fetch('/api/admin/pos/sale', {
@@ -434,6 +467,91 @@ export default function POSPage() {
     } finally {
       setIsProcessing(false)
     }
+  }
+
+  async function confirmWithPrescriptions() {
+    if (!prescriptionModal) return
+    const incomplete = prescriptionModal.forms.some(f => !f.patient_name.trim())
+    if (incomplete) return
+
+    const prescriptionData = prescriptionModal.items.map((item, i) => ({
+      ...item,
+      ...prescriptionModal.forms[i],
+    }))
+    setPrescriptionModal(null)
+    await handleSaleWithPrescriptions(prescriptionData)
+  }
+
+  async function handleSaleWithPrescriptions(prescriptionData: Array<{
+    product_id: string; product_name: string; quantity: number;
+    patient_name: string; patient_rut: string; doctor_name: string;
+    medical_center: string; prescription_number: string; prescription_date: string;
+    is_controlled: boolean;
+  }>) {
+    setIsProcessing(true)
+    try {
+      const discountNum = parseFloat(discountValue) || 0
+      const subtotalAmt = cart.reduce((s, i) => s + i.price * i.quantity, 0)
+      const discountAmountCalc = discountType === '%'
+        ? Math.round(subtotalAmt * Math.min(discountNum, 100) / 100)
+        : Math.min(Math.round(discountNum), subtotalAmt)
+      const totalAmt = Math.max(0, subtotalAmt - discountAmountCalc)
+      const pharmacistName = typeof window !== 'undefined' ? localStorage.getItem('pharmacist_name') || '' : ''
+
+      const res = await fetch('/api/admin/pos/sale', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cart.map(i => ({ product_id: i.product_id, product_name: i.product_name, quantity: i.quantity, price: i.price })),
+          payment_method: paymentMethod,
+          cash_amount: paymentMethod === 'pos_cash' || paymentMethod === 'pos_mixed' ? parseFloat(cashReceived) || totalAmt : undefined,
+          card_amount: paymentMethod === 'pos_mixed' ? parseFloat(mixedCard) || 0 : undefined,
+          customer_name: customerName || undefined,
+          customer_phone: customerPhone || undefined,
+          discount_amount: discountAmountCalc || undefined,
+          prescription_records: prescriptionData.map(p => ({
+            product_id: p.product_id,
+            product_name: p.product_name,
+            quantity: p.quantity,
+            patient_name: p.patient_name,
+            patient_rut: p.patient_rut || undefined,
+            doctor_name: p.doctor_name || undefined,
+            medical_center: p.medical_center || undefined,
+            prescription_number: p.prescription_number || undefined,
+            prescription_date: p.prescription_date || undefined,
+            is_controlled: p.is_controlled,
+            dispensed_by: pharmacistName || undefined,
+          })),
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Error al procesar venta')
+      }
+      const data = await res.json()
+      const saleDate = new Date().toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' })
+      setSuccessOrder({
+        id: data.id, total: totalAmt, items: [...cart], method: paymentMethod,
+        customer: customerName || 'Cliente',
+        change: paymentMethod === 'pos_cash' ? Math.max(0, parseFloat(cashReceived) - totalAmt) : 0,
+        date: saleDate,
+        discountAmount: discountAmountCalc,
+        loyaltyPointsEarned: data.loyalty_points_earned,
+      })
+      setCart([])
+      setSearch('')
+      setProducts([])
+      setCustomerName('')
+      setCustomerPhone('')
+      setDiscountValue('')
+      setCashReceived('')
+      setShowPayModal(false)
+      loadTodayStats()
+      setHistoryLoaded(false)
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error al procesar')
+    } finally { setIsProcessing(false) }
   }
 
   const lookupPickup = async () => {
@@ -648,45 +766,76 @@ export default function POSPage() {
       </div>
     )}
 
-    {/* Prescription confirmation modal */}
-    {prescriptionPending && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm shadow-2xl">
-          <div className="px-6 py-5 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/40 rounded-xl flex items-center justify-center shrink-0">
-                <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-              </div>
+    {/* Prescription data-capture modal */}
+    {prescriptionModal && (() => {
+      const item = prescriptionModal.items[prescriptionModal.currentIdx]
+      const form = prescriptionModal.forms[prescriptionModal.currentIdx]
+      const setForm = (patch: Partial<typeof form>) => {
+        const newForms = [...prescriptionModal.forms]
+        newForms[prescriptionModal.currentIdx] = { ...form, ...patch }
+        setPrescriptionModal({ ...prescriptionModal, forms: newForms })
+      }
+      const isLast = prescriptionModal.currentIdx === prescriptionModal.items.length - 1
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md space-y-4 p-6">
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-                  {prescriptionPending.prescription_type === 'controlled' ? 'Medicamento controlado' : 'Requiere receta médica'}
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">{prescriptionPending.name}</p>
+                <h2 className="font-bold text-slate-900 dark:text-white">Receta retenida</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{item.product_name} × {item.quantity}</p>
+                {prescriptionModal.items.length > 1 && (
+                  <p className="text-xs text-slate-400">{prescriptionModal.currentIdx + 1} / {prescriptionModal.items.length}</p>
+                )}
               </div>
             </div>
-            <p className="text-sm text-slate-600 dark:text-slate-300">
-              {prescriptionPending.prescription_type === 'controlled'
-                ? 'Este medicamento requiere Receta Cheque. Verifica que el cliente la presente antes de dispensar.'
-                : 'Este medicamento requiere receta médica válida. Verifica que el cliente la presente antes de dispensar.'}
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setPrescriptionPending(null)}
-                className="flex-1 py-2.5 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-xl text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-              >
+            {item.is_controlled && (
+              <div className="flex items-center gap-2 text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl px-3 py-2">
+                <span className="font-semibold">&#x26A0; Psicotrópico / Estupefaciente</span>
+              </div>
+            )}
+            <div className="space-y-3">
+              <input required placeholder="Nombre paciente *" value={form.patient_name}
+                onChange={e => setForm({ patient_name: e.target.value })}
+                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100" />
+              <input placeholder="RUT paciente" value={form.patient_rut}
+                onChange={e => setForm({ patient_rut: e.target.value })}
+                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100" />
+              <input placeholder="Médico" value={form.doctor_name}
+                onChange={e => setForm({ doctor_name: e.target.value })}
+                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100" />
+              <input placeholder="Centro / Clínica" value={form.medical_center}
+                onChange={e => setForm({ medical_center: e.target.value })}
+                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100" />
+              <input placeholder="Nro. Receta" value={form.prescription_number}
+                onChange={e => setForm({ prescription_number: e.target.value })}
+                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100" />
+              <input type="date" placeholder="Fecha receta" value={form.prescription_date}
+                onChange={e => setForm({ prescription_date: e.target.value })}
+                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100" />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setPrescriptionModal(null)}
+                className="flex-1 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                 Cancelar
               </button>
-              <button
-                onClick={() => { addToCartDirect(prescriptionPending); setPrescriptionPending(null) }}
-                className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-semibold transition-colors"
-              >
-                Receta verificada ��
-              </button>
+              {!isLast ? (
+                <button
+                  onClick={() => setPrescriptionModal({ ...prescriptionModal, currentIdx: prescriptionModal.currentIdx + 1 })}
+                  disabled={!form.patient_name.trim()}
+                  className="flex-1 py-2.5 bg-amber-500 text-white rounded-xl text-sm font-bold hover:bg-amber-600 transition-colors disabled:opacity-50">
+                  Siguiente
+                </button>
+              ) : (
+                <button onClick={confirmWithPrescriptions} disabled={!form.patient_name.trim()}
+                  className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50">
+                  Confirmar venta
+                </button>
+              )}
             </div>
           </div>
         </div>
-      </div>
-    )}
+      )
+    })()}
 
     <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-8rem)]">
       {/* Left: Product search */}
