@@ -161,7 +161,7 @@ export default function DescuentosPage() {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'update_loyalty', ...loyaltyEdit }),
+        body: JSON.stringify({ action: 'update_loyalty', points_per_clp: loyaltyEdit.points_per_clp, clp_per_point: loyaltyEdit.clp_per_point, loyalty_enabled: loyaltyEdit.enabled }),
       });
       if (!res.ok) throw new Error('Error al guardar');
       setLoyaltySaved(true);
