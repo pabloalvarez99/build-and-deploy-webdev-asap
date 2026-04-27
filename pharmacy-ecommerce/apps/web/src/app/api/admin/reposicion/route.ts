@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
     // Get suppliers for filter
     const suppliers = await db.suppliers.findMany({
       where: { active: true },
-      select: { id: true, name: true },
+      select: { id: true, name: true, contact_email: true },
       orderBy: { name: 'asc' },
     });
 

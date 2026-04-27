@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   RefreshCw, AlertTriangle, Loader2, CheckCircle2, AlertCircle,
   Package, TrendingDown, ShoppingCart, ChevronRight, X,
-  Sliders, ArrowRight, ExternalLink, Info, Scale,
+  Sliders, ArrowRight, ExternalLink, Info, Scale, Zap, Mail,
 } from 'lucide-react';
 
 interface Suggestion {
@@ -24,7 +24,7 @@ interface Suggestion {
   supplier: { id: string; name: string } | null;
 }
 
-interface Supplier { id: string; name: string }
+interface Supplier { id: string; name: string; contact_email?: string | null }
 
 interface Data {
   suggestions: Suggestion[];
@@ -64,6 +64,13 @@ export default function ReposicionPage() {
   const [poSupplierId, setPoSupplierId] = useState('');
   const [creatingPO, setCreatingPO] = useState(false);
   const [poResult, setPoResult] = useState<string | null>(null);
+
+  // Express order state
+  const [expressTarget, setExpressTarget] = useState<Suggestion | null>(null);
+  const [expressNotes, setExpressNotes] = useState('');
+  const [expressQty, setExpressQty] = useState(1);
+  const [sendingExpress, setSendingExpress] = useState(false);
+  const [expressSuccess, setExpressSuccess] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -139,6 +146,34 @@ export default function ReposicionPage() {
     }
   };
 
+  const handleExpressOrder = async () => {
+    if (!expressTarget?.supplier) return;
+    const supplier = data?.suppliers.find(s => s.id === expressTarget.supplier!.id);
+    if (!supplier?.contact_email) return;
+    setSendingExpress(true);
+    try {
+      const res = await fetch('/api/admin/reposicion/express', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          supplier_id: supplier.id,
+          items: [{ name: expressTarget.name, qty: expressQty, unit_cost: expressTarget.cost_price }],
+          notes: expressNotes || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Error');
+      setExpressSuccess(`Email enviado a ${supplier.name}`);
+      setExpressTarget(null);
+      setExpressNotes('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al enviar pedido express');
+    } finally {
+      setSendingExpress(false);
+    }
+  };
+
   const filtered = data?.suggestions.filter(s => {
     if (filterUrgency !== 'all' && s.urgency !== filterUrgency) return false;
     if (filterSupplier && s.supplier?.id !== filterSupplier) return false;
@@ -206,6 +241,18 @@ export default function ReposicionPage() {
       {error && (
         <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-3">
           <AlertCircle className="w-4 h-4 shrink-0" /> {error}
+        </div>
+      )}
+
+      {expressSuccess && (
+        <div className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+            <Mail className="w-4 h-4" />
+            {expressSuccess}
+          </div>
+          <button onClick={() => setExpressSuccess(null)} className="text-emerald-500 hover:text-emerald-700">
+            <X className="w-3 h-3" />
+          </button>
         </div>
       )}
 
@@ -339,9 +386,19 @@ export default function ReposicionPage() {
 
                       {/* Urgency + suggested qty */}
                       <div className="flex flex-col items-end gap-1.5 ml-2 shrink-0">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${u.color}`}>
-                          {u.label}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${u.color}`}>
+                            {u.label}
+                          </span>
+                          {s.supplier && data.suppliers.find(sup => sup.id === s.supplier!.id)?.contact_email && (
+                            <button
+                              onClick={e => { e.stopPropagation(); setExpressTarget(s); setExpressQty(s.suggested_qty); setExpressNotes(''); setExpressSuccess(null); }}
+                              className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800/50 transition-colors"
+                              title="Pedido express por email">
+                              <Zap className="w-3 h-3" /> Express
+                            </button>
+                          )}
+                        </div>
                         {isSelected ? (
                           <div className="flex items-center gap-1">
                             <button onClick={() => updateQty(s.id, (selected.get(s.id)?.qty ?? 1) - 1)}
@@ -441,6 +498,72 @@ export default function ReposicionPage() {
                   className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2">
                   {creatingPO ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
                   {creatingPO ? 'Creando...' : 'Crear OC'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Express order modal */}
+      {expressTarget && data && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+              <h2 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Zap className="w-5 h-5 text-amber-500" /> Pedido Express
+              </h2>
+              <button onClick={() => setExpressTarget(null)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-3">
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{expressTarget.name}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Proveedor: {expressTarget.supplier?.name} · Stock actual: {expressTarget.stock}
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Cantidad a solicitar</label>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setExpressQty(q => Math.max(1, q - 1))}
+                    className="w-9 h-9 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center font-bold">
+                    -
+                  </button>
+                  <input type="number" min={1} value={expressQty}
+                    onChange={e => setExpressQty(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="flex-1 text-center py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold text-lg focus:border-amber-400 focus:outline-none" />
+                  <button onClick={() => setExpressQty(q => q + 1)}
+                    className="w-9 h-9 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center font-bold">
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nota al proveedor (opcional)</label>
+                <textarea value={expressNotes} onChange={e => setExpressNotes(e.target.value)}
+                  placeholder="Ej: Urgente, necesitamos para esta semana..."
+                  rows={2}
+                  className="w-full px-3 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-amber-400 focus:outline-none resize-none" />
+              </div>
+
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <Mail className="w-3.5 h-3.5 shrink-0" />
+                Se enviará email a: <strong>{data.suppliers.find(s => s.id === expressTarget.supplier?.id)?.contact_email ?? '—'}</strong>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => setExpressTarget(null)}
+                  className="flex-1 py-3 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-xl font-semibold text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                  Cancelar
+                </button>
+                <button onClick={handleExpressOrder} disabled={sendingExpress}
+                  className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2">
+                  {sendingExpress ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                  {sendingExpress ? 'Enviando...' : 'Enviar pedido'}
                 </button>
               </div>
             </div>

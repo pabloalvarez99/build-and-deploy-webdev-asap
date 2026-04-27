@@ -358,6 +358,169 @@ export async function sendDailyReport(opts: {
   });
 }
 
+export interface DailySummaryData {
+  to: string;
+  date: string;
+  ventas_hoy: number;
+  ordenes_hoy: number;
+  delta_ventas_pct: number | null;
+  margen_bruto: number | null;
+  meta_diaria: number | null;
+  pct_meta: number | null;
+  diferencia_caja: number | null;
+  top_productos: { name: string; units: number; revenue: number }[];
+  alertas: {
+    reservas_por_expirar: number;
+    por_vencer_7d: number;
+    stock_cero: number;
+    faltas_con_stock: number;
+  };
+}
+
+export async function sendDailySummary(data: DailySummaryData) {
+  if (!process.env.RESEND_API_KEY || !data.to) return;
+  const resend = getResend();
+
+  const fmtCLP = (n: number) =>
+    new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(n);
+
+  const deltaHtml = data.delta_ventas_pct !== null
+    ? ` <span style="color:${data.delta_ventas_pct >= 0 ? '#059669' : '#dc2626'};font-size:13px;">${data.delta_ventas_pct >= 0 ? '▲' : '▼'} ${Math.abs(data.delta_ventas_pct)}% vs ayer</span>`
+    : '';
+
+  const topTable = data.top_productos.length > 0
+    ? `<table width="100%" style="border-collapse:collapse;margin-top:8px;">
+        <tr style="background:#f8fafc;">
+          <th style="padding:6px 10px;text-align:left;font-size:12px;color:#64748b;">Producto</th>
+          <th style="padding:6px 10px;text-align:center;font-size:12px;color:#64748b;">Uds.</th>
+          <th style="padding:6px 10px;text-align:right;font-size:12px;color:#64748b;">Total</th>
+        </tr>
+        ${data.top_productos.map(p =>
+          `<tr><td style="padding:6px 10px;font-size:13px;color:#334155;">${p.name}</td>
+           <td style="padding:6px 10px;text-align:center;font-size:13px;">${p.units}</td>
+           <td style="padding:6px 10px;text-align:right;font-size:13px;font-weight:600;">${fmtCLP(p.revenue)}</td></tr>`
+        ).join('')}
+       </table>`
+    : '<p style="color:#94a3b8;font-size:13px;margin:0;">Sin ventas registradas.</p>';
+
+  const alertLines = [
+    data.alertas.reservas_por_expirar > 0 ? `⏰ ${data.alertas.reservas_por_expirar} reserva(s) por expirar` : null,
+    data.alertas.por_vencer_7d > 0 ? `📦 ${data.alertas.por_vencer_7d} lote(s) vence(n) en 7 días` : null,
+    data.alertas.stock_cero > 0 ? `🚫 ${data.alertas.stock_cero} producto(s) sin stock` : null,
+    data.alertas.faltas_con_stock > 0 ? `📋 ${data.alertas.faltas_con_stock} falta(s) con stock disponible` : null,
+  ].filter(Boolean).join('<br>');
+
+  const html = emailWrapper(`
+    <h2 style="color:#0f172a;font-size:20px;margin:0 0 4px;">Resumen del día</h2>
+    <p style="color:#64748b;font-size:14px;margin:0 0 24px;">${data.date}</p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr>
+        <td width="50%" style="padding-right:8px;">
+          <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:16px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#166534;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Ventas</p>
+            <p style="margin:6px 0 2px;font-size:26px;font-weight:800;color:#059669;">${fmtCLP(data.ventas_hoy)}</p>
+            <p style="margin:0;font-size:12px;color:#4ade80;">${data.ordenes_hoy} pedidos${deltaHtml}</p>
+          </div>
+        </td>
+        <td width="50%" style="padding-left:8px;">
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;text-align:center;">
+            ${data.margen_bruto !== null
+              ? `<p style="margin:0;font-size:12px;color:#334155;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Margen bruto est.</p>
+                 <p style="margin:6px 0 2px;font-size:26px;font-weight:800;color:#0f172a;">${fmtCLP(data.margen_bruto)}</p>
+                 <p style="margin:0;font-size:12px;color:#94a3b8;">productos con costo cargado</p>`
+              : `<p style="margin:0;font-size:13px;color:#94a3b8;padding-top:12px;">Sin datos de costo<br>Carga cost_price en productos</p>`}
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    ${data.meta_diaria ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px;margin-bottom:20px;">
+      <p style="margin:0;font-size:13px;color:#92400e;font-weight:600;">Meta diaria: ${data.pct_meta ?? 0}% — ${fmtCLP(data.ventas_hoy)} / ${fmtCLP(data.meta_diaria)}</p>
+      <div style="margin-top:8px;height:6px;background:#fde68a;border-radius:3px;overflow:hidden;">
+        <div style="height:100%;width:${Math.min(data.pct_meta ?? 0, 100)}%;background:${(data.pct_meta ?? 0) >= 80 ? '#059669' : (data.pct_meta ?? 0) >= 50 ? '#d97706' : '#dc2626'};border-radius:3px;"></div>
+      </div>
+    </div>` : ''}
+
+    ${data.diferencia_caja !== null ? `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:20px;">
+      <p style="margin:0;font-size:13px;color:#334155;">Diferencia de caja: <strong style="color:${data.diferencia_caja === 0 ? '#059669' : Math.abs(data.diferencia_caja) < 1000 ? '#d97706' : '#dc2626'}">${fmtCLP(data.diferencia_caja)}</strong></p>
+    </div>` : ''}
+
+    <h3 style="font-size:14px;font-weight:600;color:#0f172a;margin:0 0 4px;">Top 5 productos</h3>
+    ${topTable}
+
+    ${alertLines ? `<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:12px;margin-top:20px;">
+      <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#991b1b;">Para mañana</p>
+      <p style="margin:0;font-size:13px;color:#7f1d1d;line-height:1.8;">${alertLines}</p>
+    </div>` : ''}
+
+    <div style="margin-top:24px;text-align:center;">
+      <a href="${BASE}/admin/operaciones" style="background:#059669;color:#fff;padding:10px 24px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;">Ver Operaciones →</a>
+    </div>
+  `);
+
+  await resend.emails.send({
+    from: FROM,
+    to: data.to,
+    subject: `📊 Resumen ${data.date} — ${fmtCLP(data.ventas_hoy)} · Tu Farmacia`,
+    html,
+  });
+}
+
+export async function sendExpressOrderEmail(opts: {
+  supplierEmail: string;
+  supplierName: string;
+  pharmacyContact: string;
+  items: { name: string; qty: number; unit_cost?: number | null }[];
+  notes?: string;
+}) {
+  if (!process.env.RESEND_API_KEY) return;
+  const resend = getResend();
+
+  const rows = opts.items.map(i =>
+    `<tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;color:#334155;">${i.name}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;text-align:center;font-weight:700;color:#d97706;">${i.qty}</td>
+      ${i.unit_cost ? `<td style="padding:8px 12px;border-bottom:1px solid #f1f5f9;text-align:right;color:#64748b;">${new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',minimumFractionDigits:0}).format(i.unit_cost)}</td>` : '<td></td>'}
+    </tr>`
+  ).join('');
+
+  const html = emailWrapper(`
+    <h2 style="color:#0f172a;font-size:20px;margin:0 0 4px;">Pedido urgente de reposición</h2>
+    <p style="color:#64748b;font-size:14px;margin:0 0 24px;">Tu Farmacia — Coquimbo, Chile</p>
+
+    <p style="color:#334155;font-size:14px;margin:0 0 16px;">Estimado/a ${opts.supplierName},</p>
+    <p style="color:#334155;font-size:14px;margin:0 0 20px;">
+      Necesitamos los siguientes productos con carácter urgente. Por favor confirme disponibilidad y fecha estimada de entrega.
+    </p>
+
+    <table width="100%" style="border-collapse:collapse;margin-bottom:20px;">
+      <thead>
+        <tr style="background:#f8fafc;">
+          <th style="padding:8px 12px;text-align:left;font-size:12px;color:#64748b;font-weight:600;">Producto</th>
+          <th style="padding:8px 12px;text-align:center;font-size:12px;color:#64748b;font-weight:600;">Cantidad</th>
+          <th style="padding:8px 12px;text-align:right;font-size:12px;color:#64748b;font-weight:600;">P. referencia</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+
+    ${opts.notes ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px;margin-bottom:20px;">
+      <p style="margin:0;font-size:13px;color:#92400e;"><strong>Nota:</strong> ${opts.notes}</p>
+    </div>` : ''}
+
+    <p style="color:#334155;font-size:13px;margin:0 0 4px;">Contacto: <strong>${opts.pharmacyContact}</strong></p>
+    <p style="color:#64748b;font-size:12px;margin:0;">Tu Farmacia · Coquimbo, Chile · <a href="${BASE}/admin" style="color:#059669;">tu-farmacia.cl</a></p>
+  `);
+
+  await resend.emails.send({
+    from: FROM,
+    to: opts.supplierEmail,
+    subject: `⚡ Pedido urgente Tu Farmacia — ${opts.items.map(i => i.name).join(', ').slice(0, 60)}`,
+    html,
+  });
+}
+
 export async function sendNewOrderAlert(opts: {
   toEmail: string;
   orderId: string;
