@@ -8,7 +8,7 @@ import {
   Pill, Heart, Droplets, Apple, Stethoscope, Brain, Wind, Sparkles,
   Eye, Flower2, Shield, Droplet, Baby, Users, Activity, Leaf,
   TrendingUp, MessageCircle, FileText, RefreshCw, LayoutGrid, List,
-  BadgePercent, AlertCircle, Star, Loader2,
+  BadgePercent, AlertCircle, Star, Loader2, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -144,6 +144,10 @@ function HomeContent() {
   const [acError, setAcError] = useState<string | null>(null);
   const [acOpen, setAcOpen] = useState(false);
   const acContainerRef = useRef<HTMLDivElement>(null);
+  const topSellersScrollRef = useRef<HTMLDivElement>(null);
+  const scrollTopSellers = (dir: 'left' | 'right') => {
+    topSellersScrollRef.current?.scrollBy({ left: dir === 'right' ? 600 : -600, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     const cat = searchParams.get('category');
@@ -246,15 +250,15 @@ function HomeContent() {
 
   const loadTopSellers = async () => {
     try {
-      const res = await fetch('/api/products/top-sellers?limit=10');
+      const res = await fetch('/api/products/top-sellers?limit=20');
       if (res.ok) {
         const data = await res.json();
         if (data.length > 0) { setTopSellers(data); return; }
       }
-      const fallback = await fetch('/api/products?in_stock=true&active_only=true&limit=30&sort_by=name');
+      const fallback = await fetch('/api/products?in_stock=true&active_only=true&limit=50&sort_by=name');
       if (fallback.ok) {
         const { products } = await fallback.json();
-        const withImage = (products as Product[]).filter(p => p.image_url).slice(0, 10);
+        const withImage = (products as Product[]).filter(p => p.image_url).slice(0, 20);
         if (withImage.length > 0) setTopSellers(withImage);
       }
     } catch {}
@@ -544,11 +548,17 @@ function HomeContent() {
             {/* Más Vendidos */}
             {topSellers.length > 0 && !selectedCategory && !searchTerm && !showDiscountOnly && (
               <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <TrendingUp className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-                  <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Más vendidos</h2>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                    <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Más vendidos</h2>
+                  </div>
+                  <div className="hidden md:flex items-center gap-1">
+                    <button onClick={() => scrollTopSellers('left')} className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"><ChevronLeft className="w-4 h-4 text-slate-600 dark:text-slate-300" /></button>
+                    <button onClick={() => scrollTopSellers('right')} className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"><ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-300" /></button>
+                  </div>
                 </div>
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
+                <div ref={topSellersScrollRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
                   {topSellers.map((product) => {
                     const finalPrice = product.discount_percent ? discountedPrice(Number(product.price), product.discount_percent) : Number(product.price);
                     return (
