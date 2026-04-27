@@ -82,6 +82,13 @@ export default function ArqueoPage() {
   const [showHistory, setShowHistory] = useState(false);
   const [expandedClose, setExpandedClose] = useState<string | null>(null);
 
+  // Pharmacist shift
+  const [showPharmacistModal, setShowPharmacistModal] = useState(false);
+  const [pharmacistName, setPharmacistName] = useState('');
+  const [pharmacistRut, setPharmacistRut] = useState('');
+  const [savingPharmacist, setSavingPharmacist] = useState(false);
+  const [activePharmacist, setActivePharmacist] = useState<string | null>(null);
+
   // Fondo inicial edit
   const [editingFondo, setEditingFondo] = useState(false);
   const [fondoInput, setFondoInput] = useState('');
@@ -96,6 +103,7 @@ export default function ArqueoPage() {
       const json = await res.json();
       setData(json);
       setFondoInput(String(json.fondo_inicial));
+      setActivePharmacist(json.pharmacist_name || null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error desconocido');
     } finally {
@@ -361,6 +369,25 @@ export default function ArqueoPage() {
         )}
       </div>
 
+      {/* Farmacéutico en turno */}
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">Farmacéutico en turno</p>
+        {activePharmacist ? (
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{activePharmacist}</p>
+            <button onClick={() => setShowPharmacistModal(true)}
+              className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline">
+              Cambiar
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => setShowPharmacistModal(true)}
+            className="w-full py-2.5 border-2 border-dashed border-slate-200 dark:border-slate-600 rounded-xl text-sm text-slate-500 dark:text-slate-400 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors">
+            + Registrar farmacéutico
+          </button>
+        )}
+      </div>
+
       {/* Recent orders */}
       {data.recent_orders.length > 0 && (
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
@@ -549,6 +576,51 @@ export default function ArqueoPage() {
         </div>
       )}
     </div>
+
+      {/* Pharmacist shift modal */}
+      {showPharmacistModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm space-y-4 p-6">
+            <h2 className="font-bold text-slate-900 dark:text-white">Farmacéutico en turno</h2>
+            <input placeholder="Nombre completo *" value={pharmacistName}
+              onChange={e => setPharmacistName(e.target.value)}
+              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100" />
+            <input placeholder="RUT (ej: 12.345.678-9) *" value={pharmacistRut}
+              onChange={e => setPharmacistRut(e.target.value)}
+              className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100" />
+            <div className="flex gap-3">
+              <button onClick={() => setShowPharmacistModal(false)}
+                className="flex-1 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                Cancelar
+              </button>
+              <button
+                disabled={!pharmacistName.trim() || !pharmacistRut.trim() || savingPharmacist}
+                onClick={async () => {
+                  setSavingPharmacist(true);
+                  try {
+                    const res = await fetch('/api/admin/arqueo', {
+                      method: 'POST', credentials: 'include',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'set_pharmacist_shift', pharmacist_name: pharmacistName.trim(), pharmacist_rut: pharmacistRut.trim() }),
+                    });
+                    if (res.ok) {
+                      if (typeof window !== 'undefined') {
+                        localStorage.setItem('pharmacist_name', pharmacistName.trim());
+                      }
+                      setActivePharmacist(pharmacistName.trim());
+                      setShowPharmacistModal(false);
+                      setPharmacistName('');
+                      setPharmacistRut('');
+                    }
+                  } finally { setSavingPharmacist(false); }
+                }}
+                className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50">
+                {savingPharmacist ? 'Guardando...' : 'Confirmar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

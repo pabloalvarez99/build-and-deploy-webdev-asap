@@ -17,7 +17,7 @@ export async function GET() {
     const db = await getDb();
 
     const settings = await db.admin_settings.findMany({
-      where: { key: { in: [SETTING_TURNO_INICIO, SETTING_FONDO_INICIAL] } },
+      where: { key: { in: [SETTING_TURNO_INICIO, SETTING_FONDO_INICIAL, 'caja_pharmacist_name'] } },
     });
     const settingsMap: Record<string, string> = {};
     for (const s of settings) settingsMap[s.key] = s.value;
@@ -80,6 +80,7 @@ export async function GET() {
         created_at: o.created_at.toISOString(),
         customer: o.guest_name ? `${o.guest_name} ${o.guest_surname ?? ''}`.trim() : 'Cliente',
       })),
+      pharmacist_name: settingsMap['caja_pharmacist_name'] || null,
       closes: closes.map(c => ({
         id: c.id,
         turno_inicio: c.turno_inicio.toISOString(),
@@ -117,6 +118,44 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { action } = body;
     const db = await getDb();
+
+    if (action === 'set_pharmacist_shift') {
+      const { pharmacist_name, pharmacist_rut } = body;
+      if (!pharmacist_name || !pharmacist_rut) {
+        return errorResponse('pharmacist_name y pharmacist_rut requeridos', 400);
+      }
+      const shift = await db.pharmacist_shifts.create({
+        data: {
+          pharmacist_name,
+          pharmacist_rut,
+          shift_start: new Date(),
+        },
+      });
+      await Promise.all([
+        db.admin_settings.upsert({
+          where: { key: 'caja_pharmacist_shift_id' },
+          update: { value: shift.id },
+          create: { key: 'caja_pharmacist_shift_id', value: shift.id },
+        }),
+        db.admin_settings.upsert({
+          where: { key: 'caja_pharmacist_name' },
+          update: { value: pharmacist_name },
+          create: { key: 'caja_pharmacist_name', value: pharmacist_name },
+        }),
+      ]);
+      return NextResponse.json({ ok: true, shift_id: shift.id });
+    }
+
+    if (action === 'close_pharmacist_shift') {
+      const shiftIdSetting = await db.admin_settings.findUnique({ where: { key: 'caja_pharmacist_shift_id' } });
+      if (shiftIdSetting?.value) {
+        await db.pharmacist_shifts.update({
+          where: { id: shiftIdSetting.value },
+          data: { shift_end: new Date(), notes: body.notes || null },
+        });
+      }
+      return NextResponse.json({ ok: true });
+    }
 
     if (action === 'set_fondo') {
       const { fondo } = body;
