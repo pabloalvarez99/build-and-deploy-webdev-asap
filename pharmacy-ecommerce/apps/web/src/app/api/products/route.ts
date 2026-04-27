@@ -94,6 +94,10 @@ export async function GET(request: NextRequest) {
   const stockFilter = searchParams.get('stock_filter')
   if (stockFilter === 'out') where.stock = { lte: 0 }
   if (stockFilter === 'low') where.stock = { gt: 0, lte: 10 }
+  if (stockFilter === 'excel_agotado') {
+    where.stock = { lte: 0 }
+    where.stock_movements = { some: { reason: { in: ['import_excel', 'agotado_excel'] } } }
+  }
 
   // Sorting
   let orderBy: Record<string, string> = { created_at: 'desc' }

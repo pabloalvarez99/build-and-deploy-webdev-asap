@@ -24,9 +24,11 @@ const REASON_CONFIG: Record<string, { label: string; color: string }> = {
   sale: { label: 'Venta online', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' },
   cancelled: { label: 'Cancelación', color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' },
   adjustment: { label: 'Ajuste manual', color: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400' },
+  import_excel: { label: 'Import Excel', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' },
+  agotado_excel: { label: 'Agotado Excel', color: 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400' },
 }
 
-const REASONS = ['', 'purchase', 'sale_pos', 'sale', 'cancelled', 'adjustment']
+const REASONS = ['', 'purchase', 'sale_pos', 'sale', 'cancelled', 'adjustment', 'import_excel', 'agotado_excel']
 
 interface AdjustProduct { id: string; name: string; stock: number }
 

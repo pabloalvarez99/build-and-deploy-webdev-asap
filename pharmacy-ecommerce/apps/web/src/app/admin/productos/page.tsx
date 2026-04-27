@@ -44,7 +44,7 @@ export default function AdminProductsPage() {
  // ?stock=out|low|in pre-selects the stock filter (linked from NotificationBell)
  const [stockFilter, setStockFilter] = useState(() => {
   const s = searchParams.get('stock');
-  return s === 'low' || s === 'out' || s === 'in' ? s : '';
+  return s === 'low' || s === 'out' || s === 'in' || s === 'excel_agotado' ? s : '';
  });
  const [minPrice, setMinPrice] = useState('');
  const [maxPrice, setMaxPrice] = useState('');
@@ -56,7 +56,7 @@ export default function AdminProductsPage() {
 
  // Data completeness stats (loaded once on mount)
  const [productStats, setProductStats] = useState<{
-  total: number; noImage: number; noExternalId: number; noBarcode: number; outOfStock: number; lowStock: number;
+  total: number; noImage: number; noExternalId: number; noBarcode: number; outOfStock: number; lowStock: number; excelAgotado: number;
  } | null>(null);
 
  const handleColumnSort = (field: string) => {
@@ -217,7 +217,7 @@ export default function AdminProductsPage() {
  const data = await productApi.list({
  page: currentPage,
  limit: 20,
- active_only: stockFilter === 'out' ? false : !showInactive,
+ active_only: (stockFilter === 'out' || stockFilter === 'excel_agotado') ? false : !showInactive,
  search: searchTerm || undefined,
  category: selectedCategory || undefined,
  laboratory: selectedLaboratory || undefined,
@@ -230,7 +230,7 @@ export default function AdminProductsPage() {
  no_external_id: noExternalId || undefined,
  no_barcode: noBarcode || undefined,
  in_stock: stockFilter === 'in' ? true : undefined,
- stock_filter: (stockFilter === 'low' || stockFilter === 'out') ? (stockFilter as 'low' | 'out') : undefined,
+ stock_filter: (stockFilter === 'low' || stockFilter === 'out' || stockFilter === 'excel_agotado') ? (stockFilter as 'low' | 'out' | 'excel_agotado') : undefined,
  });
  setProducts(data);
  } catch (error) {
@@ -893,12 +893,13 @@ export default function AdminProductsPage() {
 
  {/* Data Completeness Panel */}
  {productStats && (
- <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
+ <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2 mb-4">
   {[
   { label: 'Sin imagen', value: productStats.noImage, color: 'amber', onClick: () => { setNoImage(true); setCurrentPage(1); } },
   { label: 'Sin cód. externo', value: productStats.noExternalId, color: 'violet', onClick: () => { setNoExternalId(true); setCurrentPage(1); } },
   { label: 'Sin barcode', value: productStats.noBarcode, color: 'cyan', onClick: () => { setNoBarcode(true); setCurrentPage(1); } },
   { label: 'Agotados', value: productStats.outOfStock, color: 'red', onClick: () => { setStockFilter('out'); setCurrentPage(1); } },
+  { label: 'Agotados Excel', value: productStats.excelAgotado, color: 'rose', onClick: () => { setStockFilter('excel_agotado'); setCurrentPage(1); } },
   { label: 'Stock bajo', value: productStats.lowStock, color: 'orange', onClick: () => { setStockFilter('low'); setCurrentPage(1); } },
   { label: 'Total activos', value: productStats.total, color: 'emerald', onClick: undefined },
   ].map(({ label, value, color, onClick }) => (
@@ -913,6 +914,7 @@ export default function AdminProductsPage() {
      color === 'violet' ? 'border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/20 hover:border-violet-400' :
      color === 'cyan' ? 'border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-900/20 hover:border-cyan-400' :
      color === 'red' ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 hover:border-red-400' :
+     color === 'rose' ? 'border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/20 hover:border-rose-400' :
      'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 hover:border-orange-400'
     }`
     : 'cursor-default border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20'
@@ -923,6 +925,7 @@ export default function AdminProductsPage() {
    color === 'violet' ? 'text-violet-700 dark:text-violet-300' :
    color === 'cyan' ? 'text-cyan-700 dark:text-cyan-300' :
    color === 'red' ? 'text-red-700 dark:text-red-300' :
+   color === 'rose' ? 'text-rose-700 dark:text-rose-300' :
    color === 'orange' ? 'text-orange-700 dark:text-orange-300' :
    'text-emerald-700 dark:text-emerald-300'
    }`}>{value.toLocaleString('es-CL')}</span>

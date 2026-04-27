@@ -48,7 +48,7 @@ export const productApi = {
     max_price?: number
     no_image?: boolean
     has_discount?: boolean
-    stock_filter?: 'low' | 'out' | ''
+    stock_filter?: 'low' | 'out' | 'excel_agotado' | ''
     no_external_id?: boolean
     no_barcode?: boolean
   }): Promise<PaginatedProducts> => {

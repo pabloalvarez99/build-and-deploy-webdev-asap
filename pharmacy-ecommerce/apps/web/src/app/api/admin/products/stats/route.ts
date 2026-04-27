@@ -9,16 +9,17 @@ export async function GET() {
 
     const db = await getDb();
 
-    const [total, noImage, noExternalId, noBarcode, outOfStock, lowStock] = await Promise.all([
+    const [total, noImage, noExternalId, noBarcode, outOfStock, lowStock, excelAgotado] = await Promise.all([
       db.products.count({ where: { active: true } }),
       db.products.count({ where: { active: true, image_url: null } }),
       db.products.count({ where: { active: true, external_id: null } }),
       db.products.count({ where: { active: true, product_barcodes: { none: {} } } }),
       db.products.count({ where: { active: true, stock: { lte: 0 } } }),
       db.products.count({ where: { active: true, stock: { gt: 0, lte: 10 } } }),
+      db.products.count({ where: { active: true, stock: { lte: 0 }, stock_movements: { some: { reason: { in: ['import_excel', 'agotado_excel'] } } } } }),
     ]);
 
-    return NextResponse.json({ total, noImage, noExternalId, noBarcode, outOfStock, lowStock });
+    return NextResponse.json({ total, noImage, noExternalId, noBarcode, outOfStock, lowStock, excelAgotado });
   } catch (e) {
     console.error('GET /api/admin/products/stats error:', e);
     return errorResponse('Error fetching stats', 500);
