@@ -207,6 +207,12 @@ export default function AdminReportesPage() {
     a.click();
   };
 
+  const exportLibroVentas = () => {
+    const from = period === 0 ? (customFrom || getFromDate(30)) : getFromDate(period);
+    const to = period === 0 ? (customTo || new Date().toISOString().split('T')[0]) : new Date().toISOString().split('T')[0];
+    window.location.href = `/api/admin/reportes/libro-ventas?from=${from}&to=${to}`;
+  };
+
   if (!user || user.role !== 'admin') return null;
 
   const gridColor = isDark ? '#334155' : '#E2E8F0';
@@ -241,6 +247,13 @@ export default function AdminReportesPage() {
           >
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">CSV</span>
+          </button>
+          <button
+            onClick={exportLibroVentas}
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">Libro de Ventas</span>
           </button>
         </div>
       </div>
