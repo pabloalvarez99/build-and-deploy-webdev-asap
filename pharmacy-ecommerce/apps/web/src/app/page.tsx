@@ -132,6 +132,7 @@ function HomeContent() {
   const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
   const [showDiscountOnly, setShowDiscountOnly] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [loyaltyEnabled, setLoyaltyEnabled] = useState(true);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const ITEMS_PER_PAGE = 20;
   const router = useRouter();
@@ -170,6 +171,13 @@ function HomeContent() {
       .then(data => setFrequentProducts(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, [user]);
+
+  useEffect(() => {
+    fetch('/api/loyalty/config')
+      .then(r => r.ok ? r.json() : { enabled: true })
+      .then(data => setLoyaltyEnabled(data.enabled !== false))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -475,7 +483,7 @@ function HomeContent() {
             </div>
 
             {/* Loyalty teaser */}
-            {!user && !selectedCategory && !searchTerm && !showDiscountOnly && (
+            {loyaltyEnabled && !user && !selectedCategory && !searchTerm && !showDiscountOnly && (
               <Link
                 href="/auth/register"
                 className="flex items-center gap-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl px-5 py-4 hover:border-amber-300 dark:hover:border-amber-700 transition-colors group"
