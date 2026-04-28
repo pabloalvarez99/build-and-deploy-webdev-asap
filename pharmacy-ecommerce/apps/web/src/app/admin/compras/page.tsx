@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
+import { isOwnerRole } from '@/lib/roles'
 import { purchaseOrderApi, supplierApi, type PurchaseOrder, type Supplier } from '@/lib/api'
 import { ClipboardList, Plus, Eye, Filter, CheckCircle2, Clock, XCircle, AlertTriangle, ChevronDown, ChevronRight, ShoppingCart } from 'lucide-react'
 
@@ -72,7 +73,7 @@ export default function ComprasPage() {
   }, [page, statusFilter, supplierFilter])
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { router.push('/'); return }
+    if (!user || !isOwnerRole(user.role)) { router.push('/'); return }
     supplierApi.list().then((d) => setSuppliers(d.suppliers)).catch(console.error)
     fetch('/api/admin/inventory/reorder-suggestions')
       .then((r) => r.json())

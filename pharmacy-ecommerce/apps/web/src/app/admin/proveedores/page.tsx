@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
+import { isOwnerRole } from '@/lib/roles'
 import { supplierApi, type Supplier } from '@/lib/api'
 import { Truck, Plus, Edit2, Trash2, Phone, Mail, Globe, Package, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
@@ -25,7 +26,7 @@ export default function ProveedoresPage() {
   const [includeInactive, setIncludeInactive] = useState(false)
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { router.push('/'); return }
+    if (!user || !isOwnerRole(user.role)) { router.push('/'); return }
     load()
   }, [user, router, includeInactive])
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
+import { isOwnerRole } from '@/lib/roles'
 import {
   purchaseOrderApi, supplierApi, productApi,
   type Supplier, type ScannedLine, type ProductWithCategory,
@@ -56,7 +57,7 @@ export default function NuevaCompraPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { router.push('/'); return }
+    if (!user || !isOwnerRole(user.role)) { router.push('/'); return }
     const presetId = searchParams.get('supplier_id')
     supplierApi.list().then((d) => {
       setSuppliers(d.suppliers)

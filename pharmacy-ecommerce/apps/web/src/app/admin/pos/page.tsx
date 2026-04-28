@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
+import { isAdminRole } from '@/lib/roles'
 import { productApi, Category } from '@/lib/api'
 import { calcPoints } from '@/lib/loyalty-utils'
 import {
@@ -196,7 +197,7 @@ export default function POSPage() {
   }, [customerPhone])
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { router.push('/'); return }
+    if (!user || !isAdminRole(user.role)) { router.push('/'); return }
     searchRef.current?.focus()
     // Load categories for quick filter pills
     productApi.listCategories(true)

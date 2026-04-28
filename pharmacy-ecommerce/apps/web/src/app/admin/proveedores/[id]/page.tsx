@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
+import { isOwnerRole } from '@/lib/roles'
 import { supplierApi, type Supplier } from '@/lib/api'
 import {
   Truck, ArrowLeft, Mail, Phone, Globe, FileText, ClipboardList,
@@ -52,7 +53,7 @@ export default function ProveedorDetailPage() {
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { router.push('/'); return }
+    if (!user || !isOwnerRole(user.role)) { router.push('/'); return }
     load()
   }, [user, router, params.id])
 

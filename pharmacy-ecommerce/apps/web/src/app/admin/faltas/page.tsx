@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
+import { isAdminRole } from '@/lib/roles';
 import { BookX, Plus, CheckCircle, X, Search, Clock, Bell, Trash2 } from 'lucide-react';
 
 interface Falta {
@@ -36,7 +37,7 @@ export default function FaltasPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { router.push('/'); return; }
+    if (!user || !isAdminRole(user.role)) { router.push('/'); return; }
     load();
   }, [user, router, statusFilter]);
 

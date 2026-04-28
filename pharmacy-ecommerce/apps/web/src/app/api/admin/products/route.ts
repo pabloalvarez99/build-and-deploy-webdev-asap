@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { getDb } from '@/lib/db';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
+import { logAudit } from '@/lib/audit';
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,6 +42,10 @@ export async function POST(request: NextRequest) {
     });
 
     revalidateTag('products');
+    logAudit(admin.email || admin.uid, 'create', 'product', product.id, product.name, {
+      price: { old: null, new: product.price.toString() },
+      stock: { old: null, new: product.stock },
+    });
     return NextResponse.json({
       ...product,
       price: product.price.toString(),

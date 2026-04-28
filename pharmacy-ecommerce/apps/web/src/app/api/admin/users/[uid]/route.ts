@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth } from '@/lib/firebase/admin';
 import { getOwnerUser, errorResponse } from '@/lib/firebase/api-helpers';
+import { logAudit } from '@/lib/audit';
 
 export async function PATCH(
   request: NextRequest,
@@ -25,6 +26,7 @@ export async function PATCH(
     if (Object.keys(update).length === 0) return errorResponse('Sin cambios', 400);
 
     const user = await adminAuth.updateUser(uid, update);
+    logAudit(owner.email || owner.uid, 'update', 'user', uid, user.email ?? undefined, { disabled: { old: !disabled, new: disabled } });
     return NextResponse.json({
       user: {
         uid: user.uid,

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
+import { isAdminRole } from '@/lib/roles';
 import { formatPrice } from '@/lib/format';
 import { POINTS_TO_CLP } from '@/lib/loyalty-utils';
 import {
@@ -70,7 +71,7 @@ export default function FidelidadPage() {
 
   useEffect(() => {
     if (!user) { router.push('/auth/login'); return; }
-    if (user.role !== 'admin') { router.push('/'); return; }
+    if (!isAdminRole(user.role)) { router.push('/'); return; }
     fetchStats();
   }, [user]);
 

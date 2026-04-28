@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { getDb } from '@/lib/db';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
+import { logAudit } from '@/lib/audit';
 
 export async function POST(
   _request: NextRequest,
@@ -90,6 +91,10 @@ export async function POST(
     }
 
     revalidateTag('products');
+    logAudit(admin.email || admin.uid, 'update', 'purchase_order', id, order.invoice_number ?? undefined, {
+      status: { old: 'draft', new: 'received' },
+      items_updated: { old: null, new: mappedItems.length },
+    });
     return NextResponse.json({
       success: true,
       items_updated: mappedItems.length,

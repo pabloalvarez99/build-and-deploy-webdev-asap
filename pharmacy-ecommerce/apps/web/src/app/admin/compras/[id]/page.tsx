@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
+import { isOwnerRole } from '@/lib/roles'
 import { purchaseOrderApi, type PurchaseOrder } from '@/lib/api'
 import {
   ClipboardList, ArrowLeft, CheckCircle2, Clock, XCircle,
@@ -38,7 +39,7 @@ export default function CompraDetailPage() {
   const [deletingItem, setDeletingItem] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { router.push('/'); return }
+    if (!user || !isOwnerRole(user.role)) { router.push('/'); return }
     load()
   }, [user, router, params.id])
 

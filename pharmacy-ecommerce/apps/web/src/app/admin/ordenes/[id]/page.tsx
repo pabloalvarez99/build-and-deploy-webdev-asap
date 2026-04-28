@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
+import { isAdminRole } from '@/lib/roles';
 import { orderApi, OrderWithItems } from '@/lib/api';
 import { ArrowLeft, Package, MapPin, FileText, User, Mail, Printer, Check, Clock, Truck, CheckCircle, XCircle, Store, Phone, CreditCard, Pencil, Save, RotateCcw } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
@@ -131,7 +132,7 @@ export default function AdminOrderDetailPage() {
  const [showDevolucionModal, setShowDevolucionModal] = useState(false);
 
  useEffect(() => {
- if (!user || user.role !== 'admin') {
+ if (!user || !isAdminRole(user.role)) {
  router.push('/');
  return;
  }
@@ -215,7 +216,7 @@ export default function AdminOrderDetailPage() {
   setShowDevolucionModal(true);
  };
 
- if (!user || user.role !== 'admin') {
+ if (!user || !isAdminRole(user.role)) {
  return null;
  }
 

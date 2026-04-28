@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
+import { isAdminRole } from '@/lib/roles';
 import { orderApi, Order } from '@/lib/api';
 import { formatPrice } from '@/lib/format';
 import {
@@ -90,7 +91,7 @@ export default function AdminOrdersPage() {
   }, [searchParams]);
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') {
+    if (!user || !isAdminRole(user.role)) {
       router.push('/');
     }
   }, [user, router]);
@@ -225,7 +226,7 @@ export default function AdminOrdersPage() {
     window.location.href = `/api/admin/orders/export?${params.toString()}`;
   };
 
-  if (!user || user.role !== 'admin') return null;
+  if (!user || !isAdminRole(user.role)) return null;
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">

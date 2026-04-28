@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth } from '@/lib/firebase/admin';
 import { getOwnerUser, errorResponse } from '@/lib/firebase/api-helpers';
 import { ADMIN_ROLES } from '@/lib/roles';
+import { logAudit } from '@/lib/audit';
 
 export async function GET() {
   const owner = await getOwnerUser();
@@ -40,7 +41,14 @@ export async function POST(request: NextRequest) {
       return errorResponse('No puedes remover tu propio acceso admin', 400);
     }
 
+    let prevRole: string | null = null;
+    try {
+      const u = await adminAuth.getUser(uid);
+      prevRole = (u.customClaims?.role as string) || 'user';
+    } catch {}
+
     await adminAuth.setCustomUserClaims(uid, { role });
+    logAudit(owner.email || owner.uid, 'update', 'user', uid, undefined, { role: { old: prevRole, new: role } });
     return NextResponse.json({ success: true, uid, role });
   } catch (error) {
     console.error('Set role error:', error);

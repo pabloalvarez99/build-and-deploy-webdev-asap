@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
+import { isOwnerRole } from '@/lib/roles';
 import { formatPrice } from '@/lib/format';
 import {
   TrendingUp, DollarSign, AlertTriangle, CheckCircle, Search, Download,
@@ -69,7 +70,7 @@ export default function CostosPage() {
   const [simDiscount, setSimDiscount] = useState(0);
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { router.push('/'); return; }
+    if (!user || !isOwnerRole(user.role)) { router.push('/'); return; }
     load();
   }, [user, router]);
 

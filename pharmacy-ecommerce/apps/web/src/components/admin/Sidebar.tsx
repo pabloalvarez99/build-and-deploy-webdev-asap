@@ -40,6 +40,8 @@ import {
   Activity,
   Shield,
   Wallet,
+  Crown,
+  ShieldCheck,
   type LucideIcon,
 } from 'lucide-react';
 import { canAccessRoute } from '@/lib/roles';
@@ -78,6 +80,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Operación',
     items: [
       { href: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
+      { href: '/admin/ejecutivo', icon: Crown, label: 'Ejecutivo' },
       { href: '/admin/operaciones', icon: Activity, label: 'Operaciones' },
       { href: '/admin/pos', icon: Receipt, label: 'POS' },
       { href: '/admin/arqueo', icon: Calculator, label: 'Arqueo' },
@@ -147,6 +150,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Sistema',
     items: [
       { href: '/admin/usuarios', icon: Shield, label: 'Usuarios' },
+      { href: '/admin/sistema/auditoria', icon: ShieldCheck, label: 'Auditoría' },
       { href: '/admin/configuracion', icon: Settings, label: 'Configuración' },
     ],
   },

@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { getDb } from '@/lib/db';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
+import { logAudit } from '@/lib/audit';
+
+const AUDITED_FIELDS = ['name', 'price', 'stock', 'cost_price', 'active', 'discount_percent', 'category_id', 'prescription_type'] as const;
+
+function diffFields(before: Record<string, unknown>, after: Record<string, unknown>) {
+  const changes: Record<string, { old: unknown; new: unknown }> = {};
+  for (const k of AUDITED_FIELDS) {
+    const o = before[k];
+    const n = after[k];
+    const ov = o instanceof Object && 'toString' in o ? o.toString() : o;
+    const nv = n instanceof Object && 'toString' in n ? n.toString() : n;
+    if (ov !== nv && nv !== undefined) changes[k] = { old: ov ?? null, new: nv ?? null };
+  }
+  return changes;
+}
 
 export async function GET(
   _request: NextRequest,
@@ -46,6 +61,9 @@ export async function PUT(
     const body = await request.json();
     const db = await getDb();
 
+    const before = await db.products.findUnique({ where: { id } });
+    if (!before) return errorResponse('Not found', 404);
+
     const updateData: Record<string, unknown> = {};
     if (body.name !== undefined) updateData.name = body.name;
     if (body.slug !== undefined) updateData.slug = body.slug;
@@ -88,6 +106,8 @@ export async function PUT(
       ]);
 
       revalidateTag('products');
+      const changes = diffFields(before as unknown as Record<string, unknown>, product as unknown as Record<string, unknown>);
+      logAudit(admin.email || admin.uid, 'update', 'product', id, product.name, changes);
       return NextResponse.json({
         ...product,
         price: product.price.toString(),
@@ -102,6 +122,8 @@ export async function PUT(
     });
 
     revalidateTag('products');
+    const changes = diffFields(before as unknown as Record<string, unknown>, product as unknown as Record<string, unknown>);
+    logAudit(admin.email || admin.uid, 'update', 'product', id, product.name, changes);
     return NextResponse.json({
       ...product,
       price: product.price.toString(),
@@ -124,9 +146,11 @@ export async function DELETE(
     const { id } = await params;
     const db = await getDb();
 
+    const before = await db.products.findUnique({ where: { id }, select: { name: true } });
     await db.products.delete({ where: { id } });
 
     revalidateTag('products');
+    logAudit(admin.email || admin.uid, 'delete', 'product', id, before?.name);
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);

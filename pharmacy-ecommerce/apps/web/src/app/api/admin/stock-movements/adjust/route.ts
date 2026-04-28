@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { getDb } from '@/lib/db';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
+import { logAudit } from '@/lib/audit';
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,6 +50,10 @@ export async function POST(request: NextRequest) {
     }
 
     revalidateTag('products');
+    logAudit(admin.email || admin.uid, 'create', 'stock_movement', product_id, product.name, {
+      delta: { old: product.stock, new: newStock },
+      notes: { old: null, new: notes ?? null },
+    });
     return NextResponse.json({ success: true, new_stock: newStock, product_name: product.name });
   } catch (error) {
     console.error('Stock adjust error:', error);

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
+import { isAdminRole } from '@/lib/roles';
 import { productApi, Category } from '@/lib/api';
 import { Plus, Edit, Trash2, X, AlertTriangle, Package } from 'lucide-react';
 
@@ -25,7 +26,7 @@ export default function AdminCategoriesPage() {
  });
 
  useEffect(() => {
- if (!user || user.role !== 'admin') {
+ if (!user || !isAdminRole(user.role)) {
  router.push('/');
  return;
  }
@@ -126,7 +127,7 @@ export default function AdminCategoriesPage() {
  .replace(/(^-|-$)/g, '');
  };
 
- if (!user || user.role !== 'admin') {
+ if (!user || !isAdminRole(user.role)) {
  return null;
  }
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth } from '@/lib/firebase/admin';
 import { getOwnerUser, errorResponse } from '@/lib/firebase/api-helpers';
 import { ADMIN_ROLES } from '@/lib/roles';
+import { logAudit } from '@/lib/audit';
 import crypto from 'crypto';
 
 const ALLOWED = [...ADMIN_ROLES, 'user'] as const;
@@ -43,6 +44,8 @@ export async function POST(request: NextRequest) {
     } catch (e) {
       console.error('generatePasswordResetLink error:', e);
     }
+
+    logAudit(owner.email || owner.uid, 'create', 'user', user.uid, email, { role: { old: null, new: role } });
 
     return NextResponse.json({
       user: {

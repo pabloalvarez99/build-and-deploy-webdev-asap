@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
+import { isAdminRole } from '@/lib/roles';
 import { formatPrice } from '@/lib/format';
 import {
   Warehouse, Search, Download, AlertTriangle, Package, TrendingUp,
@@ -81,7 +82,7 @@ export default function InventarioPage() {
   const [abcClase, setAbcClase] = useState<'' | 'A' | 'B' | 'C'>('');
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { router.push('/'); return; }
+    if (!user || !isAdminRole(user.role)) { router.push('/'); return; }
     loadInventory('');
   }, [user, router]);
 
@@ -202,7 +203,7 @@ export default function InventarioPage() {
   const noCost = items.filter(i => i.cost_price === null).length;
   const criticalDays = items.filter(i => i.dias_inventario !== null && i.dias_inventario <= 7).length;
 
-  if (!user || user.role !== 'admin') return null;
+  if (!user || !isAdminRole(user.role)) return null;
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">

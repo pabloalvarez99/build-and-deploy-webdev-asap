@@ -1,6 +1,35 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: Roles ERP + Gestión Financiera completos (Abril 2026)
+## Estado actual: ERP profesional — auditoría + FEFO + dashboard ejecutivo (Abril 2026)
+
+---
+
+## 2026-04-28 — Feat: Auditoría + FEFO + Dashboard ejecutivo + Fix masivo guards
+
+- **T1: Fix guards de rol (21 páginas)**: reemplazado `user.role !== 'admin'` por `isAdminRole(user.role)` (16 páginas) o `isOwnerRole(user.role)` (5 páginas owner-only: reportes, costos, configuración, proveedores, compras). Sin esto, owner/pharmacist/seller eran rebotados al storefront pese a tener rol válido.
+- **T2: Audit log cableado**. `lib/audit.ts:logAudit` ya existía sin callers. Wirear en mutaciones sensibles:
+  - `POST /api/admin/products`, `PUT/DELETE /api/admin/products/[id]` con diff de campos auditables (price/stock/cost_price/active/discount/category/prescription_type)
+  - `PUT /api/admin/orders/[id]` (status changes + actions: approve/reject/refund + notes)
+  - `POST /api/admin/stock-movements/adjust`
+  - `POST /api/admin/pos/sale`
+  - `POST /api/admin/users/invite`, `PATCH /api/admin/users/[uid]`, `POST /api/admin/users` (cambio rol)
+  - `POST /api/admin/purchase-orders/[id]/receive`
+  - Nueva ruta `GET /api/admin/audit?entity=&action=&user=&from=&to=&page=` con filtros + paginación, owner-only.
+  - Nueva página `/admin/sistema/auditoria` (DataTable con filas expandibles mostrando diff campo por campo old → new).
+- **T3: POS auto-registra recetas**. Ya existía modal de captura datos paciente/médico/Nº receta y `POST /api/admin/pos/sale` ya persistía a `prescription_records`. Agregada columna "Origen" (POS/Manual via `order_id` truthy) y export CSV con BOM UTF-8 en `/admin/libro-recetas` para entrega ISP.
+- **T4: FEFO en POS**. `POST /api/admin/pos/sale` ahora descuenta de `product_batches` con menor `expiry_date` primero. Trace de lotes consumidos guardado en `stock_movements.admin_id`. Sin migración necesaria — usa schema existente.
+- **T5: Dashboard ejecutivo del dueño** (`/admin/ejecutivo`, owner-only). Una sola pantalla con:
+  - KPIs financieros mes en curso: Ingresos, COGS estimado (order_items × cost_price), Margen bruto + %, EBITDA estimado, Gastos operativos, AP vencido + por vencer 7d.
+  - MoM y YoY en `StatCard.delta`.
+  - Alertas accionables (panel rojo): AP vencido con link a `/admin/finanzas/cuentas-pagar`, caída ingresos > 10% MoM, faltas pendientes con link a `/admin/faltas`.
+  - Top 5 productos por margen absoluto y top 5 por rotación del mes.
+  - Acciones rápidas a finanzas/costos/reportes.
+  - Endpoint nuevo `GET /api/admin/ejecutivo` (composición de aggregates en un round-trip).
+- **Sidebar**: nuevo item "Ejecutivo" (Crown icon, grupo Operación), "Auditoría" (ShieldCheck, grupo Sistema). Ambos owner-only via `OWNER_ONLY_ROUTES`.
+
+### Bitácora del cambio
+- 21 archivos guard fix + 9 endpoints con audit + 4 archivos nuevos (audit page/api, ejecutivo page/api) + sidebar + roles + libro-recetas.
+- Build limpio, 0 errores TS. Solo warnings preexistentes de "Dynamic server usage" (cookies → intencional).
 
 ---
 

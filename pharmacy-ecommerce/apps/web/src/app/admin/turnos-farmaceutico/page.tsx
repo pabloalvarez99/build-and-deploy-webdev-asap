@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
+import { isAdminRole } from '@/lib/roles';
 import { Loader2, Filter, UserCheck, ShieldAlert, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface Prescription {
@@ -72,7 +73,7 @@ export default function TurnosFarmaceuticoPage() {
   }, [from, to, page]);
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { router.push('/'); return; }
+    if (!user || !isAdminRole(user.role)) { router.push('/'); return; }
     load();
   }, [user, router, load]);
 

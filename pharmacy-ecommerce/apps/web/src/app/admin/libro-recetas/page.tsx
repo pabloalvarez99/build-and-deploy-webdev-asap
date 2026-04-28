@@ -3,10 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
-import { Loader2, Printer, Filter, BookOpen, ShieldAlert } from 'lucide-react';
+import { isAdminRole } from '@/lib/roles';
+import { Loader2, Printer, Filter, BookOpen, ShieldAlert, Download, Receipt } from 'lucide-react';
 
 interface PrescriptionRecord {
   id: string;
+  order_id: string | null;
   product_name: string;
   quantity: number;
   prescription_number: string | null;
@@ -28,6 +30,39 @@ interface PageData {
 
 function fmt(iso: string) {
   return new Date(iso).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: '2-digit' });
+}
+
+function csvEscape(v: unknown): string {
+  if (v === null || v === undefined) return '';
+  const s = String(v);
+  if (/[",\n;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+function exportCSV(records: PrescriptionRecord[]) {
+  const headers = ['Fecha', 'Producto', 'Cantidad', 'Paciente', 'RUT', 'Médico', 'Centro médico', 'Nro receta', 'Fecha receta', 'Controlado', 'Origen', 'Farmacéutico'];
+  const rows = records.map((r) => [
+    new Date(r.dispensed_at).toLocaleString('es-CL'),
+    r.product_name,
+    r.quantity,
+    r.patient_name,
+    r.patient_rut ?? '',
+    r.doctor_name ?? '',
+    r.medical_center ?? '',
+    r.prescription_number ?? '',
+    r.prescription_date ?? '',
+    r.is_controlled ? 'Sí' : 'No',
+    r.order_id ? 'POS' : 'Manual',
+    r.dispensed_by ?? '',
+  ]);
+  const csv = [headers, ...rows].map((r) => r.map(csvEscape).join(',')).join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `libro-recetas-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export default function LibroRecetasPage() {
@@ -53,7 +88,7 @@ export default function LibroRecetasPage() {
   }, [from, to, controlled]);
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { router.push('/'); return; }
+    if (!user || !isAdminRole(user.role)) { router.push('/'); return; }
     load();
   }, [user, router, load]);
 
@@ -64,12 +99,20 @@ export default function LibroRecetasPage() {
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <BookOpen className="w-6 h-6 text-emerald-600" /> Libro de Recetas
         </h1>
-        <button
-          onClick={() => window.print()}
-          className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-xl text-sm font-medium hover:bg-slate-700 transition-colors"
-        >
-          <Printer className="w-4 h-4" /> Imprimir
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => exportCSV(data?.records || [])}
+            className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors"
+          >
+            <Download className="w-4 h-4" /> CSV
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-xl text-sm font-medium hover:bg-slate-700 transition-colors"
+          >
+            <Printer className="w-4 h-4" /> Imprimir
+          </button>
+        </div>
       </div>
 
       {/* KPIs */}
@@ -118,6 +161,7 @@ export default function LibroRecetasPage() {
                 <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Médico</th>
                 <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Nro Receta</th>
                 <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Q</th>
+                <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Origen</th>
                 <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Farmacéutico</th>
               </tr>
             </thead>
@@ -136,6 +180,15 @@ export default function LibroRecetasPage() {
                   <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{r.doctor_name || '—'}</td>
                   <td className="px-3 py-2 text-slate-500 dark:text-slate-400 font-mono text-xs">{r.prescription_number || '—'}</td>
                   <td className="px-3 py-2 text-center text-slate-700 dark:text-slate-200">{r.quantity}</td>
+                  <td className="px-3 py-2">
+                    {r.order_id ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10.5px] font-semibold border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 bg-emerald-500/[0.08]">
+                        <Receipt className="w-2.5 h-2.5" /> POS
+                      </span>
+                    ) : (
+                      <span className="text-[11px] admin-text-subtle">Manual</span>
+                    )}
+                  </td>
                   <td className="px-3 py-2 text-slate-500 dark:text-slate-400">{r.dispensed_by || '—'}</td>
                 </tr>
               ))}

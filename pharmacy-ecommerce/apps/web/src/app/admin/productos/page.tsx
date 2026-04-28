@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuthStore } from '@/store/auth';
+import { isAdminRole } from '@/lib/roles';
 import { productApi, PaginatedProducts, Category } from '@/lib/api';
 import { Plus, Edit, Trash2, Search, Download, Upload, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package, FileSpreadsheet, CheckCircle, XCircle, RefreshCw, ArrowRight, History, ArrowUp, ArrowDown, ArrowUpDown, Camera, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
 import { parseExcelFile, diffProducts, loadAllProductsForDiff, parsePrice, type ExcelRow, type DiffResult } from '@/lib/excel-import';
@@ -155,7 +156,7 @@ export default function AdminProductsPage() {
  });
 
  useEffect(() => {
- if (!user || user.role !== 'admin') {
+ if (!user || !isAdminRole(user.role)) {
  router.push('/');
  return;
  }
@@ -816,7 +817,7 @@ export default function AdminProductsPage() {
  }
  };
 
- if (!user || user.role !== 'admin') {
+ if (!user || !isAdminRole(user.role)) {
  return null;
  }
 

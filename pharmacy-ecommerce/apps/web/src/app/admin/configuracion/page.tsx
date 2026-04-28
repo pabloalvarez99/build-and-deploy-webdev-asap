@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
+import { isOwnerRole } from '@/lib/roles';
 import { Save, Mail, AlertTriangle, CheckCircle, Monitor, Download, Store, Phone, MapPin, Globe, TrendingUp } from 'lucide-react';
 
 export default function AdminConfigPage() {
@@ -22,7 +23,7 @@ export default function AdminConfigPage() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { router.push('/'); return; }
+    if (!user || !isOwnerRole(user.role)) { router.push('/'); return; }
     fetch('/api/admin/settings')
       .then(r => r.json())
       .then(data => {
@@ -66,7 +67,7 @@ export default function AdminConfigPage() {
     }
   };
 
-  if (!user || user.role !== 'admin') return null;
+  if (!user || !isOwnerRole(user.role)) return null;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

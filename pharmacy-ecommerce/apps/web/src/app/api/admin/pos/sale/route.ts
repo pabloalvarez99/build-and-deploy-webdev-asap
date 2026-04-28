@@ -3,6 +3,7 @@ import { revalidateTag } from 'next/cache';
 import { getDb } from '@/lib/db';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 import { awardLoyaltyPoints } from '@/lib/loyalty';
+import { logAudit } from '@/lib/audit';
 
 async function checkAndAlertLowStock(db: Awaited<ReturnType<typeof getDb>>, productIds: string[]) {
   if (productIds.length === 0) return;
@@ -126,12 +127,31 @@ export async function POST(request: NextRequest) {
           data: { stock: { decrement: item.quantity } },
         });
 
+        // FEFO: deduct from earliest-expiring batches first
+        const batches = await tx.product_batches.findMany({
+          where: { product_id: item.product_id, quantity: { gt: 0 } },
+          orderBy: { expiry_date: 'asc' },
+        });
+        let remaining = item.quantity;
+        const consumedBatches: string[] = [];
+        for (const b of batches) {
+          if (remaining <= 0) break;
+          const take = Math.min(b.quantity, remaining);
+          await tx.product_batches.update({
+            where: { id: b.id },
+            data: { quantity: { decrement: take } },
+          });
+          consumedBatches.push(`${b.batch_code ?? b.id.slice(0, 8)}:${take}`);
+          remaining -= take;
+        }
+
+        const batchTrace = consumedBatches.length ? ` — lotes ${consumedBatches.join(',')}` : '';
         await tx.stock_movements.create({
           data: {
             product_id: item.product_id,
             delta: -item.quantity,
             reason: 'sale_pos',
-            admin_id: admin.email || admin.uid,
+            admin_id: `${admin.email || admin.uid}${batchTrace}`,
           },
         });
       }
@@ -161,6 +181,11 @@ export async function POST(request: NextRequest) {
 
     revalidateTag('products');
     revalidateTag('top-sellers');
+    logAudit(admin.email || admin.uid, 'create', 'pos_sale', order.id, customer_name || 'Venta POS', {
+      total: { old: null, new: total },
+      payment_method: { old: null, new: payment_method },
+      items: { old: null, new: items.length },
+    });
     // Fire-and-forget low stock check (same logic as online order approval)
     checkAndAlertLowStock(db, items.map((i) => i.product_id)).catch(() => {});
 

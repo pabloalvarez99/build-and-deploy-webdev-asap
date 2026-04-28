@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
+import { isAdminRole } from '@/lib/roles'
 import { productApi } from '@/lib/api'
 import { TrendingUp, TrendingDown, Package, ChevronLeft, ChevronRight, Plus, Minus, X, Search, Loader2, Download, AlertTriangle, Upload, FileText, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
@@ -66,7 +67,7 @@ export default function StockMovementsPage() {
   const [importError, setImportError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { router.push('/'); return }
+    if (!user || !isAdminRole(user.role)) { router.push('/'); return }
   }, [user, router])
 
   useEffect(() => {

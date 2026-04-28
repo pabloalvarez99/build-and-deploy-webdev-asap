@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
+import { isOwnerRole } from '@/lib/roles';
 import { formatPrice } from '@/lib/format';
 import { Download, TrendingUp, ShoppingBag, Calculator, Package, TrendingDown, Store, Globe, Users, UserCheck, UserX } from 'lucide-react';
 import {
@@ -167,7 +168,7 @@ export default function AdminReportesPage() {
   }, [period, customFrom, customTo]);
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { router.push('/'); return; }
+    if (!user || !isOwnerRole(user.role)) { router.push('/'); return; }
     loadData();
   }, [user, router, loadData]);
 
@@ -213,7 +214,7 @@ export default function AdminReportesPage() {
     window.location.href = `/api/admin/reportes/libro-ventas?from=${from}&to=${to}`;
   };
 
-  if (!user || user.role !== 'admin') return null;
+  if (!user || !isOwnerRole(user.role)) return null;
 
   const gridColor = isDark ? '#334155' : '#E2E8F0';
   const axisColor = isDark ? '#64748B' : '#94A3B8';

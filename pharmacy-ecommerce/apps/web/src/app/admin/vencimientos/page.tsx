@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
+import { isAdminRole } from '@/lib/roles';
 import { formatPrice } from '@/lib/format';
 import { CalendarClock, AlertTriangle, Plus, Trash2, Tag, X } from 'lucide-react';
 
@@ -50,7 +51,7 @@ export default function VencimientosPage() {
   const [liquidating, setLiquidating] = useState(false);
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { router.push('/'); return; }
+    if (!user || !isAdminRole(user.role)) { router.push('/'); return; }
     load();
   }, [user, router, filter]);
 

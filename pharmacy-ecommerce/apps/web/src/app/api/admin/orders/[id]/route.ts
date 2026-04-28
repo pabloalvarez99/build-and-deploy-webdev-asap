@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers'
 import { getDb } from '@/lib/db'
 import { awardLoyaltyPoints, restoreLoyaltyPoints } from '@/lib/loyalty'
+import { logAudit } from '@/lib/audit'
 
 const VALID_STATUSES = ['pending', 'reserved', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded']
 const STOCK_DEDUCTED_STATUSES = ['paid', 'processing', 'shipped', 'delivered', 'completed']
@@ -43,13 +44,27 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const body = await request.json()
     const db = await getDb()
 
-    if (body.action === 'approve_reservation') return approveReservation(db, id)
-    if (body.action === 'reject_reservation') return rejectReservation(db, id)
-    if (body.action === 'refund') return processRefund(db, id, body.notes)
+    const auditUser = admin.email || admin.uid
+    if (body.action === 'approve_reservation') {
+      const r = await approveReservation(db, id)
+      logAudit(auditUser, 'update', 'order', id, undefined, { action: { old: null, new: 'approve_reservation' } })
+      return r
+    }
+    if (body.action === 'reject_reservation') {
+      const r = await rejectReservation(db, id)
+      logAudit(auditUser, 'update', 'order', id, undefined, { action: { old: null, new: 'reject_reservation' } })
+      return r
+    }
+    if (body.action === 'refund') {
+      const r = await processRefund(db, id, body.notes)
+      logAudit(auditUser, 'update', 'order', id, undefined, { action: { old: null, new: 'refund' }, notes: { old: null, new: body.notes ?? null } })
+      return r
+    }
 
     // Notes-only update (no status change required)
     if (body.notes !== undefined && body.status === undefined) {
       const updated = await db.orders.update({ where: { id }, data: { notes: body.notes || null } })
+      logAudit(auditUser, 'update', 'order', id, undefined, { notes: { old: null, new: body.notes ?? null } })
       return NextResponse.json({ ...updated, total: updated.total.toString() })
     }
 
@@ -83,7 +98,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       restoreLoyaltyPoints(id).catch(() => {})
     }
 
+    const beforeStatus = (await db.orders.findUnique({ where: { id }, select: { status: true } }))?.status ?? null
     const updated = await db.orders.update({ where: { id }, data: { status: body.status } })
+    logAudit(auditUser, 'update', 'order', id, undefined, { status: { old: beforeStatus, new: body.status } })
     return NextResponse.json({ ...updated, total: updated.total.toString() })
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500)

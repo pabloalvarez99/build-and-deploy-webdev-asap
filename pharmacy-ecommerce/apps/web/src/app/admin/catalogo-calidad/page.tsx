@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
+import { isAdminRole } from '@/lib/roles';
 import {
   ClipboardCheck,
   ImageOff,
@@ -164,7 +165,7 @@ export default function CatalogoCalidadPage() {
   const [sortAsc, setSortAsc] = useState(false);
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { router.push('/'); return; }
+    if (!user || !isAdminRole(user.role)) { router.push('/'); return; }
     loadData(null);
   }, [user, router]);
 
@@ -234,7 +235,7 @@ export default function CatalogoCalidadPage() {
   // We use the loaded issues list length as proxy — server returns all if no filter
   const uniqueWithIssues = !activeFilter ? products.length : null;
 
-  if (!user || user.role !== 'admin') return null;
+  if (!user || !isAdminRole(user.role)) return null;
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
