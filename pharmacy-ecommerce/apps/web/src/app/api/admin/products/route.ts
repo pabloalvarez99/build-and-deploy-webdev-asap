@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { getDb } from '@/lib/db';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 
@@ -39,6 +40,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    revalidateTag('products');
     return NextResponse.json({
       ...product,
       price: product.price.toString(),

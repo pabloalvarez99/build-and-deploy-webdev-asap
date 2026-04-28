@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { unstable_cache } from 'next/cache'
 import { getDb } from '@/lib/db'
 
 function sanitizeImageUrl(url: string | null): string | null {
@@ -21,13 +22,22 @@ function mapProduct(p: any) {
   }
 }
 
-// GET /api/products/[slug] — get product by slug
+const getCachedProduct = unstable_cache(
+  async (slug: string) => {
+    const db = await getDb()
+    const product = await db.products.findFirst({
+      where: { slug },
+      include: { categories: { select: { name: true, slug: true } } },
+    })
+    if (!product) return null
+    return mapProduct(product)
+  },
+  ['product-by-slug'],
+  { tags: ['products'], revalidate: 600 }
+)
+
 export async function GET(_req: NextRequest, { params }: { params: { slug: string } }) {
-  const db = await getDb()
-  const product = await db.products.findFirst({
-    where: { slug: params.slug },
-    include: { categories: { select: { name: true, slug: true } } },
-  })
-  if (!product) return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 })
-  return NextResponse.json(mapProduct(product))
+  const data = await getCachedProduct(params.slug)
+  if (!data) return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 })
+  return NextResponse.json(data)
 }

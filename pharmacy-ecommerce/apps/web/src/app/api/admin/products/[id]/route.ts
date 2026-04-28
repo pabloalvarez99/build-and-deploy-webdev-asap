@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { getDb } from '@/lib/db';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 
@@ -86,6 +87,7 @@ export async function PUT(
           : []),
       ]);
 
+      revalidateTag('products');
       return NextResponse.json({
         ...product,
         price: product.price.toString(),
@@ -99,6 +101,7 @@ export async function PUT(
       data: updateData,
     });
 
+    revalidateTag('products');
     return NextResponse.json({
       ...product,
       price: product.price.toString(),
@@ -123,6 +126,7 @@ export async function DELETE(
 
     await db.products.delete({ where: { id } });
 
+    revalidateTag('products');
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);

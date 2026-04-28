@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 import { getDb } from '@/lib/db';
 
@@ -286,6 +287,7 @@ export async function POST(request: NextRequest) {
       // No bloquear el import si falla el sync de barcodes
     }
 
+    revalidateTag('products');
     return NextResponse.json({
       success: true,
       inserted,

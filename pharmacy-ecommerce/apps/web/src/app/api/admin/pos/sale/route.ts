@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { getDb } from '@/lib/db';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 import { awardLoyaltyPoints } from '@/lib/loyalty';
@@ -158,6 +159,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    revalidateTag('products');
+    revalidateTag('top-sellers');
     // Fire-and-forget low stock check (same logic as online order approval)
     checkAndAlertLowStock(db, items.map((i) => i.product_id)).catch(() => {});
 

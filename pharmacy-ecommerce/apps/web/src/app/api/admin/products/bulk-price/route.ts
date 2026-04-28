@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers'
 import { getDb } from '@/lib/db'
 
@@ -85,6 +86,7 @@ export async function POST(request: NextRequest) {
     count += batch.length
   }
 
+  revalidateTag('products')
   return NextResponse.json({
     updated: count,
     sample: updated.slice(0, 5).map((u) => ({

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { getDb } from '@/lib/db'
 import { webpayTransaction } from '@/lib/transbank'
 import { sendWebpayConfirmation, sendLowStockAlert, sendNewOrderAlert } from '@/lib/email'
@@ -140,6 +141,8 @@ async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
     // New order alert to admin (non-blocking)
     notifyAdminNewOrder(db, order, orderItems).catch(() => {})
 
+    revalidateTag('top-sellers')
+    revalidateTag('products')
     return NextResponse.redirect(
       `${BASE_URL}/checkout/reservation?order_id=${order.id}&code=${pickupCode}&expires=${encodeURIComponent(pickupExpires.toISOString())}&total=${order.total}&paid=webpay`,
       { status: 303 }

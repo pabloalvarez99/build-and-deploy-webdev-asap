@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 import { getDb } from '@/lib/db';
 
@@ -40,6 +41,7 @@ export async function PATCH(
       data: { product_id: id, delta, reason, admin_id: admin.uid },
     });
 
+    revalidateTag('products');
     return NextResponse.json({ success: true, stock: updated.stock });
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { getDb } from '@/lib/db';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    revalidateTag('products');
     return NextResponse.json({ success: true, new_stock: newStock, product_name: product.name });
   } catch (error) {
     console.error('Stock adjust error:', error);

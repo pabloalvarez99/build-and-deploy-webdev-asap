@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { getDb } from '@/lib/db';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 
@@ -26,6 +27,7 @@ export async function PUT(
       data: updateData,
     });
 
+    revalidateTag('categories');
     return NextResponse.json({
       ...category,
       created_at: category.created_at.toISOString(),
@@ -57,6 +59,7 @@ export async function DELETE(
 
     await db.categories.delete({ where: { id } });
 
+    revalidateTag('categories');
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);
