@@ -39,6 +39,7 @@ import {
   X,
   Activity,
   Shield,
+  Wallet,
 } from 'lucide-react';
 import { canAccessRoute } from '@/lib/roles';
 
@@ -83,6 +84,7 @@ const navItems = [
   { href: '/admin/devoluciones', icon: RotateCcw, label: 'Devoluciones' },
   { href: '/admin/vencimientos', icon: CalendarClock, label: 'Vencimientos' },
   { href: '/admin/reportes', icon: BarChart2, label: 'Reportes' },
+  { href: '/admin/finanzas', icon: Wallet, label: 'Finanzas' },
   { href: '/admin/usuarios', icon: Shield, label: 'Usuarios' },
   { href: '/admin/configuracion', icon: Settings, label: 'Configuración' },
 ];
