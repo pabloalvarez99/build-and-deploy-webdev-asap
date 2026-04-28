@@ -60,6 +60,15 @@ model products {
   batches                   product_batches[]
   supplier_price_lists      supplier_price_lists[]
   prescription_records      prescription_records[]
+
+  @@index([category_id])
+  @@index([active])
+  @@index([laboratory])
+  @@index([therapeutic_action])
+  @@index([prescription_type])
+  @@index([external_id])
+  @@index([stock])
+  @@index([created_at(sort: Desc)])
 }
 
 model barcode_catalog {
@@ -105,6 +114,13 @@ model orders {
   order_items                order_items[]
   devoluciones               devoluciones[]
   prescription_records       prescription_records[]
+
+  @@index([user_id])
+  @@index([status])
+  @@index([guest_email])
+  @@index([pickup_code])
+  @@index([reservation_expires_at])
+  @@index([created_at(sort: Desc)])
 }
 
 model order_items {
@@ -117,6 +133,9 @@ model order_items {
   created_at        DateTime  @default(now()) @db.Timestamptz(6)
   orders            orders    @relation(fields: [order_id], references: [id], onDelete: Cascade)
   products          products? @relation(fields: [product_id], references: [id], onDelete: SetNull)
+
+  @@index([order_id])
+  @@index([product_id])
 }
 
 model therapeutic_category_mapping {
@@ -139,6 +158,10 @@ model stock_movements {
   admin_id   String    @db.VarChar(255)
   created_at DateTime  @default(now()) @db.Timestamptz(6)
   products   products? @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@index([product_id])
+  @@index([reason])
+  @@index([created_at(sort: Desc)])
 }
 
 model suppliers {
