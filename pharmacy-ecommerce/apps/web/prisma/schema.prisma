@@ -193,11 +193,16 @@ model purchase_orders {
   notes          String?
   image_url      String?                @db.VarChar(500)
   ocr_raw        String?
-  created_by     String                 @db.VarChar(255)
-  created_at     DateTime               @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime               @default(now()) @updatedAt @db.Timestamptz(6)
-  suppliers      suppliers              @relation(fields: [supplier_id], references: [id])
-  items          purchase_order_items[]
+  created_by         String                 @db.VarChar(255)
+  created_at         DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime               @default(now()) @updatedAt @db.Timestamptz(6)
+  paid               Boolean                @default(false)
+  paid_at            DateTime?              @db.Timestamptz(6)
+  payment_method_ap  String?                @db.VarChar(50)
+  due_date           DateTime?              @db.Date
+  suppliers          suppliers              @relation(fields: [supplier_id], references: [id])
+  items              purchase_order_items[]
+  purchase_payments  purchase_payments[]
 }
 
 model purchase_order_items {
@@ -372,4 +377,63 @@ model pharmacist_shifts {
   created_at      DateTime  @default(now()) @db.Timestamptz(6)
 
   @@index([shift_start])
+}
+
+model purchase_payments {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  purchase_order_id String          @db.Uuid
+  amount            Decimal         @db.Decimal(10, 2)
+  payment_method    String          @db.VarChar(50)
+  paid_at           DateTime        @db.Timestamptz(6)
+  notes             String?
+  created_by        String          @db.VarChar(255)
+  created_at        DateTime        @default(now()) @db.Timestamptz(6)
+  purchase_orders   purchase_orders @relation(fields: [purchase_order_id], references: [id], onDelete: Cascade)
+
+  @@index([purchase_order_id])
+  @@index([paid_at(sort: Desc)])
+}
+
+model gasto_categories {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String             @db.VarChar(100)
+  type             String             @default("variable") @db.VarChar(20)
+  sort_order       Int                @default(0)
+  gastos           gastos[]
+  recurring_expenses recurring_expenses[]
+}
+
+model gastos {
+  id                   String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category_id          String             @db.Uuid
+  description          String             @db.VarChar(255)
+  amount               Decimal            @db.Decimal(10, 2)
+  expense_date         DateTime           @db.Date
+  paid_at              DateTime?          @db.Timestamptz(6)
+  payment_method       String?            @db.VarChar(50)
+  recurring_expense_id String?            @db.Uuid
+  created_by           String             @db.VarChar(255)
+  created_at           DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime           @default(now()) @updatedAt @db.Timestamptz(6)
+  gasto_categories     gasto_categories   @relation(fields: [category_id], references: [id])
+  recurring_expenses   recurring_expenses? @relation(fields: [recurring_expense_id], references: [id], onDelete: SetNull)
+
+  @@index([category_id])
+  @@index([expense_date(sort: Desc)])
+  @@index([paid_at])
+}
+
+model recurring_expenses {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category_id      String           @db.Uuid
+  description      String           @db.VarChar(255)
+  amount           Decimal          @db.Decimal(10, 2)
+  day_of_month     Int
+  active           Boolean          @default(true)
+  created_by       String           @db.VarChar(255)
+  created_at       DateTime         @default(now()) @db.Timestamptz(6)
+  gasto_categories gasto_categories @relation(fields: [category_id], references: [id])
+  gastos           gastos[]
+
+  @@index([active])
 }

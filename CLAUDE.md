@@ -223,6 +223,9 @@ Despues de cada cambio significativo, actualizar `pharmacy-ecommerce/bitacora.md
 3. **Document Results**: Add review section to `tasks/todo.md`
 4. **Capture Lessons**: Update `tasks/lessons.md` after corrections
 
+## Tooling
+- **Solo CLI**: usar `gh`, `git`, `npm`, `gcloud`, etc. NUNCA MCP tools. No Gmail MCP, no Drive MCP, no Calendar MCP, no context7, ninguno.
+
 ## Core Principles
 - **Simplicity First**: Make every change as simple as possible. Impact minimal code.
 - **No Laziness**: Find root causes. No temporary fixes. Senior developer standards.
