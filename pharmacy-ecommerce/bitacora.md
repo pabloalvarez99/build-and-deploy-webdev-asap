@@ -4,6 +4,17 @@
 
 ---
 
+## 2026-04-28 — Perf: Caché Next.js + Edge Config + Índices DB
+
+- **`unstable_cache`** en `/api/products` (300s, tag `products`), `/api/products/[slug]` (600s), `/api/products/filters` (1800s). Rutas dinámicas (search/barcode) no cacheadas.
+- **`revalidateTag('products')`** en todos los endpoints de mutación: admin/products CRUD, import, bulk-price, update-prices, stock, stock-movements/adjust, purchase-orders receive, pos/sale, webpay/return.
+- **`revalidateTag('categories')`** en admin/categories/[id] PUT+DELETE.
+- **Edge Config** (`@vercel/edge-config`) para `admin_settings` GET: sub-1ms vs DB round-trip. Fallback a DB + backfill automático. PATCH escribe DB (fuente de verdad) + `updateEdgeConfig` no-bloqueante. `VERCEL_API_TOKEN` en Vercel.
+- **Índice DB**: `idx_products_active_stock ON products(active, stock DESC)` — query inventario valorizado 48ms → <1ms.
+- **Skipped**: ISR homepage (es `'use client'`), lazy firebase-admin (ya lazy), Upstash Redis (sin credenciales; `unstable_cache` cubre el caso hot-products).
+
+---
+
 ## 2026-04-27 — Feat: Módulo Gestión Financiera
 
 - **Schema**: 4 tablas nuevas (`purchase_payments`, `gasto_categories`, `gastos`, `recurring_expenses`) + 4 campos en `purchase_orders` (`paid`, `paid_at`, `payment_method_ap`, `due_date`). Seed: 11 categorías fijas.
