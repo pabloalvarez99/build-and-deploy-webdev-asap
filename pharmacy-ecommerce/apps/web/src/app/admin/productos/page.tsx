@@ -13,6 +13,7 @@ import { ScanInvoiceModal } from '@/components/admin/ScanInvoiceModal';
 import type { ScannedProductData } from '@/lib/invoice-parser/types';
 import { formatPrice } from '@/lib/format';
 import { uploadProductImage } from '@/lib/firebase/storage';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
 
 export default function AdminProductsPage() {
  const router = useRouter();
@@ -823,73 +824,57 @@ export default function AdminProductsPage() {
  const showingEnd = products ? Math.min(currentPage * 20, products.total) : 0;
 
  return (
- <div className="max-w-7xl mx-auto">
- <div className="flex justify-between items-center mb-6">
- <div>
- <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Productos</h1>
- <p className="text-slate-500 dark:text-slate-400 mt-1">
- Gestiona el catálogo de productos
- </p>
- </div>
- <div className="flex flex-wrap gap-2">
- <button
- onClick={() => setShowScanModal(true)}
- className="btn btn-secondary flex items-center gap-2"
- >
- <Camera className="w-5 h-5" />
- Escanear Factura
- </button>
- <button
- onClick={() => { resetImportState(); setShowImportModal(true); }}
- className="btn btn-secondary flex items-center gap-2"
- >
- <Upload className="w-5 h-5" />
- Importar Excel
- </button>
- <button
- onClick={() => {
-  setShowPriceImportModal(true);
-  setPriceImportStep('upload');
-  setPriceImportPreview(null);
-  setPriceImportResult(null);
-  setPriceImportRows([]);
-  setPriceImportError(null);
- }}
- className="btn btn-secondary flex items-center gap-2"
- >
- <DollarSign className="w-5 h-5" />
- Importar Precios
- </button>
- <button
- onClick={() => { setShowBulkPriceModal(true); setBulkPricePreview(null); setBulkPriceResult(null); setBulkPriceError(''); setBulkPriceAdjValue(''); }}
- className="btn btn-secondary flex items-center gap-2"
- >
- <TrendingUp className="w-5 h-5" />
- Ajuste Precios
- </button>
- <button
- onClick={exportToCSV}
- className="btn btn-secondary flex items-center gap-2"
- >
- <Download className="w-5 h-5" />
- Exportar CSV
- </button>
- <button
- onClick={() => {
- resetForm();
- setEditingProduct(null);
- setEditingProductExternalId('');
- setEditingProductBarcodes([]);
- setNewBarcodeInput('');
- setShowForm(true);
- }}
- className="btn btn-primary flex items-center gap-2"
- >
- <Plus className="w-5 h-5" />
- Nuevo Producto
- </button>
- </div>
- </div>
+ <div className="space-y-6">
+ <PageHeader
+   title="Productos"
+   description="Gestiona el catálogo, importa precios masivamente y controla stock"
+   icon={<Package className="w-4 h-4" strokeWidth={2} />}
+   actions={
+     <>
+       <button onClick={() => setShowScanModal(true)} className="admin-btn admin-btn-secondary">
+         <Camera className="w-3.5 h-3.5" /> <span className="hidden lg:inline">Escanear</span>
+       </button>
+       <button onClick={() => { resetImportState(); setShowImportModal(true); }} className="admin-btn admin-btn-secondary">
+         <Upload className="w-3.5 h-3.5" /> <span className="hidden lg:inline">Importar Excel</span>
+       </button>
+       <button
+         onClick={() => {
+          setShowPriceImportModal(true);
+          setPriceImportStep('upload');
+          setPriceImportPreview(null);
+          setPriceImportResult(null);
+          setPriceImportRows([]);
+          setPriceImportError(null);
+         }}
+         className="admin-btn admin-btn-secondary"
+       >
+         <DollarSign className="w-3.5 h-3.5" /> <span className="hidden lg:inline">Precios</span>
+       </button>
+       <button
+         onClick={() => { setShowBulkPriceModal(true); setBulkPricePreview(null); setBulkPriceResult(null); setBulkPriceError(''); setBulkPriceAdjValue(''); }}
+         className="admin-btn admin-btn-secondary"
+       >
+         <TrendingUp className="w-3.5 h-3.5" /> <span className="hidden lg:inline">Ajuste</span>
+       </button>
+       <button onClick={exportToCSV} className="admin-btn admin-btn-secondary">
+         <Download className="w-3.5 h-3.5" /> <span className="hidden lg:inline">CSV</span>
+       </button>
+       <button
+         onClick={() => {
+           resetForm();
+           setEditingProduct(null);
+           setEditingProductExternalId('');
+           setEditingProductBarcodes([]);
+           setNewBarcodeInput('');
+           setShowForm(true);
+         }}
+         className="admin-btn admin-btn-primary"
+       >
+         <Plus className="w-3.5 h-3.5" /> Nuevo
+       </button>
+     </>
+   }
+ />
 
  {/* Data Completeness Panel */}
  {productStats && (

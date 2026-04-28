@@ -12,7 +12,7 @@ export function isOwnerRole(role?: string): boolean {
   return OWNER_ROLES.includes(role as AdminRole);
 }
 
-const SELLER_ROUTES = new Set([
+export const SELLER_ROUTES = new Set([
   '/admin',
   '/admin/operaciones',
   '/admin/pos',
@@ -22,7 +22,7 @@ const SELLER_ROUTES = new Set([
   '/admin/clientes',
 ]);
 
-const PHARMACIST_EXTRA_ROUTES = new Set([
+export const PHARMACIST_EXTRA_ROUTES = new Set([
   '/admin/productos',
   '/admin/catalogo',
   '/admin/catalogo-calidad',
@@ -39,7 +39,7 @@ const PHARMACIST_EXTRA_ROUTES = new Set([
   '/admin/stock',
 ]);
 
-const OWNER_ONLY_ROUTES = new Set([
+export const OWNER_ONLY_ROUTES = new Set([
   '/admin/reportes',
   '/admin/costos',
   '/admin/proveedores',
@@ -56,4 +56,47 @@ export function canAccessRoute(role: string | undefined, href: string): boolean 
   if (role === 'pharmacist') return SELLER_ROUTES.has(href) || PHARMACIST_EXTRA_ROUTES.has(href);
   if (role === 'seller') return SELLER_ROUTES.has(href);
   return false;
+}
+
+export function routesForRole(role: string | undefined): string[] {
+  if (isOwnerRole(role)) {
+    return [
+      ...Array.from(SELLER_ROUTES),
+      ...Array.from(PHARMACIST_EXTRA_ROUTES),
+      ...Array.from(OWNER_ONLY_ROUTES),
+    ];
+  }
+  if (role === 'pharmacist') return [...Array.from(SELLER_ROUTES), ...Array.from(PHARMACIST_EXTRA_ROUTES)];
+  if (role === 'seller') return Array.from(SELLER_ROUTES);
+  return [];
+}
+
+export function routesLostOnDemotion(currentRole: string, nextRole: string): string[] {
+  const before = routesForRole(currentRole);
+  const after = new Set(routesForRole(nextRole));
+  return before.filter((r) => !after.has(r));
+}
+
+const LABEL: Record<string, string> = {
+  owner: 'Dueño',
+  admin: 'Dueño',
+  pharmacist: 'Farmacéutico',
+  seller: 'Vendedor',
+  user: 'Cliente',
+};
+
+const DESCRIPTION: Record<string, string> = {
+  owner: 'Acceso total · usuarios · finanzas · reportes',
+  admin: 'Acceso total · usuarios · finanzas · reportes',
+  pharmacist: 'POS · recetas · vencimientos · inventario',
+  seller: 'POS · órdenes · clientes · arqueo',
+  user: 'Sin acceso al admin',
+};
+
+export function roleLabel(role?: string): string {
+  return LABEL[role ?? ''] ?? role ?? '—';
+}
+
+export function roleDescription(role?: string): string {
+  return DESCRIPTION[role ?? ''] ?? '';
 }

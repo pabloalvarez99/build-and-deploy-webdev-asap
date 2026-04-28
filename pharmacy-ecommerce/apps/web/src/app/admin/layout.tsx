@@ -6,13 +6,16 @@ import { useAuthStore } from '@/store/auth';
 import { productApi, orderApi, purchaseOrderApi } from '@/lib/api';
 import { useAdminShortcuts } from '@/hooks/useAdminShortcuts';
 import { useTheme } from '@/hooks/useTheme';
-import { Sun, Moon, Menu } from 'lucide-react';
-import { isAdminRole } from '@/lib/roles';
+import { Sun, Moon, Menu, Search } from 'lucide-react';
+import { isAdminRole, roleLabel } from '@/lib/roles';
 import { Sidebar } from '@/components/admin/Sidebar';
 import { CommandPalette } from '@/components/admin/CommandPalette';
 import { NotificationBell } from '@/components/admin/NotificationBell';
 import { Breadcrumbs } from '@/components/admin/Breadcrumbs';
 import { ShortcutsHelp } from '@/components/admin/ShortcutsHelp';
+import './admin.css';
+
+const PROD_HOSTS = ['tu-farmacia.cl', 'tu-farmacia.vercel.app'];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -27,19 +30,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [pendingFaltas, setPendingFaltas] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [isProd, setIsProd] = useState(false);
   const { theme, toggleTheme, mounted } = useTheme();
 
-  // Keyboard shortcuts
   useAdminShortcuts({
     onCommandPalette: () => setIsCommandPaletteOpen(true),
     onNewProduct: () => router.push('/admin/productos?action=new'),
     onShowHelp: () => setIsShortcutsHelpOpen(true),
   });
 
-  // Load sidebar state from localStorage (desktop only)
   useEffect(() => {
     const stored = localStorage.getItem('admin-sidebar-collapsed');
     if (stored) setSidebarCollapsed(stored === 'true');
+    if (typeof window !== 'undefined') {
+      setIsProd(PROD_HOSTS.includes(window.location.hostname));
+    }
   }, []);
 
   const handleSidebarToggle = () => {
@@ -48,7 +53,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     localStorage.setItem('admin-sidebar-collapsed', String(next));
   };
 
-  // Auth check
   useEffect(() => {
     if (!user) {
       router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
@@ -59,10 +63,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [user, router, pathname]);
 
-  // Load stats for badges
   useEffect(() => {
     if (!user || !isAdminRole(user.role)) return;
-
     const loadStats = async () => {
       try {
         const [orders, reservations, lowStock, outStock, draftPOs, faltasRes] = await Promise.all([
@@ -82,24 +84,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         console.error('Error loading admin stats:', error);
       }
     };
-
     loadStats();
     const interval = setInterval(loadStats, 60000);
     return () => clearInterval(interval);
   }, [user]);
 
-  // Don't render until auth is confirmed
   if (!user || !isAdminRole(user.role)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="animate-spin w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full" />
+      <div data-admin="1" className="min-h-screen flex items-center justify-center admin-canvas">
+        <div className="admin-spinner" />
       </div>
     );
   }
 
+  const initials = (user.name || user.email || '?').slice(0, 2).toUpperCase();
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      {/* Sidebar */}
+    <div data-admin="1" className="min-h-screen admin-canvas">
       <Sidebar
         isCollapsed={sidebarCollapsed}
         onToggle={handleSidebarToggle}
@@ -114,69 +115,92 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         role={user.role}
       />
 
-      {/* Main content */}
       <main
         className={`min-h-screen transition-all duration-300 ${
           sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'
         }`}
       >
-        {/* Top bar */}
-        <header className="sticky top-0 z-20 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700">
-          <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-            {/* Left side - hamburger (mobile) + breadcrumbs */}
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <button
-                onClick={() => setMobileDrawerOpen(true)}
-                className="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors shrink-0"
-                aria-label="Abrir menú"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
+        {/* Topbar */}
+        <header
+          className="sticky top-0 z-20 backdrop-blur-xl"
+          style={{
+            background: 'color-mix(in srgb, var(--admin-canvas) 78%, transparent)',
+            borderBottom: '1px solid var(--admin-border)',
+          }}
+        >
+          <div className="flex items-center gap-3 h-14 px-4 sm:px-6 lg:px-8">
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setMobileDrawerOpen(true)}
+              className="lg:hidden p-2 -ml-2 rounded-lg admin-text-muted hover:bg-[color:var(--admin-accent-soft)] transition-colors shrink-0"
+              aria-label="Abrir menú"
+            >
+              <Menu className="w-[18px] h-[18px]" />
+            </button>
+
+            {/* Breadcrumbs */}
+            <div className="flex-1 min-w-0">
               <Breadcrumbs />
             </div>
 
-            {/* Right side */}
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={() => setIsCommandPaletteOpen(true)}
-                className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
-              >
-                <span>Buscar...</span>
-                <kbd className="px-1.5 py-0.5 text-xs bg-white dark:bg-slate-800 rounded border border-slate-300 dark:border-slate-600">
-                  ⌘K
-                </kbd>
-              </button>
+            {/* Center search */}
+            <button
+              onClick={() => setIsCommandPaletteOpen(true)}
+              className="hidden md:flex items-center gap-2 px-3 h-9 w-[320px] xl:w-[420px] rounded-lg admin-text-muted text-[13px] transition-all"
+              style={{
+                background: 'var(--admin-surface)',
+                border: '1px solid var(--admin-border-strong)',
+              }}
+            >
+              <Search className="w-3.5 h-3.5" />
+              <span className="flex-1 text-left">Buscar productos, órdenes, clientes…</span>
+              <kbd className="admin-kbd">⌘K</kbd>
+            </button>
+
+            {/* Right cluster */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              {isProd && (
+                <span className="hidden sm:inline-flex admin-env-badge" title="Estás en producción">
+                  Producción
+                </span>
+              )}
               {mounted && (
                 <button
                   onClick={toggleTheme}
-                  aria-label={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
-                  className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                  aria-label={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+                  className="w-9 h-9 rounded-lg flex items-center justify-center admin-text-muted hover:bg-[color:var(--admin-accent-soft)] transition-colors"
                 >
                   {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                 </button>
               )}
-              <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 capitalize">
-                {user.role === 'admin' ? 'owner' : user.role}
-              </span>
               <NotificationBell />
+              <div className="hidden sm:flex items-center gap-2 pl-2 ml-1 border-l admin-hairline">
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-[10.5px] font-semibold text-white"
+                  style={{ background: 'linear-gradient(135deg, var(--admin-accent), var(--admin-accent-2))' }}
+                  title={user.email}
+                >
+                  {initials}
+                </div>
+                <span className="text-[12px] admin-text-muted hidden lg:inline">
+                  {roleLabel(user.role)}
+                </span>
+              </div>
             </div>
           </div>
         </header>
 
         {/* Page content */}
-        <div className="p-4 lg:p-8">
+        <div className="max-w-screen-2xl mx-auto p-4 sm:p-6 lg:p-10 admin-fade-in" key={pathname}>
           {children}
         </div>
       </main>
 
-      {/* Command Palette */}
       <CommandPalette
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
         onNewProduct={() => router.push('/admin/productos?action=new')}
       />
-
-      {/* Shortcuts Help */}
       <ShortcutsHelp
         isOpen={isShortcutsHelpOpen}
         onClose={() => setIsShortcutsHelpOpen(false)}

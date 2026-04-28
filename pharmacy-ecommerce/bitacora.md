@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-04-28 — Feat: Admin Console redesign + roles + invitaciones
+
+- **Diseño aislado del storefront**: nuevo `apps/web/src/app/admin/admin.css` con tokens scoped a `[data-admin="1"]`. Canvas zinc/violeta, paleta dark `#0b0b0f / #111118 / #16161f`, accent indigo→violet (en lugar de emerald). Tipografía 14–15px tabular. Motion `cubic-bezier(0.16,1,0.3,1)`.
+- **Sidebar agrupado** (`Sidebar.tsx` reescrito): 8 grupos colapsables (Operación · Catálogo · Ventas · Compras · Inventario · Farmacia · Finanzas · Sistema). Estado por grupo persistido en `localStorage`. Grupo se oculta completo si `canAccessRoute` no deja items visibles. Brand "Tu Farmacia · Console" + footer con avatar + RoleBadge.
+- **Layout shell** (`admin/layout.tsx`): topbar refinado con search central (320–420px), badge "Producción" cuando hostname coincide con prod, avatar con iniciales + chip de rol. `max-w-screen-2xl`, padding `lg:p-10`, `admin-fade-in` por route.
+- **Primitivos compartidos** (`components/admin/ui/`): `PageHeader`, `Card`, `StatCard` (con delta + sparkline slot), `DataTable`, `EmptyState`, `RoleBadge`. Adoptados en Dashboard, Productos y Usuarios; resto migrará incrementalmente.
+- **Roles polish** (`lib/roles.ts`): nuevos `roleLabel`, `roleDescription`, `routesForRole`, `routesLostOnDemotion`. Sets `SELLER_ROUTES`/`PHARMACIST_EXTRA_ROUTES`/`OWNER_ONLY_ROUTES` ahora `export`.
+- **Gestión de Usuarios** (`/admin/usuarios` rewrite + nuevos endpoints):
+  - `POST /api/admin/users/invite`: crea Firebase user, asigna rol via custom claim, devuelve `generatePasswordResetLink`.
+  - `PATCH /api/admin/users/[uid]`: enable/disable usuario.
+  - UI: search en vivo, segmented filter por rol, modal de invitación (email + nombre + rol con descripción), modal de confirmación al demotear (lista las rutas que se pierden), toggle disable, columna "último ingreso" (relativa) y "creado", auto-protección (no puedes cambiar tu propio rol ni deshabilitarte).
+- **Dashboard** (`admin/page.tsx`): adoptó `PageHeader` + `StatCard`. Fix bug `user.role !== 'admin'` → `isAdminRole(user.role)` (antes bloqueaba a owners/pharmacists/sellers en cliente).
+
+---
+
 ## 2026-04-28 — Perf: Caché Next.js + Edge Config + Índices DB
 
 - **`unstable_cache`** en `/api/products` (300s, tag `products`), `/api/products/[slug]` (600s), `/api/products/filters` (1800s). Rutas dinámicas (search/barcode) no cacheadas.

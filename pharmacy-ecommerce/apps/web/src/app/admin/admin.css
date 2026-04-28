@@ -1,0 +1,290 @@
+/* ─────────────────────────────────────────────────────────────────────
+   Admin Console design tokens — scoped to [data-admin="1"] only.
+   Storefront stays untouched. Loaded by app/admin/layout.tsx.
+   ───────────────────────────────────────────────────────────────────── */
+
+[data-admin="1"] {
+  /* canvas + surfaces */
+  --admin-canvas: #f7f7f9;
+  --admin-surface: #ffffff;
+  --admin-surface-2: #fbfbfd;
+  --admin-elevated: #ffffff;
+  --admin-border: rgba(15, 15, 25, 0.08);
+  --admin-border-strong: rgba(15, 15, 25, 0.12);
+  --admin-text: #0f0f19;
+  --admin-text-muted: #5b5b6b;
+  --admin-text-subtle: #8a8a99;
+
+  /* indigo/violet accent */
+  --admin-accent: #6366f1;
+  --admin-accent-2: #8b5cf6;
+  --admin-accent-soft: rgba(99, 102, 241, 0.10);
+  --admin-accent-ring: rgba(99, 102, 241, 0.18);
+
+  /* motion */
+  --admin-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --admin-dur-fast: 120ms;
+  --admin-dur: 200ms;
+  --admin-dur-slow: 320ms;
+
+  /* type */
+  --admin-font-size: 14px;
+
+  font-size: var(--admin-font-size);
+  background: var(--admin-canvas);
+  color: var(--admin-text);
+  font-feature-settings: "ss01", "cv11", "tnum";
+}
+
+@media (min-width: 1024px) {
+  [data-admin="1"] {
+    --admin-font-size: 15px;
+  }
+}
+
+.dark[data-admin="1"],
+[data-admin="1"].dark,
+.dark [data-admin="1"] {
+  --admin-canvas: #0b0b0f;
+  --admin-surface: #111118;
+  --admin-surface-2: #0e0e15;
+  --admin-elevated: #16161f;
+  --admin-border: rgba(255, 255, 255, 0.06);
+  --admin-border-strong: rgba(255, 255, 255, 0.10);
+  --admin-text: #ececf2;
+  --admin-text-muted: #a1a1ad;
+  --admin-text-subtle: #6f6f7c;
+  --admin-accent: #818cf8;
+  --admin-accent-2: #a78bfa;
+  --admin-accent-soft: rgba(129, 140, 248, 0.12);
+  --admin-accent-ring: rgba(129, 140, 248, 0.22);
+}
+
+/* ── primitives (component classes used by admin/ui/*.tsx) ── */
+
+[data-admin="1"] .admin-canvas {
+  background: var(--admin-canvas);
+  color: var(--admin-text);
+}
+
+[data-admin="1"] .admin-surface {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: 16px;
+}
+
+[data-admin="1"] .admin-elevated {
+  background: var(--admin-elevated);
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 16px;
+  box-shadow: 0 1px 0 rgba(15, 15, 25, 0.04), 0 12px 32px -16px rgba(15, 15, 25, 0.18);
+}
+
+.dark [data-admin="1"] .admin-elevated,
+[data-admin="1"].dark .admin-elevated {
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4), 0 18px 48px -20px rgba(0, 0, 0, 0.6);
+}
+
+[data-admin="1"] .admin-hairline {
+  border-color: var(--admin-border);
+}
+
+[data-admin="1"] .admin-text-muted { color: var(--admin-text-muted); }
+[data-admin="1"] .admin-text-subtle { color: var(--admin-text-subtle); }
+
+/* ── buttons ── */
+[data-admin="1"] .admin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1;
+  height: 36px;
+  transition: background-color var(--admin-dur-fast) var(--admin-ease),
+              border-color var(--admin-dur-fast) var(--admin-ease),
+              color var(--admin-dur-fast) var(--admin-ease),
+              box-shadow var(--admin-dur-fast) var(--admin-ease),
+              transform var(--admin-dur-fast) var(--admin-ease);
+  border: 1px solid transparent;
+}
+
+[data-admin="1"] .admin-btn-primary {
+  background: linear-gradient(180deg, var(--admin-accent), var(--admin-accent-2));
+  color: white;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2) inset, 0 6px 16px -6px var(--admin-accent-ring);
+}
+[data-admin="1"] .admin-btn-primary:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+[data-admin="1"] .admin-btn-ghost {
+  background: transparent;
+  color: var(--admin-text-muted);
+}
+[data-admin="1"] .admin-btn-ghost:hover {
+  background: var(--admin-accent-soft);
+  color: var(--admin-text);
+}
+
+[data-admin="1"] .admin-btn-secondary {
+  background: var(--admin-surface);
+  color: var(--admin-text);
+  border-color: var(--admin-border-strong);
+}
+[data-admin="1"] .admin-btn-secondary:hover {
+  background: var(--admin-surface-2);
+}
+
+/* ── inputs ── */
+[data-admin="1"] .admin-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 0.75rem;
+  border-radius: 10px;
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border-strong);
+  color: var(--admin-text);
+  font-size: 0.875rem;
+  transition: border-color var(--admin-dur-fast) var(--admin-ease),
+              box-shadow var(--admin-dur-fast) var(--admin-ease);
+}
+[data-admin="1"] .admin-input:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-ring);
+}
+[data-admin="1"] .admin-input::placeholder {
+  color: var(--admin-text-subtle);
+}
+
+/* ── kbd ── */
+[data-admin="1"] kbd.admin-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border-strong);
+  color: var(--admin-text-muted);
+}
+
+/* ── nav-item active gradient pill ── */
+[data-admin="1"] .admin-nav-active {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.10), rgba(139, 92, 246, 0.06) 60%, transparent);
+  color: var(--admin-text);
+  position: relative;
+}
+[data-admin="1"] .admin-nav-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--admin-accent), var(--admin-accent-2));
+}
+
+/* ── group label ── */
+[data-admin="1"] .admin-group-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--admin-text-subtle);
+}
+
+/* ── env badge ── */
+[data-admin="1"] .admin-env-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--admin-accent-soft);
+  color: var(--admin-accent);
+  border: 1px solid var(--admin-accent-ring);
+}
+[data-admin="1"] .admin-env-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-ring);
+}
+
+/* ── skeleton ring ── */
+[data-admin="1"] .admin-spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2.5px solid var(--admin-accent-ring);
+  border-top-color: var(--admin-accent);
+  animation: admin-spin 0.7s linear infinite;
+}
+@keyframes admin-spin { to { transform: rotate(360deg); } }
+
+/* ── table density ── */
+[data-admin="1"] .admin-table th {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--admin-text-subtle);
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--admin-border);
+  background: var(--admin-surface-2);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+[data-admin="1"] .admin-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--admin-border);
+  font-size: 13.5px;
+  vertical-align: middle;
+}
+[data-admin="1"] .admin-table tbody tr:last-child td { border-bottom: 0; }
+[data-admin="1"] .admin-table tbody tr {
+  transition: background-color var(--admin-dur-fast) var(--admin-ease);
+}
+[data-admin="1"] .admin-table tbody tr:hover {
+  background: var(--admin-surface-2);
+}
+
+/* ── fade-in for page content ── */
+[data-admin="1"] .admin-fade-in {
+  animation: admin-fade-in var(--admin-dur-slow) var(--admin-ease) both;
+}
+@keyframes admin-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── scrollbar polish (admin only) ── */
+[data-admin="1"] *::-webkit-scrollbar { width: 10px; height: 10px; }
+[data-admin="1"] *::-webkit-scrollbar-track { background: transparent; }
+[data-admin="1"] *::-webkit-scrollbar-thumb {
+  background: var(--admin-border-strong);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+[data-admin="1"] *::-webkit-scrollbar-thumb:hover {
+  background: var(--admin-text-subtle);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
