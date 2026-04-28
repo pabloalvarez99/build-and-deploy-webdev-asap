@@ -843,6 +843,12 @@ export default function POSPage() {
         <div className="flex items-center gap-3 flex-wrap">
           <Receipt className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Punto de Venta</h1>
+          {user?.name && (
+            <span className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1">
+              <User className="w-4 h-4" />
+              {user.name}
+            </span>
+          )}
           <div className="flex items-center gap-2 ml-auto">
             <button
               onClick={() => { setShowPickupModal(true); setPickupCode(''); setPickupOrder(null); setPickupError(null); setPickupApproved(false); setTimeout(() => pickupDigitRefs.current[0]?.focus(), 50) }}

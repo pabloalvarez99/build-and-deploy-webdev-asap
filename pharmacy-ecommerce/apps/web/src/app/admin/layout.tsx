@@ -7,6 +7,7 @@ import { productApi, orderApi, purchaseOrderApi } from '@/lib/api';
 import { useAdminShortcuts } from '@/hooks/useAdminShortcuts';
 import { useTheme } from '@/hooks/useTheme';
 import { Sun, Moon, Menu } from 'lucide-react';
+import { isAdminRole } from '@/lib/roles';
 import { Sidebar } from '@/components/admin/Sidebar';
 import { CommandPalette } from '@/components/admin/CommandPalette';
 import { NotificationBell } from '@/components/admin/NotificationBell';
@@ -53,14 +54,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
       return;
     }
-    if (user.role !== 'admin') {
+    if (!isAdminRole(user.role)) {
       router.push('/');
     }
   }, [user, router, pathname]);
 
   // Load stats for badges
   useEffect(() => {
-    if (!user || user.role !== 'admin') return;
+    if (!user || !isAdminRole(user.role)) return;
 
     const loadStats = async () => {
       try {
@@ -88,7 +89,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [user]);
 
   // Don't render until auth is confirmed
-  if (!user || user.role !== 'admin') {
+  if (!user || !isAdminRole(user.role)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
         <div className="animate-spin w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full" />
@@ -110,6 +111,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         draftPurchaseOrders={draftPurchaseOrders}
         pendingFaltas={pendingFaltas}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+        role={user.role}
       />
 
       {/* Main content */}
@@ -153,6 +155,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                 </button>
               )}
+              <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 capitalize">
+                {user.role === 'admin' ? 'owner' : user.role}
+              </span>
               <NotificationBell />
             </div>
           </div>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
+import { getOwnerUser, errorResponse } from '@/lib/firebase/api-helpers';
 import { getDb } from '@/lib/db';
 
 function getDefaultFrom(daysAgo: number): string {
@@ -25,8 +25,8 @@ function computeKpis(orders: { total: any }[]) {
 
 export async function GET(request: NextRequest) {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return errorResponse('Unauthorized', 403);
+    const owner = await getOwnerUser();
+    if (!owner) return errorResponse('Unauthorized', 403);
 
     const { searchParams } = request.nextUrl;
     const from = searchParams.get('from') || getDefaultFrom(30);

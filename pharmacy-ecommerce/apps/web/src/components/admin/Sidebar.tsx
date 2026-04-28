@@ -38,7 +38,9 @@ import {
   ClipboardCheck,
   X,
   Activity,
+  Shield,
 } from 'lucide-react';
+import { canAccessRoute } from '@/lib/roles';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -51,6 +53,7 @@ interface SidebarProps {
   draftPurchaseOrders?: number;
   pendingFaltas?: number;
   onOpenCommandPalette?: () => void;
+  role?: string;
 }
 
 const navItems = [
@@ -80,6 +83,7 @@ const navItems = [
   { href: '/admin/devoluciones', icon: RotateCcw, label: 'Devoluciones' },
   { href: '/admin/vencimientos', icon: CalendarClock, label: 'Vencimientos' },
   { href: '/admin/reportes', icon: BarChart2, label: 'Reportes' },
+  { href: '/admin/usuarios', icon: Shield, label: 'Usuarios' },
   { href: '/admin/configuracion', icon: Settings, label: 'Configuración' },
 ];
 
@@ -94,9 +98,11 @@ export function Sidebar({
   draftPurchaseOrders = 0,
   pendingFaltas = 0,
   onOpenCommandPalette,
+  role = 'admin',
 }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
+  const visibleNavItems = navItems.filter(item => canAccessRoute(role, item.href));
 
   // Close drawer on ESC
   useEffect(() => {
@@ -233,7 +239,7 @@ export function Sidebar({
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {navItems.map((item) => (
+        {visibleNavItems.map((item) => (
           <NavItem key={item.href} item={item} collapsed={collapsed} />
         ))}
       </nav>

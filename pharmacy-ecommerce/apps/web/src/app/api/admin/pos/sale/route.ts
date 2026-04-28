@@ -105,6 +105,8 @@ export async function POST(request: NextRequest) {
           guest_name: customer_name || 'Venta POS',
           customer_phone: customer_phone || null,
           notes: notes || null,
+          sold_by_user_id: admin.uid,
+          sold_by_name: admin.name || admin.email || admin.uid,
           order_items: {
             create: items.map((item) => ({
               product_id: item.product_id,

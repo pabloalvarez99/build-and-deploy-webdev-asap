@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
+import { getOwnerUser, errorResponse } from '@/lib/firebase/api-helpers';
 
 export async function GET(request: NextRequest) {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return errorResponse('Unauthorized', 403);
+    const owner = await getOwnerUser();
+    if (!owner) return errorResponse('Unauthorized', 403);
 
     const searchParams = request.nextUrl.searchParams;
     const includeInactive = searchParams.get('include_inactive') === 'true';
@@ -49,8 +49,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return errorResponse('Unauthorized', 403);
+    const owner = await getOwnerUser();
+    if (!owner) return errorResponse('Unauthorized', 403);
 
     const body = await request.json();
 

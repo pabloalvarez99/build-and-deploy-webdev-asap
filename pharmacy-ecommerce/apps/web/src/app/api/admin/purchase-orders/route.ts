@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
+import { getOwnerUser, errorResponse } from '@/lib/firebase/api-helpers';
 
 function serializePO(po: Record<string, unknown>) {
   return {
@@ -14,8 +14,8 @@ function serializePO(po: Record<string, unknown>) {
 
 export async function GET(request: NextRequest) {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return errorResponse('Unauthorized', 403);
+    const owner = await getOwnerUser();
+    if (!owner) return errorResponse('Unauthorized', 403);
 
     const sp = request.nextUrl.searchParams;
     const page = parseInt(sp.get('page') || '1');
@@ -58,8 +58,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return errorResponse('Unauthorized', 403);
+    const owner = await getOwnerUser();
+    if (!owner) return errorResponse('Unauthorized', 403);
 
     const body = await request.json();
 
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
         notes: body.notes?.trim() || null,
         ocr_raw: body.ocr_raw || null,
         image_url: body.image_url || null,
-        created_by: admin.email || admin.uid,
+        created_by: owner.email || owner.uid,
         items: {
           create: body.items.map((item: {
             product_id?: string;
