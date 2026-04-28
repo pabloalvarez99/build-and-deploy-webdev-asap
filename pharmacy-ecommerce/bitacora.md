@@ -1,5 +1,35 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
+## Estado actual: Roles ERP + Gestión Financiera completos (Abril 2026)
+
+---
+
+## 2026-04-27 — Feat: Módulo Gestión Financiera
+
+- **Schema**: 4 tablas nuevas (`purchase_payments`, `gasto_categories`, `gastos`, `recurring_expenses`) + 4 campos en `purchase_orders` (`paid`, `paid_at`, `payment_method_ap`, `due_date`). Seed: 11 categorías fijas.
+- **Cuentas por Pagar** (`/admin/finanzas/cuentas-pagar`): lista OC received con estado pago, vencimiento, abonos parciales. Modal para registrar pagos/abonos con `mark_fully_paid`.
+- **Gastos** (`/admin/finanzas/gastos`): CRUD gastos por mes + plantillas recurrentes (generar gasto del mes con un clic, día_del_mes 1-28).
+- **P&L** (`/admin/finanzas/pyl`): mensual + YoY + YTD. BarChart Recharts. Tabla con % cambio anual.
+- **Cash Flow** (`/admin/finanzas/cash-flow`): 30d reales (ingresos + pagos) + 30d proyección (OC vencimiento + recurrentes). AreaChart.
+- **Dashboard** (`/admin/finanzas`): 4 KPIs mes en curso (OC pendientes, gastos, ingresos, margen bruto).
+- **Acceso**: owner-only (`getOwnerUser()`). Sidebar filtra `/admin/finanzas` para owner.
+
+---
+
+## 2026-04-27 — Feat: Sistema de Roles y Permisos ERP
+
+- **Roles**: `owner` (dueño), `pharmacist` (farmacéutico), `seller` (vendedor) en Firebase custom claims. `admin` legacy tratado como `owner`.
+- **`roles.ts`**: `isAdminRole`, `isOwnerRole`, `canAccessRoute` — control centralizado de acceso por ruta.
+- **`api-helpers.ts`**: `getAdminUser` acepta 3 roles + nuevo `getOwnerUser` + campo `name` en `DecodedUser`.
+- **Sidebar**: filtra navItems según rol. Seller ve 7 items. Pharmacist ve 18. Owner ve todo.
+- **API protection**: `getOwnerUser()` protege reportes, proveedores, compras, finanzas.
+- **POS trazabilidad**: `sold_by_user_id` + `sold_by_name` en tabla `orders` (DB migration). Cada venta POS registra quién vendió.
+- **POS UI**: muestra nombre del vendedor activo en el header.
+- **Gestión Usuarios** (`/admin/usuarios`): lista todos los usuarios Firebase. Owner puede asignar roles con dropdown. Sección equipo vs clientes.
+- **Badge de rol** en header del admin (visible desktop).
+
+---
+
 ## Estado actual: Cierre de caja POS completo — pos_mixed + Z-report + shift awareness (Abril 2026)
 
 ---
