@@ -39,6 +39,7 @@ export const PHARMACIST_EXTRA_ROUTES = new Set([
   '/admin/devoluciones',
   '/admin/stock',
   '/admin/farmacia',
+  '/admin/etiquetas',
 ]);
 
 export const OWNER_ONLY_ROUTES = new Set([

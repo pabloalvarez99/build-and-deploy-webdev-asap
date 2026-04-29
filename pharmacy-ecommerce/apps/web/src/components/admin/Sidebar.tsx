@@ -96,6 +96,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/admin/catalogo', icon: Database, label: 'Catálogo ERP' },
       { href: '/admin/categorias', icon: Tags, label: 'Categorías' },
       { href: '/admin/catalogo-calidad', icon: ClipboardCheck, label: 'Calidad' },
+      { href: '/admin/etiquetas', icon: Tag, label: 'Etiquetas precio' },
     ],
   },
   {
