@@ -23,6 +23,7 @@ export const SELLER_ROUTES = new Set([
   '/admin/clientes',
   '/admin/vendedor',
   '/admin/tareas',
+  '/admin/cierre-dia',
 ]);
 
 export const PHARMACIST_EXTRA_ROUTES = new Set([
@@ -57,6 +58,7 @@ export const OWNER_ONLY_ROUTES = new Set([
   '/admin/ejecutivo',
   '/admin/sistema/auditoria',
   '/admin/avisos',
+  '/admin/equipo',
 ]);
 
 export function canAccessRoute(role: string | undefined, href: string): boolean {

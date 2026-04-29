@@ -1,6 +1,28 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: ERP profesional — Fase 3 cohesión 360° (Abril 2026)
+## Estado actual: ERP profesional — Fase 4 ops 360° (Abril 2026)
+
+---
+
+## 2026-04-29 — Feat: Fase 4 ops — Equipo leaderboard + Cierre del día digital
+
+- **Leaderboard equipo** (`/admin/equipo` + `GET /api/admin/equipo`, owner-only):
+  - Endpoint agrega `orders` filtrado por `payment_provider IN (pos_*)` + `status=completed` agrupado por `sold_by_user_id`. Period selector `today|week|month`. Devuelve para c/vendedor: revenue, count, avg_ticket, share_pct, first/last_sale, top_product (joinea `order_items`), sparkline 7 días siempre (independiente del periodo).
+  - Página: 4 KPIs cabecera (ventas equipo, ticket promedio, vendedores activos, top vendedor) + podio top 3 (Crown/Medal/Award + sparkline + % del total + top producto) + tabla resto del equipo. Toggle periodo en header. Sparkline SVG inline (sin lib externa).
+- **Cierre del día digital** (`/admin/cierre-dia` + `GET /api/admin/cierre-dia` + `POST /api/admin/cierre-dia/email`):
+  - Visible para los 3 roles admin. Date picker (default hoy, max=hoy → permite consultar días anteriores).
+  - Endpoint GET en una sola query: ventas (POS por método de pago + online), delta vs día previo, ticket promedio, COGS estimado + margen bruto + %, gastos del día, caja_cierre del día (turno, fondo, esperado/contado/diferencia), recetas dispensadas + controladas, turno farmacéutico, tareas (done hoy / abiertas / atrasadas), avisos críticos activos, ventas por vendedor, top 10 productos, retiros agendados para mañana, alertas operativas (stock cero, lotes 7d, faltas con stock).
+  - Página: 4 KPIs hero + desglose método pago + caja del día + ventas por vendedor (con link a `/admin/equipo` si owner) + farmacia (recetas + turno) + top 10 productos + 4 mini-stats (tareas hechas/abiertas/atrasadas/avisos críticos) + bloque "Para mañana" (retiros + alertas).
+  - Botón Imprimir (`window.print()` con `@media print` que oculta sidebar/header/buttons → wrap-up físico).
+  - Botón "Enviar al dueño" (owner-only): POST reusa builder + `sendDailySummary` de `lib/email.ts`. Lee `alert_email` o acepta override `to` en body. Sin email configurado → 400.
+- **Sidebar** (grupo Operación): nuevos items "Equipo" (Trophy, owner) y "Cierre del día" (ClipboardCheck, todos).
+- **roles.ts**: `/admin/cierre-dia` agregado a `SELLER_ROUTES` (heredado por todos), `/admin/equipo` a `OWNER_ONLY_ROUTES`.
+
+### Archivos
+Nuevos: `admin/equipo/page.tsx`, `admin/cierre-dia/page.tsx`, `api/admin/equipo/route.ts`, `api/admin/cierre-dia/route.ts`, `api/admin/cierre-dia/email/route.ts`.
+Modificados: `lib/roles.ts`, `components/admin/Sidebar.tsx`, `bitacora.md`.
+
+Build limpio (24 páginas admin), 0 errores TS. Solo warnings preexistentes Dynamic server usage (cookies, intencional).
 
 ---
 

@@ -47,6 +47,7 @@ import {
   BadgeCheck,
   CheckSquare,
   Megaphone,
+  Trophy,
   type LucideIcon,
 } from 'lucide-react';
 import { canAccessRoute } from '@/lib/roles';
@@ -86,10 +87,12 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { href: '/admin/ejecutivo', icon: Crown, label: 'Ejecutivo' },
+      { href: '/admin/equipo', icon: Trophy, label: 'Equipo' },
       { href: '/admin/vendedor', icon: BadgeCheck, label: 'Mi panel' },
       { href: '/admin/operaciones', icon: Activity, label: 'Operaciones' },
       { href: '/admin/pos', icon: Receipt, label: 'POS' },
       { href: '/admin/arqueo', icon: Calculator, label: 'Arqueo' },
+      { href: '/admin/cierre-dia', icon: ClipboardCheck, label: 'Cierre del día' },
       { href: '/admin/turnos', icon: History, label: 'Turnos' },
       { href: '/admin/tareas', icon: CheckSquare, label: 'Tareas' },
     ],
