@@ -437,3 +437,43 @@ model recurring_expenses {
 
   @@index([active])
 }
+
+model internal_tasks {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title             String    @db.VarChar(255)
+  description       String?   @db.Text
+  assigned_to_uid   String?   @db.VarChar(255)
+  assigned_to_name  String?   @db.VarChar(255)
+  assigned_role     String?   @db.VarChar(20)
+  priority          String    @default("normal") @db.VarChar(10)
+  due_date          DateTime? @db.Date
+  status            String    @default("open") @db.VarChar(15)
+  created_by_uid    String    @db.VarChar(255)
+  created_by_name   String?   @db.VarChar(255)
+  completed_at      DateTime? @db.Timestamptz(6)
+  completed_by_uid  String?   @db.VarChar(255)
+  completed_by_name String?   @db.VarChar(255)
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([status, assigned_to_uid])
+  @@index([assigned_role, status])
+  @@index([created_at(sort: Desc)])
+}
+
+model announcements {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title           String    @db.VarChar(255)
+  body            String    @db.Text
+  severity        String    @default("info") @db.VarChar(15)
+  visible_to      String    @default("all") @db.VarChar(20)
+  pinned          Boolean   @default(false)
+  expires_at      DateTime? @db.Timestamptz(6)
+  created_by_uid  String    @db.VarChar(255)
+  created_by_name String?   @db.VarChar(255)
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([visible_to, pinned, created_at(sort: Desc)])
+  @@index([expires_at])
+}
