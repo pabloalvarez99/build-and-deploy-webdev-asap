@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-04-29 — Feat: Fase 2 cohesión operativa — vendedor landing, tareas internas, avisos, meta diaria
+
+- **Schema**: `internal_tasks` (asignación por uid o por rol, prioridad low/normal/high, due_date, status open/done/cancelled, audit fields completed_*) + `announcements` (severity info/warning/critical, visible_to all/owner/pharmacist/seller, pinned, expires_at). Pushed a Cloud SQL via `prisma db push`.
+- **Landing vendedor** (`/admin/vendedor` + `GET /api/admin/vendedor`, todos los roles admin). Reemplaza `/admin/pos` como landing del rol seller en `landingRouteForRole()`. Saludo personalizado por hora del día, badge caja activa/sin abrir, botón Abrir POS, KPIs personales (mis ventas hoy filtrado por `sold_by_user_id`, ticket promedio, gauge meta diaria local), bandeja retiros del día (orden `status=reserved` con pickup_code, expiry timer), MyTasksCard inline, 4 acciones rápidas (POS/Arqueo/Órdenes/Clientes). Auto-poll 60s.
+- **Tareas internas** (`/admin/tareas` + `/api/admin/tareas` + `/api/admin/tareas/[id]`). Owner crea y asigna a uid específico o a rol broadcast (`assigned_role`). Vendedor/farmacéutico ven scope=mine (asignadas a uid OR a su rol). PUT actions: complete (asignado o owner), reopen, cancel (owner), edit fields (owner). DELETE owner-only. Modal de creación con select de equipo (`/api/admin/users`), prioridad, due_date.
+- **Avisos del equipo** (`/admin/avisos` + `/api/admin/avisos` + `/api/admin/avisos/[id]`, owner-only para CRUD; lectura filtrada por rol). Severity (info/warning/critical), visible_to (all/owner/pharmacist/seller), pinned (no descartable), expires_at (auto-oculta vencidos al lector). Owner ve todos con `?scope=all` incluido expirados.
+- **Componentes compartidos**:
+  - `AnnouncementsBanner.tsx`: banner condicional según severity, dismiss persistido en localStorage (excepto pinned). Acepta `items` prop o auto-fetch.
+  - `MyTasksCard.tsx`: lista tareas pendientes del usuario con due-label inteligente (Atrasada Nd / Hoy / Mañana / Nd / fecha), checkbox para completar, badge contador.
+  - `DailyGoalGauge.tsx`: gauge SVG semicircular (radio 70). Tonos por % (rojo<40, ámbar<75, índigo<100, esmeralda al alcanzar). Empty state linkea a `/admin/configuracion`.
+- **Sidebar**: nuevos items en grupo Operación ("Mi panel" BadgeCheck → `/admin/vendedor`, "Tareas" CheckSquare → `/admin/tareas`) + grupo Sistema ("Avisos" Megaphone → `/admin/avisos`, owner-only).
+- **roles.ts**: `SELLER_ROUTES` ahora incluye `/admin/vendedor` y `/admin/tareas` (heredado por todos los roles admin). `OWNER_ONLY_ROUTES` incluye `/admin/avisos`. `landingRouteForRole(seller) → /admin/vendedor`.
+
+### Archivos
+Nuevos: `admin/vendedor/page.tsx`, `admin/tareas/page.tsx`, `admin/avisos/page.tsx`, `api/admin/vendedor/route.ts`, `api/admin/tareas/{route,[id]/route}.ts`, `api/admin/avisos/{route,[id]/route}.ts`, `components/admin/{AnnouncementsBanner,MyTasksCard,DailyGoalGauge}.tsx`.
+Modificados: `prisma/schema.prisma`, `lib/roles.ts`, `components/admin/Sidebar.tsx`.
+
+Build limpio, 0 errores TS.
+
+---
+
 ## 2026-04-28 — Feat: Fase 1 ERP cohesión — landing por rol, panel farmacéutico, centro alertas
 
 - **Landing por rol** (`src/app/admin/page.tsx` reescrito como redirect cliente): owner → `/admin/ejecutivo`, pharmacist → `/admin/farmacia`, seller → `/admin/pos`. Dashboard clásico movido a `/admin/dashboard` (sigue accesible desde sidebar). Helper `landingRouteForRole()` en `lib/roles.ts`.

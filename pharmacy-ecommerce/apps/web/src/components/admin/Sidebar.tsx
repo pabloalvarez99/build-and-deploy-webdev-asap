@@ -43,6 +43,9 @@ import {
   Crown,
   ShieldCheck,
   Stethoscope,
+  BadgeCheck,
+  CheckSquare,
+  Megaphone,
   type LucideIcon,
 } from 'lucide-react';
 import { canAccessRoute } from '@/lib/roles';
@@ -82,10 +85,12 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { href: '/admin/ejecutivo', icon: Crown, label: 'Ejecutivo' },
+      { href: '/admin/vendedor', icon: BadgeCheck, label: 'Mi panel' },
       { href: '/admin/operaciones', icon: Activity, label: 'Operaciones' },
       { href: '/admin/pos', icon: Receipt, label: 'POS' },
       { href: '/admin/arqueo', icon: Calculator, label: 'Arqueo' },
       { href: '/admin/turnos', icon: History, label: 'Turnos' },
+      { href: '/admin/tareas', icon: CheckSquare, label: 'Tareas' },
     ],
   },
   {
@@ -153,6 +158,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Sistema',
     items: [
       { href: '/admin/usuarios', icon: Shield, label: 'Usuarios' },
+      { href: '/admin/avisos', icon: Megaphone, label: 'Avisos' },
       { href: '/admin/sistema/auditoria', icon: ShieldCheck, label: 'Auditoría' },
       { href: '/admin/configuracion', icon: Settings, label: 'Configuración' },
     ],
