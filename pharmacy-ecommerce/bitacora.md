@@ -1,6 +1,38 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: ERP profesional — Fase 4 ops 360° (Abril 2026)
+## Estado actual: ERP profesional — Fase 5 inteligencia operativa (Abril 2026)
+
+---
+
+## 2026-04-29 — Feat: Fase 5 inteligencia — Health Score + Insights automáticos + Activity Feed
+
+ERP cubre ya datos completos (ventas, finanzas, farmacia, equipo, clientes). Fase 5 añade **inteligencia + narrativa** para percepción profesional: 1 número que cuenta la historia, anomalías detectadas automáticamente, pulso del negocio en tiempo real.
+
+- **Health Score del negocio** (`HealthScoreCard.tsx` + `/api/admin/ejecutivo` ampliado, mostrado en `/admin/ejecutivo`):
+  - Score 0-100 ponderado: meta cumplimiento (30%) + margen vs target 30% (25%) + alertas críticas inverso (20%) + rotación MoM (15%) + cumplimiento tareas 7d (10%).
+  - Endpoint extiende Promise.all con: `internal_tasks` count (done 7d / open), `orders` count today/yesterday.
+  - Devuelve bloque `health { score, label, breakdown[5], suggestion }`. Label: Crítico (<50) / En riesgo (<65) / Estable (<80) / Saludable / Excelente (≥90).
+  - `suggestion` accionable: detecta el componente más bajo y emite frase concreta ("Paga N facturas vencidas", "Sube precios o negocia costos", etc.).
+  - UI: dial SVG semicircular con color por tier (rojo→ámbar→indigo→esmeralda) + breakdown con barras de progreso por componente + chip sugerencia.
+- **Insights automáticos** (`/admin/insights` + `GET /api/admin/insights`, owner-only):
+  - Detecciones: anomalía drop (ratio última semana / prom 4 semanas previas ≤ 0.4 con baseline ≥5 u/sem), trending (ratio ≥ 1.6, baseline ≥5), capital inmovilizado (stock ≥5 sin venta 30d con cost_price, capital ≥20k), lotes vencen 60d sin descuento aplicado, clientes en riesgo (≥3 compras, daysSince > frequency*1.5 y >30d), ventas hoy < 40% del promedio 8 semanas (sólo después de las 14h con baseline ≥5).
+  - Sort por severity (critical → warning → positive → info). Cada insight tiene `href` para acción rápida.
+  - UI: 4 KPIs por severity + lista con icono temático, badge severity, línea izquierda de color, link a destino.
+- **Activity Feed global** (`/admin/actividad` + `GET /api/admin/actividad`, owner-only) + widget en `/admin/ejecutivo`:
+  - Une 6 fuentes en un solo feed: `audit_log` (mutaciones), `orders` (ventas POS+online), `caja_cierres`, `stock_movements` (adjustment/damage/expired/count_correction), `internal_tasks` completadas, `purchase_orders` recibidas.
+  - Cada evento mapea: type, severity (info/positive/warning), icon, user, title, detail, amount, href, timestamp. Cierres con diferencia >$1000 marcan warning. Stock con delta negativo marca warning.
+  - Página: filtros pill por tipo (Todos/Ventas/Cierres caja/Tareas/Auditoría/Stock/Compras) + filtro texto por usuario + range 24h/7d/30d. Eventos agrupados por día con header weekday+fecha. `divide-y` entre items.
+  - Widget compacto (`ActivityFeedWidget.tsx`, default limit 8): mostrado en ejecutivo entre top tables y quick actions. Link "Ver todo →".
+- **Sidebar / Roles / CommandPalette**:
+  - `OWNER_ONLY_ROUTES` += `/admin/insights`, `/admin/actividad`.
+  - Sidebar grupo Operación: nuevos items "Insights" (Sparkles) y "Actividad" (Heart) entre Ejecutivo y Equipo.
+  - CommandPalette: 2 entradas nav nuevas con subtitle.
+
+### Archivos
+Nuevos: `admin/insights/page.tsx`, `admin/actividad/page.tsx`, `api/admin/insights/route.ts`, `api/admin/actividad/route.ts`, `components/admin/HealthScoreCard.tsx`, `components/admin/ActivityFeedWidget.tsx`.
+Modificados: `api/admin/ejecutivo/route.ts` (+ tasks 7d / orders today/yesterday + bloque health), `admin/ejecutivo/page.tsx` (mount HealthScoreCard + ActivityFeedWidget), `lib/roles.ts`, `components/admin/Sidebar.tsx`, `components/admin/CommandPalette.tsx`.
+
+Build limpio (27 páginas admin), 0 errores TS. Solo warnings preexistentes Dynamic server usage (cookies, intencional).
 
 ---
 

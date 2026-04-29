@@ -48,6 +48,8 @@ import {
   CheckSquare,
   Megaphone,
   Trophy,
+  Sparkles,
+  Heart,
   type LucideIcon,
 } from 'lucide-react';
 import { canAccessRoute } from '@/lib/roles';
@@ -87,6 +89,8 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { href: '/admin/ejecutivo', icon: Crown, label: 'Ejecutivo' },
+      { href: '/admin/insights', icon: Sparkles, label: 'Insights' },
+      { href: '/admin/actividad', icon: Heart, label: 'Actividad' },
       { href: '/admin/equipo', icon: Trophy, label: 'Equipo' },
       { href: '/admin/vendedor', icon: BadgeCheck, label: 'Mi panel' },
       { href: '/admin/operaciones', icon: Activity, label: 'Operaciones' },

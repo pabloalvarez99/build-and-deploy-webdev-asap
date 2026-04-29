@@ -59,6 +59,8 @@ export const OWNER_ONLY_ROUTES = new Set([
   '/admin/sistema/auditoria',
   '/admin/avisos',
   '/admin/equipo',
+  '/admin/insights',
+  '/admin/actividad',
 ]);
 
 export function canAccessRoute(role: string | undefined, href: string): boolean {

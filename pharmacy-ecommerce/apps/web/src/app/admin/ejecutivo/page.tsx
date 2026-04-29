@@ -13,8 +13,11 @@ import {
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { StatCard } from '@/components/admin/ui/StatCard';
 import { DailyChecklist } from '@/components/admin/DailyChecklist';
+import { HealthScoreCard, type HealthData } from '@/components/admin/HealthScoreCard';
+import { ActivityFeedWidget } from '@/components/admin/ActivityFeedWidget';
 
 interface ExecData {
+  health?: HealthData;
   kpis: {
     ingresos: number; ingresos_prev: number; ingresos_yoy: number;
     cogs: number; gross_margin: number; gross_margin_pct: number;
@@ -82,6 +85,9 @@ export default function EjecutivoPage() {
         <div className="admin-surface p-12 text-center admin-text-muted text-sm">Cargando…</div>
       ) : (
         <div className="space-y-6">
+          {/* Health Score */}
+          {data.health && <HealthScoreCard data={data.health} />}
+
           {/* Alertas accionables */}
           {(data.ap.overdue_count > 0 || data.ops.pending_faltas > 0 || data.kpis.mom_pct < -10) && (
             <div className="admin-surface p-4 border-l-2" style={{ borderLeftColor: '#dc2626' }}>
@@ -334,6 +340,9 @@ export default function EjecutivoPage() {
               )}
             </div>
           </div>
+
+          {/* Activity feed widget */}
+          <ActivityFeedWidget />
 
           {/* Quick actions */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

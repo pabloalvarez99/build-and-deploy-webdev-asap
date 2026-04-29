@@ -17,6 +17,8 @@ export async function GET() {
     const yoyEnd = new Date(now.getFullYear() - 1, now.getMonth() + 1, 0, 23, 59, 59, 999);
     const in7d = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
     const [
       ingMes, ingPrev, ingYoY,
       gastoMes, gastoPrev,
@@ -24,6 +26,8 @@ export async function GET() {
       pendingFaltas, criticalStock,
       topMargin, salesByProduct,
       goalSettings,
+      tasksDone7d, tasksOpen,
+      ordersToday, ordersYesterday,
     ] = await Promise.all([
       db.orders.aggregate({
         where: { status: { in: ['paid', 'completed'] }, created_at: { gte: startMonth, lte: endMonth } },
@@ -78,6 +82,27 @@ export async function GET() {
       db.admin_settings.findMany({
         where: { key: { in: ['monthly_sales_target', 'daily_sales_target'] } },
       }),
+      db.internal_tasks.count({
+        where: { status: 'done', completed_at: { gte: sevenDaysAgo } },
+      }),
+      db.internal_tasks.count({
+        where: { status: 'open' },
+      }),
+      db.orders.count({
+        where: {
+          status: { in: ['paid', 'completed'] },
+          created_at: { gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()) },
+        },
+      }),
+      db.orders.count({
+        where: {
+          status: { in: ['paid', 'completed'] },
+          created_at: {
+            gte: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1),
+            lt: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+          },
+        },
+      }),
     ]);
 
     const settingsMap: Record<string, string> = {};
@@ -127,7 +152,69 @@ export async function GET() {
       .sort((a, b) => b.margin - a.margin)
       .slice(0, 5);
 
+    // Health Score 0-100 (composite ponderado)
+    const metaScore = monthlyTarget > 0 ? Math.min(100, forecastVsTargetPct) : 70;
+    const marginTarget = 30;
+    const marginScore = Math.min(100, Math.max(0, (grossMarginPct / marginTarget) * 100));
+    const totalAlerts = apOverdue._count + pendingFaltas + criticalStock;
+    const alertsScore = Math.max(0, 100 - Math.min(100, totalAlerts * 8));
+    const rotationScore = ingresosPrev > 0
+      ? Math.min(100, Math.max(20, ((ingresos / Math.max(1, dayOfMonth)) / (ingresosPrev / daysInMonth)) * 80))
+      : 60;
+    const totalTasks = tasksDone7d + tasksOpen;
+    const tasksScore = totalTasks > 0 ? Math.min(100, (tasksDone7d / totalTasks) * 100) : 80;
+
+    const healthScore = Math.round(
+      metaScore * 0.30 +
+      marginScore * 0.25 +
+      alertsScore * 0.20 +
+      rotationScore * 0.15 +
+      tasksScore * 0.10
+    );
+
+    const breakdown = [
+      { key: 'meta', label: 'Meta del mes', weight: 30, score: Math.round(metaScore), hint: monthlyTarget > 0 ? `${forecastVsTargetPct.toFixed(0)}% proyección vs meta` : 'Sin meta configurada' },
+      { key: 'margen', label: 'Margen bruto', weight: 25, score: Math.round(marginScore), hint: `${grossMarginPct.toFixed(1)}% (objetivo ${marginTarget}%)` },
+      { key: 'alertas', label: 'Alertas críticas', weight: 20, score: Math.round(alertsScore), hint: `${totalAlerts} alertas activas` },
+      { key: 'rotacion', label: 'Rotación', weight: 15, score: Math.round(rotationScore), hint: `${ingresosPrev > 0 ? (momPct >= 0 ? '+' : '') + momPct.toFixed(0) + '% MoM' : 'Sin datos previos'}` },
+      { key: 'tareas', label: 'Cumplimiento equipo', weight: 10, score: Math.round(tasksScore), hint: `${tasksDone7d} hechas / ${tasksOpen} abiertas` },
+    ];
+
+    const lowest = [...breakdown].sort((a, b) => a.score - b.score)[0];
+    let suggestion = '';
+    if (lowest.key === 'alertas' && totalAlerts > 0) {
+      if (apOverdue._count > 0) suggestion = `Paga ${apOverdue._count} factura${apOverdue._count !== 1 ? 's' : ''} vencida${apOverdue._count !== 1 ? 's' : ''}.`;
+      else if (pendingFaltas > 0) suggestion = `Resuelve ${pendingFaltas} falta${pendingFaltas !== 1 ? 's' : ''} pendiente${pendingFaltas !== 1 ? 's' : ''}.`;
+      else if (criticalStock > 0) suggestion = `Repón ${criticalStock} producto${criticalStock !== 1 ? 's' : ''} con stock crítico.`;
+    } else if (lowest.key === 'meta' && monthlyTarget > 0) {
+      suggestion = `Empuja ventas: faltan ${(100 - targetProgressPct).toFixed(0)}% de la meta.`;
+    } else if (lowest.key === 'meta') {
+      suggestion = 'Configura una meta mensual en Configuración.';
+    } else if (lowest.key === 'margen') {
+      suggestion = `Sube precios o negocia costos: margen bajo (${grossMarginPct.toFixed(0)}%).`;
+    } else if (lowest.key === 'rotacion') {
+      suggestion = 'Activa promociones o liquidación de stock antiguo.';
+    } else if (lowest.key === 'tareas') {
+      suggestion = `Hay ${tasksOpen} tareas internas sin cerrar.`;
+    } else {
+      suggestion = '¡Negocio en buen estado! Mantén el ritmo.';
+    }
+
+    let healthLabel = 'Saludable';
+    if (healthScore < 50) healthLabel = 'Crítico';
+    else if (healthScore < 65) healthLabel = 'En riesgo';
+    else if (healthScore < 80) healthLabel = 'Estable';
+    else if (healthScore >= 90) healthLabel = 'Excelente';
+
+    void ordersToday; void ordersYesterday;
+
     return NextResponse.json({
+      health: {
+        score: healthScore,
+        label: healthLabel,
+        breakdown,
+        suggestion,
+      },
       kpis: {
         ingresos, ingresos_prev: ingresosPrev, ingresos_yoy: ingresosYoY,
         cogs, gross_margin: grossMargin, gross_margin_pct: grossMarginPct,

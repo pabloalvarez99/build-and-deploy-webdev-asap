@@ -43,6 +43,8 @@ interface NavSpec {
 const NAV_SPECS: NavSpec[] = [
   { id: 'nav-dashboard', href: '/admin/dashboard', title: 'Dashboard', icon: Activity },
   { id: 'nav-ejecutivo', href: '/admin/ejecutivo', title: 'Vista ejecutiva', subtitle: 'KPIs financieros del dueño', icon: Crown },
+  { id: 'nav-insights', href: '/admin/insights', title: 'Insights', subtitle: 'Anomalías y oportunidades', icon: Crown },
+  { id: 'nav-actividad', href: '/admin/actividad', title: 'Actividad', subtitle: 'Pulso del negocio', icon: Activity },
   { id: 'nav-operaciones', href: '/admin/operaciones', title: 'Operaciones diarias', icon: Activity },
   { id: 'nav-pos', href: '/admin/pos', title: 'POS', subtitle: 'Punto de venta', icon: Receipt },
   { id: 'nav-arqueo', href: '/admin/arqueo', title: 'Arqueo de caja', icon: Calculator },
