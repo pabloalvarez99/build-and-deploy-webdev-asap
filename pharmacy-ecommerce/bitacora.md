@@ -1,6 +1,27 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: ERP profesional — auditoría + FEFO + dashboard ejecutivo (Abril 2026)
+## Estado actual: ERP profesional — cohesión operativa + landing por rol (Abril 2026)
+
+---
+
+## 2026-04-28 — Feat: Fase 1 ERP cohesión — landing por rol, panel farmacéutico, centro alertas
+
+- **Landing por rol** (`src/app/admin/page.tsx` reescrito como redirect cliente): owner → `/admin/ejecutivo`, pharmacist → `/admin/farmacia`, seller → `/admin/pos`. Dashboard clásico movido a `/admin/dashboard` (sigue accesible desde sidebar). Helper `landingRouteForRole()` en `lib/roles.ts`.
+- **Panel farmacéutico nuevo** (`/admin/farmacia` + `GET /api/admin/farmacia`, owner+pharmacist): KPIs (recetas hoy, recetas mes, controladas hoy, sin registrar, lotes <30d, controlados sin stock), 3 acciones rápidas (POS, abrir/cerrar turno farmacéutico, calidad catálogo), feed últimas 10 recetas con badge controlado, top 5 lotes por vencer con semáforo días-restantes. Badge de turno activo en header.
+- **Centro de alertas** (`NotificationBell.tsx` reescrito): consume `/api/admin/operaciones` (1 query, ya agregaba 12 en paralelo). Agrupa por severidad (Crítico · Urgente · 7 días). Persiste read/dismissed por usuario en `localStorage`. Dot rojo si hay críticos, ámbar si solo urgentes. Auto-poll 60s. Footer con link a `/admin/operaciones`.
+- **DailyChecklist** (`src/components/admin/DailyChecklist.tsx`): card colapsable con cierre de caja ayer · fondo configurado · reservas expiradas procesadas · vencidos retirados. Persiste "ocultar hoy" en `localStorage`. Montado en `/admin/operaciones` y `/admin/ejecutivo`.
+- **Command Palette ⌘K** reescrito: 31 entradas de navegación + 11 acciones rápidas autogeneradas, todas filtradas por `canAccessRoute(role, href)`. Acciones nuevas: ajustar stock, crear OC, Z-report, registrar gasto, faltas, vencimientos. Estilizado con tokens admin (var(--admin-*)).
+- **Density toggle** en topbar (Rows3/Rows4 icons): persiste `data-density="compact"` en `[data-admin="1"]`. CSS scoping en `admin.css` reduce font-size 13px y padding tablas. Valioso en catálogo 34k productos y stock movements.
+- **Sidebar limpieza badges**: removidos badges de Órdenes pendientes y Productos stock crítico (duplicaban centro de alertas). Mantienen badges Compras draft (azul) + Faltas (violeta).
+- **Sidebar item nuevo**: "Mi panel" en grupo Farmacia (Stethoscope) → `/admin/farmacia`. Dashboard apunta a `/admin/dashboard`.
+- **roles.ts**: `SELLER_ROUTES` ahora incluye `/admin/dashboard`, `PHARMACIST_EXTRA_ROUTES` incluye `/admin/farmacia`. Nueva fn `landingRouteForRole()`.
+
+### Archivos
+Nuevos: `admin/farmacia/page.tsx`, `api/admin/farmacia/route.ts`, `components/admin/DailyChecklist.tsx`, `admin/dashboard/page.tsx`.
+Reescritos: `admin/page.tsx` (redirect), `components/admin/NotificationBell.tsx`, `components/admin/CommandPalette.tsx`.
+Modificados: `admin/layout.tsx` (density toggle), `admin/admin.css` (variantes density), `components/admin/Sidebar.tsx`, `lib/roles.ts`, `admin/operaciones/page.tsx`, `admin/ejecutivo/page.tsx`.
+
+Build limpio, 0 errores TS. Solo warnings preexistentes "Dynamic server usage" (cookies, intencional).
 
 ---
 

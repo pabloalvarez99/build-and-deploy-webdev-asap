@@ -14,6 +14,7 @@ export function isOwnerRole(role?: string): boolean {
 
 export const SELLER_ROUTES = new Set([
   '/admin',
+  '/admin/dashboard',
   '/admin/operaciones',
   '/admin/pos',
   '/admin/arqueo',
@@ -37,6 +38,7 @@ export const PHARMACIST_EXTRA_ROUTES = new Set([
   '/admin/fidelidad',
   '/admin/devoluciones',
   '/admin/stock',
+  '/admin/farmacia',
 ]);
 
 export const OWNER_ONLY_ROUTES = new Set([
@@ -101,4 +103,11 @@ export function roleLabel(role?: string): string {
 
 export function roleDescription(role?: string): string {
   return DESCRIPTION[role ?? ''] ?? '';
+}
+
+export function landingRouteForRole(role?: string): string {
+  if (isOwnerRole(role)) return '/admin/ejecutivo';
+  if (role === 'pharmacist') return '/admin/farmacia';
+  if (role === 'seller') return '/admin/pos';
+  return '/admin/dashboard';
 }

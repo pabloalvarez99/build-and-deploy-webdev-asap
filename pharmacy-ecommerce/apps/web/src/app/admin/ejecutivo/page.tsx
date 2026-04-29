@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { StatCard } from '@/components/admin/ui/StatCard';
+import { DailyChecklist } from '@/components/admin/DailyChecklist';
 
 interface ExecData {
   kpis: {
@@ -55,6 +56,7 @@ export default function EjecutivoPage() {
 
   return (
     <div>
+      <DailyChecklist />
       <PageHeader
         title="Vista ejecutiva"
         description={`Pulso financiero del negocio · ${monthName}`}

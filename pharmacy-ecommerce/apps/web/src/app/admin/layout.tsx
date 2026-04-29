@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/auth';
 import { productApi, orderApi, purchaseOrderApi } from '@/lib/api';
 import { useAdminShortcuts } from '@/hooks/useAdminShortcuts';
 import { useTheme } from '@/hooks/useTheme';
-import { Sun, Moon, Menu, Search } from 'lucide-react';
+import { Sun, Moon, Menu, Search, Rows3, Rows4 } from 'lucide-react';
 import { isAdminRole, roleLabel } from '@/lib/roles';
 import { Sidebar } from '@/components/admin/Sidebar';
 import { CommandPalette } from '@/components/admin/CommandPalette';
@@ -31,6 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [isProd, setIsProd] = useState(false);
+  const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable');
   const { theme, toggleTheme, mounted } = useTheme();
 
   useAdminShortcuts({
@@ -42,10 +43,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     const stored = localStorage.getItem('admin-sidebar-collapsed');
     if (stored) setSidebarCollapsed(stored === 'true');
+    const storedDensity = localStorage.getItem('admin-density');
+    if (storedDensity === 'compact' || storedDensity === 'comfortable') {
+      setDensity(storedDensity);
+    }
     if (typeof window !== 'undefined') {
       setIsProd(PROD_HOSTS.includes(window.location.hostname));
     }
   }, []);
+
+  const toggleDensity = () => {
+    const next = density === 'compact' ? 'comfortable' : 'compact';
+    setDensity(next);
+    localStorage.setItem('admin-density', next);
+  };
 
   const handleSidebarToggle = () => {
     const next = !sidebarCollapsed;
@@ -100,7 +111,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const initials = (user.name || user.email || '?').slice(0, 2).toUpperCase();
 
   return (
-    <div data-admin="1" className="min-h-screen admin-canvas">
+    <div data-admin="1" data-density={density} className="min-h-screen admin-canvas">
       <Sidebar
         isCollapsed={sidebarCollapsed}
         onToggle={handleSidebarToggle}
@@ -173,6 +184,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                 </button>
               )}
+              <button
+                onClick={toggleDensity}
+                aria-label={density === 'compact' ? 'Densidad cómoda' : 'Densidad compacta'}
+                title={density === 'compact' ? 'Densidad cómoda' : 'Densidad compacta'}
+                className="hidden md:flex w-9 h-9 rounded-lg items-center justify-center admin-text-muted hover:bg-[color:var(--admin-accent-soft)] transition-colors"
+              >
+                {density === 'compact' ? <Rows3 className="w-4 h-4" /> : <Rows4 className="w-4 h-4" />}
+              </button>
               <NotificationBell />
               <div className="hidden sm:flex items-center gap-2 pl-2 ml-1 border-l admin-hairline">
                 <div

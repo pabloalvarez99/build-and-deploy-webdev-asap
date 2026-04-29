@@ -42,6 +42,7 @@ import {
   Wallet,
   Crown,
   ShieldCheck,
+  Stethoscope,
   type LucideIcon,
 } from 'lucide-react';
 import { canAccessRoute } from '@/lib/roles';
@@ -79,7 +80,7 @@ const NAV_GROUPS: NavGroup[] = [
     id: 'op',
     label: 'Operación',
     items: [
-      { href: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
+      { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { href: '/admin/ejecutivo', icon: Crown, label: 'Ejecutivo' },
       { href: '/admin/operaciones', icon: Activity, label: 'Operaciones' },
       { href: '/admin/pos', icon: Receipt, label: 'POS' },
@@ -132,6 +133,7 @@ const NAV_GROUPS: NavGroup[] = [
     id: 'pharm',
     label: 'Farmacia',
     items: [
+      { href: '/admin/farmacia', icon: Stethoscope, label: 'Mi panel' },
       { href: '/admin/libro-recetas', icon: BookOpen, label: 'Libro recetas' },
       { href: '/admin/turnos-farmaceutico', icon: UserCheck, label: 'Turnos farmacéutico' },
     ],
@@ -202,17 +204,16 @@ export function Sidebar({
   const isActive = (href: string, exact = false) =>
     exact ? pathname === href : pathname.startsWith(href);
 
+  // Badges intentionally limited to faltas + compras draft.
+  // Reservas/orders/stock alerts moved to NotificationBell to avoid duplication.
+  void pendingOrders; void pendingReservations; void criticalStock;
   const getBadge = (href: string) => {
-    if (href === '/admin/ordenes') return pendingOrders + pendingReservations;
-    if (href === '/admin/productos') return criticalStock;
     if (href === '/admin/compras') return draftPurchaseOrders;
     if (href === '/admin/faltas') return pendingFaltas;
     return 0;
   };
 
   const getBadgeKind = (href: string): 'amber' | 'orange' | 'blue' | 'violet' | null => {
-    if (href === '/admin/ordenes') return 'amber';
-    if (href === '/admin/productos') return 'orange';
     if (href === '/admin/compras') return 'blue';
     if (href === '/admin/faltas') return 'violet';
     return null;

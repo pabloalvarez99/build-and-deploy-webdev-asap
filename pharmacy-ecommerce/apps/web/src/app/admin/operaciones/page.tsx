@@ -8,6 +8,7 @@ import {
   Calculator, ArrowRight, PhoneCall, AlertCircle, TrendingUp,
   TrendingDown, Activity, Banknote,
 } from 'lucide-react';
+import { DailyChecklist } from '@/components/admin/DailyChecklist';
 
 interface ReservaItem {
   id: string;
@@ -211,6 +212,8 @@ export default function OperacionesPage() {
 
   return (
     <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-5">
+
+      <DailyChecklist />
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3">

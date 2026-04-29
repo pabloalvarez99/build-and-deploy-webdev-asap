@@ -1,259 +1,389 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Bell, Package, ShoppingBag, AlertTriangle, X, Check, Store, CreditCard } from 'lucide-react';
+import {
+  Bell,
+  Package,
+  ShoppingBag,
+  AlertTriangle,
+  X,
+  Check,
+  Store,
+  CalendarClock,
+  ClipboardList,
+  Wallet,
+  BookX,
+} from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
-import { productApi, orderApi } from '@/lib/api';
-import { formatPrice } from '@/lib/format';
 import Link from 'next/link';
 
+type Severity = 'critical' | 'urgent' | 'info';
+
 interface Notification {
- id: string;
- type: 'order' | 'stock' | 'critical' | 'reservation' | 'webpay';
- title: string;
- message: string;
- timestamp: Date;
- read: boolean;
- link?: string;
+  id: string;
+  severity: Severity;
+  icon: React.ReactNode;
+  title: string;
+  message: string;
+  link: string;
+  count?: number;
 }
 
+interface OperacionesData {
+  reservas_expiradas: { id: string; nombre: string; pickup_code: string | null; total: number }[];
+  reservas_urgentes: { id: string; nombre: string; pickup_code: string | null; total: number }[];
+  vencidos: { id: string; producto: string; quantity: number }[];
+  por_vencer_7d: { id: string; producto: string; expiry_date: string }[];
+  faltas_con_stock: { id: string; producto: string; cliente: string }[];
+  oc_borrador: { id: string; proveedor: string; total_cost: number | null }[];
+  stock_cero_count: number;
+  stock_critico_count: number;
+  faltas_pending_total: number;
+  kpis: { pedidos_pendientes_webpay: number };
+}
+
+const SEV_ORDER: Severity[] = ['critical', 'urgent', 'info'];
+const SEV_LABEL: Record<Severity, string> = {
+  critical: 'Crítico',
+  urgent: 'Urgente',
+  info: 'Próximos 7 días',
+};
+const SEV_DOT: Record<Severity, string> = {
+  critical: 'bg-red-500',
+  urgent: 'bg-amber-500',
+  info: 'bg-blue-500',
+};
+
 export function NotificationBell() {
- const { user } = useAuthStore();
- const [notifications, setNotifications] = useState<Notification[]>([]);
- const [isOpen, setIsOpen] = useState(false);
- const dropdownRef = useRef<HTMLDivElement>(null);
- // Dismissed IDs persist across re-renders — cleared notifications won't return on next poll
- const dismissedIds = useRef<Set<string>>(new Set());
+  const { user } = useAuthStore();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
- useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-   if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-    setIsOpen(false);
-   }
+  // Persisted dismissed/read sets per user
+  const storageKey = user?.email ? `admin-notif-${user.email}` : null;
+
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setReadIds(new Set(parsed.read || []));
+        setDismissedIds(new Set(parsed.dismissed || []));
+      }
+    } catch {}
+  }, [storageKey]);
+
+  const persist = useCallback((read: Set<string>, dismissed: Set<string>) => {
+    if (!storageKey) return;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify({
+        read: Array.from(read),
+        dismissed: Array.from(dismissed),
+      }));
+    } catch {}
+  }, [storageKey]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const fetchNotifications = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await fetch('/api/admin/operaciones', { credentials: 'include' });
+      if (!res.ok) return;
+      const data: OperacionesData = await res.json();
+
+      const built: Notification[] = [];
+
+      // CRÍTICO
+      if (data.reservas_expiradas.length > 0) {
+        built.push({
+          id: 'reservas-expiradas',
+          severity: 'critical',
+          icon: <Store className="w-4 h-4 text-red-500" />,
+          title: 'Reservas expiradas',
+          message: `${data.reservas_expiradas.length} reserva${data.reservas_expiradas.length > 1 ? 's' : ''} sin procesar`,
+          link: '/admin/ordenes?status=reserved',
+          count: data.reservas_expiradas.length,
+        });
+      }
+      if (data.vencidos.length > 0) {
+        built.push({
+          id: 'vencidos',
+          severity: 'critical',
+          icon: <AlertTriangle className="w-4 h-4 text-red-500" />,
+          title: 'Productos vencidos con stock',
+          message: `${data.vencidos.length} lote${data.vencidos.length > 1 ? 's' : ''} requieren acción`,
+          link: '/admin/vencimientos',
+          count: data.vencidos.length,
+        });
+      }
+      if (data.stock_cero_count > 0) {
+        built.push({
+          id: 'stock-cero',
+          severity: 'critical',
+          icon: <Package className="w-4 h-4 text-red-500" />,
+          title: 'Productos agotados',
+          message: `${data.stock_cero_count} sin stock`,
+          link: '/admin/inventario',
+          count: data.stock_cero_count,
+        });
+      }
+
+      // URGENTE
+      if (data.reservas_urgentes.length > 0) {
+        built.push({
+          id: 'reservas-urgentes',
+          severity: 'urgent',
+          icon: <Store className="w-4 h-4 text-amber-500" />,
+          title: 'Reservas por expirar (<6h)',
+          message: `${data.reservas_urgentes.length} pendiente${data.reservas_urgentes.length > 1 ? 's' : ''}`,
+          link: '/admin/ordenes?status=reserved',
+          count: data.reservas_urgentes.length,
+        });
+      }
+      if (data.faltas_con_stock.length > 0) {
+        built.push({
+          id: 'faltas-disponibles',
+          severity: 'urgent',
+          icon: <BookX className="w-4 h-4 text-amber-500" />,
+          title: 'Faltas con stock disponible',
+          message: `${data.faltas_con_stock.length} cliente${data.faltas_con_stock.length > 1 ? 's' : ''} pendiente${data.faltas_con_stock.length > 1 ? 's' : ''} avisar`,
+          link: '/admin/faltas',
+          count: data.faltas_con_stock.length,
+        });
+      }
+      if (data.oc_borrador.length > 0) {
+        built.push({
+          id: 'oc-borrador',
+          severity: 'urgent',
+          icon: <ClipboardList className="w-4 h-4 text-amber-500" />,
+          title: 'OC en borrador',
+          message: `${data.oc_borrador.length} sin confirmar`,
+          link: '/admin/compras',
+          count: data.oc_borrador.length,
+        });
+      }
+      if (data.kpis.pedidos_pendientes_webpay > 0) {
+        built.push({
+          id: 'webpay-pendientes',
+          severity: 'urgent',
+          icon: <Wallet className="w-4 h-4 text-amber-500" />,
+          title: 'Webpay pendiente preparar',
+          message: `${data.kpis.pedidos_pendientes_webpay} orden${data.kpis.pedidos_pendientes_webpay > 1 ? 'es' : ''} pagad${data.kpis.pedidos_pendientes_webpay > 1 ? 'as' : 'a'}`,
+          link: '/admin/ordenes?status=paid',
+          count: data.kpis.pedidos_pendientes_webpay,
+        });
+      }
+
+      // INFO 7d
+      if (data.por_vencer_7d.length > 0) {
+        built.push({
+          id: 'por-vencer-7d',
+          severity: 'info',
+          icon: <CalendarClock className="w-4 h-4 text-blue-500" />,
+          title: 'Lotes vencen en 7 días',
+          message: `${data.por_vencer_7d.length} lote${data.por_vencer_7d.length > 1 ? 's' : ''} próximo${data.por_vencer_7d.length > 1 ? 's' : ''}`,
+          link: '/admin/vencimientos',
+          count: data.por_vencer_7d.length,
+        });
+      }
+      if (data.stock_critico_count > 0) {
+        built.push({
+          id: 'stock-bajo',
+          severity: 'info',
+          icon: <AlertTriangle className="w-4 h-4 text-blue-500" />,
+          title: 'Stock bajo',
+          message: `${data.stock_critico_count} producto${data.stock_critico_count > 1 ? 's' : ''} bajo umbral`,
+          link: '/admin/reposicion',
+          count: data.stock_critico_count,
+        });
+      }
+
+      setNotifications(built.filter((n) => !dismissedIds.has(n.id)));
+    } catch (error) {
+      console.error('Error checking notifications:', error);
+    }
+  }, [user, dismissedIds]);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(interval);
+  }, [user, fetchNotifications]);
+
+  const unreadCount = notifications.filter((n) => !readIds.has(n.id)).length;
+
+  const markAsRead = (id: string) => {
+    const next = new Set(readIds);
+    next.add(id);
+    setReadIds(next);
+    persist(next, dismissedIds);
   };
-  document.addEventListener('mousedown', handleClickOutside);
-  return () => document.removeEventListener('mousedown', handleClickOutside);
- }, []);
 
- const checkNotifications = useCallback(async () => {
-  if (!user) return;
-  try {
-   const newNotifications: Notification[] = [];
+  const markAllAsRead = () => {
+    const next = new Set(readIds);
+    notifications.forEach((n) => next.add(n.id));
+    setReadIds(next);
+    persist(next, dismissedIds);
+  };
 
-   const webpayPaidOrders = await orderApi.listAll({ status: 'paid', limit: 10 });
-   webpayPaidOrders.orders
-    .filter((o) => o.payment_provider === 'webpay')
-    .forEach((order) => {
-     newNotifications.push({
-      id: `webpay-${order.id}`,
-      type: 'webpay',
-      title: 'Pago Webpay — preparar pedido',
-      message: `Orden #${order.id.slice(0, 8)} · ${formatPrice(order.total)}`,
-      timestamp: new Date(order.created_at),
-      read: false,
-      link: `/admin/ordenes/${order.id}`,
-     });
-    });
+  const dismiss = (id: string, e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    const next = new Set(dismissedIds);
+    next.add(id);
+    setDismissedIds(next);
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    persist(readIds, next);
+  };
 
-   const reservedOrders = await orderApi.listAll({ status: 'reserved', limit: 10 });
-   reservedOrders.orders.forEach((order) => {
-    newNotifications.push({
-     id: `reservation-${order.id}`,
-     type: 'reservation',
-     title: 'Reserva pendiente de aprobación',
-     message: `Reserva #${order.id.slice(0, 8)} por ${formatPrice(order.total)}`,
-     timestamp: new Date(order.created_at),
-     read: false,
-     link: `/admin/ordenes/${order.id}`,
-    });
-   });
+  const clearAll = () => {
+    const next = new Set(dismissedIds);
+    notifications.forEach((n) => next.add(n.id));
+    setDismissedIds(next);
+    setNotifications([]);
+    persist(readIds, next);
+  };
 
-   const [outOfStock, lowStock] = await Promise.all([
-    productApi.list({ limit: 1, active_only: true, stock_filter: 'out' }),
-    productApi.list({ limit: 1, active_only: true, stock_filter: 'low' }),
-   ]);
+  const grouped = SEV_ORDER.map((sev) => ({
+    severity: sev,
+    items: notifications.filter((n) => n.severity === sev),
+  })).filter((g) => g.items.length > 0);
 
-   if (outOfStock.total > 0) {
-    newNotifications.push({
-     id: `critical-stock`,
-     type: 'critical',
-     title: 'Productos agotados',
-     message: `${outOfStock.total} producto${outOfStock.total > 1 ? 's' : ''} sin stock`,
-     timestamp: new Date(),
-     read: false,
-     link: '/admin/productos?stock=out',
-    });
-   }
+  const criticalCount = notifications.filter((n) => n.severity === 'critical' && !readIds.has(n.id)).length;
+  const badgeColor = criticalCount > 0 ? 'bg-red-500' : 'bg-amber-500';
 
-   if (lowStock.total > 0) {
-    newNotifications.push({
-     id: `low-stock`,
-     type: 'stock',
-     title: 'Stock bajo',
-     message: `${lowStock.total} producto${lowStock.total > 1 ? 's' : ''} con stock bajo`,
-     timestamp: new Date(),
-     read: false,
-     link: '/admin/productos?stock=low',
-    });
-   }
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="relative w-9 h-9 rounded-lg flex items-center justify-center admin-text-muted hover:bg-[color:var(--admin-accent-soft)] transition-colors"
+        aria-label="Notificaciones"
+      >
+        <Bell className="w-4 h-4" />
+        {unreadCount > 0 && (
+          <span className={`absolute top-1 right-1 min-w-[16px] h-4 px-1 ${badgeColor} text-white text-[10px] font-bold rounded-full flex items-center justify-center`}>
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </button>
 
-   // Strip dismissed notifications before merging
-   const incoming = newNotifications.filter((n) => !dismissedIds.current.has(n.id));
-
-   setNotifications((prev) => {
-    // Preserve read state from existing notifications — fixes "mark as read" reverting on poll
-    const readStateMap = new Map(prev.map((n) => [n.id, n.read]));
-    const incomingIds = new Set(incoming.map((n) => n.id));
-    // Keep old non-dismissed items that aren't being replaced by incoming
-    const retained = prev.filter((n) => !incomingIds.has(n.id) && !dismissedIds.current.has(n.id));
-    const merged = incoming.map((n) => ({ ...n, read: readStateMap.get(n.id) ?? false }));
-    return [...merged, ...retained].slice(0, 20);
-   });
-  } catch (error) {
-   console.error('Error checking notifications:', error);
-  }
- }, [user]);
-
- useEffect(() => {
-  if (!user) return;
-  checkNotifications();
-  const interval = setInterval(checkNotifications, 30000);
-  return () => clearInterval(interval);
- }, [user, checkNotifications]);
-
- const unreadCount = notifications.filter((n) => !n.read).length;
-
- const markAsRead = (id: string) => {
-  setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
- };
-
- const markAllAsRead = () => {
-  setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
- };
-
- const dismiss = (id: string, e?: React.MouseEvent) => {
-  e?.preventDefault();
-  e?.stopPropagation();
-  dismissedIds.current.add(id);
-  setNotifications((prev) => prev.filter((n) => n.id !== id));
- };
-
- const clearAll = () => {
-  // Register all current IDs as dismissed so the next poll won't restore them
-  notifications.forEach((n) => dismissedIds.current.add(n.id));
-  setNotifications([]);
- };
-
- const getIcon = (type: Notification['type']) => {
-  switch (type) {
-   case 'order': return <ShoppingBag className="w-4 h-4 text-emerald-500" />;
-   case 'reservation': return <Store className="w-4 h-4 text-amber-500" />;
-   case 'webpay': return <CreditCard className="w-4 h-4 text-blue-500" />;
-   case 'stock': return <Package className="w-4 h-4 text-orange-500" />;
-   case 'critical': return <AlertTriangle className="w-4 h-4 text-red-500" />;
-  }
- };
-
- const formatTime = (date: Date) => {
-  const diff = Date.now() - date.getTime();
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  if (minutes < 1) return 'Ahora';
-  if (minutes < 60) return `Hace ${minutes}m`;
-  if (hours < 24) return `Hace ${hours}h`;
-  return date.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' });
- };
-
- return (
-  <div className="relative" ref={dropdownRef}>
-   <button
-    onClick={() => setIsOpen(!isOpen)}
-    className="relative p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-   >
-    <Bell className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-    {unreadCount > 0 && (
-     <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-      {unreadCount > 9 ? '9+' : unreadCount}
-     </span>
-    )}
-   </button>
-
-   {isOpen && (
-    <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50">
-     {/* Header */}
-     <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-      <h3 className="font-semibold text-slate-900 dark:text-slate-100">Notificaciones</h3>
-      <div className="flex items-center gap-3">
-       {unreadCount > 0 && (
-        <button
-         onClick={markAllAsRead}
-         className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1"
-        >
-         <Check className="w-3 h-3" />
-         Marcar leídas
-        </button>
-       )}
-       {notifications.length > 0 && (
-        <button
-         onClick={clearAll}
-         className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-        >
-         Limpiar todo
-        </button>
-       )}
-      </div>
-     </div>
-
-     {/* List */}
-     <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50">
-      {notifications.length > 0 ? (
-       notifications.map((notification) => (
+      {isOpen && (
         <div
-         key={notification.id}
-         className={`relative group flex items-start gap-3 transition-colors ${
-          !notification.read
-           ? 'bg-emerald-50/50 dark:bg-emerald-900/10'
-           : 'hover:bg-slate-50 dark:hover:bg-slate-700/30'
-         }`}
+          className="absolute right-0 mt-2 w-96 max-w-[calc(100vw-2rem)] rounded-xl shadow-2xl overflow-hidden z-50"
+          style={{
+            background: 'var(--admin-elevated)',
+            border: '1px solid var(--admin-border-strong)',
+          }}
         >
-         <Link
-          href={notification.link || '#'}
-          onClick={() => { markAsRead(notification.id); setIsOpen(false); }}
-          className="flex items-start gap-3 flex-1 min-w-0 px-4 py-3 pr-8"
-         >
-          <div className="mt-0.5 flex-shrink-0">{getIcon(notification.type)}</div>
-          <div className="flex-1 min-w-0">
-           <div className="flex items-center justify-between gap-2">
-            <p className={`text-sm ${!notification.read ? 'font-semibold' : 'font-medium'} text-slate-900 dark:text-slate-100`}>
-             {notification.title}
-            </p>
-            {!notification.read && (
-             <span className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0" />
-            )}
-           </div>
-           <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{notification.message}</p>
-           <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{formatTime(notification.timestamp)}</p>
+          <div className="px-4 py-3 border-b admin-hairline flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-[14px]" style={{ color: 'var(--admin-text)' }}>
+                Centro de alertas
+              </h3>
+              <p className="text-[11px] admin-text-subtle">Auto-actualiza cada 60s</p>
+            </div>
+            <div className="flex items-center gap-3">
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  className="text-[11px] text-[color:var(--admin-accent)] hover:opacity-80 flex items-center gap-1"
+                >
+                  <Check className="w-3 h-3" />
+                  Marcar leídas
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button
+                  onClick={clearAll}
+                  className="text-[11px] admin-text-muted hover:text-[color:var(--admin-text)]"
+                >
+                  Limpiar
+                </button>
+              )}
+            </div>
           </div>
-         </Link>
-         {/* Per-item dismiss — appears on hover */}
-         <button
-          onClick={(e) => dismiss(notification.id, e)}
-          title="Descartar"
-          className="absolute right-2 top-2.5 p-1 rounded text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 opacity-0 group-hover:opacity-100 transition-opacity"
-         >
-          <X className="w-3.5 h-3.5" />
-         </button>
+
+          <div className="max-h-[60vh] sm:max-h-[420px] overflow-y-auto">
+            {grouped.length > 0 ? (
+              grouped.map((group) => (
+                <div key={group.severity}>
+                  <div className="px-4 py-2 flex items-center gap-2 admin-text-subtle text-[10.5px] uppercase tracking-wider font-semibold sticky top-0" style={{ background: 'var(--admin-surface-2)' }}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${SEV_DOT[group.severity]}`} />
+                    {SEV_LABEL[group.severity]}
+                  </div>
+                  {group.items.map((n) => {
+                    const isRead = readIds.has(n.id);
+                    return (
+                      <div
+                        key={n.id}
+                        className={`relative group flex items-start gap-3 transition-colors border-b admin-hairline last:border-b-0 ${
+                          !isRead ? 'bg-[color:var(--admin-accent-soft)]' : ''
+                        }`}
+                      >
+                        <Link
+                          href={n.link}
+                          onClick={() => { markAsRead(n.id); setIsOpen(false); }}
+                          className="flex items-start gap-3 flex-1 min-w-0 px-4 py-3 pr-8 hover:bg-[color:var(--admin-surface-2)]"
+                        >
+                          <div className="mt-0.5 flex-shrink-0">{n.icon}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className={`text-[13px] ${!isRead ? 'font-semibold' : 'font-medium'}`} style={{ color: 'var(--admin-text)' }}>
+                                {n.title}
+                              </p>
+                              {!isRead && <span className="w-1.5 h-1.5 rounded-full bg-[color:var(--admin-accent)] flex-shrink-0" />}
+                            </div>
+                            <p className="text-[12px] admin-text-muted truncate">{n.message}</p>
+                          </div>
+                        </Link>
+                        <button
+                          onClick={(e) => dismiss(n.id, e)}
+                          title="Descartar"
+                          className="absolute right-2 top-2.5 p-1 rounded admin-text-subtle hover:admin-text-muted hover:bg-[color:var(--admin-accent-soft)] opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))
+            ) : (
+              <div className="px-4 py-12 text-center admin-text-muted">
+                <Check className="w-8 h-8 mx-auto mb-2 admin-text-subtle" />
+                <p className="text-[13px]">Todo en orden</p>
+                <p className="text-[11px] admin-text-subtle mt-1">Sin alertas operativas</p>
+              </div>
+            )}
+          </div>
+
+          <div className="px-4 py-2 border-t admin-hairline flex items-center justify-between text-[11px] admin-text-subtle">
+            <Link
+              href="/admin/operaciones"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-1 hover:text-[color:var(--admin-accent)]"
+            >
+              <ShoppingBag className="w-3 h-3" />
+              Ver operaciones
+            </Link>
+            <span>{notifications.length} alerta{notifications.length === 1 ? '' : 's'}</span>
+          </div>
         </div>
-       ))
-      ) : (
-       <div className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
-        <Bell className="w-8 h-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-        <p className="text-sm">Sin notificaciones pendientes</p>
-       </div>
       )}
-     </div>
     </div>
-   )}
-  </div>
- );
+  );
 }
