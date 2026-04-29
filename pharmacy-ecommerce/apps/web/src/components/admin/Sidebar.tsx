@@ -26,6 +26,7 @@ import {
   Calculator,
   PackageSearch,
   TrendingUp,
+  TrendingDown,
   BookX,
   BookOpen,
   UserCheck,
@@ -140,6 +141,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Farmacia',
     items: [
       { href: '/admin/farmacia', icon: Stethoscope, label: 'Mi panel' },
+      { href: '/admin/farmacia/liquidacion', icon: TrendingDown, label: 'Liquidación' },
       { href: '/admin/libro-recetas', icon: BookOpen, label: 'Libro recetas' },
       { href: '/admin/turnos-farmaceutico', icon: UserCheck, label: 'Turnos farmacéutico' },
     ],

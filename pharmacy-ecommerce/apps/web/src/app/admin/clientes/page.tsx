@@ -7,6 +7,7 @@ import {
   ArrowLeft, Save, AlertTriangle, Clock, CheckCircle, Star, Plus, Minus,
 } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
+import Link from 'next/link';
 
 interface Customer {
   id: string | null;
@@ -497,6 +498,17 @@ export default function ClientesPage() {
                 </h2>
               </div>
               <div className="flex items-center gap-2">
+                {selected && (
+                  <Link
+                    href={selected.customer.type === 'guest'
+                      ? `/admin/clientes/guest?email=${encodeURIComponent(selected.customer.email)}`
+                      : `/admin/clientes/${selected.customer.id}`}
+                    className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors"
+                    title="Abrir perfil completo"
+                  >
+                    Perfil 360°
+                  </Link>
+                )}
                 {selected?.customer.type === 'registered' && !isEditing && (
                   <>
                     <button onClick={() => { setIsEditing(true); setEditError(''); }} className="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors" title="Editar">

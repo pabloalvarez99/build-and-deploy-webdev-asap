@@ -1,6 +1,37 @@
 # Bitácora: Tu Farmacia - E-commerce de Farmacia
 
-## Estado actual: ERP profesional — cohesión operativa + landing por rol (Abril 2026)
+## Estado actual: ERP profesional — Fase 3 cohesión 360° (Abril 2026)
+
+---
+
+## 2026-04-29 — Feat: Fase 3 cohesión — Cliente 360°, forecast meta, NotificationBell unificado, liquidación lotes
+
+- **Forecast + meta mensual en Ejecutivo** (`/api/admin/ejecutivo` + `admin/ejecutivo/page.tsx`):
+  - Endpoint lee `monthly_sales_target` desde `admin_settings` y devuelve bloque `forecast { monthly_target, revenue_so_far, daily_avg, forecast_close, target_progress_pct, forecast_vs_target_pct, days_elapsed, days_in_month }`. Run-rate proyectado = (ingresos / día_actual) × días_del_mes.
+  - Card "Meta del mes" con 4 KPIs (Meta · Avance + % · Promedio diario · Proyección cierre con color rojo<85% / ámbar<100% / esmeralda≥100%) + barra de progreso con marker de pace ideal. CTA "Configurar meta" si no hay target.
+  - Fix bug histórico: `/api/admin/vendedor` leía `daily_revenue_goal` pero `/admin/configuracion` guarda `daily_sales_target` → vendedor ahora lee `daily_sales_target` con fallback al key viejo.
+- **NotificationBell unifica avisos** (`components/admin/NotificationBell.tsx`):
+  - Fetch paralelo a `/api/admin/operaciones` + `/api/admin/avisos` (filtra por rol y vigencia server-side).
+  - Mapeo severity: `critical→critical`, `warning→urgent`, `info→info`. Pinned no descartables (filtro persiste, `clearAll` los preserva). Icono Pin para pinned, Megaphone para resto.
+  - Truncado a 80 chars en preview, link a `/admin/avisos` para ver completo.
+- **Perfil Cliente 360°** (`/admin/clientes/[id]/page.tsx` nuevo + `/api/admin/clientes/[id]` ampliado):
+  - API ahora calcula KPIs (lifetime_spend, order_count, avg_ticket, first/last_order, frequency_days = span/(n-1), next_predicted) y top productos recurrentes (≥2 órdenes, ordenado por frecuencia + cantidad). Para registrados: incluye prescripciones por `patient_rut == profile.rut` y `loyalty_transactions`. Para guests: prescripciones por `customer_phone` match.
+  - Página: header con badge tipo · identity card (RUT/teléfono/email/desde) · 4 StatCards (gasto total, ticket promedio, última compra relativa, frecuencia + próxima compra) · card puntos con equivalente en CLP · 4 tabs (Órdenes con link a detalle / Productos recurrentes con link a producto / Recetas con badge controlado / Puntos con +/- color).
+  - Botón "Perfil 360°" en panel lateral de `/admin/clientes` (registered → `/admin/clientes/[uid]`, guest → `/admin/clientes/guest?email=`).
+- **POS lookup cliente por RUT/teléfono** (`api/admin/pos/customer-history` + `admin/pos/page.tsx`):
+  - Endpoint acepta `?rut=` además de `?phone=`. RUT busca en `profiles.rut` (autoritativo). Si match RUT, OR-merge con phone match. Devuelve también `phone` de profile.
+  - Input "RUT cliente" agregado en POS, lookup debounced sobre rut+phone. Link "Ver perfil 360° →" en customer history card cuando `user_id` está disponible.
+- **Liquidación lotes por vencer** (`/admin/farmacia/liquidacion` + `/api/admin/farmacia/liquidacion`):
+  - GET agrupa `product_batches` con `expiry_date ≤ +60d, quantity > 0` por producto. Devuelve `min_expiry`, `days_to_expiry`, `tier` (expired/critical/urgent/warning), `suggested_discount` por antigüedad (vencido=50%, ≤15d=40%, ≤30d=25%, ≤60d=10%), `total_at_risk`, `potential_loss`. Summary global con KPIs.
+  - POST aplica `discount_percent` masivo: itera items, valida 0-99, update `products.discount_percent`, `logAudit` por producto con `reason=liquidation_expiry`, `revalidateTag('products')`.
+  - Página: 4 StatCards (productos en riesgo · pérdida potencial · vencidos · ≤15d) + filtros por tier + tabla con checkboxes, descuento editable inline (sugerencia precargada), bulk apply. Botón "Aplicar sugerencia" rellena con valores recomendados.
+- **Sidebar**: nuevo item "Liquidación" (TrendingDown) en grupo Farmacia. `PHARMACIST_EXTRA_ROUTES` incluye `/admin/farmacia/liquidacion`.
+
+### Archivos
+Nuevos: `admin/clientes/[id]/page.tsx`, `admin/farmacia/liquidacion/page.tsx`, `api/admin/farmacia/liquidacion/route.ts`.
+Modificados: `api/admin/ejecutivo/route.ts`, `admin/ejecutivo/page.tsx`, `api/admin/vendedor/route.ts`, `components/admin/NotificationBell.tsx`, `api/admin/clientes/[id]/route.ts`, `admin/clientes/page.tsx`, `api/admin/pos/customer-history/route.ts`, `admin/pos/page.tsx`, `lib/roles.ts`, `components/admin/Sidebar.tsx`.
+
+Build limpio (24+ páginas admin), 0 errores TS. Solo warnings preexistentes Dynamic server usage (cookies).
 
 ---
 

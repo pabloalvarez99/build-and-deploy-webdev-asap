@@ -56,6 +56,7 @@ export default function POSPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pos_cash')
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
+  const [customerRut, setCustomerRut] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [successOrder, setSuccessOrder] = useState<{
     id: string; total: number; items: CartItem[]; method: PaymentMethod;
@@ -180,21 +181,27 @@ export default function POSPage() {
     if (rightTab === 'history' && !historyLoaded) loadTodaySales()
   }, [rightTab])
 
-  // Customer phone lookup with debounce
+  // Customer phone/RUT lookup with debounce
   useEffect(() => {
     const digits = customerPhone.replace(/\D/g, '')
-    if (digits.length < 4) { setCustomerHistory(null); return }
+    const rut = customerRut.replace(/[.\s-]/g, '').toUpperCase()
+    const hasPhone = digits.length >= 4
+    const hasRut = rut.length >= 7
+    if (!hasPhone && !hasRut) { setCustomerHistory(null); return }
     const t = setTimeout(async () => {
       setHistoryLoading(true)
       try {
-        const r = await fetch(`/api/admin/pos/customer-history?phone=${encodeURIComponent(digits)}`, { credentials: 'include' })
+        const params = new URLSearchParams()
+        if (hasPhone) params.set('phone', digits)
+        if (hasRut) params.set('rut', rut)
+        const r = await fetch(`/api/admin/pos/customer-history?${params.toString()}`, { credentials: 'include' })
         if (r.ok) setCustomerHistory(await r.json())
         else setCustomerHistory(null)
       } catch { setCustomerHistory(null) }
       finally { setHistoryLoading(false) }
     }, 400)
     return () => clearTimeout(t)
-  }, [customerPhone])
+  }, [customerPhone, customerRut])
 
   useEffect(() => {
     if (!user || !isAdminRole(user.role)) { router.push('/'); return }
@@ -1317,7 +1324,6 @@ export default function POSPage() {
                   value={customerPhone}
                   onChange={(e) => {
                     setCustomerPhone(e.target.value)
-                    // Auto-fill name when history found and name field is empty
                     if (!customerName && customerHistory?.found && customerHistory.name) {
                       setCustomerName(customerHistory.name)
                     }
@@ -1332,6 +1338,13 @@ export default function POSPage() {
                   <User className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-emerald-500" />
                 )}
               </div>
+              <input
+                type="text"
+                value={customerRut}
+                onChange={(e) => setCustomerRut(e.target.value)}
+                placeholder="RUT cliente (opcional, p/ fidelidad)"
+                className="col-span-2 px-3 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:border-emerald-500 focus:outline-none"
+              />
             </div>
 
             {/* Customer history card */}
@@ -1371,6 +1384,16 @@ export default function POSPage() {
                   >
                     Usar nombre: {customerHistory.name}
                   </button>
+                )}
+                {customerHistory.user_id && (
+                  <a
+                    href={`/admin/clientes/${customerHistory.user_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-xs text-emerald-700 dark:text-emerald-400 hover:underline font-semibold"
+                  >
+                    Ver perfil 360° →
+                  </a>
                 )}
               </div>
             )}

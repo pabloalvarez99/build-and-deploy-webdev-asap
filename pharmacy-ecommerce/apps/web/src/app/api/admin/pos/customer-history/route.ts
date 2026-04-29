@@ -8,44 +8,61 @@ export async function GET(request: NextRequest) {
     if (!admin) return errorResponse('Unauthorized', 403);
 
     const phone = request.nextUrl.searchParams.get('phone')?.replace(/\D/g, '') || '';
-    if (phone.length < 4) {
-      return NextResponse.json({ found: false });
-    }
+    const rutRaw = request.nextUrl.searchParams.get('rut') || '';
+    const rut = rutRaw.replace(/[.\s]/g, '').toUpperCase();
 
     const db = await getDb();
 
-    // Find orders matching the phone (last 4+ digits suffix search)
+    let user_id: string | null = null;
+    let profileName: string | null = null;
+    let profilePhone: string | null = null;
+
+    // Lookup by RUT first if provided (most authoritative)
+    if (rut.length >= 7) {
+      const profile = await db.profiles.findFirst({
+        where: { rut: { equals: rut, mode: 'insensitive' } },
+        select: { id: true, name: true, phone: true },
+      });
+      if (profile) {
+        user_id = profile.id;
+        profileName = profile.name;
+        profilePhone = profile.phone;
+      }
+    }
+
+    if (!user_id && phone.length < 4) {
+      return NextResponse.json({ found: false });
+    }
+
     const orders = await db.orders.findMany({
-      where: {
-        customer_phone: { endsWith: phone.slice(-8) },
-      },
+      where: user_id
+        ? { OR: [{ user_id }, ...(phone.length >= 4 ? [{ customer_phone: { endsWith: phone.slice(-8) } }] : [])] }
+        : { customer_phone: { endsWith: phone.slice(-8) } },
       include: { order_items: { select: { product_name: true, quantity: true } } },
       orderBy: { created_at: 'desc' },
       take: 20,
     });
 
-    if (orders.length === 0) {
+    if (orders.length === 0 && !user_id) {
       return NextResponse.json({ found: false });
     }
 
-    // Derive customer name from most recent order
     const latest = orders[0];
-    const name = latest.guest_name
-      ? `${latest.guest_name} ${latest.guest_surname || ''}`.trim()
-      : null;
+    const name = profileName
+      ?? (latest?.guest_name ? `${latest.guest_name} ${latest.guest_surname || ''}`.trim() : null);
 
-    // Find registered user_id from any order with this phone
-    const registeredOrder = orders.find((o) => o.user_id !== null);
-    const user_id = registeredOrder?.user_id ?? null;
-
-    // Get loyalty points if registered
-    let loyalty_points: number | null = null;
-    if (user_id) {
-      const profile = await db.profiles.findUnique({ where: { id: user_id }, select: { loyalty_points: true } });
-      loyalty_points = profile?.loyalty_points ?? 0;
+    if (!user_id) {
+      const registeredOrder = orders.find((o) => o.user_id !== null);
+      user_id = registeredOrder?.user_id ?? null;
     }
 
-    // Tally top products across all orders
+    let loyalty_points: number | null = null;
+    if (user_id) {
+      const profile = await db.profiles.findUnique({ where: { id: user_id }, select: { loyalty_points: true, phone: true } });
+      loyalty_points = profile?.loyalty_points ?? 0;
+      if (!profilePhone) profilePhone = profile?.phone ?? null;
+    }
+
     const productCount: Record<string, { name: string; count: number }> = {};
     for (const order of orders) {
       for (const item of order.order_items) {
@@ -60,7 +77,6 @@ export async function GET(request: NextRequest) {
       .slice(0, 5)
       .map((p) => p.name);
 
-    // Recent orders summary
     const recentOrders = orders.slice(0, 5).map((o) => ({
       date: o.created_at.toLocaleDateString('es-CL', { timeZone: 'America/Santiago', day: '2-digit', month: 'short' }),
       total: Number(o.total),
@@ -71,6 +87,7 @@ export async function GET(request: NextRequest) {
       found: true,
       name,
       user_id,
+      phone: profilePhone,
       loyalty_points,
       visit_count: orders.length,
       top_products: topProducts,

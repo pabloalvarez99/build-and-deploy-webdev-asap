@@ -23,6 +23,7 @@ export async function GET() {
       apOpen, apOverdue, apDue7d,
       pendingFaltas, criticalStock,
       topMargin, salesByProduct,
+      goalSettings,
     ] = await Promise.all([
       db.orders.aggregate({
         where: { status: { in: ['paid', 'completed'] }, created_at: { gte: startMonth, lte: endMonth } },
@@ -74,7 +75,21 @@ export async function GET() {
         orderBy: { _sum: { quantity: 'desc' } },
         take: 5,
       }),
+      db.admin_settings.findMany({
+        where: { key: { in: ['monthly_sales_target', 'daily_sales_target'] } },
+      }),
     ]);
+
+    const settingsMap: Record<string, string> = {};
+    for (const s of goalSettings) settingsMap[s.key] = s.value;
+    const monthlyTarget = parseFloat(settingsMap['monthly_sales_target'] ?? '0');
+
+    const dayOfMonth = now.getDate();
+    const daysInMonth = endMonth.getDate();
+    const dailyAvg = dayOfMonth > 0 ? Number(ingMes._sum.total || 0) / dayOfMonth : 0;
+    const forecastClose = dailyAvg * daysInMonth;
+    const targetProgressPct = monthlyTarget > 0 ? (Number(ingMes._sum.total || 0) / monthlyTarget) * 100 : 0;
+    const forecastVsTargetPct = monthlyTarget > 0 ? (forecastClose / monthlyTarget) * 100 : 0;
 
     const ingresos = Number(ingMes._sum.total || 0);
     const ingresosPrev = Number(ingPrev._sum.total || 0);
@@ -139,6 +154,16 @@ export async function GET() {
         product_name: s.product_name,
         units: s._sum.quantity ?? 0,
       })),
+      forecast: {
+        monthly_target: monthlyTarget,
+        revenue_so_far: Number(ingMes._sum.total || 0),
+        daily_avg: dailyAvg,
+        forecast_close: forecastClose,
+        target_progress_pct: targetProgressPct,
+        forecast_vs_target_pct: forecastVsTargetPct,
+        days_elapsed: dayOfMonth,
+        days_in_month: daysInMonth,
+      },
     });
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);

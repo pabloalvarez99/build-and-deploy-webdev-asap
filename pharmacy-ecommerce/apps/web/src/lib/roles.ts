@@ -41,6 +41,7 @@ export const PHARMACIST_EXTRA_ROUTES = new Set([
   '/admin/devoluciones',
   '/admin/stock',
   '/admin/farmacia',
+  '/admin/farmacia/liquidacion',
   '/admin/etiquetas',
 ]);
 

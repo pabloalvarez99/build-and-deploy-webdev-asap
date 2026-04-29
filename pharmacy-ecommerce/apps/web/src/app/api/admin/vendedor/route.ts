@@ -30,7 +30,7 @@ export async function GET() {
         where: { key: { in: [SETTING_TURNO_INICIO, SETTING_FONDO_INICIAL] } },
       }),
       db.admin_settings.findMany({
-        where: { key: { in: ['daily_revenue_goal', 'monthly_revenue_goal'] } },
+        where: { key: { in: ['daily_sales_target', 'monthly_sales_target', 'daily_revenue_goal', 'monthly_revenue_goal'] } },
       }),
       db.orders.findMany({
         where: {
@@ -97,7 +97,7 @@ export async function GET() {
       ? new Date(settingsMap[SETTING_TURNO_INICIO])
       : todayStart;
     const fondoInicial = parseFloat(settingsMap[SETTING_FONDO_INICIAL] ?? '0');
-    const dailyGoal = parseFloat(settingsMap['daily_revenue_goal'] ?? '0');
+    const dailyGoal = parseFloat(settingsMap['daily_sales_target'] ?? settingsMap['daily_revenue_goal'] ?? '0');
 
     const myRevenue = myPosOrdersToday.reduce((s, o) => s + Number(o.total), 0);
     const myCount = myPosOrdersToday.length;

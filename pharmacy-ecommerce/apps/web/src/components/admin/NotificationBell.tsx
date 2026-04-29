@@ -13,6 +13,8 @@ import {
   ClipboardList,
   Wallet,
   BookX,
+  Megaphone,
+  Pin,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import Link from 'next/link';
@@ -27,6 +29,17 @@ interface Notification {
   message: string;
   link: string;
   count?: number;
+  pinned?: boolean;
+}
+
+interface AnnouncementRow {
+  id: string;
+  title: string;
+  body: string;
+  severity: 'info' | 'warning' | 'critical';
+  pinned: boolean;
+  expires_at: string | null;
+  created_at: string;
 }
 
 interface OperacionesData {
@@ -100,9 +113,15 @@ export function NotificationBell() {
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await fetch('/api/admin/operaciones', { credentials: 'include' });
-      if (!res.ok) return;
-      const data: OperacionesData = await res.json();
+      const [resOps, resAvisos] = await Promise.all([
+        fetch('/api/admin/operaciones', { credentials: 'include' }),
+        fetch('/api/admin/avisos', { credentials: 'include' }).catch(() => null),
+      ]);
+      if (!resOps.ok) return;
+      const data: OperacionesData = await resOps.json();
+      const avisosData: { announcements: AnnouncementRow[] } = resAvisos && resAvisos.ok
+        ? await resAvisos.json()
+        : { announcements: [] };
 
       const built: Notification[] = [];
 
@@ -211,7 +230,26 @@ export function NotificationBell() {
         });
       }
 
-      setNotifications(built.filter((n) => !dismissedIds.has(n.id)));
+      const sevMap: Record<AnnouncementRow['severity'], Severity> = {
+        critical: 'critical',
+        warning: 'urgent',
+        info: 'info',
+      };
+      for (const a of avisosData.announcements ?? []) {
+        built.push({
+          id: `aviso-${a.id}`,
+          severity: sevMap[a.severity] ?? 'info',
+          icon: a.pinned
+            ? <Pin className="w-4 h-4" style={{ color: 'var(--admin-accent)' }} />
+            : <Megaphone className={`w-4 h-4 ${a.severity === 'critical' ? 'text-red-500' : a.severity === 'warning' ? 'text-amber-500' : 'text-blue-500'}`} />,
+          title: a.title,
+          message: a.body.length > 80 ? `${a.body.slice(0, 80)}…` : a.body,
+          link: '/admin/avisos',
+          pinned: a.pinned,
+        });
+      }
+
+      setNotifications(built.filter((n) => n.pinned || !dismissedIds.has(n.id)));
     } catch (error) {
       console.error('Error checking notifications:', error);
     }
@@ -243,6 +281,8 @@ export function NotificationBell() {
   const dismiss = (id: string, e?: React.MouseEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
+    const target = notifications.find((n) => n.id === id);
+    if (target?.pinned) return;
     const next = new Set(dismissedIds);
     next.add(id);
     setDismissedIds(next);
@@ -252,9 +292,9 @@ export function NotificationBell() {
 
   const clearAll = () => {
     const next = new Set(dismissedIds);
-    notifications.forEach((n) => next.add(n.id));
+    notifications.filter((n) => !n.pinned).forEach((n) => next.add(n.id));
     setDismissedIds(next);
-    setNotifications([]);
+    setNotifications((prev) => prev.filter((n) => n.pinned));
     persist(readIds, next);
   };
 

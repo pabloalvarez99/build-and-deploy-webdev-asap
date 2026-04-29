@@ -8,7 +8,7 @@ import { isOwnerRole } from '@/lib/roles';
 import { formatPrice } from '@/lib/format';
 import {
   Crown, DollarSign, TrendingUp, TrendingDown, Wallet, AlertTriangle,
-  ShoppingBag, Package, Activity, ArrowRight, Calculator, Receipt,
+  ShoppingBag, Package, Activity, ArrowRight, Calculator, Receipt, Target,
 } from 'lucide-react';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { StatCard } from '@/components/admin/ui/StatCard';
@@ -34,6 +34,16 @@ interface ExecData {
   };
   top_margin: Array<{ id: string; name: string; margin: number; marginPct: number }>;
   top_rotation: Array<{ product_id: string | null; product_name: string; units: number }>;
+  forecast: {
+    monthly_target: number;
+    revenue_so_far: number;
+    daily_avg: number;
+    forecast_close: number;
+    target_progress_pct: number;
+    forecast_vs_target_pct: number;
+    days_elapsed: number;
+    days_in_month: number;
+  };
 }
 
 export default function EjecutivoPage() {
@@ -173,6 +183,75 @@ export default function EjecutivoPage() {
               href="/admin/finanzas/cuentas-pagar"
             />
           </div>
+
+          {/* Forecast + meta mensual */}
+          {data.forecast && (
+            <div className="admin-surface p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Target className="w-4 h-4" style={{ color: 'var(--admin-accent)' }} />
+                  <h3 className="text-[14px] font-semibold" style={{ color: 'var(--admin-text)' }}>
+                    Meta del mes
+                  </h3>
+                </div>
+                {data.forecast.monthly_target === 0 && (
+                  <Link href="/admin/configuracion" className="text-[11.5px] admin-text-muted hover:text-[color:var(--admin-accent)]">
+                    Configurar meta →
+                  </Link>
+                )}
+              </div>
+
+              {data.forecast.monthly_target > 0 ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[12.5px]">
+                    <div>
+                      <p className="admin-text-subtle uppercase tracking-wider text-[10.5px] font-semibold">Meta</p>
+                      <p className="text-base font-semibold tabular-nums mt-1" style={{ color: 'var(--admin-text)' }}>{formatPrice(data.forecast.monthly_target)}</p>
+                    </div>
+                    <div>
+                      <p className="admin-text-subtle uppercase tracking-wider text-[10.5px] font-semibold">Avance</p>
+                      <p className="text-base font-semibold tabular-nums mt-1" style={{ color: 'var(--admin-text)' }}>{formatPrice(data.forecast.revenue_so_far)}</p>
+                      <p className="text-[11px] admin-text-muted">{data.forecast.target_progress_pct.toFixed(0)}% · día {data.forecast.days_elapsed}/{data.forecast.days_in_month}</p>
+                    </div>
+                    <div>
+                      <p className="admin-text-subtle uppercase tracking-wider text-[10.5px] font-semibold">Promedio diario</p>
+                      <p className="text-base font-semibold tabular-nums mt-1" style={{ color: 'var(--admin-text)' }}>{formatPrice(data.forecast.daily_avg)}</p>
+                    </div>
+                    <div>
+                      <p className="admin-text-subtle uppercase tracking-wider text-[10.5px] font-semibold">Proyección cierre</p>
+                      <p className={`text-base font-semibold tabular-nums mt-1 ${data.forecast.forecast_vs_target_pct >= 100 ? 'text-emerald-500' : data.forecast.forecast_vs_target_pct >= 85 ? 'text-amber-500' : 'text-red-500'}`}>{formatPrice(data.forecast.forecast_close)}</p>
+                      <p className="text-[11px] admin-text-muted">{data.forecast.forecast_vs_target_pct.toFixed(0)}% de la meta</p>
+                    </div>
+                  </div>
+
+                  <div className="relative h-2 w-full overflow-hidden rounded-full" style={{ background: 'var(--admin-surface-2)' }}>
+                    <div
+                      className="absolute inset-y-0 left-0 transition-all"
+                      style={{
+                        width: `${Math.min(100, data.forecast.target_progress_pct)}%`,
+                        background: data.forecast.target_progress_pct >= 100 ? '#10b981' : 'var(--admin-accent)',
+                      }}
+                    />
+                    <div
+                      className="absolute inset-y-0 w-0.5 bg-zinc-400"
+                      style={{ left: `${Math.min(100, (data.forecast.days_elapsed / data.forecast.days_in_month) * 100)}%` }}
+                      title="Pace ideal"
+                    />
+                  </div>
+                  <p className="text-[11px] admin-text-subtle">
+                    {data.forecast.forecast_vs_target_pct >= 100
+                      ? `Vas a superar la meta por ${formatPrice(data.forecast.forecast_close - data.forecast.monthly_target)}`
+                      : `Faltan ${formatPrice(data.forecast.monthly_target - data.forecast.forecast_close)} para cumplir al ritmo actual`}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-[12.5px] admin-text-subtle">
+                  Sin meta configurada. Define la meta mensual en{' '}
+                  <Link href="/admin/configuracion" className="text-[color:var(--admin-accent)] hover:underline">configuración</Link>.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* YoY card */}
           <div className="admin-surface p-5">
