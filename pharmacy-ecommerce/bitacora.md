@@ -1913,3 +1913,9 @@ Usuario solicito documentacion para SIGUIENTE sesion crear plan completo reempla
 - Estado persistido en `localStorage` (`pos.showBarcodes`)
 - Rinde `external_id`; placeholder "Sin código" si falta
 - Permite al cajero comparar varios códigos simultáneos sin abrir cada producto
+
+## 2026-05-05 — Productos admin: vista cuadrícula + toggle códigos
+- `/admin/productos`: nuevo toggle vista (Tabla/Cuadrícula) y toggle "Códigos" en toolbar
+- Cuadrícula: cards 2-6 col según ancho, imagen aspect-square, nombre, precio, stock badge, click→editar, hover→duplicar/eliminar
+- Toggle códigos rinde JsBarcode SVG (EAN13/CODE128) en cards mobile y en grid view
+- Estado persistido (`admin.productos.viewMode`, `admin.productos.showBarcodes`)

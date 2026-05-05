@@ -7,7 +7,8 @@ import Image from 'next/image';
 import { useAuthStore } from '@/store/auth';
 import { isAdminRole } from '@/lib/roles';
 import { productApi, PaginatedProducts, Category } from '@/lib/api';
-import { Plus, Edit, Trash2, Search, Download, Upload, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package, FileSpreadsheet, CheckCircle, XCircle, RefreshCw, ArrowRight, History, ArrowUp, ArrowDown, ArrowUpDown, Camera, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Download, Upload, ChevronLeft, ChevronRight, CheckSquare, Square, Power, PowerOff, AlertTriangle, Copy, Filter, X, Package, FileSpreadsheet, CheckCircle, XCircle, RefreshCw, ArrowRight, History, ArrowUp, ArrowDown, ArrowUpDown, Camera, DollarSign, TrendingUp, TrendingDown, LayoutGrid, List, Barcode as BarcodeIcon } from 'lucide-react';
+import JsBarcode from 'jsbarcode';
 import { parseExcelFile, diffProducts, loadAllProductsForDiff, parsePrice, type ExcelRow, type DiffResult } from '@/lib/excel-import';
 import { StockModal } from '@/components/admin/StockModal';
 import { ScanInvoiceModal } from '@/components/admin/ScanInvoiceModal';
@@ -15,6 +16,23 @@ import type { ScannedProductData } from '@/lib/invoice-parser/types';
 import { formatPrice } from '@/lib/format';
 import { uploadProductImage } from '@/lib/firebase/storage';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
+
+function BarcodeMini({ code, height = 28 }: { code: string; height?: number }) {
+  const ref = useRef<SVGSVGElement | null>(null);
+  useEffect(() => {
+    if (!ref.current || !code) return;
+    const isEan13 = code.length === 13 && /^\d+$/.test(code);
+    try {
+      JsBarcode(ref.current, code, {
+        format: isEan13 ? 'EAN13' : 'CODE128',
+        height, width: 1.2, margin: 0, fontSize: 10, displayValue: true, background: 'transparent',
+      });
+    } catch {
+      try { JsBarcode(ref.current, code, { format: 'CODE128', height, width: 1.2, margin: 0, fontSize: 10, displayValue: true, background: 'transparent' }); } catch { /* ignore */ }
+    }
+  }, [code, height]);
+  return <svg ref={ref} className="w-full h-auto" />;
+}
 
 export default function AdminProductsPage() {
  const router = useRouter();
@@ -55,6 +73,29 @@ export default function AdminProductsPage() {
  const [noExternalId, setNoExternalId] = useState(false);
  const [noBarcode, setNoBarcode] = useState(false);
  const [showInactive, setShowInactive] = useState(false);
+ const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+ const [showBarcodes, setShowBarcodes] = useState(false);
+ useEffect(() => {
+   try {
+     const v = localStorage.getItem('admin.productos.viewMode');
+     if (v === 'grid' || v === 'table') setViewMode(v);
+     setShowBarcodes(localStorage.getItem('admin.productos.showBarcodes') === '1');
+   } catch { /* ignore */ }
+ }, []);
+ const toggleViewMode = () => {
+   setViewMode(prev => {
+     const nv = prev === 'table' ? 'grid' : 'table';
+     try { localStorage.setItem('admin.productos.viewMode', nv); } catch { /* ignore */ }
+     return nv;
+   });
+ };
+ const toggleShowBarcodes = () => {
+   setShowBarcodes(prev => {
+     const nv = !prev;
+     try { localStorage.setItem('admin.productos.showBarcodes', nv ? '1' : '0'); } catch { /* ignore */ }
+     return nv;
+   });
+ };
 
  // Data completeness stats (loaded once on mount)
  const [productStats, setProductStats] = useState<{
@@ -997,10 +1038,46 @@ export default function AdminProductsPage() {
  )}
  </button>
 
- {/* Stats pill */}
- <span className="ml-auto text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap hidden sm:block">
- <span className="font-semibold text-slate-700 dark:text-slate-200">{(products?.total || 0).toLocaleString('es-CL')}</span> productos
- </span>
+ {/* View mode + barcode toggles */}
+ <div className="ml-auto flex items-center gap-2">
+   <button
+     onClick={toggleShowBarcodes}
+     title="Mostrar/ocultar códigos de barra (B)"
+     className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border-2 text-sm font-medium transition-all ${
+       showBarcodes
+         ? 'bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-600/20'
+         : 'border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-emerald-400 hover:text-emerald-700 dark:hover:border-emerald-500 dark:hover:text-emerald-400'
+     }`}
+   >
+     <BarcodeIcon className="w-4 h-4" />
+     <span className="hidden sm:inline">Códigos</span>
+   </button>
+   <div className="flex items-center rounded-xl border-2 border-slate-200 dark:border-slate-600 overflow-hidden">
+     <button
+       onClick={() => { if (viewMode !== 'table') toggleViewMode(); }}
+       title="Vista de tabla"
+       className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-all ${
+         viewMode === 'table' ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
+       }`}
+     >
+       <List className="w-4 h-4" />
+       <span className="hidden lg:inline">Tabla</span>
+     </button>
+     <button
+       onClick={() => { if (viewMode !== 'grid') toggleViewMode(); }}
+       title="Vista de cuadrícula"
+       className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-all ${
+         viewMode === 'grid' ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
+       }`}
+     >
+       <LayoutGrid className="w-4 h-4" />
+       <span className="hidden lg:inline">Cuadrícula</span>
+     </button>
+   </div>
+   <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap hidden sm:block">
+     <span className="font-semibold text-slate-700 dark:text-slate-200">{(products?.total || 0).toLocaleString('es-CL')}</span> productos
+   </span>
+ </div>
  </div>
 
  {/* Active filter chips */}
@@ -2036,6 +2113,82 @@ export default function AdminProductsPage() {
  </div>
  ) : products && products.products.length > 0 ? (
  <>
+ {viewMode === 'grid' && (
+ <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
+   {products.products
+     .filter(p => {
+       if (stockFilter === 'low') return p.stock > 0 && p.stock <= 10;
+       if (stockFilter === 'out') return p.stock === 0;
+       return true;
+     })
+     .map((product) => {
+       const outOfStock = product.stock === 0;
+       const lowStock = product.stock > 0 && product.stock <= 10;
+       const ext = (product as any).external_id as string | null | undefined;
+       return (
+         <div
+           key={product.id}
+           className={`group relative card p-2.5 hover:shadow-lg hover:border-emerald-400 transition-all cursor-pointer ${
+             outOfStock ? 'border-red-200 dark:border-red-700 bg-red-50/30 dark:bg-red-900/10' :
+             lowStock ? 'border-orange-200 dark:border-orange-700 bg-orange-50/30 dark:bg-orange-900/10' : ''
+           }`}
+           onClick={() => handleEdit(product)}
+         >
+           <div className="aspect-square w-full relative rounded-lg bg-white dark:bg-slate-100 border border-slate-100 overflow-hidden mb-2">
+             {product.image_url ? (
+               <Image src={product.image_url} alt="" fill sizes="200px" className="object-contain" />
+             ) : (
+               <div className="w-full h-full flex items-center justify-center"><Package className="w-8 h-8 text-slate-300" /></div>
+             )}
+             {!product.active && (
+               <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-slate-900/70 text-white text-[10px] font-medium rounded">Inactivo</span>
+             )}
+             <span className={`absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
+               outOfStock ? 'bg-red-600 text-white' :
+               lowStock ? 'bg-orange-500 text-white' : 'bg-slate-900/70 text-white'
+             }`}>
+               {outOfStock ? 'Agotado' : `Stock ${product.stock}`}
+             </span>
+           </div>
+           <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 line-clamp-2 leading-tight" title={product.name}>{product.name}</p>
+           {product.laboratory && <p className="text-[11px] text-slate-500 truncate mt-0.5">{product.laboratory}</p>}
+           <div className="flex items-center justify-between mt-1">
+             <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{formatPrice(product.price)}</span>
+             {(product as any).discount_percent ? (
+               <span className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded">-{(product as any).discount_percent}%</span>
+             ) : null}
+           </div>
+           {showBarcodes && (
+             ext ? (
+               <div className="mt-2 px-1 py-1 bg-white dark:bg-slate-100 rounded border border-slate-200 dark:border-slate-300" onClick={(e) => e.stopPropagation()}>
+                 <BarcodeMini code={ext} height={28} />
+               </div>
+             ) : (
+               <div className="mt-2 text-[10px] text-slate-400 italic">Sin código</div>
+             )
+           )}
+           <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+             <button
+               onClick={(e) => { e.stopPropagation(); handleDuplicate(product); }}
+               className="p-1.5 bg-white dark:bg-slate-700 text-slate-600 hover:text-blue-600 rounded-lg shadow-sm border border-slate-200 dark:border-slate-600"
+               title="Duplicar"
+             >
+               <Copy className="w-3.5 h-3.5" />
+             </button>
+             <button
+               onClick={(e) => { e.stopPropagation(); handleDelete(product.id); }}
+               className="p-1.5 bg-white dark:bg-slate-700 text-slate-600 hover:text-red-600 rounded-lg shadow-sm border border-slate-200 dark:border-slate-600"
+               title="Eliminar"
+             >
+               <Trash2 className="w-3.5 h-3.5" />
+             </button>
+           </div>
+         </div>
+       );
+     })}
+ </div>
+ )}
+ {viewMode === 'table' && <>
  {/* Mobile Card Layout */}
  <div className="md:hidden space-y-3">
  {products.products
@@ -2089,6 +2242,15 @@ export default function AdminProductsPage() {
  <span className="text-xs text-slate-500 truncate">{product.category_name}</span>
  )}
  </div>
+ {showBarcodes && (
+   (product as any).external_id ? (
+     <div className="mt-2 px-1 py-1 bg-white dark:bg-slate-100 rounded border border-slate-200 dark:border-slate-300 max-w-[200px]">
+       <BarcodeMini code={(product as any).external_id} height={26} />
+     </div>
+   ) : (
+     <p className="text-[10px] text-slate-400 italic mt-2">Sin código</p>
+   )
+ )}
  <div className="flex items-center gap-1 mt-3">
  {(product as any).prescription_type === 'prescription' && (
  <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded">RX</span>
@@ -2408,6 +2570,7 @@ export default function AdminProductsPage() {
  </table>
  </div>
  </div>
+ </>}
 
  {/* Pagination */}
  {products.total_pages > 1 && (
