@@ -9,9 +9,27 @@ import { calcPoints } from '@/lib/loyalty-utils'
 import {
   ShoppingCart, Search, Plus, Minus, Trash2, CreditCard, Banknote,
   CheckCircle2, X, Receipt, Loader2, SmartphoneNfc, ScanLine, CheckCircle, AlertCircle, User, History, BarChart3, Store,
-  BookX, Shuffle,
+  BookX, Shuffle, Barcode as BarcodeIcon,
 } from 'lucide-react'
+import JsBarcode from 'jsbarcode'
 import { isControlledSubstance } from '@/lib/controlled-substances'
+
+function BarcodeMini({ code }: { code: string }) {
+  const ref = useRef<SVGSVGElement | null>(null)
+  useEffect(() => {
+    if (!ref.current || !code) return
+    const isEan13 = code.length === 13 && /^\d+$/.test(code)
+    try {
+      JsBarcode(ref.current, code, {
+        format: isEan13 ? 'EAN13' : 'CODE128',
+        height: 28, width: 1.2, margin: 0, fontSize: 10, displayValue: true, background: 'transparent',
+      })
+    } catch {
+      try { JsBarcode(ref.current, code, { format: 'CODE128', height: 28, width: 1.2, margin: 0, fontSize: 10, displayValue: true, background: 'transparent' }) } catch { /* ignore */ }
+    }
+  }, [code])
+  return <svg ref={ref} className="w-full h-auto" />
+}
 
 interface CartItem {
   product_id: string
@@ -31,6 +49,7 @@ interface Product {
   presentation?: string | null
   prescription_type?: string | null
   active_ingredient?: string | null
+  external_id?: string | null
 }
 
 type PaymentMethod = 'pos_cash' | 'pos_debit' | 'pos_credit' | 'pos_mixed'
@@ -75,6 +94,17 @@ export default function POSPage() {
   const barcodeBufferRef = useRef<{ char: string; time: number }[]>([])
   const barcodeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [barcodeFlash, setBarcodeFlash] = useState<{ ok: boolean; text: string } | null>(null)
+  const [showBarcodes, setShowBarcodes] = useState(false)
+  useEffect(() => {
+    try { setShowBarcodes(localStorage.getItem('pos.showBarcodes') === '1') } catch { /* ignore */ }
+  }, [])
+  const toggleBarcodes = useCallback(() => {
+    setShowBarcodes((v) => {
+      const nv = !v
+      try { localStorage.setItem('pos.showBarcodes', nv ? '1' : '0') } catch { /* ignore */ }
+      return nv
+    })
+  }, [])
   const [searchError, setSearchError] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState('')
   const [categories, setCategories] = useState<Category[]>([])
@@ -865,6 +895,18 @@ export default function POSPage() {
               <Store className="w-3.5 h-3.5" />
               Retiro
             </button>
+            <button
+              onClick={toggleBarcodes}
+              title="Mostrar/ocultar códigos de barra en la cuadrícula (B)"
+              className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border transition-colors ${
+                showBarcodes
+                  ? 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-transparent hover:bg-slate-200 dark:hover:bg-slate-600'
+              }`}
+            >
+              <BarcodeIcon className="w-3.5 h-3.5" />
+              {showBarcodes ? 'Códigos: ON' : 'Códigos'}
+            </button>
             <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-full">
               <ScanLine className="w-3.5 h-3.5" />
               <span>Lector de barras activo</span>
@@ -977,6 +1019,17 @@ export default function POSPage() {
                       <div className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                         En carrito: {inCart.quantity}
                       </div>
+                    )}
+                    {showBarcodes && p.external_id && (
+                      <div
+                        className="mt-2 px-1 py-1 bg-white dark:bg-slate-100 rounded border border-slate-200 dark:border-slate-300"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <BarcodeMini code={p.external_id} />
+                      </div>
+                    )}
+                    {showBarcodes && !p.external_id && (
+                      <div className="mt-2 text-[10px] text-slate-400 italic">Sin código</div>
                     )}
                   </button>
                   {/* Buttons for out-of-stock products */}

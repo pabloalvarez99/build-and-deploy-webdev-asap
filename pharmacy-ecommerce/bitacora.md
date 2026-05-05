@@ -1907,3 +1907,9 @@ Usuario solicito documentacion para SIGUIENTE sesion crear plan completo reempla
 - Root dir en Vercel: `pharmacy-ecommerce/apps/web`
 - **Build**: usar `./node_modules/.bin/next build` (NO `npx next build` que usa v16)
 - **Diseño**: Mobile-first, 18px base, 48px+ touch targets, alto contraste
+
+## 2026-05-05 — POS: códigos de barra visibles en cuadrícula
+- Toggle "Códigos" en toolbar POS muestra/oculta SVG de barras (JsBarcode, EAN13/CODE128) bajo cada tarjeta de producto
+- Estado persistido en `localStorage` (`pos.showBarcodes`)
+- Rinde `external_id`; placeholder "Sin código" si falta
+- Permite al cajero comparar varios códigos simultáneos sin abrir cada producto
