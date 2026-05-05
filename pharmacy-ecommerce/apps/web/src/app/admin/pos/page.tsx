@@ -14,7 +14,7 @@ import {
 import JsBarcode from 'jsbarcode'
 import { isControlledSubstance } from '@/lib/controlled-substances'
 
-function BarcodeMini({ code }: { code: string }) {
+function BarcodeMini({ code, height = 28, fontSize = 10, width = 1.2 }: { code: string; height?: number; fontSize?: number; width?: number }) {
   const ref = useRef<SVGSVGElement | null>(null)
   useEffect(() => {
     if (!ref.current || !code) return
@@ -22,12 +22,12 @@ function BarcodeMini({ code }: { code: string }) {
     try {
       JsBarcode(ref.current, code, {
         format: isEan13 ? 'EAN13' : 'CODE128',
-        height: 28, width: 1.2, margin: 0, fontSize: 10, displayValue: true, background: 'transparent',
+        height, width, margin: 0, fontSize, displayValue: true, background: 'transparent',
       })
     } catch {
-      try { JsBarcode(ref.current, code, { format: 'CODE128', height: 28, width: 1.2, margin: 0, fontSize: 10, displayValue: true, background: 'transparent' }) } catch { /* ignore */ }
+      try { JsBarcode(ref.current, code, { format: 'CODE128', height, width, margin: 0, fontSize, displayValue: true, background: 'transparent' }) } catch { /* ignore */ }
     }
-  }, [code])
+  }, [code, height, fontSize, width])
   return <svg ref={ref} className="w-full h-auto" />
 }
 
@@ -338,17 +338,27 @@ export default function POSPage() {
     return () => document.removeEventListener('keydown', onKeyDown, { capture: true })
   }, [handleBarcodeScan])
 
-  // Global '/' shortcut to focus search
+  const [barcodeZoom, setBarcodeZoom] = useState<{ code: string; name: string } | null>(null)
+
+  // Global '/' shortcut to focus search; 'B' toggles barcode visibility
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null
+      const inField = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
       if (e.key === '/' && document.activeElement !== searchRef.current) {
         e.preventDefault()
         searchRef.current?.focus()
+        return
       }
+      if ((e.key === 'b' || e.key === 'B') && !inField && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault()
+        toggleBarcodes()
+      }
+      if (e.key === 'Escape' && barcodeZoom) setBarcodeZoom(null)
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
-  }, [])
+  }, [toggleBarcodes, barcodeZoom])
 
   const searchProducts = useCallback(async (q: string, category: string) => {
     if (!q.trim() && !category) { setProducts([]); setSearchError(null); return }
@@ -915,6 +925,36 @@ export default function POSPage() {
         </div>
 
         {/* Barcode scan flash */}
+        {barcodeZoom && (
+          <div
+            className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4"
+            onClick={() => setBarcodeZoom(null)}
+          >
+            <div
+              className="bg-white rounded-2xl p-6 max-w-2xl w-full shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Código de barras</p>
+                  <p className="text-base font-bold text-slate-900 line-clamp-2">{barcodeZoom.name}</p>
+                </div>
+                <button
+                  onClick={() => setBarcodeZoom(null)}
+                  className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg"
+                  title="Cerrar (Esc)"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="bg-white p-6 rounded-xl border-2 border-slate-200">
+                <BarcodeMini code={barcodeZoom.code} height={140} fontSize={20} width={3} />
+              </div>
+              <p className="text-xs text-slate-500 mt-3 text-center">Apunta el lector al código en pantalla. Esc o click fuera para cerrar.</p>
+            </div>
+          </div>
+        )}
+
         {barcodeFlash && (
           <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border-2 ${
             barcodeFlash.ok
@@ -1020,18 +1060,22 @@ export default function POSPage() {
                         En carrito: {inCart.quantity}
                       </div>
                     )}
-                    {showBarcodes && p.external_id && (
-                      <div
-                        className="mt-2 px-1 py-1 bg-white dark:bg-slate-100 rounded border border-slate-200 dark:border-slate-300"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <BarcodeMini code={p.external_id} />
-                      </div>
-                    )}
-                    {showBarcodes && !p.external_id && (
-                      <div className="mt-2 text-[10px] text-slate-400 italic">Sin código</div>
-                    )}
                   </button>
+                  {showBarcodes && p.external_id && (
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      className="mt-2 px-1 py-1 bg-white dark:bg-slate-100 rounded border border-slate-200 dark:border-slate-300 cursor-zoom-in hover:ring-2 hover:ring-emerald-400"
+                      onClick={() => setBarcodeZoom({ code: p.external_id!, name: p.name })}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setBarcodeZoom({ code: p.external_id!, name: p.name }) } }}
+                      title="Click para ampliar (escanear desde pantalla)"
+                    >
+                      <BarcodeMini code={p.external_id} />
+                    </div>
+                  )}
+                  {showBarcodes && !p.external_id && (
+                    <div className="mt-2 text-[10px] text-slate-400 italic text-center">Sin código</div>
+                  )}
                   {/* Buttons for out-of-stock products */}
                   {outOfStock && (
                     <div className="flex gap-1 mt-1">

@@ -17,7 +17,7 @@ import { formatPrice } from '@/lib/format';
 import { uploadProductImage } from '@/lib/firebase/storage';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 
-function BarcodeMini({ code, height = 28 }: { code: string; height?: number }) {
+function BarcodeMini({ code, height = 28, fontSize = 10, width = 1.2 }: { code: string; height?: number; fontSize?: number; width?: number }) {
   const ref = useRef<SVGSVGElement | null>(null);
   useEffect(() => {
     if (!ref.current || !code) return;
@@ -25,12 +25,12 @@ function BarcodeMini({ code, height = 28 }: { code: string; height?: number }) {
     try {
       JsBarcode(ref.current, code, {
         format: isEan13 ? 'EAN13' : 'CODE128',
-        height, width: 1.2, margin: 0, fontSize: 10, displayValue: true, background: 'transparent',
+        height, width, margin: 0, fontSize, displayValue: true, background: 'transparent',
       });
     } catch {
-      try { JsBarcode(ref.current, code, { format: 'CODE128', height, width: 1.2, margin: 0, fontSize: 10, displayValue: true, background: 'transparent' }); } catch { /* ignore */ }
+      try { JsBarcode(ref.current, code, { format: 'CODE128', height, width, margin: 0, fontSize, displayValue: true, background: 'transparent' }); } catch { /* ignore */ }
     }
-  }, [code, height]);
+  }, [code, height, fontSize, width]);
   return <svg ref={ref} className="w-full h-auto" />;
 }
 
@@ -96,6 +96,20 @@ export default function AdminProductsPage() {
      return nv;
    });
  };
+ const [barcodeZoom, setBarcodeZoom] = useState<{ code: string; name: string } | null>(null);
+ useEffect(() => {
+   function onKey(e: KeyboardEvent) {
+     const t = e.target as HTMLElement | null;
+     const inField = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || (t as any).isContentEditable);
+     if (inField || e.ctrlKey || e.metaKey || e.altKey) return;
+     if (e.key === 'b' || e.key === 'B') { e.preventDefault(); toggleShowBarcodes(); }
+     else if (e.key === 'g' || e.key === 'G') { e.preventDefault(); toggleViewMode(); }
+     else if (e.key === 'Escape' && barcodeZoom) setBarcodeZoom(null);
+   }
+   document.addEventListener('keydown', onKey);
+   return () => document.removeEventListener('keydown', onKey);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [barcodeZoom]);
 
  // Data completeness stats (loaded once on mount)
  const [productStats, setProductStats] = useState<{
@@ -867,6 +881,35 @@ export default function AdminProductsPage() {
 
  return (
  <div className="space-y-6">
+ {barcodeZoom && (
+   <div
+     className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4"
+     onClick={() => setBarcodeZoom(null)}
+   >
+     <div
+       className="bg-white rounded-2xl p-6 max-w-2xl w-full shadow-2xl"
+       onClick={(e) => e.stopPropagation()}
+     >
+       <div className="flex items-start justify-between mb-3">
+         <div>
+           <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Código de barras</p>
+           <p className="text-base font-bold text-slate-900 line-clamp-2">{barcodeZoom.name}</p>
+         </div>
+         <button
+           onClick={() => setBarcodeZoom(null)}
+           className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg"
+           title="Cerrar (Esc)"
+         >
+           <X className="w-5 h-5" />
+         </button>
+       </div>
+       <div className="bg-white p-6 rounded-xl border-2 border-slate-200">
+         <BarcodeMini code={barcodeZoom.code} height={140} fontSize={20} width={3} />
+       </div>
+       <p className="text-xs text-slate-500 mt-3 text-center">Apunta el lector al código en pantalla. Esc o click fuera para cerrar.</p>
+     </div>
+   </div>
+ )}
  <PageHeader
    title="Productos"
    description="Gestiona el catálogo, importa precios masivamente y controla stock"
@@ -2160,7 +2203,11 @@ export default function AdminProductsPage() {
            </div>
            {showBarcodes && (
              ext ? (
-               <div className="mt-2 px-1 py-1 bg-white dark:bg-slate-100 rounded border border-slate-200 dark:border-slate-300" onClick={(e) => e.stopPropagation()}>
+               <div
+                 className="mt-2 px-1 py-1 bg-white dark:bg-slate-100 rounded border border-slate-200 dark:border-slate-300 cursor-zoom-in hover:ring-2 hover:ring-emerald-400"
+                 onClick={(e) => { e.stopPropagation(); setBarcodeZoom({ code: ext, name: product.name }); }}
+                 title="Ampliar código (escanear desde pantalla)"
+               >
                  <BarcodeMini code={ext} height={28} />
                </div>
              ) : (
@@ -2244,7 +2291,10 @@ export default function AdminProductsPage() {
  </div>
  {showBarcodes && (
    (product as any).external_id ? (
-     <div className="mt-2 px-1 py-1 bg-white dark:bg-slate-100 rounded border border-slate-200 dark:border-slate-300 max-w-[200px]">
+     <div
+       className="mt-2 px-1 py-1 bg-white dark:bg-slate-100 rounded border border-slate-200 dark:border-slate-300 max-w-[200px] cursor-zoom-in hover:ring-2 hover:ring-emerald-400"
+       onClick={() => setBarcodeZoom({ code: (product as any).external_id, name: product.name })}
+     >
        <BarcodeMini code={(product as any).external_id} height={26} />
      </div>
    ) : (

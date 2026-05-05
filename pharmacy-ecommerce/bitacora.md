@@ -1919,3 +1919,10 @@ Usuario solicito documentacion para SIGUIENTE sesion crear plan completo reempla
 - Cuadrícula: cards 2-6 col según ancho, imagen aspect-square, nombre, precio, stock badge, click→editar, hover→duplicar/eliminar
 - Toggle códigos rinde JsBarcode SVG (EAN13/CODE128) en cards mobile y en grid view
 - Estado persistido (`admin.productos.viewMode`, `admin.productos.showBarcodes`)
+
+## 2026-05-05 — Mejoras códigos: zoom modal + atajos teclado
+- POS y `/admin/productos`: click en barcode rinde modal con código gigante (height 140, width 3) para escanear desde pantalla
+- POS: tecla `B` toggle códigos
+- Productos: teclas `B` (códigos) y `G` (vista tabla/cuadrícula)
+- POS: barcode movido fuera del `<button>` (HTML válido, role=button con keyboard support)
+- Esc cierra zoom
