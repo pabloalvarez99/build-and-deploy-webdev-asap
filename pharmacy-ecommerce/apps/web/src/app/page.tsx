@@ -346,6 +346,8 @@ function HomeContent() {
         </button>
       )}
 
+      <h1 className="sr-only">Tu Farmacia — Catálogo de medicamentos, vitaminas y salud en Coquimbo, Chile</h1>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex gap-6 py-4 sm:py-6">
 
