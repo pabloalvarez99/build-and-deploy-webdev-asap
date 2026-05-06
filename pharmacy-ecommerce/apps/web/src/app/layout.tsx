@@ -16,9 +16,15 @@ export const metadata: Metadata = {
     template: '%s | Tu Farmacia',
   },
   description: 'Farmacia online en Coquimbo, Chile. Medicamentos, vitaminas, productos de salud y belleza con retiro en tienda o despacho a todo Chile. Precios accesibles para adultos mayores.',
-  keywords: ['farmacia', 'medicamentos', 'Coquimbo', 'Chile', 'farmacia online', 'remedios', 'salud', 'vitaminas', 'adulto mayor'],
+  keywords: ['farmacia', 'medicamentos', 'Coquimbo', 'Chile', 'farmacia online', 'remedios', 'salud', 'vitaminas', 'adulto mayor', 'farmacia La Serena', 'despacho a domicilio', 'cotización medicamentos'],
   authors: [{ name: 'Tu Farmacia' }],
   creator: 'Tu Farmacia',
+  publisher: 'Tu Farmacia',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   openGraph: {
     type: 'website',
     locale: 'es_CL',
@@ -26,11 +32,13 @@ export const metadata: Metadata = {
     siteName: 'Tu Farmacia',
     title: 'Tu Farmacia - Farmacia online en Coquimbo, Chile',
     description: 'Medicamentos, vitaminas, productos de salud y belleza con retiro en tienda o despacho a todo Chile.',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Tu Farmacia - Farmacia online Coquimbo' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Tu Farmacia - Farmacia online en Coquimbo, Chile',
     description: 'Medicamentos, vitaminas, productos de salud y belleza con retiro en tienda o despacho a todo Chile.',
+    images: ['/og-image.png'],
   },
   robots: {
     index: true,
@@ -62,17 +70,52 @@ export default function RootLayout({
 }) {
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Pharmacy',
-    name: 'Tu Farmacia',
-    description: 'Farmacia online en Coquimbo, Chile. Medicamentos, vitaminas y productos de salud.',
-    url: siteUrl,
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: 'Coquimbo',
-      addressCountry: 'CL',
-    },
-    priceRange: '$',
-    currenciesAccepted: 'CLP',
+    '@graph': [
+      {
+        '@type': ['Pharmacy', 'Store', 'LocalBusiness'],
+        '@id': `${siteUrl}/#pharmacy`,
+        name: 'Tu Farmacia',
+        description: 'Farmacia online en Coquimbo, Chile. Medicamentos, vitaminas y productos de salud con retiro en tienda y despacho a todo Chile.',
+        url: siteUrl,
+        telephone: '+56993649604',
+        image: `${siteUrl}/og-image.png`,
+        logo: `${siteUrl}/icon-512.png`,
+        priceRange: '$',
+        currenciesAccepted: 'CLP',
+        paymentAccepted: ['Cash', 'Credit Card', 'Debit Card', 'Webpay'],
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Coquimbo',
+          addressRegion: 'Coquimbo',
+          addressCountry: 'CL',
+        },
+        areaServed: [
+          { '@type': 'City', name: 'Coquimbo' },
+          { '@type': 'City', name: 'La Serena' },
+          { '@type': 'Country', name: 'Chile' },
+        ],
+        openingHoursSpecification: [{
+          '@type': 'OpeningHoursSpecification',
+          dayOfWeek: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+          opens: '09:00',
+          closes: '20:00',
+        }],
+        sameAs: [`https://wa.me/56993649604`],
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${siteUrl}/#website`,
+        url: siteUrl,
+        name: 'Tu Farmacia',
+        inLanguage: 'es-CL',
+        publisher: { '@id': `${siteUrl}/#pharmacy` },
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: { '@type': 'EntryPoint', urlTemplate: `${siteUrl}/?search={search_term_string}` },
+          'query-input': 'required name=search_term_string',
+        },
+      },
+    ],
   };
 
   return (
@@ -80,7 +123,9 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/manifest.json" />
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* Prevent flash of wrong theme */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()` }} />
         <script

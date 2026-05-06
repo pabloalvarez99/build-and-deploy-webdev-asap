@@ -7,10 +7,30 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
-        disallow: ['/admin/', '/api/', '/auth/', '/checkout/'],
+        allow: ['/', '/producto/', '/cotizacion'],
+        disallow: [
+          '/admin/',
+          '/api/',
+          '/auth/',
+          '/checkout/',
+          '/carrito',
+          '/mi-cuenta/',
+          '/mis-pedidos/',
+          '/rastrear-pedido/',
+          '/*?*sort_by=',
+          '/*?*page=',
+        ],
+      },
+      {
+        userAgent: 'GPTBot',
+        disallow: '/',
+      },
+      {
+        userAgent: 'CCBot',
+        disallow: '/',
       },
     ],
     sitemap: `${siteUrl}/sitemap.xml`,
+    host: siteUrl,
   };
 }

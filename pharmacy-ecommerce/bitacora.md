@@ -1926,3 +1926,28 @@ Usuario solicito documentacion para SIGUIENTE sesion crear plan completo reempla
 - Productos: teclas `B` (códigos) y `G` (vista tabla/cuadrícula)
 - POS: barcode movido fuera del `<button>` (HTML válido, role=button con keyboard support)
 - Esc cierra zoom
+
+## 2026-05-05 — SEO + a11y + perf hardening (offline-safe, branch offline-improvements)
+DB Cloud SQL suspendida (caso d8816534195156363 en revisión Google). Mejoras sin tocar DB ni Firebase admin.
+
+**SEO**
+- Layout root JSON-LD ahora usa `@graph` con `Pharmacy + Store + LocalBusiness`, `WebSite` con `SearchAction` (?search=q), telephone, openingHoursSpecification, areaServed (Coquimbo/La Serena/Chile), paymentAccepted, sameAs WhatsApp.
+- Producto JSON-LD enriquecido: `@graph` con Product (sku, mpn, category, finalPrice con descuento, priceValidUntil, itemCondition, hasMerchantReturnPolicy 10 días, shippingDetails CL 1-5d) + BreadcrumbList (Inicio → Categoría → Producto).
+- OG image fallback `/og-image.png` (1200x630) en root + producto.
+- `keywords` ampliado (La Serena, despacho, cotización).
+- robots.ts: Allow `/`, `/producto/`, `/cotizacion`. Disallow `/admin/`, `/api/`, `/auth/`, `/checkout/`, `/carrito`, `/mi-cuenta/`, `/mis-pedidos/`, `/rastrear-pedido/`, query strings sort_by/page. Block GPTBot/CCBot. Host directive.
+- sitemap.ts: Añadidos /cotizacion, /rastrear-pedido, /auth/*. Fallback con 16 categorías estáticas cuando DB cae (mantiene SEO durante outage).
+- manifest.ts: scope, orientation, lang es-CL, categories, maskable icon, shortcuts (Catálogo/Cotización/Rastrear).
+- Layouts noindex creados: auth, checkout, mi-cuenta, mis-pedidos, carrito, rastrear-pedido. Cotización layout con metadata indexable + canonical.
+- Layout link `/manifest.json` → `/manifest.webmanifest` (Next ts manifest). dns-prefetch + preconnect Google Fonts.
+- page.tsx home: parsea `?search=` y `?q=` desde URL → soporta SearchAction.
+
+**Perf**
+- next.config.js: `optimizePackageImports` (lucide-react, recharts, date-fns), `compress`, `poweredByHeader: false`, `productionBrowserSourceMaps: false`.
+- Image deviceSizes + imageSizes finos (360-1920, 16-384).
+- Headers: HSTS preload 2y, X-Content-Type-Options, X-Frame-Options SAMEORIGIN, Referrer-Policy strict-origin-when-cross-origin, Permissions-Policy (camera self / geolocation self / payment self / microphone none), Cache-Control immutable para /_next/static/fonts/images.
+- X-Robots-Tag noindex en /admin/* y /api/* (defensa en profundidad).
+
+**Build**
+- Local OK (NODE_OPTIONS 6GB). 87.6kB First Load shared. /manifest.webmanifest emitido. Todas las páginas estáticas o dinámicas según corresponde.
+- Branch offline-improvements (NO merge a main hasta DB restaurada).

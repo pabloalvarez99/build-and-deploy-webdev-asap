@@ -154,6 +154,11 @@ function HomeContent() {
     if (cat) setSelectedCategory(cat);
     const discount = searchParams.get('discount');
     if (discount === 'true') setShowDiscountOnly(true);
+    const q = searchParams.get('search') || searchParams.get('q');
+    if (q) {
+      setSearchInput(q);
+      setSearchTerm(q);
+    }
   }, [searchParams]);
 
   useEffect(() => {

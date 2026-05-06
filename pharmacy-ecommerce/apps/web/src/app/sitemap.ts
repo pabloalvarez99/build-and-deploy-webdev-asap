@@ -7,9 +7,20 @@ export const dynamic = 'force-dynamic';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tu-farmacia.cl';
 
+  const now = new Date();
   const staticPages: MetadataRoute.Sitemap = [
-    { url: siteUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
-    { url: `${siteUrl}/carrito`, changeFrequency: 'always', priority: 0.3 },
+    { url: siteUrl, lastModified: now, changeFrequency: 'daily', priority: 1 },
+    { url: `${siteUrl}/cotizacion`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${siteUrl}/rastrear-pedido`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${siteUrl}/auth/login`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${siteUrl}/auth/register`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
+  ];
+
+  const fallbackCategorySlugs = [
+    'dolor-fiebre','sistema-cardiovascular','diabetes-metabolismo','vitaminas-suplementos',
+    'sistema-digestivo','sistema-nervioso','sistema-respiratorio','dermatologia',
+    'oftalmologia','salud-femenina','antibioticos-infecciones','higiene-cuidado-personal',
+    'bebes-ninos','adulto-mayor','insumos-medicos','productos-naturales',
   ];
 
   try {
@@ -40,6 +51,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     return [...staticPages, ...categoryUrls, ...productUrls];
   } catch {
-    return staticPages;
+    const fallbackCategories: MetadataRoute.Sitemap = fallbackCategorySlugs.map((slug) => ({
+      url: `${siteUrl}/?category=${slug}`,
+      lastModified: now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }));
+    return [...staticPages, ...fallbackCategories];
   }
 }
