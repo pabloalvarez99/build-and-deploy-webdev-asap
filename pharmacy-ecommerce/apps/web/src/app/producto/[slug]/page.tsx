@@ -90,7 +90,7 @@ export default async function ProductPage({
               [product.therapeutic_action, product.presentation, product.laboratory]
                 .filter(Boolean)
                 .join(' · ') || product.name,
-            image: sanitizeImageUrl(product.image_url) ?? `${siteUrl}/og-image.png`,
+            image: sanitizeImageUrl(product.image_url) ?? `${siteUrl}/opengraph-image`,
             sku: product.external_id || product.id,
             mpn: product.external_id || undefined,
             category: product.categories?.name || undefined,

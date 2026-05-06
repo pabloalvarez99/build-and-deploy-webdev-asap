@@ -32,13 +32,11 @@ export const metadata: Metadata = {
     siteName: 'Tu Farmacia',
     title: 'Tu Farmacia - Farmacia online en Coquimbo, Chile',
     description: 'Medicamentos, vitaminas, productos de salud y belleza con retiro en tienda o despacho a todo Chile.',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Tu Farmacia - Farmacia online Coquimbo' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Tu Farmacia - Farmacia online en Coquimbo, Chile',
     description: 'Medicamentos, vitaminas, productos de salud y belleza con retiro en tienda o despacho a todo Chile.',
-    images: ['/og-image.png'],
   },
   robots: {
     index: true,
@@ -78,7 +76,7 @@ export default function RootLayout({
         description: 'Farmacia online en Coquimbo, Chile. Medicamentos, vitaminas y productos de salud con retiro en tienda y despacho a todo Chile.',
         url: siteUrl,
         telephone: '+56993649604',
-        image: `${siteUrl}/og-image.png`,
+        image: `${siteUrl}/opengraph-image`,
         logo: `${siteUrl}/icon-512.png`,
         priceRange: '$',
         currenciesAccepted: 'CLP',
