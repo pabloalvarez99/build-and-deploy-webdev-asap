@@ -519,7 +519,7 @@ function HomeContent() {
                   <span className="text-sm text-slate-400 font-normal">Tus productos habituales</span>
                 </div>
                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
-                  {frequentProducts.map((product) => {
+                  {frequentProducts.map((product, idx) => {
                     const finalPrice = product.discount_percent
                       ? discountedPrice(Number(product.price), product.discount_percent)
                       : Number(product.price);
@@ -528,7 +528,7 @@ function HomeContent() {
                         <Link href={`/producto/${product.slug}`} className="block">
                           <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                             {product.image_url && !brokenImages.has(product.id) ? (
-                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
+                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" priority={idx === 0} fetchPriority={idx === 0 ? 'high' : 'auto'} onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
                             ) : <div className="absolute inset-0 flex items-center justify-center text-slate-300"><Package className="w-8 h-8" /></div>}
                           </div>
                         </Link>
@@ -566,14 +566,14 @@ function HomeContent() {
                   </div>
                 </div>
                 <div ref={topSellersScrollRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
-                  {topSellers.map((product) => {
+                  {topSellers.map((product, idx) => {
                     const finalPrice = product.discount_percent ? discountedPrice(Number(product.price), product.discount_percent) : Number(product.price);
                     return (
                       <div key={product.id} className="flex-shrink-0 w-36 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
                         <Link href={`/producto/${product.slug}`} className="block">
                           <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                             {product.image_url && !brokenImages.has(product.id) ? (
-                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
+                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" priority={idx === 0} fetchPriority={idx === 0 ? 'high' : 'auto'} onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
                             ) : <div className="absolute inset-0 flex items-center justify-center text-slate-300"><Package className="w-8 h-8" /></div>}
                           </div>
                         </Link>
@@ -608,14 +608,14 @@ function HomeContent() {
                   <Link href="/?discount=true" className="text-sm text-cyan-600 dark:text-cyan-400 font-semibold hover:underline">Ver todas →</Link>
                 </div>
                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
-                  {discountedProducts.map((product) => {
+                  {discountedProducts.map((product, idx) => {
                     const finalPrice = discountedPrice(Number(product.price), product.discount_percent!);
                     return (
                       <div key={product.id} className="flex-shrink-0 w-36 bg-white dark:bg-slate-900 rounded-2xl border border-red-100 dark:border-red-900/50 shadow-sm overflow-hidden flex flex-col">
                         <Link href={`/producto/${product.slug}`} className="block relative">
                           <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                             {product.image_url && !brokenImages.has(product.id) ? (
-                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
+                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" priority={idx === 0} fetchPriority={idx === 0 ? 'high' : 'auto'} onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
                             ) : <div className="absolute inset-0 flex items-center justify-center text-slate-300"><Package className="w-8 h-8" /></div>}
                             <div className="absolute top-1.5 left-1.5 bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md">-{product.discount_percent}%</div>
                           </div>
@@ -711,7 +711,7 @@ function HomeContent() {
               <>
                 {viewMode === 'grid' ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {allProducts.map((product) => {
+                    {allProducts.map((product, idx) => {
                       const finalPrice = product.discount_percent
                         ? discountedPrice(Number(product.price), product.discount_percent)
                         : Number(product.price);
@@ -720,7 +720,7 @@ function HomeContent() {
                           <Link href={`/producto/${product.slug}`} className="block">
                             <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                               {product.image_url && !brokenImages.has(product.id) ? (
-                                <Image src={product.image_url} alt={product.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-contain p-3 group-hover:scale-105 transition-transform duration-300" onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
+                                <Image src={product.image_url} alt={product.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-contain p-3 group-hover:scale-105 transition-transform duration-300" priority={idx < 3} fetchPriority={idx < 3 ? 'high' : 'auto'} onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
                               ) : (
                                 <div className="absolute inset-0 flex items-center justify-center">
                                   <Package className="w-10 h-10 text-slate-200 dark:text-slate-700" />

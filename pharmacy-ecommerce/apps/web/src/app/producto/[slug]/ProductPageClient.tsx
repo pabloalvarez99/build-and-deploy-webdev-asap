@@ -123,6 +123,7 @@ export default function ProductPage() {
                 sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-contain p-3 sm:p-6"
                 priority
+                fetchPriority="high"
               />
             ) : (
               <Package className="w-24 h-24 text-slate-300 dark:text-slate-600" />

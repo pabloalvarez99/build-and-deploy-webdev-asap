@@ -1951,3 +1951,10 @@ DB Cloud SQL suspendida (caso d8816534195156363 en revisión Google). Mejoras si
 **Build**
 - Local OK (NODE_OPTIONS 6GB). 87.6kB First Load shared. /manifest.webmanifest emitido. Todas las páginas estáticas o dinámicas según corresponde.
 - Branch offline-improvements (NO merge a main hasta DB restaurada).
+
+## 2026-05-05 — LCP wins: priority + fetchPriority en imágenes hero (offline-improvements)
+- `app/page.tsx`: `priority` + `fetchPriority="high"` en primer Image (idx===0) de 3 carruseles (frequentProducts, topSellers, discountedProducts) y primeros 3 (idx<3) del grid principal `allProducts`.
+- `app/producto/[slug]/ProductPageClient.tsx`: añadido `fetchPriority="high"` a la imagen principal (ya tenía `priority`).
+- Map callbacks ahora reciben `idx` para evaluación condicional.
+- Build local OK (NODE_OPTIONS 6GB), 87.6kB First Load shared sin cambios.
+- Branch offline-improvements; sin tocar /api/*, /lib/db.ts, /lib/firebase/*.
