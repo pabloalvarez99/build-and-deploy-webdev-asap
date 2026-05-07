@@ -3,6 +3,15 @@
 E-commerce + ERP para farmacia en Coquimbo, Chile (adultos mayores).
 **Live**: https://tu-farmacia.cl · **Admin**: /admin · **Web app**: `pharmacy-ecommerce/apps/web`
 
+## Scope de este repo (IMPORTANTE)
+Este repo (`build-and-deploy-webdev-asap`) es **exclusivamente para Tu Farmacia LOCAL REAL en producción**. No mezclar con experimentos.
+
+Repos relacionados, **separados a propósito**:
+- `pabloalvarez99/build-and-deploy-webdev-asap` (este) → Tu Farmacia prod, Next.js + Cloud SQL, Vercel auto-deploy. Cambios afectan al cliente real.
+- `pabloalvarez99/pharma-server` (privado) → **experimental**. Servidor Rust on-prem (axum + SurrealDB embedded + Windows service + MSI). Producto vendible separado, no toca Tu Farmacia. Ver `C:/Users/Administrator/Documents/GitHub/pharma-server/`.
+
+Regla: cualquier feature/fix de Tu Farmacia va aquí. Cualquier exploración de servidor on-prem genérico va al otro repo. No cross-imports, no shared CI, no shared deploy.
+
 ## Stack (esencial)
 Next.js 14.2.35 · Tailwind 3 · TS · Firebase Auth · Cloud SQL Postgres 15 (proyecto `tu-farmacia-prod`, sin RLS, sin Supabase) · Prisma 7 · Transbank Webpay Plus PROD (commerce `597053071888`) · Resend · Zustand · Recharts · Vercel auto-deploy (`git push origin main`).
 
