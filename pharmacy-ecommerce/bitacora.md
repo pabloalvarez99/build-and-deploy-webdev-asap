@@ -1980,3 +1980,7 @@ PR #2 (offline-improvements → main) merged squash. Deploy prod Vercel ✅.
 
 **Scope reglas**
 - `CLAUDE.md`: añadida sección scope separando este repo (Tu Farmacia prod) de `pharma-server` (experimental, separado).
+
+## 2026-05-07 — PWA install prompt: botón "Instalar" móvil
+
+Comp `InstallPWAButton.tsx` (client) capta `beforeinstallprompt`, muestra banner flotante bottom turquesa con btn Instalar (≥44px tap target) + "Ahora no". Detecta display-mode standalone → no muestra si ya instalada. `appinstalled` → ocultar. Dismiss localStorage 7d (no molestar adultos mayores). Mounted en `layout.tsx` junto a `PWARegister`. Build local OK, prod deployed `a914130`. Smoke `/` 200.
