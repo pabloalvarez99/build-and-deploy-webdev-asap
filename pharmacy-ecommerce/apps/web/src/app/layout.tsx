@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { Navbar } from '@/components/Navbar';
 import { WhatsAppButton } from '@/components/WhatsAppButton';
+import { PWARegister } from '@/components/PWARegister';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
@@ -77,7 +78,7 @@ export default function RootLayout({
         url: siteUrl,
         telephone: '+56993649604',
         image: `${siteUrl}/opengraph-image`,
-        logo: `${siteUrl}/icon-512.png`,
+        logo: `${siteUrl}/icon`,
         priceRange: '$',
         currenciesAccepted: 'CLP',
         paymentAccepted: ['Cash', 'Credit Card', 'Debit Card', 'Webpay'],
@@ -119,9 +120,8 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="icon" href="/favicon.ico" sizes="48x48" />
+        <link rel="manifest" href="/manifest.json" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* Prevent flash of wrong theme */}
@@ -138,6 +138,7 @@ export default function RootLayout({
         <Navbar />
         <main id="main-content" className="min-h-screen">{children}</main>
         <WhatsAppButton />
+        <PWARegister />
         <footer className="bg-slate-50 dark:bg-slate-800 border-t-2 border-slate-100 dark:border-slate-700 py-10 mt-8" role="contentinfo">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
