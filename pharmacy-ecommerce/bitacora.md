@@ -1984,3 +1984,13 @@ PR #2 (offline-improvements → main) merged squash. Deploy prod Vercel ✅.
 ## 2026-05-07 — PWA install prompt: botón "Instalar" móvil
 
 Comp `InstallPWAButton.tsx` (client) capta `beforeinstallprompt`, muestra banner flotante bottom turquesa con btn Instalar (≥44px tap target) + "Ahora no". Detecta display-mode standalone → no muestra si ya instalada. `appinstalled` → ocultar. Dismiss localStorage 7d (no molestar adultos mayores). Mounted en `layout.tsx` junto a `PWARegister`. Build local OK, prod deployed `a914130`. Smoke `/` 200.
+
+## 2026-05-07 — PWA SW v2: SWR cache productos + pre-cache home
+
+`public/sw.js` CACHE_VERSION `tf-v2` (drop caches viejos).
+- Pre-cache: `/`, `/offline`, `/manifest.json`, `/favicon.ico` en install → home navegable offline desde primera carga.
+- Navegaciones HTML: stale-while-revalidate (cached primero + fetch bg) en lugar de network-first → mejor UX en redes lentas.
+- `/api/products/*` allowlist con SWR + freshness 30min vía header custom `sw-cached-at`. Offline + cache válido → devuelve stale; offline sin cache → 503 JSON.
+- Demás `/api/*` (cart, orders, profile, auth, checkout, webpay) sin cachear (server siempre valida stock/precio en mutaciones).
+- LRU trim: runtime 60, api 40 entries.
+- Deploy `145c5de` prod ✅. Verificado /sw.js sirviendo tf-v2 con content-type correcto.
