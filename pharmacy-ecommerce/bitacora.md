@@ -1958,3 +1958,25 @@ DB Cloud SQL suspendida (caso d8816534195156363 en revisión Google). Mejoras si
 - Map callbacks ahora reciben `idx` para evaluación condicional.
 - Build local OK (NODE_OPTIONS 6GB), 87.6kB First Load shared sin cambios.
 - Branch offline-improvements; sin tocar /api/*, /lib/db.ts, /lib/firebase/*.
+
+## 2026-05-07 — PWA producción: service worker + offline page + merge a main
+
+PR #2 (offline-improvements → main) merged squash. Deploy prod Vercel ✅.
+
+**SW + offline**
+- `public/sw.js`: SW vanilla (no Workbox). Precache `/offline`, `/icon`, `/apple-icon`, `/manifest.json`. Strategy network-first navigation con fallback a `/offline` cuando offline. Skip non-GET, skip `/api/*`, skip `/admin/*`, skip `/checkout` (evita interceptar pagos Webpay).
+- `src/components/PWARegister.tsx`: registra `/sw.js` con scope `/` tras window load. Sólo en prod.
+- `src/app/offline/page.tsx`: pantalla offline branded turquesa (no Chrome dino).
+- `src/app/icon.tsx` + `apple-icon.tsx`: Next 14 dynamic icons (192/180px PNG generados).
+- `src/app/opengraph-image.tsx`: OG card turquesa para WhatsApp/social share.
+
+**Headers + middleware**
+- `next.config.js`: `Service-Worker-Allowed: /` + `Cache-Control: public, max-age=0, must-revalidate` para `/sw.js`. Manifest content-type `application/json`.
+- `middleware.ts`: bypass `/sw.js`, `/manifest.json`, `/offline`, `/icon`, `/apple-icon`, `/opengraph-image` (no auth, no rewrites).
+- `prisma.config.ts`: tolera DATABASE_URL ausente en build (no crashea Vercel build sin runtime env).
+
+**Verificación prod**
+- `https://tu-farmacia.cl/{,sw.js,manifest.json,offline,icon,apple-icon}` → todos 200, content-types OK.
+
+**Scope reglas**
+- `CLAUDE.md`: añadida sección scope separando este repo (Tu Farmacia prod) de `pharma-server` (experimental, separado).
