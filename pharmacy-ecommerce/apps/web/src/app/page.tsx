@@ -626,7 +626,7 @@ function HomeContent() {
                         <Link href={`/producto/${product.slug}`} className="block">
                           <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                             {product.image_url && !brokenImages.has(product.id) ? (
-                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" priority={idx < 2} fetchPriority={idx < 2 ? 'high' : 'auto'} onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
+                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" loading="lazy" onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
                             ) : <div className="absolute inset-0 flex items-center justify-center text-slate-300"><Package className="w-8 h-8" /></div>}
                           </div>
                         </Link>
@@ -674,7 +674,7 @@ function HomeContent() {
                         <Link href={`/producto/${product.slug}`} className="block">
                           <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                             {product.image_url && !brokenImages.has(product.id) ? (
-                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" priority={idx < 2} fetchPriority={idx < 2 ? 'high' : 'auto'} onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
+                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" priority={idx === 0} fetchPriority={idx === 0 ? 'high' : 'auto'} onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
                             ) : <div className="absolute inset-0 flex items-center justify-center text-slate-300"><Package className="w-8 h-8" /></div>}
                           </div>
                         </Link>
@@ -719,7 +719,7 @@ function HomeContent() {
                         <Link href={`/producto/${product.slug}`} className="block relative">
                           <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                             {product.image_url && !brokenImages.has(product.id) ? (
-                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" priority={idx < 2} fetchPriority={idx < 2 ? 'high' : 'auto'} onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
+                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" loading="lazy" onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
                             ) : <div className="absolute inset-0 flex items-center justify-center text-slate-300"><Package className="w-8 h-8" /></div>}
                             <div className="absolute top-1.5 left-1.5 bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md">-{product.discount_percent}%</div>
                           </div>
@@ -824,7 +824,7 @@ function HomeContent() {
                           <Link href={`/producto/${product.slug}`} className="block">
                             <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                               {product.image_url && !brokenImages.has(product.id) ? (
-                                <Image src={product.image_url} alt={product.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-contain p-3 group-hover:scale-105 transition-transform duration-300" priority={idx < 3} fetchPriority={idx < 3 ? 'high' : 'auto'} onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
+                                <Image src={product.image_url} alt={product.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-contain p-3 group-hover:scale-105 transition-transform duration-300" loading="lazy" onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
                               ) : (
                                 <div className="absolute inset-0 flex items-center justify-center">
                                   <Package className="w-10 h-10 text-slate-200 dark:text-slate-700" />
