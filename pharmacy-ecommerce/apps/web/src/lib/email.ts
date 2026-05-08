@@ -59,6 +59,7 @@ export async function sendWebpayConfirmation(opts: {
   to: string;
   name: string;
   orderId: string;
+  trackingToken?: string | null;
   total: number;
   items: OrderEmailItem[];
 }) {
@@ -96,7 +97,8 @@ export async function sendWebpayConfirmation(opts: {
       <p style="margin:4px 0 0;font-family:monospace;font-size:14px;color:#334155;">${shortId}...</p>
     </div>
 
-    <a href="${BASE}/mis-pedidos" style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;">Ver mis pedidos →</a>
+    ${opts.trackingToken ? `<a href="${BASE}/seguimiento/${opts.trackingToken}" style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;margin-right:8px;">Seguir mi pedido →</a>` : ''}
+    <a href="${BASE}/mis-pedidos" style="display:inline-block;background:#f1f5f9;color:#0f172a;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;">Mis pedidos</a>
   `);
 
   await getResend().emails.send({
@@ -112,6 +114,7 @@ export async function sendPickupReservationEmail(opts: {
   name: string;
   orderId: string;
   pickupCode: string;
+  trackingToken?: string | null;
   total: number;
   expiresAt: string;
   items: OrderEmailItem[];
@@ -155,6 +158,8 @@ export async function sendPickupReservationEmail(opts: {
         <li>Paga en tienda y retira tus productos</li>
       </ol>
     </div>
+
+    ${opts.trackingToken ? `<a href="${BASE}/seguimiento/${opts.trackingToken}" style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;">Seguir mi pedido →</a>` : ''}
   `);
 
   await getResend().emails.send({

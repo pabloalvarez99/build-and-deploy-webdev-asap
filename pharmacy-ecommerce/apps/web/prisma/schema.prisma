@@ -118,6 +118,7 @@ model orders {
   guest_surname              String?      @db.VarChar(255)
   customer_phone             String?      @db.VarChar(20)
   pickup_code                String?      @db.VarChar(10)
+  tracking_token             String?      @unique @db.VarChar(64)
   reservation_expires_at     DateTime?    @db.Timestamptz(6)
   shipping_address           String?
   notes                      String?

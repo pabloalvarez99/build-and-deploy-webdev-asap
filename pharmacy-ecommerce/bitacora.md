@@ -4,6 +4,36 @@
 
 ---
 
+## 2026-05-08 — Feat: tracking público pedido `/seguimiento/[token]` (sin login)
+
+Cliente recibe link único en email post-compra → ve estado pedido sin crear cuenta. Reduce fricción soporte (WhatsApp queries "¿cómo va mi pedido?").
+
+- **Schema**: `orders.tracking_token VARCHAR(64) UNIQUE NULL` (Prisma `schema.prisma`).
+- **Migration**: `prisma/migrations/20260508_add_tracking_token.sql` con `ALTER TABLE` + índice único + backfill (`encode(gen_random_bytes(24), 'hex')` para órdenes existentes).
+- **Token**: `crypto.randomBytes(24).toString('hex')` = 48 chars hex, validado regex `/^[a-f0-9]{32,64}$/i`.
+- **Helper** `src/lib/tracking.ts`:
+  - `generateTrackingToken()` + `trackingUrl(token)` (respeta `NEXT_PUBLIC_BASE_URL` con `.trim().replace(/\/$/, '')`).
+  - `statusToTimeline(status, payment_provider)` → 5 steps user-facing (`Pedido recibido → Pago/Reserva → Preparando → Listo retiro → Entregado`), maneja `cancelled/rejected`.
+- **Generación en checkout**:
+  - `/api/store-pickup` setea `tracking_token` + retorna en JSON + pasa a email reservation.
+  - `/api/webpay/create` setea `tracking_token` al crear order pendiente. `/api/webpay/return` selecciona campo y lo pasa a `sendWebpayConfirmation`.
+- **Email**: `sendWebpayConfirmation` y `sendPickupReservationEmail` aceptan `trackingToken?` y agregan CTA verde "Seguir mi pedido →" apuntando a `/seguimiento/{token}`.
+- **API pública** `GET /api/tracking/[token]` (`runtime: 'nodejs'`, `force-dynamic`):
+  - Valida regex token. 400 si inválido, 404 si no existe.
+  - Retorna subset seguro: status, total, payment_provider, pickup_code, expires, items, customer name. NO email/phone/user_id.
+- **Página** `/seguimiento/[token]/page.tsx` (Server Component):
+  - `metadata.robots: { index: false, follow: false }` — no indexable.
+  - Banner adaptativo: cancelado (rojo) / listo retiro (verde con código grande monoespaciado tracking-[0.3em]) / entregado / preparando (cyan).
+  - Timeline 5-step con íconos lucide, dot states (done/active/pending/cancelled), ring-4 en active.
+  - Lista items con totales por línea + total general.
+  - CTA WhatsApp `wa.me/56993649604` con mensaje pre-rellenado `Hola! Consulta sobre mi pedido #{shortId}`.
+
+**DB pendiente**: aplicar migration en Cloud SQL antes de deploy. Sin la columna, `prisma.orders.create` con `tracking_token` lanzará. Comando: `npx prisma db push` (con `DATABASE_URL` apuntando a Cloud SQL via proxy) o aplicar SQL directo en `migrations/20260508_add_tracking_token.sql`.
+
+Build local OK (`/seguimiento/[token]` 187 B, dynamic). `tsc --noEmit` source clean.
+
+---
+
 ## 2026-05-08 — Feat: `/productos` catálogo con filtros laterales + sort + infinite scroll
 
 Nueva página dedicada al catálogo (separada del homepage `/` que mantiene scrollers/promos). URL state shareable.

@@ -54,7 +54,7 @@ async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
     // Find pending webpay order matching the buy_order prefix
     const pendingOrders = await db.orders.findMany({
       where: { payment_provider: 'webpay', status: 'pending' },
-      select: { id: true, total: true, user_id: true, guest_email: true, guest_name: true, guest_surname: true, payment_provider: true },
+      select: { id: true, total: true, user_id: true, guest_email: true, guest_name: true, guest_surname: true, payment_provider: true, tracking_token: true },
     })
 
     const order = pendingOrders.find((o) =>
@@ -118,6 +118,7 @@ async function handleReturn(tokenWs: string | null, tbkToken: string | null) {
         to: emailDest,
         name: order.guest_name || 'Cliente',
         orderId: order.id,
+        trackingToken: order.tracking_token,
         total: Number(order.total),
         items: orderItems.map((i) => ({
           product_name: i.product_name,

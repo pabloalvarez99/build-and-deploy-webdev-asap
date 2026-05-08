@@ -3,6 +3,7 @@ import { getAuthenticatedUser, errorResponse } from '@/lib/firebase/api-helpers'
 import { getDb } from '@/lib/db'
 import { sendPickupReservationEmail } from '@/lib/email'
 import { POINTS_TO_CLP } from '@/lib/loyalty'
+import { generateTrackingToken } from '@/lib/tracking'
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     const pickupCode = String(Math.floor(100000 + Math.random() * 900000))
+    const trackingToken = generateTrackingToken()
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
 
     // Create order + items + points redemption atomically
@@ -66,6 +68,7 @@ export async function POST(request: NextRequest) {
           guest_session_id: session_id,
           payment_provider: 'store',
           pickup_code: pickupCode,
+          tracking_token: trackingToken,
           reservation_expires_at: expiresAt,
           customer_phone: phone,
           guest_name: name,
@@ -105,6 +108,7 @@ export async function POST(request: NextRequest) {
         name: name || 'Cliente',
         orderId: order.id,
         pickupCode,
+        trackingToken,
         total: finalTotal,
         expiresAt: expiresAt.toISOString(),
         items: orderItems.map((i) => ({
@@ -118,6 +122,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       order_id: order.id,
       pickup_code: pickupCode,
+      tracking_token: trackingToken,
       expires_at: expiresAt.toISOString(),
       total: finalTotal.toString(),
       points_redeemed: pointsRedeemed,

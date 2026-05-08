@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser, errorResponse } from '@/lib/firebase/api-helpers'
 import { getDb } from '@/lib/db'
 import { webpayTransaction } from '@/lib/transbank'
+import { generateTrackingToken } from '@/lib/tracking'
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,6 +35,8 @@ export async function POST(request: NextRequest) {
       orderItems.push({ product_id: product.id, product_name: product.name, quantity: item.quantity, price })
     }
 
+    const trackingToken = generateTrackingToken()
+
     // Create order + items atomically
     const order = await db.$transaction(async (tx: Parameters<Parameters<typeof db.$transaction>[0]>[0]) => {
       const o = await tx.orders.create({
@@ -45,6 +48,7 @@ export async function POST(request: NextRequest) {
           guest_email: email,
           guest_session_id: session_id,
           payment_provider: 'webpay',
+          tracking_token: trackingToken,
           customer_phone: phone,
           guest_name: name,
           guest_surname: surname,
