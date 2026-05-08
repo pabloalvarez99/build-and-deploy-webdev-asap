@@ -2049,3 +2049,23 @@ Pendiente futuro perf:
 - Migrar `app/page.tsx` Home a Server Component + `loadProducts`/`loadTopSellers` server-side.
 - Code-split Recharts (solo admin lo usa, no debería estar en home chunk).
 - Auditar chunk 2117 — qué exporta y por qué carga en home.
+
+## 2026-05-07 — Push notifications full impl (commit 6e4ef0f)
+
+DB prod migration aplicada: `push_subscriptions` (UUID id, FK profiles cascade, endpoint UNIQUE, p256dh, auth, user_agent, created_at, last_used_at). Indexes user_id + created_at desc.
+Migration script: `scripts/run-migration.mjs` usa `@google-cloud/cloud-sql-connector` + service account de `.env.prod-temp` (vercel env pull). Trim+escape multiline GOOGLE_SERVICE_ACCOUNT JSON.
+
+VAPID: `npx web-push generate-vapid-keys` → env vars Vercel prod (NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT=mailto:contacto@tu-farmacia.cl).
+
+SW tf-v2→tf-v3: handler push (parsea data JSON, fallback text, notificación con icon/badge=/icon, tag, data.url) + notificationclick (matchAll windows + focus o openWindow).
+
+API:
+- `POST /api/push/subscribe` — upsert by endpoint (idempotente), attach userId si auth.
+- `POST /api/push/unsubscribe` — delete by endpoint.
+- `POST /api/push/broadcast` — admin-only (`getAdminUser()`), Promise.all paralelo, captura 410/404 → bulk delete stale.
+
+Frontend `PushOptInButton.tsx`: muestra banner cyan 8s post-load si `Notification.permission==='default'` y no dismissed (14d). Click "Activar" → `Notification.requestPermission()` → `pushManager.subscribe({applicationServerKey: vapid})` → POST subscribe. Dismiss persistido localStorage. Mounted en layout junto a InstallPWAButton.
+
+Admin `/admin/push`: form title (50ch) + body (120ch) + url, confirm dialog, POST broadcast, render `{sent}/{total}, {failed} fail, {cleaned} stale`.
+
+Pendiente verificación e2e en mobile real.
