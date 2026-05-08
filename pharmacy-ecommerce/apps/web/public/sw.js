@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'tf-v2';
+const CACHE_VERSION = 'tf-v3';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const API_CACHE = `${CACHE_VERSION}-api`;
@@ -150,4 +150,36 @@ self.addEventListener('fetch', (event) => {
       ),
     );
   }
+});
+
+// Push notifications
+self.addEventListener('push', (event) => {
+  let data = { title: 'Tu Farmacia', body: 'Tienes una notificación' };
+  try {
+    if (event.data) data = { ...data, ...event.data.json() };
+  } catch (e) {
+    if (event.data) data.body = event.data.text();
+  }
+  const options = {
+    body: data.body,
+    icon: data.icon || '/icon',
+    badge: data.badge || '/icon',
+    tag: data.tag || 'tu-farmacia-default',
+    data: { url: data.url || '/' },
+    requireInteraction: false,
+  };
+  event.waitUntil(self.registration.showNotification(data.title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || '/';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window' }).then((clients) => {
+      for (const c of clients) {
+        if (c.url.includes(url) && 'focus' in c) return c.focus();
+      }
+      return self.clients.openWindow(url);
+    }),
+  );
 });

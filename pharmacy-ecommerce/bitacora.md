@@ -1994,3 +1994,58 @@ Comp `InstallPWAButton.tsx` (client) capta `beforeinstallprompt`, muestra banner
 - Demás `/api/*` (cart, orders, profile, auth, checkout, webpay) sin cachear (server siempre valida stock/precio en mutaciones).
 - LRU trim: runtime 60, api 40 entries.
 - Deploy `145c5de` prod ✅. Verificado /sw.js sirviendo tf-v2 con content-type correcto.
+
+## 2026-05-07 — Lighthouse audit + fixes CLS/LCP home (commit ce1f05a)
+
+Lighthouse CLI mobile prod (https://tu-farmacia.cl, throttling=simulate):
+- Performance **63** ❌ | A11y 86 | BP 100 ✅ | SEO 92
+- LCP 3.9s (bad) | CLS 0.416 (catastrophic) | TBT 290ms | FCP 1.0s ✅
+
+Root causes:
+- CLS 0.22: `MobileCategoryGrid` retorna `null` mientras `categories` state vacío → al popularse pushea contenido 284px abajo.
+- CLS adicional: secciones `topSellers`/`discountedProducts` short-circuit con `.length > 0` → pop-in al cargar.
+- LCP element: 2da imagen producto en scroller horizontal (`TAPSIN LIMONADA DIA`) con `loading=lazy`. Priority solo `idx === 0`.
+
+Fixes (`src/app/page.tsx`):
+- MobileCategoryGrid: placeholder `<div className="lg:hidden min-h-[220px]" aria-hidden />` durante load.
+- TopSellers/Ofertas: placeholder `min-h-[260px]` durante fetch.
+- Scrollers: `priority={idx < 2}` + `fetchPriority={idx < 2 ? 'high' : 'auto'}` (3 ocurrencias: frequentProducts, topSellers, discountedProducts).
+
+Build local OK. Push ce1f05a → Vercel auto-deploy. Re-correr Lighthouse post-deploy para verificar mejoras.
+
+Pending diagnostics no abordados (próxima iteración):
+- robots.txt invalid (SEO 92)
+- aria-allowed-attr, color-contrast, link-name (A11y 86)
+- mainthread-work-breakdown (TBT 290ms)
+
+## 2026-05-07 — Skeleton fix Speed Index regression (commit d3fb0d3)
+
+Lighthouse post-fix CLS (ce1f05a):
+- Perf 63→78 ✅ | CLS 0.416→0.001 ✅ FIXED
+- LCP 3.9s→3.8s ~igual (bottleneck = Next/image proxy a CDNs externos lentos)
+- Speed Index 2.1s→4.9s **regresión** — placeholders min-h vacíos cuentan como "no renderizado"
+- TBT 290→330ms
+
+Fix: reemplazar min-h vacíos con `ScrollerSkeleton` + `CategoryGridSkeleton` (animate-pulse, mismo height). Skeleton pinta de inmediato → SI restaurado sin reintroducir CLS.
+
+Pendiente medir post-deploy d3fb0d3.
+
+## 2026-05-07 — Lighthouse v3 post-skeleton (commit d3fb0d3) — final perf state
+
+| Métrica | Baseline | v2 (CLS fix) | v3 (skeleton) |
+|---|---|---|---|
+| Perf | 63 | 78 | 71 |
+| CLS | 0.416 | 0.001 | 0.014 ✅ |
+| LCP | 3.9s | 3.8s | 3.7s |
+| SI | 2.1s | 4.9s | 2.9s ✅ |
+| TBT | 290ms | 330ms | 720ms |
+| FCP | 1.0s | 1.2s | 1.0s |
+
+CLS resuelto definitivamente. SI restaurado tras regresión.
+TBT/LCP estancados — bottleneck = chunks JS pesados (`2117-*.js` 1020ms bootup, page bundle Home 973ms con 1130 LOC client). Mejora real requiere refactor a Server Components (alto costo/riesgo).
+Decisión: aceptar Perf 71-78 (Lighthouse single-run noise ±10pts), avanzar a push notifications.
+
+Pendiente futuro perf:
+- Migrar `app/page.tsx` Home a Server Component + `loadProducts`/`loadTopSellers` server-side.
+- Code-split Recharts (solo admin lo usa, no debería estar en home chunk).
+- Auditar chunk 2117 — qué exporta y por qué carga en home.
