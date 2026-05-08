@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-05-07 — Fix: SEO robots.txt sitemap URL roto + a11y contrast footer
+
+Fix bug Lighthouse SEO 92→100 (robots.txt invalid).
+
+- `curl https://tu-farmacia.cl/robots.txt` reveló línea rota: `Sitemap: https://tu-farmacia.cl\n/sitemap.xml`. Causa: `NEXT_PUBLIC_SITE_URL` en Vercel tiene trailing `\n` (común al pegar valor en UI).
+- Fix defensivo en código: `(env.NEXT_PUBLIC_SITE_URL || 'https://tu-farmacia.cl').trim().replace(/\/$/, '')` aplicado en `src/app/robots.ts`, `src/app/sitemap.ts`, `src/app/layout.tsx` (metadataBase, JSON-LD, alternates.canonical).
+- Removido `host:` field de robots (no estándar W3C, Yandex-only, Lighthouse no lo usa).
+- A11y contrast: footer copyright `text-slate-400 dark:text-slate-500` (~3.5:1 fail AA) → `text-slate-600 dark:text-slate-300` (~7:1 pass AAA).
+
+Build local OK. Próximo lighthouse esperado: SEO 92→100, A11y leve mejora.
+
+---
+
 ## 2026-05-07 — Feat: Push notif auto-broadcast en `apply_bulk` descuentos
 
 Cierre del canal push: ya no requiere paso manual a `/admin/push`. Marcar oferta masiva → suscriptores reciben notificación automáticamente.

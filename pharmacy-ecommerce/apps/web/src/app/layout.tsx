@@ -10,7 +10,7 @@ import { PushOptInButton } from '@/components/PushOptInButton';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tu-farmacia.cl';
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://tu-farmacia.cl').trim().replace(/\/$/, '');
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -172,7 +172,7 @@ export default function RootLayout({
               </div>
             </div>
             <div className="border-t border-slate-200 dark:border-slate-700 mt-8 pt-6 text-center">
-              <p className="text-slate-400 dark:text-slate-500 text-base">
+              <p className="text-slate-600 dark:text-slate-300 text-base">
                 &copy; {new Date().getFullYear()} Tu Farmacia. Todos los derechos reservados.
               </p>
             </div>
