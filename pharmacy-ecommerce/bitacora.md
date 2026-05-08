@@ -2206,3 +2206,18 @@ Nueva feature: search bar global en Navbar (storefront, hidden en /admin).
 - `NavbarSearch.tsx` — wrapper responsive: desktop inline (md+, max-w-xl flex-1), mobile icon button → full-screen overlay con `body.overflow=hidden`.
 
 **Navbar.tsx**: import `NavbarSearch`, render entre logo y actions sólo si `!isAdmin`.
+
+## 2026-05-08 — UI audit P0/P1 (sesión 1)
+
+Audit completo de storefront (`/`, `/producto/[slug]`, `/carrito`, `/checkout`, `/mi-cuenta`, `/auth/login`) → 41 issues priorizados en `/tmp/ui-audit.md`. Top 5 P0/P1 implementados:
+
+1. **checkout Webpay clearCart()** — removido pre-submit. Cart se limpia ahora en `/checkout/webpay/success` post-confirmación. Si user cancela en banco → carrito intacto para reintento. (ya en HEAD c432117)
+2. **producto/[slug] React.cache** — `getProductBySlug` envuelto en `cache()` de React. `generateMetadata` + `default` page comparten 1 sola query Prisma por request en lugar de 2. Commit `cc0a1e1`.
+3. **modal Webpay a11y** — `role="dialog" aria-modal="true" aria-labelledby aria-describedby`, focus-trap (Tab/Shift+Tab cíclico), Esc cierra, focus-restore al trigger, body overflow lock. (ya en HEAD c432117)
+4. **inputMode numeric/email** — `<input type="tel" inputMode="numeric" pattern="[0-9+\s\-]*">` + email `inputMode="email"`. Teclado correcto en mobile target adulto mayor. (ya en HEAD c432117)
+5. **Image priority limit** — antes 8+ `<Image priority>` simultáneos (frequent + top-sellers + ofertas + grid) → red bloqueada, LCP castigado. Ahora solo top-sellers `idx===0` priority/fetchPriority=high; resto `loading="lazy"`. Commit `7df2d5e`.
+
+Build local OK (160 páginas generadas). Error en `collect-build-traces` (`_app.js.nft.json`) es Windows-specific, Vercel deploy tolera.
+
+P2/P3 → siguiente sesión. Audit completo en `/tmp/ui-audit.md`.
+
