@@ -528,7 +528,7 @@ function HomeContent() {
                         <Link href={`/producto/${product.slug}`} className="block">
                           <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                             {product.image_url && !brokenImages.has(product.id) ? (
-                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" priority={idx === 0} fetchPriority={idx === 0 ? 'high' : 'auto'} onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
+                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" priority={idx < 2} fetchPriority={idx < 2 ? 'high' : 'auto'} onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
                             ) : <div className="absolute inset-0 flex items-center justify-center text-slate-300"><Package className="w-8 h-8" /></div>}
                           </div>
                         </Link>
@@ -553,6 +553,9 @@ function HomeContent() {
             )}
 
             {/* Más Vendidos */}
+            {!selectedCategory && !searchTerm && !showDiscountOnly && topSellers.length === 0 && (
+              <div className="min-h-[260px]" aria-hidden />
+            )}
             {topSellers.length > 0 && !selectedCategory && !searchTerm && !showDiscountOnly && (
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -573,7 +576,7 @@ function HomeContent() {
                         <Link href={`/producto/${product.slug}`} className="block">
                           <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                             {product.image_url && !brokenImages.has(product.id) ? (
-                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" priority={idx === 0} fetchPriority={idx === 0 ? 'high' : 'auto'} onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
+                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" priority={idx < 2} fetchPriority={idx < 2 ? 'high' : 'auto'} onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
                             ) : <div className="absolute inset-0 flex items-center justify-center text-slate-300"><Package className="w-8 h-8" /></div>}
                           </div>
                         </Link>
@@ -598,6 +601,9 @@ function HomeContent() {
             )}
 
             {/* Ofertas */}
+            {!selectedCategory && !searchTerm && !showDiscountOnly && discountedProducts.length === 0 && (
+              <div className="min-h-[260px]" aria-hidden />
+            )}
             {discountedProducts.length > 0 && !selectedCategory && !searchTerm && !showDiscountOnly && (
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -615,7 +621,7 @@ function HomeContent() {
                         <Link href={`/producto/${product.slug}`} className="block relative">
                           <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                             {product.image_url && !brokenImages.has(product.id) ? (
-                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" priority={idx === 0} fetchPriority={idx === 0 ? 'high' : 'auto'} onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
+                              <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" priority={idx < 2} fetchPriority={idx < 2 ? 'high' : 'auto'} onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
                             ) : <div className="absolute inset-0 flex items-center justify-center text-slate-300"><Package className="w-8 h-8" /></div>}
                             <div className="absolute top-1.5 left-1.5 bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md">-{product.discount_percent}%</div>
                           </div>
@@ -929,7 +935,7 @@ function MobileCategoryGrid({ categories, onSelect }: { categories: Category[]; 
   const [showAll, setShowAll] = useState(false);
   const visible = showAll ? categories : categories.slice(0, 6);
 
-  if (categories.length === 0) return null;
+  if (categories.length === 0) return <div className="lg:hidden min-h-[220px]" aria-hidden />;
   return (
     <div className="lg:hidden">
       <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-3">Categorías</h2>
