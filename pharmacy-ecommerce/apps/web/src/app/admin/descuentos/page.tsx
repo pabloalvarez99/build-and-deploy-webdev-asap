@@ -5,7 +5,7 @@ import {
   Tag, Percent, Gift, Star, TrendingDown, ChevronRight,
   Loader2, CheckCircle2, AlertCircle, Settings, Zap, Trash2,
   ShoppingBag, Users, Coins, ToggleLeft, ToggleRight, Info,
-  Package, RefreshCw, ArrowRight,
+  Package, RefreshCw, ArrowRight, Bell,
 } from 'lucide-react';
 
 interface DiscountProduct {
@@ -65,7 +65,8 @@ export default function DescuentosPage() {
   const [applyCategoryId, setApplyCategoryId] = useState('');
   const [applyPercent, setApplyPercent] = useState<number>(10);
   const [applyLoading, setApplyLoading] = useState(false);
-  const [applyResult, setApplyResult] = useState<{ updated: number } | null>(null);
+  const [applyNotify, setApplyNotify] = useState(true);
+  const [applyResult, setApplyResult] = useState<{ updated: number; push: { sent: number; failed: number; total: number } | null } | null>(null);
 
   // Remove state
   const [removeScope, setRemoveScope] = useState<'all' | 'category'>('category');
@@ -115,11 +116,12 @@ export default function DescuentosPage() {
           scope: applyScope,
           category_id: applyCategoryId || undefined,
           discount_percent: applyPercent,
+          notify: applyNotify,
         }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Error');
-      setApplyResult({ updated: json.updated });
+      setApplyResult({ updated: json.updated, push: json.push ?? null });
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error');
@@ -382,10 +384,33 @@ export default function DescuentosPage() {
                 </div>
               )}
 
+              {/* Notify toggle */}
+              <label className="flex items-center gap-3 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/40 rounded-xl px-3 py-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={applyNotify}
+                  onChange={e => setApplyNotify(e.target.checked)}
+                  className="w-4 h-4 accent-violet-600"
+                />
+                <Bell className="w-4 h-4 text-violet-600 dark:text-violet-400 shrink-0" />
+                <span className="text-xs text-violet-700 dark:text-violet-300">
+                  Enviar notificación push a suscriptores
+                </span>
+              </label>
+
               {applyResult && (
-                <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl px-3 py-2">
-                  <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  {applyResult.updated} productos actualizados
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl px-3 py-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    {applyResult.updated} productos actualizados
+                  </div>
+                  {applyResult.push && (
+                    <div className="flex items-center gap-2 text-xs text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-900/20 rounded-xl px-3 py-2">
+                      <Bell className="w-3.5 h-3.5 shrink-0" />
+                      Push enviado: {applyResult.push.sent}/{applyResult.push.total}
+                      {applyResult.push.failed > 0 && ` · ${applyResult.push.failed} fallidos`}
+                    </div>
+                  )}
                 </div>
               )}
 

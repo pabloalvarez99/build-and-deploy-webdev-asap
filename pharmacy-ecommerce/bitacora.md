@@ -4,6 +4,31 @@
 
 ---
 
+## 2026-05-07 — Feat: Push notif auto-broadcast en `apply_bulk` descuentos
+
+Cierre del canal push: ya no requiere paso manual a `/admin/push`. Marcar oferta masiva → suscriptores reciben notificación automáticamente.
+
+- Nueva fn reusable `src/lib/push/broadcast.ts` `sendBroadcast({title, body, url, tag})`:
+  - Configura web-push lazy (singleton flag `configured`), reusa VAPID env.
+  - Lee `db.push_subscriptions.findMany()` paralelo, payload JSON `{title, body, url, tag}`.
+  - Cleanup auto endpoints `410|404` con `deleteMany`.
+  - Devuelve `{ok, sent, failed, total, cleaned}`.
+- Refactor `/api/push/broadcast/route.ts` ahora wrapper delgado (auth + parse + delegar a `sendBroadcast`).
+- `/api/admin/descuentos` POST `apply_bulk` acepta `notify: true` opcional:
+  - Tras `updateMany`, si `notify && discount_percent > 0 && updated > 0` → `sendBroadcast` best-effort en `try/catch` (no bloquea respuesta si falla).
+  - Title dinámico: scope `category` → busca nombre `db.categories.findUnique` → `🔥 {Categoría}: {N}% off`. Otro caso → `🔥 Ofertas hasta {N}% off`.
+  - Body: `{updated} producto(s) con descuento`. URL: `/?discount=true` (home filtro existente).
+  - Tag único `discount-{Date.now()}` (evita merge de notificaciones).
+  - Respuesta extiende: `{success, updated, push: {sent, failed, total} | null}`.
+- UI `/admin/descuentos` (tab "Aplicar descuento"):
+  - Checkbox `applyNotify` (default true) con icono `Bell` violet, label "Enviar notificación push a suscriptores".
+  - Pasa `notify: applyNotify` en payload.
+  - Result UI muestra dos chips: verde "{N} productos actualizados" + violet "Push enviado: {sent}/{total}" (+ failed si >0).
+
+Build local OK. Push notif ahora cierra loop completo: admin marca oferta → suscriptores reciben push instantáneo → tap abre `/?discount=true`.
+
+---
+
 ## 2026-04-29 — Feat: Fase 5 inteligencia — Health Score + Insights automáticos + Activity Feed
 
 ERP cubre ya datos completos (ventas, finanzas, farmacia, equipo, clientes). Fase 5 añade **inteligencia + narrativa** para percepción profesional: 1 número que cuenta la historia, anomalías detectadas automáticamente, pulso del negocio en tiempo real.

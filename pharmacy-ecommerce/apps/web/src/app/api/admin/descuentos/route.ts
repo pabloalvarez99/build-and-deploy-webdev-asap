@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 import { getDb } from '@/lib/db';
+import { sendBroadcast } from '@/lib/push/broadcast';
 
 /**
  * GET /api/admin/descuentos
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
     const db = await getDb();
 
     if (action === 'apply_bulk') {
-      const { scope, category_id, discount_percent, product_ids } = body;
+      const { scope, category_id, discount_percent, product_ids, notify } = body;
       if (typeof discount_percent !== 'number' || discount_percent < 0 || discount_percent > 99) {
         return errorResponse('discount_percent debe ser entre 0 y 99', 400);
       }
@@ -116,7 +117,29 @@ export async function POST(request: NextRequest) {
       }
 
       const result = await db.products.updateMany({ where, data: { discount_percent } });
-      return NextResponse.json({ success: true, updated: result.count });
+
+      let push: { sent: number; failed: number; total: number } | null = null;
+      if (notify === true && discount_percent > 0 && result.count > 0) {
+        try {
+          let title = `🔥 Ofertas hasta ${discount_percent}% off`;
+          let pushBody = `${result.count} producto${result.count === 1 ? '' : 's'} con descuento`;
+          if (scope === 'category' && category_id) {
+            const cat = await db.categories.findUnique({ where: { id: category_id }, select: { name: true } });
+            if (cat?.name) title = `🔥 ${cat.name}: ${discount_percent}% off`;
+          }
+          const r = await sendBroadcast({
+            title,
+            body: pushBody,
+            url: '/?discount=true',
+            tag: `discount-${Date.now()}`,
+          });
+          push = { sent: r.sent, failed: r.failed, total: r.total };
+        } catch (e) {
+          console.error('[descuentos] push broadcast failed:', e);
+        }
+      }
+
+      return NextResponse.json({ success: true, updated: result.count, push });
     }
 
     if (action === 'remove_bulk') {
