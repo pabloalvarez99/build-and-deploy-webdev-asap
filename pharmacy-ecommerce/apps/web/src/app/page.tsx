@@ -80,6 +80,39 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   );
 }
 
+function ScrollerSkeleton() {
+  return (
+    <div className="min-h-[260px]" aria-hidden>
+      <div className="h-6 w-32 bg-slate-200 dark:bg-slate-800 rounded mb-3 animate-pulse" />
+      <div className="flex gap-3 overflow-hidden -mx-1 px-1">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="flex-shrink-0 w-36 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+            <div className="aspect-square bg-slate-100 dark:bg-slate-800 animate-pulse" />
+            <div className="p-2.5 space-y-2">
+              <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+              <div className="h-3 w-2/3 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+              <div className="h-9 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CategoryGridSkeleton() {
+  return (
+    <div className="lg:hidden min-h-[220px]" aria-hidden>
+      <div className="h-6 w-28 bg-slate-200 dark:bg-slate-800 rounded mb-3 animate-pulse" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="h-[52px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl animate-pulse" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function StockBadge({ stock }: { stock: number }) {
   if (stock <= 0) return (
     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800">
@@ -554,7 +587,7 @@ function HomeContent() {
 
             {/* Más Vendidos */}
             {!selectedCategory && !searchTerm && !showDiscountOnly && topSellers.length === 0 && (
-              <div className="min-h-[260px]" aria-hidden />
+              <ScrollerSkeleton />
             )}
             {topSellers.length > 0 && !selectedCategory && !searchTerm && !showDiscountOnly && (
               <div>
@@ -602,7 +635,7 @@ function HomeContent() {
 
             {/* Ofertas */}
             {!selectedCategory && !searchTerm && !showDiscountOnly && discountedProducts.length === 0 && (
-              <div className="min-h-[260px]" aria-hidden />
+              <ScrollerSkeleton />
             )}
             {discountedProducts.length > 0 && !selectedCategory && !searchTerm && !showDiscountOnly && (
               <div>
@@ -935,7 +968,7 @@ function MobileCategoryGrid({ categories, onSelect }: { categories: Category[]; 
   const [showAll, setShowAll] = useState(false);
   const visible = showAll ? categories : categories.slice(0, 6);
 
-  if (categories.length === 0) return <div className="lg:hidden min-h-[220px]" aria-hidden />;
+  if (categories.length === 0) return <CategoryGridSkeleton />;
   return (
     <div className="lg:hidden">
       <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-3">Categorías</h2>
