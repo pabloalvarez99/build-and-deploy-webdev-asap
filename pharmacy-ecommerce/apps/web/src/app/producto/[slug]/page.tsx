@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { cache } from 'react';
 import { getDb } from '@/lib/db';
 import ProductPageClient from './ProductPageClient';
 
@@ -9,7 +10,8 @@ function sanitizeImageUrl(url: string | null): string | null {
   return url.startsWith('http://') ? 'https://' + url.slice(7) : url;
 }
 
-async function getProductBySlug(slug: string) {
+// React.cache dedupe: generateMetadata + page comparten 1 sola query Prisma por request.
+const getProductBySlug = cache(async (slug: string) => {
   try {
     const db = await getDb();
     const product = await db.products.findFirst({
@@ -20,7 +22,7 @@ async function getProductBySlug(slug: string) {
   } catch {
     return null;
   }
-}
+});
 
 export async function generateMetadata({
   params,
