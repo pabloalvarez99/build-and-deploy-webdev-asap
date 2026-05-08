@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-05-08 — Home redesign: hero búsqueda + categorías destacadas (UX adultos mayores)
+
+Rediseño `/` priorizando legibilidad y tap targets para clientes mayores.
+
+- Nuevo `src/components/home/Hero.tsx` — bloque destacado con gradiente cyan→emerald, título grande ("¿Qué medicamento necesita hoy?"), input búsqueda 60px alto, texto 18-20px, CTAs primarios "Ver ofertas" (rojo) y "Cotizar receta" (outline).
+- Nuevo `src/components/home/FeaturedCategories.tsx` — 4 tiles destacados (Medicamentos→dolor-fiebre, Cuidado personal→higiene-cuidado-personal, Bebés→bebes-ninos, Adulto mayor→adulto-mayor). Tarjetas 140px+ alto, iconos 56px en píldora de color, scroll-snap mobile / grid 4-col desktop.
+- `src/app/page.tsx` — reemplazo barra de búsqueda compacta por Hero cuando home está limpia (sin filtros). En vista filtrada se mantiene barra simplificada (más alta: min-h 48px, border-2). Autocomplete preservado, integrado dentro del Hero.
+- Tap targets: todos los CTAs ≥48-56px, inputs ≥48px, tipografía base ≥16px (subió a 18-20px en hero).
+- Contraste: textos slate-900/slate-50 sobre fondos claros/oscuros, foco con ring-4 cyan-500/30.
+- Performance: sin nuevas dependencias; Hero/FeaturedCategories importados estáticos pero compactos. Carrusel mobile usa `overflow-x-auto` nativo (no JS extra).
+
+Archivos: `src/components/home/Hero.tsx`, `src/components/home/FeaturedCategories.tsx`, `src/app/page.tsx`.
+
+---
+
 ## 2026-05-07 — Perf: lazy-load floating UI bundle (TBT/initial JS ↓)
 
 Reducción JS inicial extrayendo componentes no-críticos del layout a `next/dynamic` con `ssr: false`.

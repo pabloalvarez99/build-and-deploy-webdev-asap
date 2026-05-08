@@ -16,6 +16,8 @@ import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
 import { formatPrice, discountedPrice } from '@/lib/format';
 import { ReactNode } from 'react';
+import Hero, { HeroAutocompleteShell, HeroAcLoading } from '@/components/home/Hero';
+import FeaturedCategories from '@/components/home/FeaturedCategories';
 
 const categoryIcons: Record<string, ReactNode> = {
   'dolor-fiebre': <Pill className="w-4 h-4" />,
@@ -426,105 +428,168 @@ function HomeContent() {
           {/* ── Main content ───────────────────────────────────── */}
           <div className="flex-1 min-w-0 space-y-5">
 
-            {/* Search bar */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 px-4 py-3">
-              <div className="flex gap-2 items-center">
-                <div className="flex-1 relative" role="search" ref={acContainerRef}>
-                  <label htmlFor="search-products" className="sr-only">Buscar medicamentos</label>
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-slate-400 dark:text-slate-500" aria-hidden="true" />
-                  </div>
-                  <input
-                    ref={searchInputRef}
-                    id="search-products"
-                    type="search"
-                    placeholder="Buscar medicamentos, principio activo, laboratorio..."
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') { setAcOpen(false); }
-                      if (e.key === 'Enter') { setAcOpen(false); }
-                    }}
-                    onFocus={() => {
-                      if (searchInput.length >= 2 && (acSuggestions.length > 0 || acError)) setAcOpen(true);
-                    }}
-                    className="block w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-base text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-400 transition-all"
-                    autoComplete="off"
-                    aria-autocomplete="list"
-                    aria-expanded={acOpen}
-                    aria-controls="ac-listbox"
-                  />
-                  {searchInput && (
-                    <button
-                      onClick={() => {
-                        setSearchInput('');
-                        setSearchTerm('');
-                        setAcOpen(false);
-                        setAcSuggestions([]);
-                        searchInputRef.current?.focus();
-                      }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-500 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
-                      aria-label="Limpiar búsqueda"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-
-                  {/* Autocomplete dropdown */}
-                  {acOpen && (
-                    <div
-                      id="ac-listbox"
-                      role="listbox"
-                      className="absolute top-full left-0 right-0 mt-1.5 z-50 rounded-2xl border-2 border-slate-200 dark:border-slate-700 shadow-xl bg-white dark:bg-slate-900 overflow-hidden"
-                    >
-                      {acLoading ? (
-                        <div className="flex items-center justify-center gap-2 px-4 py-4 text-slate-400 dark:text-slate-500">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span className="text-base">Buscando...</span>
-                        </div>
-                      ) : acError ? (
-                        <div className="px-4 py-4 text-base text-red-500 dark:text-red-400">{acError}</div>
-                      ) : acSuggestions.length === 0 ? (
-                        <div className="px-4 py-4 text-base text-slate-500 dark:text-slate-400">
-                          Sin resultados para &ldquo;{searchInput}&rdquo;
-                        </div>
-                      ) : (
-                        acSuggestions.map((p) => {
-                          const displayPrice = p.discount_percent
-                            ? discountedPrice(Number(p.price), p.discount_percent)
-                            : Number(p.price);
-                          const displayName = p.name.length > 40 ? p.name.slice(0, 40) + '…' : p.name;
-                          return (
-                            <button
-                              key={p.id}
-                              role="option"
-                              aria-selected={false}
-                              onMouseDown={(e) => {
-                                // mousedown fires before blur; prevent input blur then navigate
-                                e.preventDefault();
-                                setAcOpen(false);
-                                router.push(`/producto/${p.slug}`);
-                              }}
-                              className="w-full flex items-center justify-between px-4 py-3 min-h-[56px] text-left hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-b-0 focus:outline-none focus:bg-emerald-50 dark:focus:bg-emerald-900/20"
-                            >
-                              <span className="text-base font-semibold text-slate-800 dark:text-slate-100 truncate pr-4">{displayName}</span>
-                              <span className="text-emerald-600 font-bold text-sm flex-shrink-0">{formatPrice(displayPrice)}</span>
-                            </button>
-                          );
-                        })
-                      )}
+            {/* Hero w/ búsqueda grande + CTA Ver ofertas */}
+            {!selectedCategory && !searchTerm && !showDiscountOnly ? (
+              <Hero
+                searchInput={searchInput}
+                onSearchChange={setSearchInput}
+                onSearchClear={() => {
+                  setSearchInput('');
+                  setSearchTerm('');
+                  setAcOpen(false);
+                  setAcSuggestions([]);
+                  searchInputRef.current?.focus();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') setAcOpen(false);
+                  if (e.key === 'Enter') setAcOpen(false);
+                }}
+                onFocus={() => {
+                  if (searchInput.length >= 2 && (acSuggestions.length > 0 || acError)) setAcOpen(true);
+                }}
+                inputRef={searchInputRef}
+                containerRef={acContainerRef}
+                acOpen={acOpen}
+                acControlsId="ac-listbox"
+                autocomplete={acOpen ? (
+                  <HeroAutocompleteShell>
+                    {acLoading ? (
+                      <HeroAcLoading />
+                    ) : acError ? (
+                      <div className="px-4 py-4 text-base text-red-500 dark:text-red-400">{acError}</div>
+                    ) : acSuggestions.length === 0 ? (
+                      <div className="px-4 py-4 text-base text-slate-500 dark:text-slate-400">
+                        Sin resultados para &ldquo;{searchInput}&rdquo;
+                      </div>
+                    ) : (
+                      acSuggestions.map((p) => {
+                        const displayPrice = p.discount_percent
+                          ? discountedPrice(Number(p.price), p.discount_percent)
+                          : Number(p.price);
+                        const displayName = p.name.length > 40 ? p.name.slice(0, 40) + '…' : p.name;
+                        return (
+                          <button
+                            key={p.id}
+                            role="option"
+                            aria-selected={false}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setAcOpen(false);
+                              router.push(`/producto/${p.slug}`);
+                            }}
+                            className="w-full flex items-center justify-between px-5 py-4 min-h-[60px] text-left hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-b-0 focus:outline-none focus:bg-cyan-50 dark:focus:bg-cyan-900/20"
+                          >
+                            <span className="text-base font-semibold text-slate-800 dark:text-slate-100 truncate pr-4">{displayName}</span>
+                            <span className="text-emerald-700 dark:text-emerald-400 font-black text-base flex-shrink-0">{formatPrice(displayPrice)}</span>
+                          </button>
+                        );
+                      })
+                    )}
+                  </HeroAutocompleteShell>
+                ) : null}
+              />
+            ) : (
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 px-4 py-3">
+                <div className="flex gap-2 items-center">
+                  <div className="flex-1 relative" role="search" ref={acContainerRef}>
+                    <label htmlFor="search-products" className="sr-only">Buscar medicamentos</label>
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Search className="h-5 w-5 text-slate-500 dark:text-slate-400" aria-hidden="true" />
                     </div>
-                  )}
+                    <input
+                      ref={searchInputRef}
+                      id="search-products"
+                      type="search"
+                      placeholder="Buscar medicamentos, principio activo, laboratorio..."
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') { setAcOpen(false); }
+                        if (e.key === 'Enter') { setAcOpen(false); }
+                      }}
+                      onFocus={() => {
+                        if (searchInput.length >= 2 && (acSuggestions.length > 0 || acError)) setAcOpen(true);
+                      }}
+                      className="block w-full pl-12 pr-12 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-base text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:ring-4 focus:ring-cyan-500/30 focus:border-cyan-500 transition-all min-h-[48px]"
+                      autoComplete="off"
+                      aria-autocomplete="list"
+                      aria-expanded={acOpen}
+                      aria-controls="ac-listbox"
+                    />
+                    {searchInput && (
+                      <button
+                        onClick={() => {
+                          setSearchInput('');
+                          setSearchTerm('');
+                          setAcOpen(false);
+                          setAcSuggestions([]);
+                          searchInputRef.current?.focus();
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+                        aria-label="Limpiar búsqueda"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                    {acOpen && (
+                      <div
+                        id="ac-listbox"
+                        role="listbox"
+                        className="absolute top-full left-0 right-0 mt-1.5 z-50 rounded-2xl border-2 border-slate-200 dark:border-slate-700 shadow-xl bg-white dark:bg-slate-900 overflow-hidden"
+                      >
+                        {acLoading ? (
+                          <div className="flex items-center justify-center gap-2 px-4 py-4 text-slate-500 dark:text-slate-400">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span className="text-base">Buscando...</span>
+                          </div>
+                        ) : acError ? (
+                          <div className="px-4 py-4 text-base text-red-500 dark:text-red-400">{acError}</div>
+                        ) : acSuggestions.length === 0 ? (
+                          <div className="px-4 py-4 text-base text-slate-500 dark:text-slate-400">
+                            Sin resultados para &ldquo;{searchInput}&rdquo;
+                          </div>
+                        ) : (
+                          acSuggestions.map((p) => {
+                            const displayPrice = p.discount_percent
+                              ? discountedPrice(Number(p.price), p.discount_percent)
+                              : Number(p.price);
+                            const displayName = p.name.length > 40 ? p.name.slice(0, 40) + '…' : p.name;
+                            return (
+                              <button
+                                key={p.id}
+                                role="option"
+                                aria-selected={false}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  setAcOpen(false);
+                                  router.push(`/producto/${p.slug}`);
+                                }}
+                                className="w-full flex items-center justify-between px-4 py-3 min-h-[56px] text-left hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-b-0 focus:outline-none focus:bg-emerald-50 dark:focus:bg-emerald-900/20"
+                              >
+                                <span className="text-base font-semibold text-slate-800 dark:text-slate-100 truncate pr-4">{displayName}</span>
+                                <span className="text-emerald-700 dark:text-emerald-400 font-bold text-base flex-shrink-0">{formatPrice(displayPrice)}</span>
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <Link
+                    href="/cotizacion"
+                    className="flex-shrink-0 flex items-center gap-1.5 px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-bold text-base hover:border-cyan-500 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors min-h-[48px]"
+                  >
+                    <FileText className="w-5 h-5" />
+                    <span className="hidden sm:inline">Cotizar</span>
+                  </Link>
                 </div>
-                <Link
-                  href="/cotizacion"
-                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-medium text-sm hover:border-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors"
-                >
-                  <FileText className="w-4 h-4" />
-                  <span className="hidden sm:inline">Cotizar</span>
-                </Link>
               </div>
-            </div>
+            )}
+
+            {/* Featured categories — solo en home limpia */}
+            {!selectedCategory && !searchTerm && !showDiscountOnly && (
+              <FeaturedCategories onSelect={handleCategoryChange} />
+            )}
 
             {/* Loyalty teaser */}
             {loyaltyEnabled && !user && !selectedCategory && !searchTerm && !showDiscountOnly && (
