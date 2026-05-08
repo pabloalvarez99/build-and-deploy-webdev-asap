@@ -4,6 +4,30 @@
 
 ---
 
+## 2026-05-08 — Verificación sprint paralelo 6 sesiones + migration `tracking_token` aplicada Cloud SQL prod
+
+Cierre sprint frontend cliente. 10 commits desde `dc64a82` (`a7e0d24`..`adf5e46`): home redesign adulto mayor, PDP zoom + low-stock + sticky CTA, search global autocomplete, checkout progress + sticky bar + inline validation, catálogo `/productos` filtros + sort + infinite scroll, P0 fixes (clearCart post-success Webpay, modal a11y, inputMode), perf `React.cache` PDP, audit UI 41 issues, tracking público.
+
+**Migration aplicada `tu-farmacia-prod`**:
+
+- `prisma/migrations/20260508_add_tracking_token.sql` ejecutada vía `scripts/run-migration.mjs` (BEGIN/COMMIT atómico, `@google-cloud/cloud-sql-connector`).
+- Primer intento falló: `function gen_random_bytes(integer) does not exist` → añadido `CREATE EXTENSION IF NOT EXISTS pgcrypto` al SQL → OK.
+- Verify: columna `tracking_token VARCHAR(64)` ✅, índice único `orders_tracking_token_key` ✅, **52/52 órdenes con backfill** (0 NULL) ✅.
+
+**Build + deploy + smoke**:
+
+- `NODE_OPTIONS=--max-old-space-size=6144 ./node_modules/.bin/next build` local OK. `/seguimiento/[token]` + `/api/tracking/[token]` ƒ dynamic en route table.
+- Vercel `Ready Production` (`adf5e46`).
+- Smoke: `/`, `/productos`, `/carrito`, `/checkout`, `/rastrear-pedido` → 200.
+- `/api/tracking/INVALID_TOKEN` → 400 `{"error":"Token inválido"}` (no 500 — fix migration confirmado). Token bien-formado inexistente → 404 `{"error":"Pedido no encontrado"}`.
+- `/seguimiento/INVALID` → 200 + `<meta name="robots" content="noindex, nofollow">` (Next 14 force-dynamic `notFound()` retorna 200 status, meta robots bloquea SEO; aceptable).
+
+**Lighthouse**: pendiente próxima sesión (sin headless Chrome runner). Targets vigentes: SEO 100, A11y ≥95, Perf ≥80, TBT <600ms, LCP <2.5s.
+
+**P2/P3 audit pendientes** (`audits/ui-audit-2026-05-08.md`, 30 issues): focus-visible global, skip-link landmark, aria-live cart, contraste secundario, route-level dynamic import floating UI, image `sizes` grids, prefetch hover Navbar, empty states `/productos`, breadcrumbs PDP/categoría, error boundary `/seguimiento`, `pull-to-refresh` `/mis-pedidos`.
+
+---
+
 ## 2026-05-08 — Feat: tracking público pedido `/seguimiento/[token]` (sin login)
 
 Cliente recibe link único en email post-compra → ve estado pedido sin crear cuenta. Reduce fricción soporte (WhatsApp queries "¿cómo va mi pedido?").
