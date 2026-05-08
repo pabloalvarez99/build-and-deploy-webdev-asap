@@ -28,7 +28,7 @@
   }
 
   .btn-primary {
-    @apply bg-cyan-600 text-white hover:bg-cyan-700 shadow-lg shadow-cyan-600/25 hover:shadow-cyan-600/40 focus:ring-cyan-500 border-2 border-transparent text-lg;
+    @apply bg-cyan-700 text-white hover:bg-cyan-800 shadow-lg shadow-cyan-700/25 hover:shadow-cyan-700/40 focus:ring-cyan-500 border-2 border-transparent text-lg;
   }
 
   .btn-secondary {
@@ -76,8 +76,23 @@
   }
 }
 
-/* Smooth dark mode transitions */
-*, *::before, *::after {
+/* Smooth dark mode transitions — scoped to interactive surfaces only.
+   Universal `*` selector applied to thousands of nodes caused jank on theme toggle
+   and unnecessary paint cost on mount. */
+body,
+.card,
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-outline,
+.btn-ghost,
+.input,
+.glass-nav,
+nav,
+header,
+footer,
+button,
+a {
   transition-property: background-color, border-color, color;
   transition-duration: 200ms;
   transition-timing-function: ease;
@@ -94,6 +109,13 @@ html {
   outline-offset: 2px;
   border-radius: 8px;
 }
+
+/* WCAG AA contrast: bump slate-400 (#94a3b8) → slate-500 (#64748b) in light mode.
+   slate-400 on white = 2.85:1 (fail). slate-500 on white = 4.55:1 (pass AA).
+   Dark-mode override (.dark .text-slate-400) keeps custom palette. */
+html:not(.dark) .text-slate-400 { color: #64748b; }
+/* Primary cyan buttons need cyan-700 (#0e7490) for white text @ small size to pass AA (4.5:1). */
+html:not(.dark) .bg-cyan-600 { background-color: #0e7490; }
 
 /* Print styles for reservation/order pages */
 @media print {

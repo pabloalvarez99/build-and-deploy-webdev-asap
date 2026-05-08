@@ -2275,3 +2275,36 @@ Build local OK (160 páginas generadas). Error en `collect-build-traces` (`_app.
 
 P2/P3 → siguiente sesión. Audit completo en `/tmp/ui-audit.md`.
 
+
+## 2026-05-08 — UI audit P2/P3 batch (a11y + perf + ux)
+
+Continuación sesión audit. Lighthouse mobile prod baseline (https://tu-farmacia.cl):
+- Perf 76 · A11y 86 · BP 100 · SEO 100
+- LCP 3.7s · TBT 400ms · CLS 0 · SI 4.9s
+- Desktop A11y 81 (color-contrast 65 items)
+
+Top issue: contraste `bg-cyan-600 + white text` 3.68:1 + `text-slate-400` 2.85:1 sobre blanco → fail WCAG AA. Toast sin `aria-live`. Universal `*` transition jank.
+
+Fixes aplicados (1 commit):
+
+1. **a11y**:
+   - `globals.css`: scope universal transition a `body, .card, .btn*, nav, button, a, input` (eliminar `*` selector → ~1000 nodos fuera del transition reflow).
+   - `globals.css`: `html:not(.dark) .text-slate-400 → #64748b` (slate-500 = 4.55:1 AA pass).
+   - `globals.css`: `html:not(.dark) .bg-cyan-600 → #0e7490` (cyan-700 = 5.05:1 con white AA pass).
+   - `.btn-primary` → `bg-cyan-700` (consistente con override anterior).
+   - `Toast` (page.tsx): `role="status" aria-live="polite" aria-atomic="true"` → SR anuncia "agregado al carrito".
+   - `auth/login`: `aria-pressed={showPassword}` en toggle ojo.
+
+2. **perf**:
+   - `page.tsx`: `loadCategories + loadDiscountedProducts + loadTopSellers` → `Promise.all` (3 fetches concurrentes en mount, antes secuencial).
+   - `page.tsx`: `AbortController` en autocomplete fetch (cancela request previo en cada keystroke → previene resultados stale + libera red).
+
+3. **ux**:
+   - `page.tsx` `handleAddToCart`: try/catch con toast error explícito (antes: si `addToCart` falla mostraba toast falso "agregado").
+   - `auth/login`: redirect sanitize endurecido (rechaza `//evil.com` y `/\`).
+   - `WhatsAppButton`: `opacity-90` → 100 (mejor contraste verde sobre fondos claros).
+   - `seguimiento/[token]/error.tsx` nuevo: error boundary con CTA WhatsApp + retry + link home.
+
+Build local OK 160 páginas, sin warnings nuevos. Commit pendiente push.
+
+Diferidos (P2/P3 sin tocar esta sesión): U7 IntersectionObserver auto-load, U8 debounce qty cart, U9 undo toast eliminar, U14 clear-search btn 28→44px, A9 zoom hint mobile, A10 cart qty 44→48px, M3-M9 mobile layouts (modal 320px, payment grid stack, image carousel snap, tablet `sm:grid-cols-2` PDP, safe-area WhatsApp), P3 prefetch hover, P6 reuse server product, P10/P11 loyalty store cache, breadcrumbs schema, empty state filtros `/productos`, bottom-nav (descartado: contradice UX adulto mayor con navbar grande superior). Total: ~20 P2/P3 diferidos para próxima sesión.

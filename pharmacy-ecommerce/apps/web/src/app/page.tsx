@@ -71,7 +71,7 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   }, [onClose]);
 
   return (
-    <div className="fixed bottom-24 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-auto z-50">
+    <div className="fixed bottom-24 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-auto z-50" role="status" aria-live="polite" aria-atomic="true">
       <div className="flex items-center gap-3 bg-slate-900 dark:bg-slate-700 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-white/10">
         <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center flex-shrink-0">
           <Check className="w-3.5 h-3.5" />
@@ -203,9 +203,7 @@ function HomeContent() {
   }, []);
 
   useEffect(() => {
-    loadCategories();
-    loadDiscountedProducts();
-    loadTopSellers();
+    Promise.all([loadCategories(), loadDiscountedProducts(), loadTopSellers()]);
   }, []);
 
   useEffect(() => {
@@ -234,7 +232,7 @@ function HomeContent() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Autocomplete debounced fetch
+  // Autocomplete debounced fetch with AbortController to prevent stale results overwriting fresh ones
   useEffect(() => {
     if (searchInput.length < 2) {
       setAcSuggestions([]);
@@ -244,16 +242,19 @@ function HomeContent() {
     }
     setAcLoading(true);
     setAcError(null);
+    const ctrl = new AbortController();
     const timer = setTimeout(async () => {
       try {
         const res = await fetch(
-          `/api/products?search=${encodeURIComponent(searchInput)}&limit=6&active_only=true`
+          `/api/products?search=${encodeURIComponent(searchInput)}&limit=6&active_only=true`,
+          { signal: ctrl.signal }
         );
         if (!res.ok) throw new Error(`Error ${res.status}`);
         const data = await res.json();
         setAcSuggestions(data.products ?? []);
         setAcOpen(true);
       } catch (err: unknown) {
+        if ((err as { name?: string })?.name === 'AbortError') return;
         const msg = err instanceof Error ? err.message : 'Error desconocido';
         console.error('[Autocomplete]', msg);
         setAcError('Error al buscar');
@@ -262,7 +263,7 @@ function HomeContent() {
         setAcLoading(false);
       }
     }, 300);
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); ctrl.abort(); };
   }, [searchInput]);
 
   // Click-outside closes autocomplete
@@ -341,10 +342,15 @@ function HomeContent() {
 
   const handleAddToCart = async (product: Product) => {
     setAddingId(product.id);
-    await addToCart(product.id);
-    const shortName = product.name.length > 25 ? product.name.substring(0, 25) + '...' : product.name;
-    setToast(`${shortName} agregado`);
-    setTimeout(() => setAddingId(null), 600);
+    try {
+      await addToCart(product.id);
+      const shortName = product.name.length > 25 ? product.name.substring(0, 25) + '...' : product.name;
+      setToast(`${shortName} agregado`);
+    } catch {
+      setToast('Error al agregar. Intenta de nuevo.');
+    } finally {
+      setTimeout(() => setAddingId(null), 600);
+    }
   };
 
   const handleCategoryChange = useCallback((slug: string) => {

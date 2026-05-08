@@ -27,7 +27,7 @@ export function WhatsAppButton() {
       rel="noopener noreferrer"
       aria-label="Contáctanos por WhatsApp"
       title="Contáctanos por WhatsApp"
-      className={`fixed right-4 z-50 w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 opacity-90 hover:opacity-100 ${bottomClass}`}
+      className={`fixed right-4 z-50 w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 ${bottomClass}`}
       style={{ backgroundColor: '#25D366' }}
     >
       <svg

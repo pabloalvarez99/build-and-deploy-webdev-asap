@@ -10,7 +10,8 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const rawRedirect = searchParams.get('redirect') || '/';
-  const redirect = rawRedirect.startsWith('/') ? rawRedirect : '/';
+  // Reject protocol-relative (//evil.com) and any path that doesn't resolve to same-origin.
+  const redirect = (rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') && !rawRedirect.startsWith('/\\')) ? rawRedirect : '/';
 
   const { login, isLoading, error, clearError } = useAuthStore();
   const [email, setEmail] = useState('');
@@ -98,6 +99,7 @@ function LoginContent() {
                 onClick={() => setShowPassword(v => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                 aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                aria-pressed={showPassword}
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
