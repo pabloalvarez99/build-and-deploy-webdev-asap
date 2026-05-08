@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from '@/hooks/useTheme';
 import { formatPrice } from '@/lib/format';
+import { NavbarSearch } from '@/components/search/NavbarSearch';
 
 function PharmacyLogo({ isAdmin }: { isAdmin: boolean }) {
   return (
@@ -90,6 +91,9 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 gap-3">
           <PharmacyLogo isAdmin={!!isAdmin} />
+
+          {/* Global search (storefront only) */}
+          {!isAdmin && <NavbarSearch />}
 
           {/* Actions */}
           <div className="flex items-center gap-1 flex-shrink-0">

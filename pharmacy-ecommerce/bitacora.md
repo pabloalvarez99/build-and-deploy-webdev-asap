@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-05-08 — Checkout UX: progress indicator, sticky mobile bar, validación inline
+
+Optimización `/carrito` + `/checkout` (mantiene Webpay flow + retiro tienda intactos). Modelo es solo retiro en tienda — autocomplete dirección Coquimbo descartado por no encajar.
+
+- **Nuevo componente** `src/components/CheckoutProgress.tsx`: 3 steps (Carrito → Datos → Pago), íconos lucide, estados done/active/pending, accesible (`<nav aria-label>`, `aria-current="step"`).
+- **`/carrito`**: render `<CheckoutProgress current={1} />`. Sticky bottom bar mobile (`md:hidden`, `fixed bottom-0 z-40`) con Total + CTA "Continuar". Container con `pb-28 md:pb-6`.
+- **`/checkout`**:
+  - Render `<CheckoutProgress current={2} />` debajo del header.
+  - **Validación inline por campo**: estado `fieldErrors` + `touched`. Validators puros (`validateName`/`validatePhone`/`validateEmail`). `useEffect` re-valida campos tocados en cada cambio. Error inline con `<AlertCircle>` + `aria-invalid` + `aria-describedby`. `inputMode="tel"`/`"email"`.
+  - `canSubmit` deriva de validación real.
+  - **Sticky mobile CTA**: botón principal `hidden md:flex`. Barra mobile fija con Total efectivo + botón compacto. Container `pb-28 md:pb-6`.
+  - Email opcional para retiro tienda preservado; required solo para Webpay.
+  - Guest checkout intacto (no fuerza login).
+
+Archivos: `src/components/CheckoutProgress.tsx` (nuevo), `src/app/carrito/page.tsx`, `src/app/checkout/page.tsx`.
+
+Build: 160/160 páginas OK. ENOENT en `.nft.json` = quirk Windows pre-existente, Vercel (Linux) OK.
+
+---
+
 ## 2026-05-08 — PDP mejora: zoom, badge stock bajo, sticky mobile add-to-cart
 
 Mejoras a `/producto/[slug]` (`ProductPageClient.tsx`) para UX adultos mayores y mobile.
@@ -2152,3 +2172,15 @@ Frontend `PushOptInButton.tsx`: muestra banner cyan 8s post-load si `Notificatio
 Admin `/admin/push`: form title (50ch) + body (120ch) + url, confirm dialog, POST broadcast, render `{sent}/{total}, {failed} fail, {cleaned} stale`.
 
 Pendiente verificación e2e en mobile real.
+
+## 2026-05-08 — Global search autocomplete (Navbar)
+
+Nueva feature: search bar global en Navbar (storefront, hidden en /admin).
+
+**API**: `src/app/api/search/suggest/route.ts` — `GET /api/search/suggest?q=...` (min 2 chars). Top 8 productos (Prisma `findMany` OR sobre name/active_ingredient/laboratory/therapeutic_action, `mode:insensitive`, orderBy stock desc + name asc) + top 3 categorías (name match). `match_field`/`match_value` para indicar match no-name. `force-dynamic`, sin cache.
+
+**Componentes**: `src/components/search/`
+- `SearchBar.tsx` — input + dropdown/listbox. Debounce 200ms, AbortController para cancelar inflight. Recent searches en `localStorage` key `tf:recent-searches` (max 6). Keyboard nav ↑↓ Enter Esc, `aria-selected`. Highlight match con `<mark>`. Variantes `desktop` (dropdown absolute) + `overlay` (full-screen mobile). Click-outside cierra desktop. Enter sin item → submit a `/?search=...`.
+- `NavbarSearch.tsx` — wrapper responsive: desktop inline (md+, max-w-xl flex-1), mobile icon button → full-screen overlay con `body.overflow=hidden`.
+
+**Navbar.tsx**: import `NavbarSearch`, render entre logo y actions sólo si `!isAdmin`.
