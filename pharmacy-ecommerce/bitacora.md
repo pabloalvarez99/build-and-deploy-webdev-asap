@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-05-08 — Feat: `/productos` catálogo con filtros laterales + sort + infinite scroll
+
+Nueva página dedicada al catálogo (separada del homepage `/` que mantiene scrollers/promos). URL state shareable.
+
+- `src/app/productos/page.tsx` (Suspense + `useSearchParams`/`router.replace`):
+  - Filtros: categoría (radios), rango precio min/max CLP, en stock, con descuento.
+  - Sort dropdown: relevancia, más recientes, precio asc/desc, nombre A-Z (mapea a `sort_by` API existente).
+  - Búsqueda con debounce 400ms (mismo patrón que homepage).
+  - Infinite scroll vía `IntersectionObserver` (rootMargin 600px), `limit=24` por página.
+  - Mobile: drawer con overlay tap-to-close, botón "Ver N productos" sticky bottom.
+  - Chips de filtros activos con remove individual + "Limpiar todo".
+  - Empty state con CTA limpiar filtros.
+- `src/components/catalog/Filters.tsx` — sidebar reusable (variant `sidebar` | `drawer`).
+- `src/components/catalog/SortSelect.tsx` — `<select>` nativo accesible (caret custom).
+- `src/components/catalog/ProductCard.tsx` — card extraída (4-col xl, 2-col mobile), priority/fetchPriority en primeros 3, badge descuento, overlay AGOTADO.
+- API existente `/api/products` ya soporta `category`, `min_price`, `max_price`, `in_stock`, `has_discount`, `sort_by`, `search` con `unstable_cache` (revalidate 300s) → cero cambios backend.
+- A11y: targets ≥44px, labels asociadas, fieldsets/legends, `aria-label` en buttons icon-only.
+
+Build local: ENOENT carrera fs Windows (sesión paralela editando checkout/* simultáneamente: 500.html rename + `_ssgManifest.js` write). Compile + lint + 160/160 page-gen pasaron. `tsc --noEmit` source clean (errores solo en `.next/types/` stale, no en `src/`). Vercel Linux no afectado.
+
+---
+
 ## 2026-05-08 — Checkout UX: progress indicator, sticky mobile bar, validación inline
 
 Optimización `/carrito` + `/checkout` (mantiene Webpay flow + retiro tienda intactos). Modelo es solo retiro en tienda — autocomplete dirección Coquimbo descartado por no encajar.

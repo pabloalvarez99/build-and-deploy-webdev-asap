@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/auth';
 import { ShoppingBag, ArrowRight, Trash2, Plus, Minus, Package, Star } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 import { calcPoints } from '@/lib/loyalty-utils';
+import CheckoutProgress from '@/components/CheckoutProgress';
 
 export default function CartPage() {
   const { cart, fetchCart, updateQuantity, removeFromCart, isLoading } = useCartStore();
@@ -18,9 +19,10 @@ export default function CartPage() {
   }, [fetchCart]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-800 py-4 sm:py-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-800 py-4 sm:py-6 pb-28 md:pb-6">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-6">Mi Carrito</h1>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-4">Mi Carrito</h1>
+        {cart && cart.items.length > 0 && <CheckoutProgress current={1} />}
 
         {isLoading ? (
           <div className="space-y-4">
@@ -219,6 +221,25 @@ export default function CartPage() {
           </div>
         )}
       </div>
+
+      {/* Sticky mobile bottom bar */}
+      {cart && cart.items.length > 0 && (
+        <div className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-white dark:bg-slate-900 border-t-2 border-slate-200 dark:border-slate-700 px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col">
+              <span className="text-xs text-slate-500 dark:text-slate-400">Total</span>
+              <span className="text-xl font-black text-emerald-700 dark:text-emerald-400">{formatPrice(parseFloat(cart.total))}</span>
+            </div>
+            <Link
+              href="/checkout"
+              className="flex-1 max-w-[60%] flex items-center justify-center gap-2 bg-cyan-600 text-white py-3 px-4 rounded-2xl font-bold text-base min-h-[52px] shadow-lg shadow-cyan-600/20"
+            >
+              Continuar
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

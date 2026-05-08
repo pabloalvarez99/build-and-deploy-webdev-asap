@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
@@ -27,8 +27,45 @@ export default function CheckoutPage() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [loyaltyPoints, setLoyaltyPoints] = useState(0);
   const [usePoints, setUsePoints] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const modalTriggerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => { fetchCart(); }, [fetchCart]);
+
+  // Modal a11y: focus-trap, Esc, focus restore
+  useEffect(() => {
+    if (!showWhatsAppModal) return;
+    modalTriggerRef.current = (document.activeElement as HTMLElement) || null;
+    const node = modalRef.current;
+    if (!node) return;
+
+    const focusables = () => Array.from(
+      node.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+    ).filter(el => !el.hasAttribute('aria-hidden'));
+
+    focusables()[0]?.focus();
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.stopPropagation(); setShowWhatsAppModal(false); return; }
+      if (e.key !== 'Tab') return;
+      const list = focusables();
+      if (list.length === 0) return;
+      const first = list[0];
+      const last = list[list.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+      modalTriggerRef.current?.focus();
+    };
+  }, [showWhatsAppModal]);
 
   // Pre-fill form when user is logged in
   useEffect(() => {
@@ -100,7 +137,7 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Error al iniciar pago'); setIsProcessing(false); return; }
 
-      clearCart();
+      // Cart cleared en /checkout/webpay/success tras confirmación. Si pago falla/cancela → carrito intacto.
       const form = document.createElement('form');
       form.action = data.url;
       form.method = 'POST';
@@ -169,23 +206,24 @@ export default function CheckoutPage() {
     <>
       {/* WhatsApp confirmation modal */}
       {showWhatsAppModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowWhatsAppModal(false)} />
-          <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border-2 border-slate-100 dark:border-slate-700 w-full max-w-md p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="webpay-modal-title" aria-describedby="webpay-modal-desc">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowWhatsAppModal(false)} aria-hidden="true" />
+          <div ref={modalRef} className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border-2 border-slate-100 dark:border-slate-700 w-full max-w-md p-6">
             <button
               onClick={() => setShowWhatsAppModal(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+              aria-label="Cerrar"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="flex items-start gap-3 mb-4">
               <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex-shrink-0">
-                <AlertCircle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                <AlertCircle className="w-6 h-6 text-amber-600 dark:text-amber-400" aria-hidden="true" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Confirma disponibilidad primero</h2>
-                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                <h2 id="webpay-modal-title" className="text-lg font-bold text-slate-900 dark:text-slate-100">Confirma disponibilidad primero</h2>
+                <p id="webpay-modal-desc" className="text-slate-500 dark:text-slate-400 text-sm mt-1">
                   Antes de pagar con tarjeta, confirma por WhatsApp que los productos están disponibles.
                 </p>
               </div>
@@ -404,7 +442,8 @@ export default function CheckoutPage() {
               <Phone className="w-5 h-5 text-cyan-600" />Teléfono
             </label>
             <input id="ck-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-              placeholder="9 1234 5678" className="input" autoComplete="tel" />
+              placeholder="9 1234 5678" className="input" autoComplete="tel"
+              inputMode="numeric" pattern="[0-9+\s\-]*" />
           </div>
           <div>
             <label htmlFor="ck-email" className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300 mb-2">
@@ -416,7 +455,7 @@ export default function CheckoutPage() {
             </label>
             <input id="ck-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
               placeholder={paymentMethod === 'store' && !user ? 'Para recibir confirmación (opcional)' : 'tu@email.com'}
-              className="input" autoComplete="email"
+              className="input" autoComplete="email" inputMode="email"
               readOnly={!!user} />
           </div>
 
