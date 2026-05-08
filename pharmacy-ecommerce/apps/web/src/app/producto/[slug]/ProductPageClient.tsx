@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { productApi, ProductWithCategory, Product } from '@/lib/api';
 import { useCartStore } from '@/store/cart';
-import { ShoppingCart, Minus, Plus, Package, Truck, ShieldCheck, ArrowLeft, Check, MessageCircle } from 'lucide-react';
+import { ShoppingCart, Minus, Plus, Package, Truck, ShieldCheck, ArrowLeft, Check, MessageCircle, X, ZoomIn } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatPrice, discountedPrice } from '@/lib/format';
@@ -22,6 +22,19 @@ export default function ProductPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [zoomOpen, setZoomOpen] = useState(false);
+
+  useEffect(() => {
+    if (!zoomOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setZoomOpen(false); };
+    document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [zoomOpen]);
 
   useEffect(() => {
     loadProduct();
@@ -101,7 +114,7 @@ export default function ProductPage() {
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 min-h-screen">
+    <div className="bg-white dark:bg-slate-900 min-h-screen pb-28 md:pb-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* Back button */}
         <button
@@ -116,25 +129,40 @@ export default function ProductPage() {
           {/* Product Image */}
           <div className="aspect-square relative bg-slate-50 dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden flex items-center justify-center">
             {product.image_url ? (
-              <Image
-                src={product.image_url}
-                alt={product.name}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-contain p-3 sm:p-6"
-                priority
-                fetchPriority="high"
-              />
+              <button
+                type="button"
+                onClick={() => setZoomOpen(true)}
+                className="absolute inset-0 cursor-zoom-in group focus:outline-none focus:ring-4 focus:ring-cyan-500/40 rounded-2xl"
+                aria-label="Ampliar imagen"
+              >
+                <Image
+                  src={product.image_url}
+                  alt={product.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-contain p-3 sm:p-6 transition-transform duration-200 group-hover:scale-105"
+                  priority
+                  fetchPriority="high"
+                />
+                <span className="absolute bottom-3 right-3 bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 p-2.5 rounded-xl shadow-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <ZoomIn className="w-5 h-5" />
+                </span>
+              </button>
             ) : (
               <Package className="w-24 h-24 text-slate-300 dark:text-slate-600" />
             )}
             {product.discount_percent && product.stock > 0 && (
-              <div className="absolute top-3 left-3 bg-red-500 text-white text-sm font-black px-3 py-1.5 rounded-xl shadow-lg">
+              <div className="absolute top-3 left-3 bg-red-500 text-white text-sm font-black px-3 py-1.5 rounded-xl shadow-lg pointer-events-none">
                 -{product.discount_percent}% OFF
               </div>
             )}
+            {product.stock > 0 && product.stock < 10 && (
+              <div className="absolute top-3 right-3 bg-orange-500 text-white text-sm font-black px-3 py-1.5 rounded-xl shadow-lg pointer-events-none">
+                Solo {product.stock} {product.stock === 1 ? 'disponible' : 'disponibles'}
+              </div>
+            )}
             {product.stock <= 0 && (
-              <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 flex items-center justify-center">
+              <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 flex items-center justify-center pointer-events-none">
                 <span className="text-red-600 dark:text-red-400 font-bold border-2 border-red-500 dark:border-red-400 px-6 py-3 rounded-xl text-xl -rotate-6 bg-white dark:bg-slate-900">
                   AGOTADO
                 </span>
@@ -409,6 +437,69 @@ export default function ProductPage() {
           </div>
         )}
       </div>
+
+      {/* Sticky mobile add-to-cart bar */}
+      {product.stock > 0 && product.prescription_type !== 'retained' && product.prescription_type !== 'prescription' && (
+        <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t-2 border-slate-200 dark:border-slate-700 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-3 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
+          <div className="flex flex-col leading-tight min-w-0">
+            {product.discount_percent ? (
+              <>
+                <span className="text-xs text-slate-400 line-through">{formatPrice(parseFloat(product.price))}</span>
+                <span className="text-xl font-black text-emerald-700 dark:text-emerald-400">
+                  {formatPrice(discountedPrice(parseFloat(product.price), product.discount_percent))}
+                </span>
+              </>
+            ) : (
+              <span className="text-xl font-black text-emerald-700 dark:text-emerald-400">
+                {formatPrice(parseFloat(product.price))}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={handleAddToCart}
+            disabled={isAdding || added}
+            className={`flex-1 min-h-[56px] py-3 px-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 ${
+              added ? 'bg-cyan-600 text-white' : 'bg-cyan-600 text-white hover:bg-cyan-700 active:scale-[0.98]'
+            } disabled:opacity-70 disabled:cursor-not-allowed transition-all shadow-lg shadow-cyan-600/25`}
+            aria-label="Agregar al carrito"
+          >
+            {added ? (<><Check className="w-6 h-6" />Agregado</>) : isAdding ? 'Agregando...' : (<><ShoppingCart className="w-5 h-5" />Agregar</>)}
+          </button>
+        </div>
+      )}
+
+      {/* Image zoom modal */}
+      {zoomOpen && product.image_url && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setZoomOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Imagen ampliada"
+        >
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setZoomOpen(false); }}
+            className="absolute top-4 right-4 w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center"
+            aria-label="Cerrar"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div
+            className="relative w-full h-full max-w-5xl max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={product.image_url}
+              alt={product.name}
+              fill
+              sizes="100vw"
+              className="object-contain"
+              priority
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

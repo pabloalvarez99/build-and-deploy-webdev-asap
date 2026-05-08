@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-05-08 — PDP mejora: zoom, badge stock bajo, sticky mobile add-to-cart
+
+Mejoras a `/producto/[slug]` (`ProductPageClient.tsx`) para UX adultos mayores y mobile.
+
+- **Imagen con zoom**: click en imagen abre modal fullscreen (z-60, fondo black/90, X cerrar, Escape cierra, body overflow lock). Hint visual: ícono `ZoomIn` aparece on hover, `cursor-zoom-in`, scale-105 group-hover.
+- **Badge stock bajo prominente**: cuando `stock > 0 && stock < 10`, badge naranja top-right en imagen ("Solo X disponible/s"). Suma al texto existente bajo selector de cantidad.
+- **Sticky mobile add-to-cart bar**: barra fija bottom (md:hidden, z-40) con precio (tachado + final si discount) + botón "Agregar" (min-h 56px, cyan-600). Respeta `env(safe-area-inset-bottom)`. Solo activa si `stock > 0` y producto venta directa (no receta). Container con `pb-28 md:pb-0` para evitar overlap.
+- Galería real no aplica: schema sólo tiene `image_url` único; zoom modal cubre necesidad de detalle.
+- Productos relacionados ya existían (4 misma categoría, en stock).
+- Tap targets ≥48px y fonts ≥16px ya cumplían; nada que tocar.
+
+Archivos: `src/app/producto/[slug]/ProductPageClient.tsx`. Build local OK (`/producto/[slug]` 8.69 kB).
+
+---
+
 ## 2026-05-08 — Home redesign: hero búsqueda + categorías destacadas (UX adultos mayores)
 
 Rediseño `/` priorizando legibilidad y tap targets para clientes mayores.
