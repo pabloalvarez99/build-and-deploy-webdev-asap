@@ -3,9 +3,7 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { Navbar } from '@/components/Navbar';
 import { WhatsAppButton } from '@/components/WhatsAppButton';
-import { PWARegister } from '@/components/PWARegister';
-import { InstallPWAButton } from '@/components/InstallPWAButton';
-import { PushOptInButton } from '@/components/PushOptInButton';
+import { DeferredClientBundle } from '@/components/DeferredClientBundle';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
@@ -140,9 +138,7 @@ export default function RootLayout({
         <Navbar />
         <main id="main-content" className="min-h-screen">{children}</main>
         <WhatsAppButton />
-        <PWARegister />
-        <InstallPWAButton />
-        <PushOptInButton />
+        <DeferredClientBundle />
         <footer className="bg-slate-50 dark:bg-slate-800 border-t-2 border-slate-100 dark:border-slate-700 py-10 mt-8" role="contentinfo">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">

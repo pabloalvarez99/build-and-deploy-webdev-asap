@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-05-07 — Perf: lazy-load floating UI bundle (TBT/initial JS ↓)
+
+Reducción JS inicial extrayendo componentes no-críticos del layout a `next/dynamic` con `ssr: false`.
+
+- Nuevo `src/components/DeferredClientBundle.tsx` (Client) wrappea con `dynamic()`:
+  - `PWARegister` (registra SW, solo prod, post-load)
+  - `InstallPWAButton` (espera `beforeinstallprompt`, no siempre dispara)
+  - `PushOptInButton` (banner 8s delay, mayoría dismissed/granted)
+- `WhatsAppButton` queda import directo (visible inmediato, no defer).
+- `layout.tsx` consolida 3 imports → 1 wrapper. Components viven en chunks separados, no entran al bundle inicial; cargan solo cuando `useEffect` los monta.
+
+Build local OK exit 0. Verificación post-deploy: Lighthouse mobile esperado TBT 720ms→<600ms (chunks SW/push fuera del main thread inicial).
+
+---
+
 ## 2026-05-07 — Fix: SEO robots.txt sitemap URL roto + a11y contrast footer
 
 Fix bug Lighthouse SEO 92→100 (robots.txt invalid).
