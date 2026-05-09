@@ -655,7 +655,7 @@ function HomeContent() {
                       : Number(product.price);
                     return (
                       <div key={product.id} className="flex-shrink-0 w-36 bg-white dark:bg-slate-900 rounded-2xl border border-cyan-200 dark:border-cyan-800 overflow-hidden flex flex-col shadow-sm">
-                        <Link href={`/producto/${product.slug}`} className="block">
+                        <Link href={`/producto/${product.slug}`} className="block" aria-label={product.name}>
                           <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                             {product.image_url && !brokenImages.has(product.id) ? (
                               <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" loading="lazy" onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
@@ -694,8 +694,8 @@ function HomeContent() {
                     <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Más vendidos</h2>
                   </div>
                   <div className="hidden md:flex items-center gap-1">
-                    <button onClick={() => scrollTopSellers('left')} className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"><ChevronLeft className="w-4 h-4 text-slate-600 dark:text-slate-300" /></button>
-                    <button onClick={() => scrollTopSellers('right')} className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"><ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-300" /></button>
+                    <button onClick={() => scrollTopSellers('left')} aria-label="Anterior" className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"><ChevronLeft className="w-4 h-4 text-slate-600 dark:text-slate-300" /></button>
+                    <button onClick={() => scrollTopSellers('right')} aria-label="Siguiente" className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"><ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-300" /></button>
                   </div>
                 </div>
                 <div ref={topSellersScrollRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
@@ -703,7 +703,7 @@ function HomeContent() {
                     const finalPrice = product.discount_percent ? discountedPrice(Number(product.price), product.discount_percent) : Number(product.price);
                     return (
                       <div key={product.id} className="flex-shrink-0 w-36 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-                        <Link href={`/producto/${product.slug}`} className="block">
+                        <Link href={`/producto/${product.slug}`} className="block" aria-label={product.name}>
                           <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                             {product.image_url && !brokenImages.has(product.id) ? (
                               <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" priority={idx === 0} fetchPriority={idx === 0 ? 'high' : 'auto'} onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
@@ -748,7 +748,7 @@ function HomeContent() {
                     const finalPrice = discountedPrice(Number(product.price), product.discount_percent!);
                     return (
                       <div key={product.id} className="flex-shrink-0 w-36 bg-white dark:bg-slate-900 rounded-2xl border border-red-100 dark:border-red-900/50 shadow-sm overflow-hidden flex flex-col">
-                        <Link href={`/producto/${product.slug}`} className="block relative">
+                        <Link href={`/producto/${product.slug}`} className="block relative" aria-label={product.name}>
                           <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                             {product.image_url && !brokenImages.has(product.id) ? (
                               <Image src={product.image_url} alt={product.name} fill sizes="144px" className="object-contain p-2" loading="lazy" onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />
@@ -853,7 +853,7 @@ function HomeContent() {
                         : Number(product.price);
                       return (
                         <div key={product.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col hover:border-cyan-200 dark:hover:border-cyan-800 hover:shadow-md transition-all group">
-                          <Link href={`/producto/${product.slug}`} className="block">
+                          <Link href={`/producto/${product.slug}`} className="block" aria-label={product.name}>
                             <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                               {product.image_url && !brokenImages.has(product.id) ? (
                                 <Image src={product.image_url} alt={product.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-contain p-3 group-hover:scale-105 transition-transform duration-300" loading="lazy" onError={() => setBrokenImages(prev => new Set(prev).add(product.id))} />

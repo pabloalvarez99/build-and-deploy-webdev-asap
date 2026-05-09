@@ -12,7 +12,7 @@ import { NavbarSearch } from '@/components/search/NavbarSearch';
 
 function PharmacyLogo({ isAdmin }: { isAdmin: boolean }) {
   return (
-    <Link href={isAdmin ? '/admin/productos' : '/'} className="flex items-center gap-2.5 group" aria-label="Tu Farmacia">
+    <Link href={isAdmin ? '/admin/productos' : '/'} className="flex items-center gap-2.5 group">
       {/* Logomark */}
       <div className={`relative w-9 h-9 rounded-xl flex items-center justify-center shadow-md flex-shrink-0 overflow-hidden transition-shadow ${isAdmin ? 'bg-gradient-to-br from-slate-700 to-slate-800 group-hover:shadow-slate-500/40' : 'bg-gradient-to-br from-cyan-600 to-cyan-500 group-hover:shadow-cyan-500/40'}`}>
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">

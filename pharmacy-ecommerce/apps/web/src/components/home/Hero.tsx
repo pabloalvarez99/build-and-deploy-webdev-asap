@@ -65,6 +65,7 @@ export default function Hero({
               onFocus={onFocus}
               className="block w-full pl-14 pr-14 py-4 sm:py-5 bg-white dark:bg-slate-900 border-2 border-cyan-300 dark:border-cyan-800 rounded-2xl text-lg sm:text-xl font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-4 focus:ring-cyan-500/30 focus:border-cyan-500 transition-all min-h-[60px]"
               autoComplete="off"
+              role="combobox"
               aria-autocomplete="list"
               aria-expanded={acOpen}
               aria-controls={acControlsId}

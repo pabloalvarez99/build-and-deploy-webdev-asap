@@ -22,7 +22,7 @@ export function ProductCard({ product, index = 0, adding, onAdd, brokenImg, onIm
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col hover:border-cyan-200 dark:hover:border-cyan-800 hover:shadow-md transition-all group">
-      <Link href={`/producto/${product.slug}`} className="block">
+      <Link href={`/producto/${product.slug}`} className="block" aria-label={product.name}>
         <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
           {product.image_url && !brokenImg ? (
             <Image
