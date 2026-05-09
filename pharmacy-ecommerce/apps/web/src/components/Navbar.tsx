@@ -104,12 +104,12 @@ export function Navbar() {
               </span>
             )}
 
-            {/* Theme toggle */}
+            {/* Theme toggle — hidden on mobile to reduce navbar density (also accessible inside user dropdown) */}
             {mounted && (
               <button
                 onClick={toggleTheme}
                 aria-label={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
+                className={`hidden sm:flex w-9 h-9 rounded-lg items-center justify-center transition-colors ${
                   isAdmin
                     ? 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'
                     : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -207,6 +207,18 @@ export function Navbar() {
                             Mis Pedidos
                           </Link>
                         </>
+                      )}
+
+                      {/* Theme toggle inside dropdown — only visible on mobile (replaces hidden navbar button) */}
+                      {mounted && !isAdmin && (
+                        <button
+                          onClick={() => { toggleTheme(); setIsMenuOpen(false); }}
+                          className="sm:hidden w-full flex items-center gap-3 px-4 py-3 text-slate-700 dark:text-slate-300 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors min-h-[48px] text-base"
+                          aria-label={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
+                        >
+                          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                          {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+                        </button>
                       )}
 
                       <div className={`border-t mt-1 pt-1 ${isAdmin ? 'border-slate-700' : 'border-slate-100 dark:border-slate-800'}`}>

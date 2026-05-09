@@ -4,6 +4,18 @@
 
 ---
 
+## 2026-05-09 — V5 Globals + Navbar + a11y sistémico (A15 / M9)
+
+- **A15** Navbar density mobile: theme toggle `hidden sm:flex` (oculto <640px). Movido a user dropdown como item adicional `sm:hidden` con label "Modo claro/oscuro". Reduce 3 botones contiguos (avatar+cart+theme) a 2 en mobile 320px. `Navbar.tsx:107-120` + bloque dropdown.
+- **M9** WhatsAppButton: `bottom-[7.5rem|24|6]` clases Tailwind → `style.bottom = calc(<base> + env(safe-area-inset-bottom, 0px))`. iPhone X+ home indicator ya no pisa FAB. `WhatsAppButton.tsx:20-32`.
+- **A1/P4** confirmado: `globals.css:79-99` ya restringe transition (color/bg/border 200ms) a lista explícita (`body, .card, .btn*, .input, .glass-nav, nav, header, footer, button, a`) — selector universal `*` ya removido en sesión previa. Cerrado.
+- **A7** confirmado: WhatsAppButton ya sin `opacity-90` (solo hover scale). Cerrado.
+- **skip-link** `layout.tsx:135` verificado: `sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100]` — visible al Tab desde URL bar. OK.
+
+Build local OK (160/160). NO regresiones LH esperadas (sin tocar globals cascada). Sin tocar checkout/PDP/home (verticales V1-V4).
+
+---
+
 ## 2026-05-09 — V2 PDP polish + perf (A8 / U2 / M6 / P5 / P6)
 
 - **A8** `<h1>` ProductPageClient line 183 → `id="product-title" tabIndex={-1} focus:outline-none`. Permite focus programático al navegar.
@@ -2399,3 +2411,16 @@ Fixes aplicados (1 commit):
 Build local OK 160 páginas, sin warnings nuevos. Commit pendiente push.
 
 Diferidos (P2/P3 sin tocar esta sesión): U7 IntersectionObserver auto-load, U8 debounce qty cart, U9 undo toast eliminar, U14 clear-search btn 28→44px, A9 zoom hint mobile, A10 cart qty 44→48px, M3-M9 mobile layouts (modal 320px, payment grid stack, image carousel snap, tablet `sm:grid-cols-2` PDP, safe-area WhatsApp), P3 prefetch hover, P6 reuse server product, P10/P11 loyalty store cache, breadcrumbs schema, empty state filtros `/productos`, bottom-nav (descartado: contradice UX adulto mayor con navbar grande superior). Total: ~20 P2/P3 diferidos para próxima sesión.
+
+## 2026-05-09 — V1 Home polish (sesión 1 paralela)
+
+Vertical V1 audit cliente (sesión paralela #1 de 5). Cierre de 6 items audit `audits/ui-audit-2026-05-08.md`:
+
+- **A3** — SKU `text-[10px] text-slate-400` (líneas 880 + 949 page.tsx) → `text-xs text-slate-500 dark:text-slate-400` ambas instancias (grid + list view). Cumple AA contraste + legibilidad target adulto mayor.
+- **A5** — Scroll-top button (línea 407-417) ahora `focus-visible:ring-4 focus-visible:ring-cyan-500/50 focus-visible:outline-none` explícito.
+- **A6 / M2** — Stack collision esquina inferior-derecha mobile (cart bar + WhatsApp + scroll-top). Solución: scroll-top swap a `left-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))]` cuando `cart.item_count > 0`. Desapila esquina derecha sin esconder ninguna acción.
+- **U6** — Debounce dual eliminado. Un solo `useEffect` 350ms maneja commit `searchTerm` + fetch autocomplete (con AbortController preservado). Antes: 400ms search + 300ms autocomplete → 2 requests por keystroke.
+- **U7** — IntersectionObserver auto-load. Sentinel `<div ref={loadMoreSentinelRef}>` antes del btn "Cargar más" (preservado como fallback a11y). `rootMargin: 400px 0px` precarga próxima página al acercarse.
+- **U11** — Skeleton infinita resuelta. Flags `topSellersLoaded` / `discountedLoaded` set `true` en `finally` de cada loader. Skeleton sólo si `!loaded && length===0`. Sección entera oculta si `loaded && length===0`.
+
+Archivos: `src/app/page.tsx` exclusivamente. Build local OK 160/160 (warnings webpack cache restore inofensivos en build clean Windows; manifest finalizado tras retry — no bloquea Vercel). Commit + push tras `git pull --rebase`.
