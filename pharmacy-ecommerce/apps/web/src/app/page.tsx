@@ -421,10 +421,10 @@ function HomeContent() {
       {showScrollTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className={`fixed z-40 w-12 h-12 bg-slate-800 dark:bg-slate-700 text-white rounded-xl shadow-lg flex items-center justify-center hover:bg-slate-700 dark:hover:bg-slate-600 transition-all focus-visible:ring-4 focus-visible:ring-cyan-500/50 focus-visible:outline-none ${
+          className={`fixed z-40 left-4 w-12 h-12 bg-slate-800 dark:bg-slate-700 text-white rounded-xl shadow-lg flex items-center justify-center hover:bg-slate-700 dark:hover:bg-slate-600 transition-all focus-visible:ring-4 focus-visible:ring-cyan-500/50 focus-visible:outline-none ${
             cart && cart.item_count > 0
-              ? 'left-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))]'
-              : 'right-4 bottom-20'
+              ? 'bottom-[calc(5.5rem+env(safe-area-inset-bottom))]'
+              : 'bottom-[calc(1rem+env(safe-area-inset-bottom))]'
           }`}
           aria-label="Volver arriba"
         >
