@@ -136,9 +136,35 @@ function StockBadge({ stock }: { stock: number }) {
   );
 }
 
+function HeroFallback() {
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5">
+        <section
+          aria-label="Buscador y accesos rápidos"
+          className="relative overflow-hidden rounded-3xl border-2 border-cyan-200 dark:border-cyan-900/60 bg-gradient-to-br from-cyan-50 via-white to-emerald-50 dark:from-cyan-950/40 dark:via-slate-900 dark:to-emerald-950/40 px-5 py-7 sm:px-8 sm:py-9 shadow-sm"
+        >
+          <div className="relative">
+            <p className="text-base sm:text-lg font-semibold text-cyan-700 dark:text-cyan-300 mb-1">
+              Tu Farmacia · Coquimbo
+            </p>
+            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-slate-50 leading-tight tracking-tight mb-2">
+              ¿Qué medicamento necesita hoy?
+            </h2>
+            <p className="text-base sm:text-lg text-slate-700 dark:text-slate-300 mb-5 max-w-2xl">
+              Busque su producto, cotice su receta o aproveche nuestras ofertas. Atención cercana para usted.
+            </p>
+            <div className="h-[60px] rounded-2xl bg-white dark:bg-slate-900 border-2 border-cyan-300 dark:border-cyan-800" aria-hidden />
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-50 dark:bg-slate-950" />}>
+    <Suspense fallback={<HeroFallback />}>
       <HomeContent />
     </Suspense>
   );
