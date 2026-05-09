@@ -2528,3 +2528,15 @@ Resultado: 1 fetch `/api/loyalty` por sesión user (TTL 60s) en lugar de 3 (1 Na
 
 Build OK 160/160. Sweep: A11y 16/16, Perf **6/11** (P3/P8 verificados ya cerrados, P10/P11 nuevos), UX 14/15, Mobile 8/10.
 Diferidos restantes: U12 migration, P1 (RSC home refactor), P7 lucide modularizeImports, P9 skeleton overlay, M2, M10.
+
+## 2026-05-09 — V9 P9 skeleton overlay (no-flash transitions)
+
+Cierra **P9 (P3)**.
+
+Antes: skeleton 6 cards aparecía cada vez que `isLoading=true`, incluyendo cambios de categoría/búsqueda → flash de skeleton sobre fondo vacío.
+
+Fix: condición skeleton ahora `isLoading && allProducts.length === 0` (solo carga inicial vacía). Para transiciones la lista vieja se mantiene con `opacity-60 pointer-events-none` + overlay pill superior "Actualizando…" (`aria-live="polite"`, `aria-busy="true"`, `Loader2` spinner). Cuando llega nueva data, lista se reemplaza in-place sin flash.
+
+Drop `setAllProducts([])` de tres lugares (`handleCategoryChange`, search debounce x2, `setShowDiscountOnly` toggle) — ahora `loadProducts(1, true)` reemplaza al resolver.
+
+Build OK 160/160. Sweep: A11y 16/16, Perf **10/11**, UX 14/15, Mobile 8/10. Único Perf restante: P1 (RSC home refactor — esfuerzo grande, no priorizado).

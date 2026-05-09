@@ -259,7 +259,6 @@ function HomeContent() {
       if (searchInput !== searchTerm) {
         setSearchTerm(searchInput);
         setCurrentPage(1);
-        setAllProducts([]);
       }
       return;
     }
@@ -270,7 +269,6 @@ function HomeContent() {
       if (searchInput !== searchTerm) {
         setSearchTerm(searchInput);
         setCurrentPage(1);
-        setAllProducts([]);
       }
       try {
         const res = await fetch(
@@ -400,7 +398,6 @@ function HomeContent() {
   const handleCategoryChange = useCallback((slug: string) => {
     setSelectedCategory(slug);
     setCurrentPage(1);
-    setAllProducts([]);
     window.history.replaceState({}, '', slug ? `/?category=${slug}` : '/');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
@@ -819,7 +816,7 @@ function HomeContent() {
                 )}
                 {showDiscountOnly && (
                   <button
-                    onClick={() => { setShowDiscountOnly(false); setAllProducts([]); window.history.replaceState({}, '', '/'); }}
+                    onClick={() => { setShowDiscountOnly(false); window.history.replaceState({}, '', '/'); }}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg font-medium border border-red-200 dark:border-red-800 text-sm"
                   >
                     Ofertas <X className="w-3.5 h-3.5" />
@@ -852,7 +849,7 @@ function HomeContent() {
             )}
 
             {/* Products */}
-            {isLoading ? (
+            {isLoading && allProducts.length === 0 ? (
               <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4' : 'space-y-2'}>
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 animate-pulse">
@@ -868,7 +865,15 @@ function HomeContent() {
                 ))}
               </div>
             ) : allProducts.length > 0 ? (
-              <>
+              <div className={`relative ${isLoading ? 'opacity-60 pointer-events-none' : ''} transition-opacity`}>
+                {isLoading && (
+                  <div className="absolute inset-0 z-10 flex items-start justify-center pt-8 pointer-events-none" aria-live="polite" aria-busy="true">
+                    <div className="bg-white dark:bg-slate-900 border-2 border-cyan-200 dark:border-cyan-800 rounded-full px-5 py-2.5 shadow-lg flex items-center gap-2.5">
+                      <Loader2 className="w-5 h-5 animate-spin text-cyan-600" aria-hidden="true" />
+                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Actualizando…</span>
+                    </div>
+                  </div>
+                )}
                 {viewMode === 'grid' ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                     {allProducts.map((product, idx) => {
@@ -1023,7 +1028,7 @@ function HomeContent() {
                     </button>
                   </div>
                 )}
-              </>
+              </div>
             ) : (
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 py-12 text-center px-6">
                 <Search className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
