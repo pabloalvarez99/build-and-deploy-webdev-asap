@@ -6,12 +6,14 @@ import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
 import { orderApi } from '@/lib/api';
 import { calcPoints, POINTS_TO_CLP } from '@/lib/loyalty-utils';
-import { Loader2, ShieldCheck, Store, Phone, User, Mail, CreditCard, Check, MessageCircle, X, AlertCircle, Star, Banknote } from 'lucide-react';
+import { Loader2, ShieldCheck, Store, Phone, User, Mail, CreditCard, Check, MessageCircle, X, Star, Banknote } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 type PaymentMethod = 'store' | 'webpay';
 
 const WHATSAPP_NUMBER = '56993649604';
+const PHONE_RE = /^(\+?56)?9\d{8}$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -22,8 +24,11 @@ export default function CheckoutPage() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [stockShortages, setStockShortages] = useState<{ product_name: string; requested: number; available: number }[]>([]);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [loyaltyPoints, setLoyaltyPoints] = useState(0);
   const [usePoints, setUsePoints] = useState(false);
@@ -32,7 +37,6 @@ export default function CheckoutPage() {
 
   useEffect(() => { fetchCart(); }, [fetchCart]);
 
-  // Modal a11y: focus-trap, Esc, focus restore
   useEffect(() => {
     if (!showWhatsAppModal) return;
     modalTriggerRef.current = (document.activeElement as HTMLElement) || null;
@@ -67,7 +71,6 @@ export default function CheckoutPage() {
     };
   }, [showWhatsAppModal]);
 
-  // Pre-fill form when user is logged in
   useEffect(() => {
     if (user) {
       if (user.name) setName(user.name);
@@ -75,7 +78,6 @@ export default function CheckoutPage() {
     }
   }, [user]);
 
-  // Fetch loyalty points for logged-in users
   useEffect(() => {
     if (!user) { setLoyaltyPoints(0); setUsePoints(false); return; }
     fetch('/api/loyalty')
@@ -84,14 +86,26 @@ export default function CheckoutPage() {
       .catch(() => {});
   }, [user]);
 
+  const validatePhoneStr = (v: string) => {
+    const n = v.replace(/[\s\-()]/g, '');
+    if (!n) return 'Ingresa tu teléfono';
+    if (!PHONE_RE.test(n)) return 'Celular chileno inválido (ej: 9 1234 5678)';
+    return '';
+  };
+  const validateEmailStr = (v: string, required: boolean) => {
+    const t = v.trim();
+    if (!t) return required ? 'Ingresa tu email' : '';
+    if (!EMAIL_RE.test(t)) return 'Email inválido';
+    return '';
+  };
+
   const validate = () => {
     const trimmedName = name.trim();
-    const trimmedPhone = phone.replace(/[\s\-\(\)]/g, '');
-    const trimmedEmail = email.trim();
     if (!trimmedName || trimmedName.length < 2) return 'Ingresa tu nombre';
-    if (!/^\+?\d{8,12}$/.test(trimmedPhone)) return 'Teléfono inválido (ej: 912345678)';
-    if (paymentMethod === 'webpay' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) return 'Email inválido';
-    if (paymentMethod === 'store' && trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) return 'Email inválido';
+    const pe = validatePhoneStr(phone);
+    if (pe) return pe;
+    const ee = validateEmailStr(email, paymentMethod === 'webpay');
+    if (ee) return ee;
     return null;
   };
 
@@ -99,7 +113,7 @@ export default function CheckoutPage() {
     if (!cart) return '#';
     const itemLines = cart.items.map(i => `- ${i.product_name} x${i.quantity} (${formatPrice(i.subtotal)})`).join('\n');
     const message = encodeURIComponent(
-      `Hola! Antes de pagar por Webpay, quisiera confirmar disponibilidad de los siguientes productos:\n\n${itemLines}\n\nTotal: ${formatPrice(cart.total)}\n\nNombre: ${name.trim() || '...'}\n\n¿Están disponibles para compra online? Gracias!`
+      `Hola! Tengo una consulta sobre los siguientes productos:\n\n${itemLines}\n\nTotal: ${formatPrice(cart.total)}\n\nNombre: ${name.trim() || '...'}\n\n¿Me pueden ayudar? Gracias!`
     );
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
   };
@@ -109,9 +123,10 @@ export default function CheckoutPage() {
     const validationError = validate();
     if (validationError) { setError(validationError); return; }
     setError('');
+    setStockShortages([]);
 
     if (paymentMethod === 'webpay') {
-      setShowWhatsAppModal(true);
+      processWebpay();
       return;
     }
     processStorePickup();
@@ -137,7 +152,6 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Error al iniciar pago'); setIsProcessing(false); return; }
 
-      // Cart cleared en /checkout/webpay/success tras confirmación. Si pago falla/cancela → carrito intacto.
       const form = document.createElement('form');
       form.action = data.url;
       form.method = 'POST';
@@ -177,8 +191,13 @@ export default function CheckoutPage() {
       clearCart();
       router.push(`/checkout/reservation?order_id=${response.order_id}&code=${response.pickup_code}&expires=${encodeURIComponent(response.expires_at)}&total=${response.total}`);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Error al procesar el pedido';
-      setError(msg.includes('stock') ? 'Algunos productos no tienen suficiente stock.' : msg);
+      const e = err as Error & { code?: string; items?: unknown };
+      if (e?.code === 'STOCK_INSUFFICIENT' && Array.isArray(e.items)) {
+        setStockShortages(e.items as { product_name: string; requested: number; available: number }[]);
+        setError('Algunos productos no tienen stock suficiente. Ajusta cantidades en el carrito.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Error al procesar el pedido');
+      }
       setIsProcessing(false);
     }
   };
@@ -200,11 +219,10 @@ export default function CheckoutPage() {
     : 0;
   const effectiveTotal = cartTotal - pointsDiscount;
   const pointsToEarn = calcPoints(effectiveTotal);
-  const canSubmit = name && phone && (paymentMethod === 'webpay' ? email : true);
+  const canSubmit = !!name && !!phone && (paymentMethod === 'webpay' ? !!email : true) && !phoneError && !emailError;
 
   return (
     <>
-      {/* WhatsApp confirmation modal */}
       {showWhatsAppModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="webpay-modal-title" aria-describedby="webpay-modal-desc">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowWhatsAppModal(false)} aria-hidden="true" />
@@ -218,13 +236,13 @@ export default function CheckoutPage() {
             </button>
 
             <div className="flex items-start gap-3 mb-4">
-              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex-shrink-0">
-                <AlertCircle className="w-6 h-6 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+              <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-xl flex-shrink-0">
+                <MessageCircle className="w-6 h-6 text-cyan-600 dark:text-cyan-400" aria-hidden="true" />
               </div>
               <div>
-                <h2 id="webpay-modal-title" className="text-lg font-bold text-slate-900 dark:text-slate-100">Confirma disponibilidad primero</h2>
+                <h2 id="webpay-modal-title" className="text-lg font-bold text-slate-900 dark:text-slate-100">¿Tienes dudas antes de pagar?</h2>
                 <p id="webpay-modal-desc" className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-                  Antes de pagar con tarjeta, confirma por WhatsApp que los productos están disponibles.
+                  Puedes pagar con tarjeta directo o consultar primero por WhatsApp.
                 </p>
               </div>
             </div>
@@ -242,33 +260,32 @@ export default function CheckoutPage() {
               </div>
             </div>
 
+            <button
+              onClick={processWebpay}
+              className="w-full py-3.5 rounded-2xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-base transition-colors flex items-center justify-center gap-2 mb-3"
+            >
+              <CreditCard className="w-5 h-5" />
+              Pagar ahora sin preguntar
+            </button>
+
             <a
               href={buildWhatsAppUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-3 w-full py-3.5 rounded-2xl bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold text-base transition-colors mb-3"
+              className="flex items-center justify-center gap-3 w-full py-3.5 rounded-2xl border-2 border-[#25D366] text-[#25D366] hover:bg-[#25D366]/10 font-bold text-base transition-colors"
             >
               <MessageCircle className="w-5 h-5" />
-              Confirmar disponibilidad por WhatsApp
+              Tengo dudas — preguntar por WhatsApp
             </a>
 
-            <button
-              onClick={processWebpay}
-              className="w-full py-3.5 rounded-2xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-base transition-colors flex items-center justify-center gap-2"
-            >
-              <CreditCard className="w-5 h-5" />
-              Ya confirmé — proceder al pago
-            </button>
-
             <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-3">
-              Si la farmacia no confirma disponibilidad, el pago será reembolsado.
+              Si surge algún problema con tu pedido, el pago será reembolsado.
             </p>
           </div>
         </div>
       )}
 
       <div className="max-w-lg mx-auto px-4 sm:px-6 py-4 sm:py-6">
-        {/* Header */}
         <div className="text-center mb-5">
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Finalizar pedido</h1>
           {user && (
@@ -278,7 +295,6 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        {/* Order summary */}
         <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-4 mb-4">
           <div className="flex justify-between items-center">
             <span className="text-slate-600 dark:text-slate-400 font-medium">{itemCount} producto{itemCount > 1 ? 's' : ''}</span>
@@ -309,7 +325,6 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* Canjeo de puntos — solo retiro en tienda y usuarios con puntos */}
           {user && loyaltyPoints > 0 && paymentMethod === 'store' && (
             <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-600">
               <button
@@ -341,7 +356,6 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* Puntos a ganar (solo usuarios logueados) */}
           {user && pointsToEarn > 0 && (
             <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-600 flex items-center gap-2">
               <Star className="w-4 h-4 text-amber-500 fill-amber-500 flex-shrink-0" />
@@ -352,7 +366,6 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        {/* Pickup banner */}
         <div className="mb-4 flex items-center gap-3 bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800 rounded-2xl px-4 py-3">
           <Store className="w-6 h-6 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
           <div>
@@ -361,7 +374,6 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        {/* Payment method selector */}
         <div className="mb-4">
           <h2 className="text-base font-semibold text-slate-700 dark:text-slate-300 mb-3">¿Cómo quieres pagar?</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -409,18 +421,17 @@ export default function CheckoutPage() {
           </div>
 
           {paymentMethod === 'webpay' && (
-            <div className="mt-2 flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-3 py-2">
-              <MessageCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-700 dark:text-amber-400">
-                Se solicitará confirmación por WhatsApp antes de procesar el pago online.
-              </p>
+            <div className="mt-2 flex items-center justify-between gap-2 bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-xl px-3 py-2">
+              <p className="text-xs text-cyan-700 dark:text-cyan-300">Pago seguro con Webpay Plus.</p>
+              <button type="button" onClick={() => setShowWhatsAppModal(true)}
+                className="text-xs font-semibold text-cyan-700 dark:text-cyan-400 hover:underline whitespace-nowrap">
+                ¿Dudas? Pregunta por WhatsApp
+              </button>
             </div>
           )}
         </div>
 
-        {/* Form */}
         <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-5 space-y-4">
-          {/* Bienvenida para usuario logueado */}
           {user && (
             <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800">
               <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
@@ -441,9 +452,15 @@ export default function CheckoutPage() {
             <label htmlFor="ck-phone" className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300 mb-2">
               <Phone className="w-5 h-5 text-cyan-600" />Teléfono
             </label>
-            <input id="ck-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+            <input id="ck-phone" type="tel" value={phone}
+              onChange={(e) => { setPhone(e.target.value); if (phoneError) setPhoneError(''); }}
+              onBlur={(e) => setPhoneError(validatePhoneStr(e.target.value))}
               placeholder="9 1234 5678" className="input" autoComplete="tel"
-              inputMode="numeric" pattern="[0-9+\s\-]*" />
+              inputMode="numeric" pattern="[0-9+\s\-]*"
+              aria-invalid={!!phoneError} aria-describedby={phoneError ? 'ck-phone-err' : undefined} />
+            {phoneError && (
+              <p id="ck-phone-err" className="mt-1.5 text-sm font-medium text-red-600 dark:text-red-400">{phoneError}</p>
+            )}
           </div>
           <div>
             <label htmlFor="ck-email" className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300 mb-2">
@@ -453,10 +470,23 @@ export default function CheckoutPage() {
                 <span className="text-slate-400 dark:text-slate-500 font-normal text-sm">(opcional)</span>
               )}
             </label>
-            <input id="ck-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+            <input id="ck-email" type="email" value={email}
+              onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(''); }}
+              onBlur={(e) => setEmailError(validateEmailStr(e.target.value, paymentMethod === 'webpay'))}
               placeholder={paymentMethod === 'store' && !user ? 'Para recibir confirmación (opcional)' : 'tu@email.com'}
-              className="input" autoComplete="email" inputMode="email"
-              readOnly={!!user} />
+              className={`input ${user ? 'bg-slate-100 dark:bg-slate-900/60 cursor-not-allowed text-slate-500 dark:text-slate-400' : ''}`}
+              autoComplete="email" inputMode="email"
+              readOnly={!!user} aria-readonly={!!user}
+              title={user ? 'Editar en Mi Cuenta' : undefined}
+              aria-invalid={!!emailError} aria-describedby={emailError ? 'ck-email-err' : (user ? 'ck-email-help' : undefined)} />
+            {user && !emailError && (
+              <p id="ck-email-help" className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                Editar en <a href="/mi-cuenta" className="text-cyan-700 dark:text-cyan-400 font-semibold hover:underline">Mi Cuenta</a>.
+              </p>
+            )}
+            {emailError && (
+              <p id="ck-email-err" className="mt-1.5 text-sm font-medium text-red-600 dark:text-red-400">{emailError}</p>
+            )}
           </div>
 
           {!user && (
@@ -468,8 +498,24 @@ export default function CheckoutPage() {
         </div>
 
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 mt-4">
-            <p className="text-red-600 dark:text-red-400 font-semibold text-center">{error}</p>
+          <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 mt-4" role="alert">
+            <p className="text-red-700 dark:text-red-400 font-semibold text-center">{error}</p>
+            {stockShortages.length > 0 && (
+              <ul className="mt-3 space-y-1 text-sm text-red-700 dark:text-red-300">
+                {stockShortages.map(s => (
+                  <li key={s.product_name} className="flex justify-between gap-3">
+                    <span className="line-clamp-1">{s.product_name}</span>
+                    <span className="flex-shrink-0 font-semibold">pediste {s.requested} · stock {s.available}</span>
+                  </li>
+                ))}
+                <li className="pt-2 mt-2 border-t border-red-200 dark:border-red-800">
+                  <button type="button" onClick={() => router.push('/carrito')}
+                    className="w-full text-center font-semibold text-red-700 dark:text-red-300 hover:underline">
+                    Volver al carrito y ajustar cantidades
+                  </button>
+                </li>
+              </ul>
+            )}
           </div>
         )}
 

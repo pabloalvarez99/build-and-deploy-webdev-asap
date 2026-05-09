@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
     // Validate products and calculate total
     let total = 0
     const orderItems: { product_id: string; product_name: string; quantity: number; price: number }[] = []
+    const stockShortages: { product_id: string; product_name: string; requested: number; available: number }[] = []
 
     for (const item of items) {
       const product = await db.products.findFirst({
@@ -27,13 +28,24 @@ export async function POST(request: NextRequest) {
       })
 
       if (!product) return errorResponse(`Product ${item.product_id} not found`, 404)
-      if (product.stock < item.quantity) return errorResponse(`Stock insuficiente para ${product.name}`, 400)
+      if (product.stock < item.quantity) {
+        stockShortages.push({ product_id: product.id, product_name: product.name, requested: item.quantity, available: product.stock })
+        continue
+      }
 
       const rawPrice = Number(product.price)
       const disc = product.discount_percent
       const price = disc ? Math.ceil(rawPrice * (1 - disc / 100)) : rawPrice
       total += price * item.quantity
       orderItems.push({ product_id: product.id, product_name: product.name, quantity: item.quantity, price })
+    }
+
+    if (stockShortages.length > 0) {
+      const names = stockShortages.map(s => s.product_name).join(', ')
+      return NextResponse.json(
+        { error: `Stock insuficiente: ${names}`, code: 'STOCK_INSUFFICIENT', items: stockShortages },
+        { status: 400 }
+      )
     }
 
     // Apply loyalty points discount (only for authenticated users)

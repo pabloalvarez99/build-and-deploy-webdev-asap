@@ -20,8 +20,19 @@ async function apiRequest<T>(
   })
 
   if (!response.ok) {
-    const error = await response.text()
-    throw new Error(error || `HTTP error! status: ${response.status}`)
+    const raw = await response.text()
+    let parsed: unknown = null
+    try { parsed = raw ? JSON.parse(raw) : null } catch { /* not JSON */ }
+    if (parsed && typeof parsed === 'object') {
+      const obj = parsed as Record<string, unknown>
+      const msg = typeof obj.error === 'string' ? obj.error : `HTTP error! status: ${response.status}`
+      const err = new Error(msg) as Error & { code?: string; items?: unknown; status?: number }
+      if (typeof obj.code === 'string') err.code = obj.code
+      if (Array.isArray(obj.items)) err.items = obj.items
+      err.status = response.status
+      throw err
+    }
+    throw new Error(raw || `HTTP error! status: ${response.status}`)
   }
 
   if (response.status === 204) return {} as T
