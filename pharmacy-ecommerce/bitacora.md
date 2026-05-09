@@ -2424,3 +2424,18 @@ Vertical V1 audit cliente (sesión paralela #1 de 5). Cierre de 6 items audit `a
 - **U11** — Skeleton infinita resuelta. Flags `topSellersLoaded` / `discountedLoaded` set `true` en `finally` de cada loader. Skeleton sólo si `!loaded && length===0`. Sección entera oculta si `loaded && length===0`.
 
 Archivos: `src/app/page.tsx` exclusivamente. Build local OK 160/160 (warnings webpack cache restore inofensivos en build clean Windows; manifest finalizado tras retry — no bloquea Vercel). Commit + push tras `git pull --rebase`.
+
+## 2026-05-09 — V3 Checkout a11y + UX (sesión 3 paralela)
+
+Vertical V3 audit `ui-audit-2026-05-08.md` cerrado:
+- **A11** ✅ (ya cerrado en sesión previa) — phone `inputMode="numeric" pattern="[0-9+\s\-]*"`.
+- **A12** ✅ — email `readOnly={!!user}` ahora con `aria-readonly`, fondo `bg-slate-100 dark:bg-slate-900/60 cursor-not-allowed text-slate-500`, helper text "Editar en Mi Cuenta" con link `/mi-cuenta`, `title` tooltip.
+- **A13** ✅ (ya cerrado: `role="dialog" aria-modal aria-labelledby aria-describedby` + focus-trap inline + Esc + body scroll lock + focus-restore en `useEffect`).
+- **U3** ✅ — Webpay flow ya NO obliga modal preflight: `handleSubmit` paymentMethod==='webpay' → `processWebpay()` directo. Modal sigue disponible vía banner cyan "¿Dudas? Pregunta por WhatsApp" (botón opens modal). Modal copy cambia: primary btn "Pagar ahora sin preguntar" cyan, secondary outline verde "Tengo dudas — preguntar por WhatsApp". Reduce fricción enorme (antes obligaba salir a WhatsApp). Stock validado server-side ya (route store-pickup + webpay/create), pago directo seguro.
+- **U10** ✅ — Validación onBlur. `validatePhoneStr` regex `/^(\+?56)?9\d{8}$/` (celular CL), `validateEmailStr` HTML5-style + required cuando webpay. Errores inline con `aria-invalid` + `aria-describedby`. `canSubmit` requiere ausencia de errores (deshabilita botón).
+- **U5** ✅ — `/api/store-pickup` ahora colecta `stockShortages[]` y responde `{ error, code: 'STOCK_INSUFFICIENT', items: [{product_id, product_name, requested, available}] }` (status 400). Cliente `lib/api.ts:apiRequest` parsea JSON-error y attacha `code`/`items` al `Error`. Checkout muestra panel rojo con lista por producto + CTA "Volver al carrito y ajustar cantidades".
+
+Archivos: `src/app/checkout/page.tsx`, `src/app/api/store-pickup/route.ts`, `src/lib/api.ts`. NO se tocó `clearCart()` timing (U4 P0 — fuera de scope, requiere webhook arquitectural).
+
+Build local OK (compile + types + 160/160 static pages). ENOENT `_app.js.nft.json` collect-build-traces es bug Windows-only, no bloquea Vercel. Commit `b72f4cc`.
+
