@@ -198,7 +198,7 @@ function CatalogContent() {
             {searchInput && (
               <button
                 onClick={() => { setSearchInput(''); setSearchTerm(''); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-500"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
                 aria-label="Limpiar búsqueda"
               >
                 <X className="w-4 h-4" />
@@ -275,7 +275,7 @@ function CatalogContent() {
                 <p className="text-lg text-slate-600 dark:text-slate-300 font-semibold mb-2">No se encontraron productos</p>
                 <p className="text-sm text-slate-400 mb-4">Prueba ajustar los filtros o limpiarlos.</p>
                 {activeFilterCount > 0 && (
-                  <button onClick={clearAll} className="text-cyan-600 dark:text-cyan-400 font-bold hover:underline">
+                  <button onClick={clearAll} className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-base min-h-[48px] transition-colors">
                     Limpiar filtros
                   </button>
                 )}

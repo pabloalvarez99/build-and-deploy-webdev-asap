@@ -208,7 +208,7 @@ export default function CheckoutPage() {
       {showWhatsAppModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="webpay-modal-title" aria-describedby="webpay-modal-desc">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowWhatsAppModal(false)} aria-hidden="true" />
-          <div ref={modalRef} className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border-2 border-slate-100 dark:border-slate-700 w-full max-w-md p-6">
+          <div ref={modalRef} className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border-2 border-slate-100 dark:border-slate-700 w-full max-w-[calc(100vw-2rem)] sm:max-w-md p-4 sm:p-6">
             <button
               onClick={() => setShowWhatsAppModal(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"

@@ -1,22 +1,40 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
-import { ShoppingBag, ArrowRight, Trash2, Plus, Minus, Package, Star } from 'lucide-react';
+import { ShoppingBag, ArrowRight, Trash2, Plus, Minus, Package, Star, RotateCcw } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 import { calcPoints } from '@/lib/loyalty-utils';
 import CheckoutProgress from '@/components/CheckoutProgress';
 
 export default function CartPage() {
-  const { cart, fetchCart, updateQuantity, removeFromCart, isLoading } = useCartStore();
+  const { cart, fetchCart, updateQuantity, removeFromCart, addToCart, isLoading } = useCartStore();
   const { user } = useAuthStore();
+  const [undoToast, setUndoToast] = useState<{ productId: string; name: string; quantity: number } | null>(null);
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleRemove = (productId: string, name: string, quantity: number) => {
+    removeFromCart(productId);
+    setUndoToast({ productId, name, quantity });
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    undoTimerRef.current = setTimeout(() => setUndoToast(null), 5000);
+  };
+
+  const handleUndo = async () => {
+    if (!undoToast) return;
+    await addToCart(undoToast.productId, undoToast.quantity);
+    setUndoToast(null);
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+  };
 
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
+
+  useEffect(() => () => { if (undoTimerRef.current) clearTimeout(undoTimerRef.current); }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-800 py-4 sm:py-6 pb-28 md:pb-6">
@@ -132,7 +150,7 @@ export default function CartPage() {
                         </div>
 
                         <button
-                          onClick={() => removeFromCart(item.product_id)}
+                          onClick={() => handleRemove(item.product_id, item.product_name, item.quantity)}
                           className="w-11 h-11 sm:w-14 sm:h-14 flex items-center justify-center text-slate-300 dark:text-slate-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-colors"
                           aria-label={`Eliminar ${item.product_name} del carrito`}
                           title="Eliminar producto"
@@ -237,6 +255,22 @@ export default function CartPage() {
               Continuar
               <ArrowRight className="w-5 h-5" />
             </Link>
+          </div>
+        </div>
+      )}
+
+      {undoToast && (
+        <div className="fixed bottom-24 md:bottom-6 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-auto z-50" role="status" aria-live="polite">
+          <div className="flex items-center gap-3 bg-slate-900 dark:bg-slate-700 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-white/10">
+            <Trash2 className="w-5 h-5 text-red-400 flex-shrink-0" aria-hidden="true" />
+            <span className="font-medium text-base flex-1 truncate max-w-[220px]">Eliminado: {undoToast.name}</span>
+            <button
+              onClick={handleUndo}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 font-bold text-sm min-h-[40px] transition-colors"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Deshacer
+            </button>
           </div>
         </div>
       )}

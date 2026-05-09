@@ -88,7 +88,7 @@ function ScrollerSkeleton() {
       <div className="h-6 w-32 bg-slate-200 dark:bg-slate-800 rounded mb-3 animate-pulse" />
       <div className="flex gap-3 overflow-hidden -mx-1 px-1">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="flex-shrink-0 w-36 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+          <div key={i} className="snap-start flex-shrink-0 w-36 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
             <div className="aspect-square bg-slate-100 dark:bg-slate-800 animate-pulse" />
             <div className="p-2.5 space-y-2">
               <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
@@ -648,13 +648,13 @@ function HomeContent() {
                   <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Compra Rápida</h2>
                   <span className="text-sm text-slate-400 font-normal">Tus productos habituales</span>
                 </div>
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1 snap-x snap-mandatory">
                   {frequentProducts.map((product, idx) => {
                     const finalPrice = product.discount_percent
                       ? discountedPrice(Number(product.price), product.discount_percent)
                       : Number(product.price);
                     return (
-                      <div key={product.id} className="flex-shrink-0 w-36 bg-white dark:bg-slate-900 rounded-2xl border border-cyan-200 dark:border-cyan-800 overflow-hidden flex flex-col shadow-sm">
+                      <div key={product.id} className="snap-start flex-shrink-0 w-36 bg-white dark:bg-slate-900 rounded-2xl border border-cyan-200 dark:border-cyan-800 overflow-hidden flex flex-col shadow-sm">
                         <Link href={`/producto/${product.slug}`} className="block" aria-label={product.name}>
                           <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                             {product.image_url && !brokenImages.has(product.id) ? (
@@ -698,11 +698,11 @@ function HomeContent() {
                     <button onClick={() => scrollTopSellers('right')} aria-label="Siguiente" className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"><ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-300" /></button>
                   </div>
                 </div>
-                <div ref={topSellersScrollRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
+                <div ref={topSellersScrollRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1 snap-x snap-mandatory">
                   {topSellers.map((product, idx) => {
                     const finalPrice = product.discount_percent ? discountedPrice(Number(product.price), product.discount_percent) : Number(product.price);
                     return (
-                      <div key={product.id} className="flex-shrink-0 w-36 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+                      <div key={product.id} className="snap-start flex-shrink-0 w-36 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
                         <Link href={`/producto/${product.slug}`} className="block" aria-label={product.name}>
                           <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                             {product.image_url && !brokenImages.has(product.id) ? (
@@ -743,11 +743,11 @@ function HomeContent() {
                   </div>
                   <Link href="/?discount=true" className="text-sm text-cyan-600 dark:text-cyan-400 font-semibold hover:underline">Ver todas →</Link>
                 </div>
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1 snap-x snap-mandatory">
                   {discountedProducts.map((product, idx) => {
                     const finalPrice = discountedPrice(Number(product.price), product.discount_percent!);
                     return (
-                      <div key={product.id} className="flex-shrink-0 w-36 bg-white dark:bg-slate-900 rounded-2xl border border-red-100 dark:border-red-900/50 shadow-sm overflow-hidden flex flex-col">
+                      <div key={product.id} className="snap-start flex-shrink-0 w-36 bg-white dark:bg-slate-900 rounded-2xl border border-red-100 dark:border-red-900/50 shadow-sm overflow-hidden flex flex-col">
                         <Link href={`/producto/${product.slug}`} className="block relative" aria-label={product.name}>
                           <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative overflow-hidden">
                             {product.image_url && !brokenImages.has(product.id) ? (
