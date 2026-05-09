@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { cache } from 'react';
 import { getDb } from '@/lib/db';
+import type { ProductWithCategory } from '@/lib/api';
 import ProductPageClient from './ProductPageClient';
 
 const siteUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://tu-farmacia.cl';
@@ -8,6 +9,30 @@ const siteUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://tu-farmacia.cl';
 function sanitizeImageUrl(url: string | null): string | null {
   if (!url) return null;
   return url.startsWith('http://') ? 'https://' + url.slice(7) : url;
+}
+
+function serializeProduct(p: any): ProductWithCategory {
+  return {
+    id: p.id,
+    name: p.name,
+    slug: p.slug,
+    description: p.description,
+    price: p.price.toString(),
+    stock: p.stock,
+    category_id: p.category_id,
+    image_url: sanitizeImageUrl(p.image_url),
+    active: p.active,
+    external_id: p.external_id,
+    laboratory: p.laboratory,
+    therapeutic_action: p.therapeutic_action,
+    active_ingredient: p.active_ingredient,
+    prescription_type: p.prescription_type,
+    presentation: p.presentation,
+    discount_percent: p.discount_percent,
+    created_at: p.created_at instanceof Date ? p.created_at.toISOString() : p.created_at,
+    category_name: p.categories?.name ?? null,
+    category_slug: p.categories?.slug ?? null,
+  };
 }
 
 // React.cache dedupe: generateMetadata + page comparten 1 sola query Prisma por request.
@@ -160,7 +185,7 @@ export default async function ProductPage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <ProductPageClient />
+      <ProductPageClient initialProduct={product ? serializeProduct(product) : null} />
     </>
   );
 }

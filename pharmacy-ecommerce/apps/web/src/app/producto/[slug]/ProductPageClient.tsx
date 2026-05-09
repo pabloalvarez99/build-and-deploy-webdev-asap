@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { productApi, ProductWithCategory, Product } from '@/lib/api';
 import { useCartStore } from '@/store/cart';
 import { ShoppingCart, Minus, Plus, Package, Truck, ShieldCheck, ArrowLeft, Check, MessageCircle, X, ZoomIn } from 'lucide-react';
@@ -9,15 +9,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { formatPrice, discountedPrice } from '@/lib/format';
 
-export default function ProductPage() {
-  const params = useParams();
+export default function ProductPage({ initialProduct }: { initialProduct: ProductWithCategory | null }) {
   const router = useRouter();
-  const slug = params.slug as string;
 
   const { addToCart } = useCartStore();
 
-  const [product, setProduct] = useState<ProductWithCategory | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [product] = useState<ProductWithCategory | null>(initialProduct);
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [added, setAdded] = useState(false);
@@ -37,33 +34,16 @@ export default function ProductPage() {
   }, [zoomOpen]);
 
   useEffect(() => {
-    loadProduct();
-  }, [slug]);
-
-  // Dynamic page title
-  useEffect(() => {
-    if (product) {
-      document.title = `${product.name} | Tu Farmacia`;
-    }
-    return () => { document.title = 'Tu Farmacia - Farmacia online en Coquimbo, Chile'; };
-  }, [product]);
-
-  const loadProduct = async () => {
-    try {
-      const data = await productApi.get(slug);
-      setProduct(data);
-      // Load related products from same category
-      if (data.category_slug) {
-        productApi.list({ category: data.category_slug, limit: 5, in_stock: true }).then(res => {
-          setRelatedProducts(res.products.filter(p => p.slug !== slug).slice(0, 4));
-        }).catch(() => {});
-      }
-    } catch (error) {
-      console.error('Error loading product:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    if (!product?.category_slug) return;
+    let cancelled = false;
+    productApi.list({ category: product.category_slug, limit: 5, in_stock: true })
+      .then(res => {
+        if (cancelled) return;
+        setRelatedProducts(res.products.filter(p => p.slug !== product.slug).slice(0, 4));
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [product?.category_slug, product?.slug]);
 
   const handleAddToCart = async () => {
     if (!product) return;
@@ -72,33 +52,12 @@ export default function ProductPage() {
     try {
       await addToCart(product.id, quantity);
       setAdded(true);
-      setTimeout(() => router.push('/carrito'), 800);
     } catch (error) {
       console.error('Error adding to cart:', error);
     } finally {
       setIsAdding(false);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-slate-100 dark:bg-slate-700 rounded-xl w-32 mb-6" />
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="aspect-square bg-slate-100 dark:bg-slate-700 rounded-2xl" />
-            <div className="space-y-4">
-              <div className="h-5 bg-slate-100 dark:bg-slate-700 rounded w-32" />
-              <div className="h-8 bg-slate-100 dark:bg-slate-700 rounded w-3/4" />
-              <div className="h-10 bg-slate-100 dark:bg-slate-700 rounded w-1/3" />
-              <div className="h-24 bg-slate-100 dark:bg-slate-700 rounded-xl" />
-              <div className="h-16 bg-slate-100 dark:bg-slate-700 rounded-xl" />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (!product) {
     return (
@@ -114,7 +73,7 @@ export default function ProductPage() {
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 min-h-screen pb-28 md:pb-0">
+    <div className="bg-white dark:bg-slate-900 min-h-screen pb-28 sm:pb-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* Back button */}
         <button
@@ -125,7 +84,7 @@ export default function ProductPage() {
           <span>Volver</span>
         </button>
 
-        <div className="grid md:grid-cols-2 gap-6 lg:gap-12 items-start">
+        <div className="grid sm:grid-cols-2 gap-6 lg:gap-12 items-start">
           {/* Product Image */}
           <div className="aspect-square relative bg-slate-50 dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden flex items-center justify-center">
             {product.image_url ? (
@@ -180,7 +139,7 @@ export default function ProductPage() {
                   {product.laboratory}
                 </span>
               )}
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 leading-tight mb-3">
+              <h1 id="product-title" tabIndex={-1} className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 leading-tight mb-3 focus:outline-none">
                 {product.name}
               </h1>
 
@@ -335,29 +294,46 @@ export default function ProductPage() {
                 </div>
 
                 {/* Add to cart */}
-                <button
-                  onClick={handleAddToCart}
-                  disabled={isAdding || added}
-                  className={`w-full py-5 px-8 rounded-2xl font-bold text-xl transition-all flex items-center justify-center gap-3 min-h-[64px] ${
-                    added
-                      ? 'bg-cyan-600 text-white'
-                      : 'bg-cyan-600 text-white hover:bg-cyan-700 shadow-lg shadow-cyan-600/25 active:scale-[0.98]'
-                  } disabled:opacity-70 disabled:cursor-not-allowed`}
-                >
-                  {added ? (
-                    <>
-                      <Check className="w-7 h-7" />
-                      Agregado
-                    </>
-                  ) : isAdding ? (
-                    'Agregando...'
-                  ) : (
-                    <>
-                      <ShoppingCart className="w-6 h-6" />
-                      Agregar al carrito
-                    </>
-                  )}
-                </button>
+                {added ? (
+                  <div role="status" aria-live="polite" className="space-y-3">
+                    <div className="rounded-2xl border-2 border-emerald-200 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 p-4 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center flex-shrink-0">
+                        <Check className="w-6 h-6" />
+                      </div>
+                      <p className="font-bold text-emerald-800 dark:text-emerald-300 text-lg">Agregado al carrito</p>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        onClick={() => router.push('/carrito')}
+                        className="py-4 px-6 rounded-2xl font-bold text-lg min-h-[56px] bg-cyan-600 text-white hover:bg-cyan-700 shadow-lg shadow-cyan-600/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                      >
+                        <ShoppingCart className="w-5 h-5" />
+                        Ver carrito
+                      </button>
+                      <button
+                        onClick={() => { setAdded(false); setQuantity(1); }}
+                        className="py-4 px-6 rounded-2xl font-bold text-lg min-h-[56px] border-2 border-cyan-600 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 active:scale-[0.98] transition-all"
+                      >
+                        Seguir comprando
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={isAdding}
+                    className="w-full py-5 px-8 rounded-2xl font-bold text-xl transition-all flex items-center justify-center gap-3 min-h-[64px] bg-cyan-600 text-white hover:bg-cyan-700 shadow-lg shadow-cyan-600/25 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isAdding ? (
+                      'Agregando...'
+                    ) : (
+                      <>
+                        <ShoppingCart className="w-6 h-6" />
+                        Agregar al carrito
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
