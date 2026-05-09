@@ -146,7 +146,7 @@ export function Navbar() {
 
                 {isMenuOpen && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
+                    <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} aria-hidden="true" />
                     <div className={`absolute right-0 mt-2 w-64 max-w-[calc(100vw-1rem)] rounded-2xl shadow-2xl py-2 z-50 ${
                       isAdmin
                         ? 'bg-slate-800 border border-slate-700'

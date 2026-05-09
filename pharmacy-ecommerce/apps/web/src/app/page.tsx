@@ -579,7 +579,7 @@ function HomeContent() {
                           setAcSuggestions([]);
                           searchInputRef.current?.focus();
                         }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
                         aria-label="Limpiar búsqueda"
                       >
                         <X className="w-4 h-4" />
@@ -631,7 +631,9 @@ function HomeContent() {
                   </div>
                   <Link
                     href="/cotizacion"
-                    className="flex-shrink-0 flex items-center gap-1.5 px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-bold text-base hover:border-cyan-500 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors min-h-[48px]"
+                    aria-label="Cotizar receta médica"
+                    title="Cotizar receta médica"
+                    className="flex-shrink-0 flex items-center gap-1.5 px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-bold text-base hover:border-cyan-500 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors min-h-[48px] min-w-[48px] justify-center"
                   >
                     <FileText className="w-5 h-5" />
                     <span className="hidden sm:inline">Cotizar</span>

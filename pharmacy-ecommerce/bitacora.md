@@ -2476,3 +2476,25 @@ Diferidos formales (próxima sesión, no scope cierre):
 - **M1, M2, M5, M7, M8, M10** — mobile layout polish (viewport scaling, cart bar consolidation, snap carousels, btn cotizar tooltip, modal padding 320px, html font-size 18px review).
 
 Working tree limpio post-commit, `origin/main` sincronizado, Vercel auto-deploy verde.
+
+## 2026-05-09 — UX/Mobile polish batch (V6)
+
+Cierra 9 items audit `ui-audit-2026-05-08.md`:
+- **U1** ✅ — `handleAddToCart` ya con try/catch + toast error path verificado.
+- **U8** ✅ — qty cart debounce 400ms. `pendingQty` state + `qtyTimersRef` por productId. Optimistic UI con `aria-live="polite"` en counter. 1→5 reduce 4 reqs a 1.
+- **U9** ✅ — undo toast eliminar 5s ya implementado (`role="status" aria-live="polite"`, btn Deshacer + RotateCcw).
+- **U13** ✅ — Navbar dropdown Esc handler ya presente, overlay agrega `aria-hidden="true"`.
+- **U14** ✅ — clear-search btn `w-9 h-9` (36px) → `w-11 h-11` (44px).
+- **M1** ✅ — viewport `userScalable: true, maximumScale: 5` agregados (zoom 500% adultos mayores).
+- **M5** ✅ — carruseles ya `snap-x snap-mandatory` + `snap-start` (3 instancias).
+- **M7** ✅ — btn Cotizar mobile + `aria-label="Cotizar receta médica"` + `title` + `min-w-[48px] justify-center`.
+- **M8** ✅ — modal checkout ya `max-w-[calc(100vw-2rem)] sm:max-w-md p-4 sm:p-6`.
+
+Archivos: `layout.tsx`, `page.tsx`, `carrito/page.tsx`, `Navbar.tsx`. Build local OK 160/160. Audit sweep table actualizado: A11y 16/16, Perf 3/11, UX 13/15, Mobile 8/10.
+
+Diferidos restantes:
+- U4 (P0) — clearCart Webpay → webhook (arch refactor).
+- U12 (P2) — prescription_pending migration.
+- P1/P2/P3/P7-P11 — perf refactors.
+- M2 (P1) — cart bar consolidation 3-layer mobile (refactor grande).
+- M10 (P3) — html font-size 18px review (decisión documentada).

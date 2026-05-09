@@ -15,6 +15,19 @@ export default function CartPage() {
   const { user } = useAuthStore();
   const [undoToast, setUndoToast] = useState<{ productId: string; name: string; quantity: number } | null>(null);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [pendingQty, setPendingQty] = useState<Record<string, number>>({});
+  const qtyTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const handleQtyChange = (productId: string, nextQty: number, stock: number) => {
+    const clamped = Math.max(1, Math.min(stock, nextQty));
+    setPendingQty(prev => ({ ...prev, [productId]: clamped }));
+    if (qtyTimersRef.current[productId]) clearTimeout(qtyTimersRef.current[productId]);
+    qtyTimersRef.current[productId] = setTimeout(async () => {
+      await updateQuantity(productId, clamped);
+      setPendingQty(prev => { const { [productId]: _, ...rest } = prev; return rest; });
+      delete qtyTimersRef.current[productId];
+    }, 400);
+  };
 
   const handleRemove = (productId: string, name: string, quantity: number) => {
     removeFromCart(productId);
@@ -34,7 +47,10 @@ export default function CartPage() {
     fetchCart();
   }, [fetchCart]);
 
-  useEffect(() => () => { if (undoTimerRef.current) clearTimeout(undoTimerRef.current); }, []);
+  useEffect(() => () => {
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    for (const t of Object.values(qtyTimersRef.current)) clearTimeout(t);
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-800 py-4 sm:py-6 pb-28 md:pb-6">
@@ -78,7 +94,9 @@ export default function CartPage() {
             {/* Cart Items */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden">
               <div className="divide-y divide-slate-100 dark:divide-slate-700">
-                {cart.items.map((item) => (
+                {cart.items.map((item) => {
+                  const displayQty = pendingQty[item.product_id] ?? item.quantity;
+                  return (
                   <div key={item.product_id} className="p-4 sm:p-5 flex gap-4">
                     {/* Product Image */}
                     <div className="w-20 h-20 sm:w-28 sm:h-28 bg-slate-50 dark:bg-slate-800 rounded-2xl flex-shrink-0 relative border-2 border-slate-100 dark:border-slate-700 overflow-hidden">
@@ -129,20 +147,20 @@ export default function CartPage() {
                         {/* Quantity controls */}
                         <div className="flex items-center border-2 border-slate-200 dark:border-slate-600 rounded-xl overflow-hidden">
                           <button
-                            onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
+                            onClick={() => handleQtyChange(item.product_id, displayQty - 1, item.stock)}
                             className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-30"
-                            disabled={item.quantity <= 1}
+                            disabled={displayQty <= 1}
                             aria-label={`Reducir cantidad de ${item.product_name}`}
                           >
                             <Minus className="w-4 h-4 sm:w-5 sm:h-5" />
                           </button>
-                          <span className="w-10 sm:w-12 text-center font-bold text-lg text-slate-900 dark:text-slate-100" aria-label={`Cantidad: ${item.quantity}`}>
-                            {item.quantity}
+                          <span className="w-10 sm:w-12 text-center font-bold text-lg text-slate-900 dark:text-slate-100" aria-label={`Cantidad: ${displayQty}`} aria-live="polite">
+                            {displayQty}
                           </span>
                           <button
-                            onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
+                            onClick={() => handleQtyChange(item.product_id, displayQty + 1, item.stock)}
                             className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-30"
-                            disabled={item.quantity >= item.stock}
+                            disabled={displayQty >= item.stock}
                             aria-label={`Aumentar cantidad de ${item.product_name}`}
                           >
                             <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -160,7 +178,8 @@ export default function CartPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
