@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { productApi, PaginatedProducts, Category, Product, ProductWithCategory } from '@/lib/api';
 import {
   Search, ShoppingCart, Check, X, ChevronUp, Package, ChevronDown,
@@ -171,7 +171,6 @@ export default function Home() {
 }
 
 function HomeContent() {
-  const searchParams = useSearchParams();
   const [products, setProducts] = useState<PaginatedProducts | null>(null);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -211,16 +210,17 @@ function HomeContent() {
   };
 
   useEffect(() => {
-    const cat = searchParams.get('category');
+    const sp = new URLSearchParams(window.location.search);
+    const cat = sp.get('category');
     if (cat) setSelectedCategory(cat);
-    const discount = searchParams.get('discount');
+    const discount = sp.get('discount');
     if (discount === 'true') setShowDiscountOnly(true);
-    const q = searchParams.get('search') || searchParams.get('q');
+    const q = sp.get('search') || sp.get('q');
     if (q) {
       setSearchInput(q);
       setSearchTerm(q);
     }
-  }, [searchParams]);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 400);
