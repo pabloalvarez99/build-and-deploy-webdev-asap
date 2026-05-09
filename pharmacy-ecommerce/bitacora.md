@@ -4,6 +4,15 @@
 
 ---
 
+## 2026-05-09 — V10 Mobile sweep close (M2 / M10)
+
+- **M2** Home no-cart: scrollTop estaba en `right-4 bottom-20` (80-128px) → overlap WhatsApp FAB `right-4 bottom-6rem` (96-152px). Fix: `left-4` incondicional + `bottom-[calc(1rem+env(safe-area-inset-bottom))]` cuando no carrito (mantiene `bottom-[calc(5.5rem+...)]` con carrito). `page.tsx:421-432`. No regresión: con carrito ya estaba en left-4.
+- **M10** `globals.css:11` `html { font-size: 18px }` → decisión diseño aceptada (target adulto mayor Coquimbo). Tailwind `text-*`/`w-*` rem-based ↑12.5% sistémico, intencional. Externos (lucide vía className `w-N h-N` = rem) escalan parejo. No regresión visible. Sin fix, marcado accepted.
+
+Build OK. Sweep cierra Mobile **10/10**. Audit residual: P1 (RSC home refactor, alto esfuerzo), U12 (receta migration, alto esfuerzo). Commit `1db05e9`.
+
+---
+
 ## 2026-05-09 — V5 Globals + Navbar + a11y sistémico (A15 / M9)
 
 - **A15** Navbar density mobile: theme toggle `hidden sm:flex` (oculto <640px). Movido a user dropdown como item adicional `sm:hidden` con label "Modo claro/oscuro". Reduce 3 botones contiguos (avatar+cart+theme) a 2 en mobile 320px. `Navbar.tsx:107-120` + bloque dropdown.
