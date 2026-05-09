@@ -113,9 +113,13 @@ html {
 /* WCAG AA contrast: bump slate-400 (#94a3b8) → slate-500 (#64748b) in light mode.
    slate-400 on white = 2.85:1 (fail). slate-500 on white = 4.55:1 (pass AA).
    Dark-mode override (.dark .text-slate-400) keeps custom palette. */
-html:not(.dark) .text-slate-400 { color: #64748b; }
-/* Primary cyan buttons need cyan-700 (#0e7490) for white text @ small size to pass AA (4.5:1). */
-html:not(.dark) .bg-cyan-600 { background-color: #0e7490; }
+/* WCAG AA contrast — bump slate-400 → slate-600 (#475569) on light surfaces.
+   slate-500 (#64748b) = 4.21:1 (still fails for sub-14px). slate-600 = 7.46:1 (AAA). */
+.text-slate-400 { color: #475569; }
+html.dark .text-slate-400 { color: #94a3b8; }
+/* Primary cyan: cyan-700 (#0e7490) for white text — AA pass at all sizes. */
+.bg-cyan-600 { background-color: #0e7490; }
+html.dark .bg-cyan-600 { background-color: #0891b2; }
 
 /* Print styles for reservation/order pages */
 @media print {
