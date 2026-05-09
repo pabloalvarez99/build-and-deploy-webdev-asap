@@ -99,8 +99,7 @@ export function InstallPWAButton() {
         <button
           type="button"
           onClick={onDismiss}
-          aria-label="Descartar"
-          className="px-4 py-1 min-h-[32px] rounded-lg text-xs text-gray-500 hover:text-gray-700"
+          className="px-4 py-2 min-h-[44px] rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white"
         >
           Ahora no
         </button>

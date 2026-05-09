@@ -46,6 +46,13 @@ Baseline 2026-05-08: D 100/81/96/100 LCP 1.4s · M 85/86/100/100 LCP 3.8s.
 
 **Lección**: Tailwind utility con misma especificidad que override custom necesita `!important` o `@layer utilities` para ganar cascade aunque venga después en archivo. `useSearchParams()` en client component fuerza Suspense bailout aunque solo se lea una vez en mount — usar `window.location.search` evita el bailout y permite SSR completo.
 
+**P2/P3 batch (`3700fe9`)** — Sesión 2 mismo día:
+- Cart undo toast: `removeFromCart` envuelto en `handleRemove(id, name, qty)`, muestra toast 5s con btn "Deshacer" (`RotateCcw`) que llama `addToCart(id, qty)`. Posicion `bottom-24` mobile / `bottom-6` desktop, `aria-live="polite"`.
+- Carruseles home (frequent/topSellers/discount): `snap-x snap-mandatory` en scroll container + `snap-start` en cards `w-36` → swipe mobile alinea card al borde.
+- `/productos` clear-search btn: `w-7 h-7` → `w-11 h-11` (44px tap target, color slate-500 → slate-700 contraste).
+- `/productos` empty-state "Limpiar filtros" btn: text-link → primary cyan-600 `min-h-[48px]` con icono.
+- Webpay confirm modal: `max-w-md` → `max-w-[calc(100vw-2rem)] sm:max-w-md` + `p-4 sm:p-6` (no overflow viewport <340px).
+
 ---
 
 ## 2026-05-08 — Verificación sprint paralelo 6 sesiones + migration `tracking_token` aplicada Cloud SQL prod
