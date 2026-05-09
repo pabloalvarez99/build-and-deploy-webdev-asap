@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-05-09 — V12 Sweep P2/P3 audit extendido (R2/R5/R17/R19)
+
+Cierre 4 diferidos del audit V11:
+
+- **R2** mis-pedidos `handleReorder`: `for await` secuencial → `Promise.allSettled` paralelo. N items = 1 round-trip concurrente vs N serial.
+- **R5** mis-pedidos: toast inline `role="alert"`/`status` (3.5s auto-dismiss) — "X de Y agregados, Z sin stock — revisa carrito" o "No se pudo agregar ningún producto" (sin redirect cuando todos fallan).
+- **R17** cotización dropdown click-outside: `searchWrapperRef` + `useEffect` `mousedown` listener cierra `dropdownOpen`. `onFocus` reabre si hay results.
+- **R19** cotización search race: `cancelled` flag pattern (productApi.list no acepta `signal`, refactor evitado). Stale setState ignorado.
+
+Audit canonical V11+V12: 11/19 cerrados, 7 diferidos P3 cosméticos (R1/R3/R4/R10/R11/R16/R18). Build OK.
+
+---
+
 ## 2026-05-09 — V11 Audit extendido (rastrear / cotización / mis-pedidos)
 
 Audit canonical extendido a 3 rutas no cubiertas. 19 hallazgos totales, **7 cerrados P1** (rutas críticas adulto mayor):

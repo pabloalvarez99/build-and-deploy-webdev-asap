@@ -31,6 +31,13 @@ export default function MyOrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [reordering, setReordering] = useState<string | null>(null);
   const [showLoyaltyHistory, setShowLoyaltyHistory] = useState(false);
+  const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   useEffect(() => {
     if (!user) {
@@ -43,16 +50,21 @@ export default function MyOrdersPage() {
 
   const handleReorder = async (orderId: string, items: Array<{ product_id: string | null; quantity: number }>) => {
     setReordering(orderId);
-    for (const item of items) {
-      if (item.product_id) {
-        try {
-          await addToCart(item.product_id, item.quantity);
-        } catch {
-          // skip products that no longer exist
-        }
-      }
-    }
+    const valid = items.filter((i) => i.product_id);
+    const results = await Promise.allSettled(
+      valid.map((i) => addToCart(i.product_id as string, i.quantity))
+    );
+    const failed = results.filter((r) => r.status === 'rejected').length;
+    const ok = valid.length - failed;
     setReordering(null);
+
+    if (ok === 0) {
+      setToast({ message: 'No se pudo agregar ningún producto. Stock agotado o productos retirados.', tone: 'error' });
+      return;
+    }
+    if (failed > 0) {
+      setToast({ message: `${ok} de ${valid.length} agregados. ${failed} sin stock — revisa carrito.`, tone: 'error' });
+    }
     router.push('/carrito');
   };
 
@@ -74,6 +86,17 @@ export default function MyOrdersPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {toast && (
+        <div
+          role={toast.tone === 'error' ? 'alert' : 'status'}
+          aria-live={toast.tone === 'error' ? 'assertive' : 'polite'}
+          className="fixed bottom-24 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-auto z-50"
+        >
+          <div className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl border text-white ${toast.tone === 'error' ? 'bg-red-600 border-red-700' : 'bg-slate-900 dark:bg-slate-700 border-white/10'}`}>
+            <span className="font-medium text-base">{toast.message}</span>
+          </div>
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Mis Pedidos</h1>
         {loyaltyPoints !== null && (

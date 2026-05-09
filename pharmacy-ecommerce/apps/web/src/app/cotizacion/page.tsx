@@ -24,6 +24,19 @@ export default function CotizacionPage() {
   const [pharmacy, setPharmacy] = useState(DEFAULT_PHARMACY);
   const searchRef = useRef<HTMLInputElement>(null);
   const printRef = useRef<HTMLDivElement>(null);
+  const searchWrapperRef = useRef<HTMLDivElement>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (!searchWrapperRef.current?.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [dropdownOpen]);
 
   useEffect(() => { fetchCart(); }, [fetchCart]);
 
@@ -43,16 +56,23 @@ export default function CotizacionPage() {
   }, []);
 
   useEffect(() => {
-    if (!search.trim()) { setResults([]); return; }
+    if (!search.trim()) { setResults([]); setDropdownOpen(false); return; }
+    let cancelled = false;
     const t = setTimeout(async () => {
+      if (cancelled) return;
       setSearching(true);
+      setDropdownOpen(true);
       try {
         const data = await productApi.list({ search: search.trim(), limit: 8, active_only: true });
-        setResults(data.products);
-      } catch { setResults([]); }
-      finally { setSearching(false); }
+        if (!cancelled) setResults(data.products);
+      } catch {
+        if (!cancelled) setResults([]);
+      }
+      finally {
+        if (!cancelled) setSearching(false);
+      }
     }, 300);
-    return () => clearTimeout(t);
+    return () => { cancelled = true; clearTimeout(t); };
   }, [search]);
 
   const addToQuote = (product: ProductWithCategory) => {
@@ -106,7 +126,7 @@ export default function CotizacionPage() {
         </div>
 
         {/* Search bar — add products */}
-        <div className="no-print mb-6 relative">
+        <div ref={searchWrapperRef} className="no-print mb-6 relative">
           <label htmlFor="quote-search" className="block text-base font-medium text-slate-700 dark:text-slate-300 mb-2">
             Buscar productos para cotización
           </label>
@@ -118,6 +138,7 @@ export default function CotizacionPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onFocus={() => { if (results.length > 0 || searching) setDropdownOpen(true); }}
               placeholder="Buscar medicamento o producto para agregar..."
               className="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-base focus:border-emerald-500 focus:outline-none shadow-sm"
               autoComplete="off"
@@ -125,7 +146,7 @@ export default function CotizacionPage() {
           </div>
 
           {/* Search dropdown */}
-          {(searching || results.length > 0) && (
+          {dropdownOpen && (searching || results.length > 0) && (
             <div className="absolute z-10 mt-2 w-full bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden">
               {searching ? (
                 <div className="px-4 py-3 text-slate-400 text-sm">Buscando...</div>
