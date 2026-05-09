@@ -52,6 +52,9 @@ Baseline 2026-05-08: D 100/81/96/100 LCP 1.4s · M 85/86/100/100 LCP 3.8s.
 - `/productos` clear-search btn: `w-7 h-7` → `w-11 h-11` (44px tap target, color slate-500 → slate-700 contraste).
 - `/productos` empty-state "Limpiar filtros" btn: text-link → primary cyan-600 `min-h-[48px]` con icono.
 - Webpay confirm modal: `max-w-md` → `max-w-[calc(100vw-2rem)] sm:max-w-md` + `p-4 sm:p-6` (no overflow viewport <340px).
+- `PushOptInButton` + `InstallPWAButton` "Ahora no" btn (`202815a`): drop `aria-label="Descartar"` mismatch + bump `text-gray-500` (3.75:1 fail) → `text-slate-700/200` 44px min. Cierra `color-contrast` + `label-content-name-mismatch` regresiones detectadas en post-batch LH.
+
+**LH post-P2/P3 (`202815a`)**: D 100/100/96/100 LCP 0.6s · M 90/100/100/100 LCP 2.3s (cached). Mantiene 0 a11y fails.
 
 ---
 
