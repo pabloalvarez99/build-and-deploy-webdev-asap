@@ -4,6 +4,50 @@
 
 ---
 
+## 2026-05-09 — Cierre A11y ≥95 + LCP mobile <2.5s (Lighthouse final 100/100/96/100 D, 94/100/100/100 M)
+
+Sesión enfocada en cerrar gaps Lighthouse pendientes del audit UI 2026-05-08. 6 commits (`654fe69..ae39a95`).
+
+**Diagnóstico**:
+- A11y D 81 / M 86 con 22/20 `color-contrast` fails (todos `bg-cyan-600` + white "Agregar" → 3.68:1, requiere 4.5).
+- LCP M 3.8s (target <2.5s). Breakdown: TTFB 173ms ✓, `elementRenderDelay` 2376ms ❌. Elemento LCP = hero `<p>` "Busque su producto…".
+
+**Fixes**:
+
+1. **Contraste (`654fe69` + `4bcb474`)** — Override `globals.css` con `!important` (Tailwind utility cascade ganaba a override no-prioritario):
+   - `.text-slate-400 → #475569` (7.46:1, era 2.85)
+   - `.text-slate-300 → #475569` (era 1.61, fail crítico)
+   - `.bg-cyan-600 → #0e7490` light AND `html.dark` (era #0891b2 dark, LH headless probablemente emula `prefers-color-scheme:dark` activando theme script)
+
+2. **LCP refactor (`3ac5000` + `8e99503`)** — Root cause: `'use client'` + `useSearchParams()` → Suspense bailout durante SSR → fallback `<div blank>` enviado, hero text aparecía recién post-hydration.
+   - Paso 1: fallback ahora SSR completo del hero (`HeroFallback` con `<p>` idéntico).
+   - Paso 2 (definitivo): drop `useSearchParams()` hook, leer `new URLSearchParams(window.location.search)` dentro de `useEffect` post-mount → cero suspend → SSR ship hero real desde inicio.
+
+3. **A11y SC fails (`97e197b` + `ae39a95`)**:
+   - `aria-allowed-attr`: input `#hero-search` ahora `role="combobox"` (permite `aria-expanded`).
+   - `button-name`: 2 chevron carousel topSellers → `aria-label="Anterior"/"Siguiente"`.
+   - `link-name`: `<Link>` que envuelven `<Image>` producto → `aria-label={product.name}` en `ProductCard.tsx` + 4 instancias `page.tsx`.
+   - `link-name` mobile: Navbar login `<Link href="/auth/login">` con `<span hidden sm:block>Ingresar</span>` → `aria-label="Ingresar"`.
+   - `label-content-name-mismatch`: Navbar brand `<Link aria-label="Tu Farmacia">` con visible "tufarmacia" → drop `aria-label` (visible text suficiente).
+
+**Lighthouse final** (`https://tu-farmacia.cl?v=cb&disable-cache`):
+
+| | Perf | A11y | BP | SEO | LCP | FCP | TBT | CLS |
+|---|---|---|---|---|---|---|---|---|
+| Desktop | **100** | **100** | 96 | 100 | 0.6s | 0.3s | 0ms | 0.011 |
+| Mobile | **94** | **100** | 100 | 100 | **1.9s** | 1.2s | 270ms | 0.002 |
+
+Baseline 2026-05-08: D 100/81/96/100 LCP 1.4s · M 85/86/100/100 LCP 3.8s.
+**Deltas**: D A11y +19, M Perf +9 / A11y +14 / **LCP -50% (3.8s → 1.9s)**. 0 a11y fails. 0 color-contrast fails.
+
+**Build/deploy**: `NODE_OPTIONS=--max-old-space-size=6144 ./node_modules/.bin/next build` local OK 6 veces. Vercel Ready 6 deploys (`654fe69`, `3ac5000`, `4bcb474`, `8e99503`, `97e197b`, `ae39a95`). Smoke 200 en `/`, `/productos`, `/carrito`, `/checkout`, `/cotizacion`, `/seguimiento/test`.
+
+**Diferidos** (P2/P3 audit): U14 clear-search btn size, A10 cart qty 48px, M5 carrusel snap, M8 modal Webpay maxw, U9 undo toast eliminar, breadcrumbs JSON-LD, empty state filtros `/productos`. Smoke real-token tracking sin `.env.prod-temp` también diferido.
+
+**Lección**: Tailwind utility con misma especificidad que override custom necesita `!important` o `@layer utilities` para ganar cascade aunque venga después en archivo. `useSearchParams()` en client component fuerza Suspense bailout aunque solo se lea una vez en mount — usar `window.location.search` evita el bailout y permite SSR completo.
+
+---
+
 ## 2026-05-08 — Verificación sprint paralelo 6 sesiones + migration `tracking_token` aplicada Cloud SQL prod
 
 Cierre sprint frontend cliente. 10 commits desde `dc64a82` (`a7e0d24`..`adf5e46`): home redesign adulto mayor, PDP zoom + low-stock + sticky CTA, search global autocomplete, checkout progress + sticky bar + inline validation, catálogo `/productos` filtros + sort + infinite scroll, P0 fixes (clearCart post-success Webpay, modal a11y, inputMode), perf `React.cache` PDP, audit UI 41 issues, tracking público.
