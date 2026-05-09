@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
+import { useLoyaltyStore } from '@/store/loyalty';
 import { ShoppingCart, Package, LogOut, User as UserIcon, Loader2, Sun, Moon, Star, ChevronDown, UserCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -41,10 +42,10 @@ export function Navbar() {
   const router = useRouter();
   const { cart, fetchCart } = useCartStore();
   const { user, logout, checkAuth, isLoading } = useAuthStore();
+  const { points: loyaltyPoints, loadLoyalty, clear: clearLoyalty } = useLoyaltyStore();
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { theme, toggleTheme, mounted } = useTheme();
-  const [loyaltyPoints, setLoyaltyPoints] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCart();
@@ -52,12 +53,9 @@ export function Navbar() {
   }, [fetchCart, checkAuth]);
 
   useEffect(() => {
-    if (!user || user.role === 'admin') { setLoyaltyPoints(null); return; }
-    fetch('/api/loyalty')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) setLoyaltyPoints(data.points ?? 0); })
-      .catch(() => {});
-  }, [user]);
+    if (!user || user.role === 'admin') { clearLoyalty(); return; }
+    loadLoyalty();
+  }, [user, loadLoyalty, clearLoyalty]);
 
   const handleLogout = () => {
     logout();

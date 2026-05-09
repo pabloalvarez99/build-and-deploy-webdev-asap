@@ -104,6 +104,8 @@ export const useAuthStore = create<AuthState>()((set) => ({
   logout: async () => {
     await signOut(auth)
     await fetch('/api/auth/session', { method: 'DELETE' })
+    const { useLoyaltyStore } = await import('@/store/loyalty')
+    useLoyaltyStore.getState().clear()
     set({ user: null, error: null })
   },
 

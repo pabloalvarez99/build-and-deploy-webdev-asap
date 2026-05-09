@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
+import { useLoyaltyStore } from '@/store/loyalty';
 import { orderApi, PaginatedOrders } from '@/lib/api';
 import { useCartStore } from '@/store/cart';
 import { Package, ChevronRight, Clock, CheckCircle, XCircle, Truck, Store, Star, ChevronDown, RotateCcw } from 'lucide-react';
@@ -23,14 +24,12 @@ export default function MyOrdersPage() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { addToCart } = useCartStore();
+  const { points: loyaltyPoints, pointsValue: loyaltyValue, transactions: loyaltyTxs, loadLoyalty } = useLoyaltyStore();
 
   const [orders, setOrders] = useState<PaginatedOrders | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [reordering, setReordering] = useState<string | null>(null);
-  const [loyaltyPoints, setLoyaltyPoints] = useState<number | null>(null);
-  const [loyaltyValue, setLoyaltyValue] = useState<number>(0);
-  const [loyaltyTxs, setLoyaltyTxs] = useState<Array<{ id: string; points: number; reason: string; created_at: string }>>([]);
   const [showLoyaltyHistory, setShowLoyaltyHistory] = useState(false);
 
   useEffect(() => {
@@ -40,19 +39,7 @@ export default function MyOrdersPage() {
     }
     loadOrders();
     if (currentPage === 1) loadLoyalty();
-  }, [user, router, currentPage]);
-
-  const loadLoyalty = async () => {
-    try {
-      const res = await fetch('/api/loyalty');
-      if (res.ok) {
-        const data = await res.json();
-        setLoyaltyPoints(data.points);
-        setLoyaltyValue(data.points_value ?? 0);
-        setLoyaltyTxs(data.transactions ?? []);
-      }
-    } catch {}
-  };
+  }, [user, router, currentPage, loadLoyalty]);
 
   const handleReorder = async (orderId: string, items: Array<{ product_id: string | null; quantity: number }>) => {
     setReordering(orderId);
@@ -99,19 +86,19 @@ export default function MyOrdersPage() {
               <div className="flex-1">
                 <p className="text-xl font-black text-amber-700 dark:text-amber-400">{loyaltyPoints} punto{loyaltyPoints !== 1 ? 's' : ''}</p>
                 <p className="text-xs text-amber-600 dark:text-amber-500">
-                  {loyaltyValue > 0 ? `= ${formatPrice(loyaltyValue)} de descuento` : 'acumulados'}
+                  {(loyaltyValue ?? 0) > 0 ? `= ${formatPrice(loyaltyValue!)} de descuento` : 'acumulados'}
                 </p>
               </div>
               <ChevronDown className={`w-4 h-4 text-amber-500 transition-transform ${showLoyaltyHistory ? 'rotate-180' : ''}`} />
             </button>
-            {showLoyaltyHistory && loyaltyTxs.length > 0 && (
+            {showLoyaltyHistory && loyaltyTxs && loyaltyTxs.length > 0 && (
               <div className="border-t border-amber-200 dark:border-amber-700 px-4 py-3 space-y-2 max-h-48 overflow-y-auto">
                 {loyaltyTxs.map((t) => {
                   const labels: Record<string, string> = { purchase: 'Compra', redemption: 'Canje', redemption_restore: 'Restauración', admin_add: 'Ajuste (+)', admin_deduct: 'Ajuste (−)' };
                   return (
                     <div key={t.id} className="flex justify-between items-center text-xs">
                       <div>
-                        <span className="font-medium text-amber-800 dark:text-amber-300">{labels[t.reason] || t.reason}</span>
+                        <span className="font-medium text-amber-800 dark:text-amber-300">{(t.reason && labels[t.reason]) || t.reason || ''}</span>
                         <p className="text-amber-600 dark:text-amber-500">{new Date(t.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                       </div>
                       <span className={`font-bold ${t.points > 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>

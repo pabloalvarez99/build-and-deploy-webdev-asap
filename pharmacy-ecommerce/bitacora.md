@@ -2512,3 +2512,19 @@ Fix: `useEffect` en `checkout/reservation/page.tsx` que llama `clearCart()` cuan
 Archivos: `src/app/checkout/reservation/page.tsx` (+9/-1).
 Build local OK 160/160. Sweep: A11y 16/16, Perf 3/11, UX **14/15**, Mobile 8/10.
 Diferidos restantes: U12, P1/P2/P3/P7-P11, M2, M10.
+
+## 2026-05-09 — V8 loyalty store cache + audit sweep perf
+
+Cierra **P10/P11 (P2)**. Verifica y cierra **P3, P8** (ya implementados en V1) + **P2** (mitigado V1 home + `idx<3` /productos catalog tolerable).
+
+Nuevo `src/store/loyalty.ts`: zustand store con cache TTL 60s. State `{points, pointsValue, transactions, loadedAt, inflight}`. `loadLoyalty(force?)` deduplica requests in-flight + respeta TTL. `clear()` invocado en logout (`auth.ts`).
+
+Migración 3 callsites:
+- **Navbar.tsx** — read `points` del store, `loadLoyalty()` en `useEffect[user]`. Antes: fetch raw cada mount.
+- **checkout/page.tsx** — same. `loyaltyPoints` derivado de `storePoints ?? 0`.
+- **mis-pedidos/page.tsx** — read full state (`points`, `pointsValue`, `transactions`). Eliminado `loadLoyalty()` local + 3 `useState` locales. Null guards en render (`loyaltyValue ?? 0`, `loyaltyTxs && loyaltyTxs.length > 0`).
+
+Resultado: 1 fetch `/api/loyalty` por sesión user (TTL 60s) en lugar de 3 (1 Navbar + 1 checkout + 1 mis-pedidos cada navegación).
+
+Build OK 160/160. Sweep: A11y 16/16, Perf **6/11** (P3/P8 verificados ya cerrados, P10/P11 nuevos), UX 14/15, Mobile 8/10.
+Diferidos restantes: U12 migration, P1 (RSC home refactor), P7 lucide modularizeImports, P9 skeleton overlay, M2, M10.

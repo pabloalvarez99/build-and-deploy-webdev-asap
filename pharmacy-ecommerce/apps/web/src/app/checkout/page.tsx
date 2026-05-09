@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
+import { useLoyaltyStore } from '@/store/loyalty';
 import { orderApi } from '@/lib/api';
 import { calcPoints, POINTS_TO_CLP } from '@/lib/loyalty-utils';
 import { Loader2, ShieldCheck, Store, Phone, User, Mail, CreditCard, Check, MessageCircle, X, Star, Banknote } from 'lucide-react';
@@ -19,6 +20,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { cart, fetchCart, clearCart, getSessionId } = useCartStore();
   const { user } = useAuthStore();
+  const { points: storePoints, loadLoyalty } = useLoyaltyStore();
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('store');
   const [name, setName] = useState('');
@@ -30,8 +32,8 @@ export default function CheckoutPage() {
   const [error, setError] = useState('');
   const [stockShortages, setStockShortages] = useState<{ product_name: string; requested: number; available: number }[]>([]);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
-  const [loyaltyPoints, setLoyaltyPoints] = useState(0);
   const [usePoints, setUsePoints] = useState(false);
+  const loyaltyPoints = user ? (storePoints ?? 0) : 0;
   const modalRef = useRef<HTMLDivElement>(null);
   const modalTriggerRef = useRef<HTMLElement | null>(null);
 
@@ -79,12 +81,9 @@ export default function CheckoutPage() {
   }, [user]);
 
   useEffect(() => {
-    if (!user) { setLoyaltyPoints(0); setUsePoints(false); return; }
-    fetch('/api/loyalty')
-      .then(r => r.ok ? r.json() : { points: 0 })
-      .then(data => setLoyaltyPoints(data.points ?? 0))
-      .catch(() => {});
-  }, [user]);
+    if (!user) { setUsePoints(false); return; }
+    loadLoyalty();
+  }, [user, loadLoyalty]);
 
   const validatePhoneStr = (v: string) => {
     const n = v.replace(/[\s\-()]/g, '');
