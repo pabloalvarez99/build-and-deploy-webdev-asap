@@ -4,6 +4,17 @@
 
 ---
 
+## 2026-05-09 — Audit batch P2 cont. (A10 cart qty 48px, M3 payment grid stack, M4 carrito img w-20)
+
+- **A10** Carrito qty buttons mobile 44→48px (`w-11 h-11` → `w-12 h-12` mobile, sm+ unchanged 56px). `carrito/page.tsx:133,142`.
+- **M3** Checkout payment method grid stack vertical en `<sm`: `grid-cols-2` → `grid-cols-1 sm:grid-cols-2`. Botones "Pagar en tienda"/"Pagar con Webpay" no aprietan en 320px. `checkout/page.tsx:367`.
+- **M4** Carrito imagen mobile 96→80px: `w-24 h-24` → `w-20 h-20` mobile, sm+ 112px sin cambios. Más espacio para nombre + controls. `carrito/page.tsx:84`.
+- **M8** confirmado ya cerrado en sesión previa (modal `max-w-[calc(100vw-2rem)]`).
+
+Build local OK.
+
+---
+
 ## 2026-05-09 — Audit batch P2 (A9 zoom hint, A16 placeholder responsive, M9 footer Cotizar)
 
 Continuación tras cierre A11y/LCP. Batch 3 items P2 audit `ui-audit-2026-05-08.md`.

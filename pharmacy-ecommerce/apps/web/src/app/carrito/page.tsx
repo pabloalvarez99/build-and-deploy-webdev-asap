@@ -81,7 +81,7 @@ export default function CartPage() {
                 {cart.items.map((item) => (
                   <div key={item.product_id} className="p-4 sm:p-5 flex gap-4">
                     {/* Product Image */}
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 bg-slate-50 dark:bg-slate-800 rounded-2xl flex-shrink-0 relative border-2 border-slate-100 dark:border-slate-700 overflow-hidden">
+                    <div className="w-20 h-20 sm:w-28 sm:h-28 bg-slate-50 dark:bg-slate-800 rounded-2xl flex-shrink-0 relative border-2 border-slate-100 dark:border-slate-700 overflow-hidden">
                       {item.product_image ? (
                         <Image
                           src={item.product_image}
@@ -130,7 +130,7 @@ export default function CartPage() {
                         <div className="flex items-center border-2 border-slate-200 dark:border-slate-600 rounded-xl overflow-hidden">
                           <button
                             onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
-                            className="w-11 h-11 sm:w-14 sm:h-14 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-30"
+                            className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-30"
                             disabled={item.quantity <= 1}
                             aria-label={`Reducir cantidad de ${item.product_name}`}
                           >
@@ -141,7 +141,7 @@ export default function CartPage() {
                           </span>
                           <button
                             onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                            className="w-11 h-11 sm:w-14 sm:h-14 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-30"
+                            className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-30"
                             disabled={item.quantity >= item.stock}
                             aria-label={`Aumentar cantidad de ${item.product_name}`}
                           >
