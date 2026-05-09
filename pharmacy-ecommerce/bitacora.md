@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-05-09 — V2 PDP polish + perf (A8 / U2 / M6 / P5 / P6)
+
+- **A8** `<h1>` ProductPageClient line 183 → `id="product-title" tabIndex={-1} focus:outline-none`. Permite focus programático al navegar.
+- **U2** Reemplaza `setTimeout(router.push('/carrito'), 800)` con success card `role="status" aria-live="polite"` + 2 botones grandes (min-h 56px): "Ver carrito" / "Seguir comprando". Usuario decide flow.
+- **M6** PDP grid `md:grid-cols-2` → `sm:grid-cols-2`. Tablet 640-768px deja 2 col en vez de stacking. `pb-28 md:pb-0` → `pb-28 sm:pb-0` (sticky bar escondido sm+).
+- **P5** Confirmado: `getProductBySlug` ya envuelto en `React.cache` (page.tsx:14) → dedupe `generateMetadata` + page (1 sola query Prisma por request). Cerrado.
+- **P6** `page.tsx` ahora serializa producto server-side y lo pasa como `initialProduct` prop a `ProductPageClient`. Cliente elimina `loadProduct` effect + estado `isLoading` + skeleton (no más flicker post-hidratación). Related products siguen cargando lazy.
+- **DEFER U12**: reserva `prescription_pending` requiere migration Prisma `orders.prescription_pending Boolean` + cambios api orders. Fuera de scope V2.
+
+Build local OK (160/160 static pages). Vercel deploy auto. Commit: `d0b2cc8`.
+
+---
+
 ## 2026-05-09 — Audit batch P2 cont. (A10 cart qty 48px, M3 payment grid stack, M4 carrito img w-20)
 
 - **A10** Carrito qty buttons mobile 44→48px (`w-11 h-11` → `w-12 h-12` mobile, sm+ unchanged 56px). `carrito/page.tsx:133,142`.
