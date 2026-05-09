@@ -107,15 +107,20 @@ export default function CotizacionPage() {
 
         {/* Search bar — add products */}
         <div className="no-print mb-6 relative">
+          <label htmlFor="quote-search" className="block text-base font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Buscar productos para cotización
+          </label>
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" aria-hidden="true" />
             <input
               ref={searchRef}
+              id="quote-search"
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar medicamento o producto para agregar..."
               className="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-base focus:border-emerald-500 focus:outline-none shadow-sm"
+              autoComplete="off"
             />
           </div>
 
@@ -194,17 +199,21 @@ export default function CotizacionPage() {
                       <td className="px-4 py-3 text-center">
                         <div className="inline-flex items-center gap-1.5 no-print">
                           <button
+                            type="button"
                             onClick={() => updateQuantity(item.product_id, Math.max(1, item.quantity - 1))}
-                            className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center transition-colors"
+                            aria-label={`Disminuir cantidad de ${item.product_name}`}
+                            className="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center transition-colors"
                           >
-                            <Minus className="w-3 h-3" />
+                            <Minus className="w-4 h-4" aria-hidden="true" />
                           </button>
                           <span className="w-8 text-center font-bold text-slate-900 dark:text-slate-100">{item.quantity}</span>
                           <button
+                            type="button"
                             onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                            className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center transition-colors"
+                            aria-label={`Aumentar cantidad de ${item.product_name}`}
+                            className="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center transition-colors"
                           >
-                            <Plus className="w-3 h-3" />
+                            <Plus className="w-4 h-4" aria-hidden="true" />
                           </button>
                         </div>
                         <span className="hidden print:inline font-medium">{item.quantity}</span>
@@ -213,10 +222,12 @@ export default function CotizacionPage() {
                       <td className="px-4 py-3 text-right font-bold text-slate-900 dark:text-slate-100">{formatPrice(item.subtotal)}</td>
                       <td className="px-4 py-3 text-right no-print">
                         <button
+                          type="button"
                           onClick={() => removeFromCart(item.product_id)}
-                          className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          aria-label={`Eliminar ${item.product_name} de cotización`}
+                          className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4" aria-hidden="true" />
                         </button>
                       </td>
                     </tr>

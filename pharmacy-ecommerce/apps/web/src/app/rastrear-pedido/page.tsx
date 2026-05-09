@@ -87,12 +87,13 @@ function TrackContent() {
 
       <form onSubmit={handleSearch} className="card p-5 sm:p-8 space-y-5 mb-6">
         <div>
-          <label className="block text-base font-medium text-slate-700 dark:text-slate-300 mb-2">
+          <label htmlFor="track-order-id" className="block text-base font-medium text-slate-700 dark:text-slate-300 mb-2">
             Número de pedido
           </label>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" aria-hidden="true" />
             <input
+              id="track-order-id"
               type="text"
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
@@ -108,23 +109,25 @@ function TrackContent() {
         </div>
 
         <div>
-          <label className="block text-base font-medium text-slate-700 dark:text-slate-300 mb-2">
+          <label htmlFor="track-contact" className="block text-base font-medium text-slate-700 dark:text-slate-300 mb-2">
             Tu email o teléfono
           </label>
           <input
+            id="track-contact"
             type="text"
             value={contact}
             onChange={(e) => setContact(e.target.value)}
             placeholder="tu@email.com o 912345678"
             className="input"
-            autoComplete="email"
+            autoComplete="off"
+            inputMode="email"
             required
           />
         </div>
 
         {error && (
-          <div className="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-2xl p-4">
-            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div role="alert" aria-live="assertive" className="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-2xl p-4">
+            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-red-600 dark:text-red-400 text-base">{error}</p>
           </div>
         )}
@@ -132,6 +135,7 @@ function TrackContent() {
         <button
           type="submit"
           disabled={isLoading}
+          aria-busy={isLoading}
           className="btn btn-primary w-full py-4 text-xl disabled:opacity-50"
         >
           {isLoading ? 'Buscando...' : 'Buscar pedido'}
@@ -139,7 +143,7 @@ function TrackContent() {
       </form>
 
       {result && statusConf && (
-        <div className="space-y-4">
+        <div role="region" aria-label="Resultado de búsqueda" aria-live="polite" className="space-y-4">
           {/* Status card */}
           <div className={`rounded-2xl border-2 p-6 text-center ${statusConf.bg}`}>
             <div className={`flex justify-center mb-3 ${statusConf.color}`}>

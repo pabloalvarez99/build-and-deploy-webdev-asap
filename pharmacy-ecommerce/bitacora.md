@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-05-09 — V11 Audit extendido (rastrear / cotización / mis-pedidos)
+
+Audit canonical extendido a 3 rutas no cubiertas. 19 hallazgos totales, **7 cerrados P1** (rutas críticas adulto mayor):
+
+### /rastrear-pedido
+- **R6** `<label>` sin `htmlFor` → 2 pares input (`track-order-id`, `track-contact`) ahora asociados. Click label foca input, SR anuncia.
+- **R7** contact input `autoComplete="email"` confuso (acepta phone) → `autoComplete="off"` + `inputMode="email"` (mobile keyboard email default).
+- **R8** error div → `role="alert" aria-live="assertive"`.
+- **R9** result section → `role="region" aria-label aria-live="polite"`.
+- **R12** submit btn → `aria-busy={isLoading}`.
+
+### /cotizacion
+- **R13** search input sin label → `<label htmlFor="quote-search">` + `autoComplete="off"`.
+- **R14** quantity btns `w-6 h-6` (≈27px en html 18px) sub-44px → `w-11 h-11` + `aria-label` dinámico por producto.
+- **R15** remove btn `p-1.5` (≈28px) sub-44px → `min-w-[44px] min-h-[44px]` + `aria-label`.
+
+Diferidos (12, P2/P3): R1-R5 mis-pedidos (reorder Promise.all + toast fail), R10-R11 rastrear (copy code, Suspense skeleton), R16-R19 cotización (keyboard nav listbox, click-outside dropdown, print style global, AbortController search).
+
+Build OK 160/160. Commits: `<TBD>`.
+
+---
+
 ## 2026-05-09 — V10 Mobile sweep close (M2 / M10)
 
 - **M2** Home no-cart: scrollTop estaba en `right-4 bottom-20` (80-128px) → overlap WhatsApp FAB `right-4 bottom-6rem` (96-152px). Fix: `left-4` incondicional + `bottom-[calc(1rem+env(safe-area-inset-bottom))]` cuando no carrito (mantiene `bottom-[calc(5.5rem+...)]` con carrito). `page.tsx:421-432`. No regresión: con carrito ya estaba en left-4.
