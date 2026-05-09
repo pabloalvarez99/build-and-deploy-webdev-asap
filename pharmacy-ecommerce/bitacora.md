@@ -2498,3 +2498,17 @@ Diferidos restantes:
 - P1/P2/P3/P7-P11 — perf refactors.
 - M2 (P1) — cart bar consolidation 3-layer mobile (refactor grande).
 - M10 (P3) — html font-size 18px review (decisión documentada).
+
+## 2026-05-09 — V7 U4 fix Webpay clearCart post-pago (P0)
+
+Cierra **U4 (P0)**.
+
+Hallazgo audit invertido: el bug real NO era `clearCart()` antes de `form.submit()` (esa llamada ya no existe en `processWebpay`), sino que tras pago Webpay exitoso `/api/webpay/return` redirige a `/checkout/reservation?paid=webpay` y esa ruta **nunca llamaba `clearCart()`**. La page legacy `/checkout/webpay/success` sí limpiaba pero no se usa (return route no apunta ahí).
+
+Resultado pre-fix: usuario pagaba con Webpay, volvía al sitio, carrito persistía → riesgo doble compra/confusión.
+
+Fix: `useEffect` en `checkout/reservation/page.tsx` que llama `clearCart()` cuando `searchParams.get('paid') === 'webpay'`. Idempotente (zustand store). Store-pickup path intacto (sigue limpiando en `checkout/page.tsx:191` post-response OK).
+
+Archivos: `src/app/checkout/reservation/page.tsx` (+9/-1).
+Build local OK 160/160. Sweep: A11y 16/16, Perf 3/11, UX **14/15**, Mobile 8/10.
+Diferidos restantes: U12, P1/P2/P3/P7-P11, M2, M10.

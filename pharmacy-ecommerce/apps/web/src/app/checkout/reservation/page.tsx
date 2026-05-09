@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Store, Clock, Copy, CheckCircle, MessageCircle, Star } from 'lucide-react';
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { formatPrice } from '@/lib/format';
 import { useAuthStore } from '@/store/auth';
+import { useCartStore } from '@/store/cart';
 import { calcPoints } from '@/lib/loyalty-utils';
 
 const WHATSAPP_NUMBER = '56993649604';
@@ -19,6 +20,13 @@ function ReservationContent() {
   const paidWithWebpay = searchParams.get('paid') === 'webpay';
   const [copied, setCopied] = useState(false);
   const { user } = useAuthStore();
+  const { clearCart } = useCartStore();
+
+  // U4: clear cart only after Webpay payment confirmed via return route.
+  // Store-pickup path clears in checkout/page.tsx after successful order creation.
+  useEffect(() => {
+    if (paidWithWebpay) clearCart();
+  }, [paidWithWebpay, clearCart]);
 
   const pointsToEarn = user && total ? calcPoints(Number(total)) : 0;
 
