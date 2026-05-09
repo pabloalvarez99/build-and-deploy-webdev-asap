@@ -187,7 +187,9 @@ function HomeContent() {
   const [toast, setToast] = useState<string | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [discountedProducts, setDiscountedProducts] = useState<Product[]>([]);
+  const [discountedLoaded, setDiscountedLoaded] = useState(false);
   const [topSellers, setTopSellers] = useState<Product[]>([]);
+  const [topSellersLoaded, setTopSellersLoaded] = useState(false);
   const [frequentProducts, setFrequentProducts] = useState<Product[]>([]);
   const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
   const [showDiscountOnly, setShowDiscountOnly] = useState(false);
@@ -205,6 +207,7 @@ function HomeContent() {
   const [acOpen, setAcOpen] = useState(false);
   const acContainerRef = useRef<HTMLDivElement>(null);
   const topSellersScrollRef = useRef<HTMLDivElement>(null);
+  const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
   const scrollTopSellers = (dir: 'left' | 'right') => {
     topSellersScrollRef.current?.scrollBy({ left: dir === 'right' ? 600 : -600, behavior: 'smooth' });
   };
@@ -247,29 +250,28 @@ function HomeContent() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchInput !== searchTerm) {
-        setSearchTerm(searchInput);
-        setCurrentPage(1);
-        setAllProducts([]);
-      }
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [searchInput]);
-
-  // Autocomplete debounced fetch with AbortController to prevent stale results overwriting fresh ones
+  // Unified 350ms debounce: search term commit + autocomplete fetch (single keystroke window)
   useEffect(() => {
     if (searchInput.length < 2) {
       setAcSuggestions([]);
       setAcOpen(false);
       setAcError(null);
+      if (searchInput !== searchTerm) {
+        setSearchTerm(searchInput);
+        setCurrentPage(1);
+        setAllProducts([]);
+      }
       return;
     }
     setAcLoading(true);
     setAcError(null);
     const ctrl = new AbortController();
     const timer = setTimeout(async () => {
+      if (searchInput !== searchTerm) {
+        setSearchTerm(searchInput);
+        setCurrentPage(1);
+        setAllProducts([]);
+      }
       try {
         const res = await fetch(
           `/api/products?search=${encodeURIComponent(searchInput)}&limit=6&active_only=true`,
@@ -288,7 +290,7 @@ function HomeContent() {
       } finally {
         setAcLoading(false);
       }
-    }, 300);
+    }, 350);
     return () => { clearTimeout(timer); ctrl.abort(); };
   }, [searchInput]);
 
@@ -306,6 +308,20 @@ function HomeContent() {
   useEffect(() => {
     loadProducts(1, true);
   }, [selectedCategory, searchTerm, showDiscountOnly]);
+
+  // U7: IntersectionObserver auto-loads next page when sentinel scrolls into view
+  useEffect(() => {
+    const node = loadMoreSentinelRef.current;
+    if (!node || !hasMore || isLoading || isLoadingMore) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadProducts(currentPage + 1, false);
+      },
+      { rootMargin: '400px 0px' }
+    );
+    obs.observe(node);
+    return () => obs.disconnect();
+  }, [hasMore, isLoading, isLoadingMore, currentPage]);
 
   const loadCategories = async () => {
     try {
@@ -329,6 +345,7 @@ function HomeContent() {
         if (withImage.length > 0) setTopSellers(withImage);
       }
     } catch {}
+    finally { setTopSellersLoaded(true); }
   };
 
   const loadDiscountedProducts = async () => {
@@ -339,6 +356,7 @@ function HomeContent() {
         setDiscountedProducts(data.products || []);
       }
     } catch {}
+    finally { setDiscountedLoaded(true); }
   };
 
   const loadProducts = async (page: number, reset: boolean) => {
@@ -406,7 +424,11 @@ function HomeContent() {
       {showScrollTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className={`fixed right-4 z-40 w-12 h-12 bg-slate-800 dark:bg-slate-700 text-white rounded-xl shadow-lg flex items-center justify-center hover:bg-slate-700 dark:hover:bg-slate-600 transition-all ${cart && cart.item_count > 0 ? 'bottom-52' : 'bottom-20'}`}
+          className={`fixed z-40 w-12 h-12 bg-slate-800 dark:bg-slate-700 text-white rounded-xl shadow-lg flex items-center justify-center hover:bg-slate-700 dark:hover:bg-slate-600 transition-all focus-visible:ring-4 focus-visible:ring-cyan-500/50 focus-visible:outline-none ${
+            cart && cart.item_count > 0
+              ? 'left-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))]'
+              : 'right-4 bottom-20'
+          }`}
           aria-label="Volver arriba"
         >
           <ChevronUp className="w-5 h-5" />
@@ -683,7 +705,7 @@ function HomeContent() {
             )}
 
             {/* Más Vendidos */}
-            {!selectedCategory && !searchTerm && !showDiscountOnly && topSellers.length === 0 && (
+            {!selectedCategory && !searchTerm && !showDiscountOnly && !topSellersLoaded && topSellers.length === 0 && (
               <ScrollerSkeleton />
             )}
             {topSellers.length > 0 && !selectedCategory && !searchTerm && !showDiscountOnly && (
@@ -731,7 +753,7 @@ function HomeContent() {
             )}
 
             {/* Ofertas */}
-            {!selectedCategory && !searchTerm && !showDiscountOnly && discountedProducts.length === 0 && (
+            {!selectedCategory && !searchTerm && !showDiscountOnly && !discountedLoaded && discountedProducts.length === 0 && (
               <ScrollerSkeleton />
             )}
             {discountedProducts.length > 0 && !selectedCategory && !searchTerm && !showDiscountOnly && (
@@ -877,7 +899,7 @@ function HomeContent() {
                             {/* SKU + stock badge */}
                             <div className="flex items-center justify-between mb-2">
                               {product.external_id ? (
-                                <span className="font-mono text-[10px] text-slate-400 dark:text-slate-600 tracking-wide">{product.external_id.slice(0, 12)}</span>
+                                <span className="font-mono text-xs text-slate-500 dark:text-slate-400 tracking-wide">{product.external_id.slice(0, 12)}</span>
                               ) : <span />}
                               <StockBadge stock={product.stock} />
                             </div>
@@ -946,7 +968,7 @@ function HomeContent() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-0.5">
-                              {product.external_id && <span className="font-mono text-[10px] text-slate-400 dark:text-slate-600">{product.external_id.slice(0, 10)}</span>}
+                              {product.external_id && <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{product.external_id.slice(0, 10)}</span>}
                               <StockBadge stock={product.stock} />
                             </div>
                             <Link href={`/producto/${product.slug}`}>
@@ -989,6 +1011,7 @@ function HomeContent() {
 
                 {hasMore && (
                   <div className="mt-4 text-center">
+                    <div ref={loadMoreSentinelRef} aria-hidden className="h-1" />
                     <button
                       onClick={() => loadProducts(currentPage + 1, false)}
                       disabled={isLoadingMore}
