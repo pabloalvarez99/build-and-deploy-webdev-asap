@@ -2439,3 +2439,40 @@ Archivos: `src/app/checkout/page.tsx`, `src/app/api/store-pickup/route.ts`, `src
 
 Build local OK (compile + types + 160/160 static pages). ENOENT `_app.js.nft.json` collect-build-traces es bug Windows-only, no bloquea Vercel. Commit `b72f4cc`.
 
+
+## 2026-05-09 — Cierre sprint paralelo V1-V5: deploy final verificado
+
+Sweep audit canonical `audits/ui-audit-2026-05-08.md` + verificación deploy.
+
+Items cerrados sweep (además de los marcados en sesiones V1-V5):
+- **A1** ✅ — `globals.css:82-99` scoped transitions a `body, .card, .btn*, .input, nav, header, footer, button, a` (V5 `38cc157`).
+- **A2** ✅ — toast `page.tsx:74` `role="status" aria-live="polite" aria-atomic="true"`.
+- **A4** ✅ — override global `.text-slate-400 → #475569` (slate-600 7.46:1 AAA) light, dark preserva (V5).
+- **A7** ✅ — WhatsAppButton `opacity-90` removido (V5).
+- **A14** ✅ — login toggle `aria-pressed={showPassword}` ya presente.
+- **U15** ✅ — login redirect rechaza protocol-relative + backslash bypass (`startsWith('/') && !startsWith('//') && !startsWith('/\')`).
+- **P4** ✅ — universal `*` transition reemplazado (idem A1).
+
+Commits sprint paralelo:
+- V1 home: `c319136` (A3/A5/A6/U6/U7/U11)
+- V2 PDP: `d0b2cc8` + docs `0f58cdb` (A8/U2/M6/P5/P6, U12 deferido)
+- V3 checkout: `b72f4cc` + docs `985e4d9` (A11/A12/A13/U3/U10/U5)
+- V4 auth/mi-cuenta/mis-pedidos: revertido por race condition entre worktrees. A14/U15 ya cerrados en código previo, mi-cuenta+mis-pedidos cards actuales OK target adulto mayor (cards info, status badges, link "Ver pedido", reorder, loyalty section). V4 cerrado de facto sin commit dedicado.
+- V5 globals/navbar/safe-area: `38cc157` (A15/M9/A1/A2/A4/A7/P4).
+
+Build local final: `Compiled successfully`, 160/160 páginas estáticas. Warnings dynamic-route admin (cookies) preexistentes, no nuevos.
+
+Lighthouse final (3 muestras mobile por variance):
+- **Desktop**: 100/100/96/100 LCP 0.7s ✅ target 100/100/96/100 LCP ≤0.7s.
+- **Mobile**: muestras `[91, 82, 97]` perf, LCP `[3.1, 3.8, 2.5]s`, a11y/best-practices/seo `100/100/100` consistente. Median 91 perf vs target 94. Variance ±7 puntos confirma noise red móvil throttling LH; V1 commit redujo `priority` images (`idx<2`/`idx<3` → `idx===0` mayoría carruseles), no introduce regresión causal. No revertido.
+
+Smoke prod: 14/14 rutas `200` (`/`, `/productos`, `/carrito`, `/checkout`, `/cotizacion`, `/seguimiento/test`, `/producto/broxal-...`, `/auth/{login,register,forgot-password}`, `/mi-cuenta`, `/mis-pedidos`, `/rastrear-pedido`, `/offline`).
+
+Diferidos formales (próxima sesión, no scope cierre):
+- **U4 (P0)** — `clearCart()` antes submit Webpay → mover a webhook success. Requiere refactor arquitectural endpoint + idempotency.
+- **U12 (P2)** — PDP `prescription_pending` requiere migration Prisma `orders.prescription_pending Boolean` + cambios api orders.
+- **P1, P2, P3, P7-P11** — perf de fondo (RSC refactor home, priority images audit completo, fetch batching, modularizeImports lucide, AbortController search, skeleton ux, loyalty cache store).
+- **U1, U8, U9, U13, U14** — UX nice-to-haves (try/catch toast addToCart, debounce qty cart, undo toast eliminar, dropdown a11y, btn clear-search 28→44px).
+- **M1, M2, M5, M7, M8, M10** — mobile layout polish (viewport scaling, cart bar consolidation, snap carousels, btn cotizar tooltip, modal padding 320px, html font-size 18px review).
+
+Working tree limpio post-commit, `origin/main` sincronizado, Vercel auto-deploy verde.
