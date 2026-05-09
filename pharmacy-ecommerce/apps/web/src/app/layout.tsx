@@ -159,6 +159,7 @@ export default function RootLayout({
                 <nav aria-label="Footer" className="flex flex-col gap-1.5">
                   <a href="/" className="text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Catálogo</a>
                   <a href="/carrito" className="text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Carrito</a>
+                  <a href="/cotizacion" className="text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Cotizar receta</a>
                   <a href="/mis-pedidos" className="text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Mis Pedidos</a>
                 </nav>
               </div>

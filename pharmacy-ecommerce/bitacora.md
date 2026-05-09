@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-05-09 — Audit batch P2 (A9 zoom hint, A16 placeholder responsive, M9 footer Cotizar)
+
+Continuación tras cierre A11y/LCP. Batch 3 items P2 audit `ui-audit-2026-05-08.md`.
+
+- **A9** PDP zoom hint mobile: badge `opacity-0 group-hover:opacity-100` invisible en touch. Cambio: `opacity-100 sm:opacity-0 sm:group-hover:opacity-100` + texto "Toca para ampliar" (mobile) / "Ampliar" (desktop). `ProductPageClient.tsx:147-151`.
+- **A16** Hero placeholder responsive: `useEffect`+`matchMedia('(max-width: 480px)')` → "Buscar medicamento..." mobile vs "Ej. paracetamol, vitamina D, pañales..." desktop. `Hero.tsx:32-39,68`.
+- **M9** Footer nav: agregar link "Cotizar receta" → `/cotizacion` (col 2 entre Carrito y Mis Pedidos). `layout.tsx:162`.
+- **M11** descartado: PDP qty selector ya tiene +/- buttons (`ProductPageClient.tsx:311-318`). Audit outdated.
+
+Build local OK (Next 14.2.35). Sin regresiones LH esperadas (cambios DOM mínimos, mismo bundle ~111kB PDP).
+
+---
+
 ## 2026-05-09 — Cierre A11y ≥95 + LCP mobile <2.5s (Lighthouse final 100/100/96/100 D, 94/100/100/100 M)
 
 Sesión enfocada en cerrar gaps Lighthouse pendientes del audit UI 2026-05-08. 6 commits (`654fe69..ae39a95`).

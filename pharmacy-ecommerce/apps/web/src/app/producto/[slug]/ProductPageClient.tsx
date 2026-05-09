@@ -144,8 +144,10 @@ export default function ProductPage() {
                   priority
                   fetchPriority="high"
                 />
-                <span className="absolute bottom-3 right-3 bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 p-2.5 rounded-xl shadow-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  <ZoomIn className="w-5 h-5" />
+                <span className="absolute bottom-3 right-3 bg-white/95 dark:bg-slate-900/95 text-slate-800 dark:text-slate-100 px-3 py-2 rounded-xl shadow-md inline-flex items-center gap-1.5 text-sm font-semibold opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <ZoomIn className="w-4 h-4" />
+                  <span className="sm:hidden">Toca para ampliar</span>
+                  <span className="hidden sm:inline">Ampliar</span>
                 </span>
               </button>
             ) : (

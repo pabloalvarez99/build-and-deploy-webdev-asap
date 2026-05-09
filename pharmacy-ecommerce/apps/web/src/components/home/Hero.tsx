@@ -2,7 +2,7 @@
 
 import { Search, BadgePercent, FileText, X, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { ReactNode, RefObject } from 'react';
+import { ReactNode, RefObject, useEffect, useState } from 'react';
 
 type Props = {
   searchInput: string;
@@ -29,6 +29,14 @@ export default function Hero({
   acControlsId,
   autocomplete,
 }: Props) {
+  const [placeholder, setPlaceholder] = useState('Ej. paracetamol, vitamina D, pañales...');
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 480px)');
+    const apply = () => setPlaceholder(mq.matches ? 'Buscar medicamento...' : 'Ej. paracetamol, vitamina D, pañales...');
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
   return (
     <section
       aria-label="Buscador y accesos rápidos"
@@ -58,7 +66,7 @@ export default function Hero({
               ref={inputRef}
               id="hero-search"
               type="search"
-              placeholder="Ej. paracetamol, vitamina D, pañales..."
+              placeholder={placeholder}
               value={searchInput}
               onChange={(e) => onSearchChange(e.target.value)}
               onKeyDown={onKeyDown}
