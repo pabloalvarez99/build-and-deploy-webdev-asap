@@ -214,6 +214,7 @@ export interface Product {
   image_url: string | null
   active: boolean
   external_id: string | null
+  barcodes?: string[]
   laboratory: string | null
   therapeutic_action: string | null
   active_ingredient: string | null

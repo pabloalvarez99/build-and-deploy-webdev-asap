@@ -30,6 +30,7 @@ function mapProduct(p: any, searchQ = '') {
     price: p.price.toString(), stock: p.stock, category_id: p.category_id,
     image_url: sanitizeImageUrl(p.image_url), active: p.active,
     external_id: p.external_id, laboratory: p.laboratory,
+    barcodes: Array.isArray(p.product_barcodes) ? p.product_barcodes.map((b: any) => b.barcode) : [],
     therapeutic_action: p.therapeutic_action, active_ingredient: p.active_ingredient,
     prescription_type: p.prescription_type, presentation: p.presentation,
     discount_percent: p.discount_percent,
@@ -105,7 +106,10 @@ async function fetchCatalog(opts: CatalogOpts) {
   const [products, total] = await Promise.all([
     db.products.findMany({
       where,
-      include: { categories: { select: { name: true, slug: true } } },
+      include: {
+        categories: { select: { name: true, slug: true } },
+        product_barcodes: { select: { barcode: true } },
+      },
       orderBy,
       skip: offset,
       take: opts.limit,
@@ -176,7 +180,10 @@ export async function GET(request: NextRequest) {
       ;[products, total] = await Promise.all([
         db.products.findMany({
           where,
-          include: { categories: { select: { name: true, slug: true } } },
+          include: {
+            categories: { select: { name: true, slug: true } },
+            product_barcodes: { select: { barcode: true } },
+          },
           orderBy: { created_at: 'desc' },
           skip: offset,
           take: limit,

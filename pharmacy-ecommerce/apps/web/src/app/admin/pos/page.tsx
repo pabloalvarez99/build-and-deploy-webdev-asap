@@ -1061,21 +1061,24 @@ export default function POSPage() {
                       </div>
                     )}
                   </button>
-                  {showBarcodes && p.external_id && (
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      className="mt-2 px-1 py-1 bg-white dark:bg-slate-100 rounded border border-slate-200 dark:border-slate-300 cursor-zoom-in hover:ring-2 hover:ring-emerald-400"
-                      onClick={() => setBarcodeZoom({ code: p.external_id!, name: p.name })}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setBarcodeZoom({ code: p.external_id!, name: p.name }) } }}
-                      title="Click para ampliar (escanear desde pantalla)"
-                    >
-                      <BarcodeMini code={p.external_id} />
-                    </div>
-                  )}
-                  {showBarcodes && !p.external_id && (
-                    <div className="mt-2 text-[10px] text-slate-400 italic text-center">Sin código</div>
-                  )}
+                  {showBarcodes && (() => {
+                    const bcs = (p as any).barcodes as string[] | undefined
+                    const code = bcs && bcs.length > 0 ? bcs[0] : p.external_id
+                    return code ? (
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        className="mt-2 px-1 py-1 bg-white dark:bg-slate-100 rounded border border-slate-200 dark:border-slate-300 cursor-zoom-in hover:ring-2 hover:ring-emerald-400"
+                        onClick={() => setBarcodeZoom({ code, name: p.name })}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setBarcodeZoom({ code, name: p.name }) } }}
+                        title="Click para ampliar (escanear desde pantalla)"
+                      >
+                        <BarcodeMini code={code} />
+                      </div>
+                    ) : (
+                      <div className="mt-2 text-[10px] text-slate-400 italic text-center">Sin código</div>
+                    )
+                  })()}
                   {/* Buttons for out-of-stock products */}
                   {outOfStock && (
                     <div className="flex gap-1 mt-1">

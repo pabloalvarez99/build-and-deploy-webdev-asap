@@ -2167,7 +2167,8 @@ export default function AdminProductsPage() {
      .map((product) => {
        const outOfStock = product.stock === 0;
        const lowStock = product.stock > 0 && product.stock <= 10;
-       const ext = (product as any).external_id as string | null | undefined;
+       const bcList = (product as any).barcodes as string[] | undefined;
+       const ext = (bcList && bcList.length > 0 ? bcList[0] : (product as any).external_id) as string | null | undefined;
        return (
          <div
            key={product.id}
@@ -2289,18 +2290,20 @@ export default function AdminProductsPage() {
  <span className="text-xs text-slate-500 truncate">{product.category_name}</span>
  )}
  </div>
- {showBarcodes && (
-   (product as any).external_id ? (
+ {showBarcodes && (() => {
+   const bcs = (product as any).barcodes as string[] | undefined;
+   const code = (bcs && bcs.length > 0 ? bcs[0] : (product as any).external_id) as string | null | undefined;
+   return code ? (
      <div
        className="mt-2 px-1 py-1 bg-white dark:bg-slate-100 rounded border border-slate-200 dark:border-slate-300 max-w-[200px] cursor-zoom-in hover:ring-2 hover:ring-emerald-400"
-       onClick={() => setBarcodeZoom({ code: (product as any).external_id, name: product.name })}
+       onClick={() => setBarcodeZoom({ code, name: product.name })}
      >
-       <BarcodeMini code={(product as any).external_id} height={26} />
+       <BarcodeMini code={code} height={26} />
      </div>
    ) : (
      <p className="text-[10px] text-slate-400 italic mt-2">Sin código</p>
-   )
- )}
+   );
+ })()}
  <div className="flex items-center gap-1 mt-3">
  {(product as any).prescription_type === 'prescription' && (
  <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded">RX</span>
