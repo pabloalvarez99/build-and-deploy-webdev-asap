@@ -8,6 +8,7 @@ import { ShoppingCart, Minus, Plus, Package, Truck, ShieldCheck, ArrowLeft, Chec
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatPrice, discountedPrice } from '@/lib/format';
+import ProfessionalInfo from './ProfessionalInfo';
 
 export default function ProductPage({ initialProduct }: { initialProduct: ProductWithCategory | null }) {
   const router = useRouter();
@@ -366,6 +367,9 @@ export default function ProductPage({ initialProduct }: { initialProduct: Produc
             </div>
           </div>
         )}
+
+        {/* Información profesional por principio activo (medicamentos) */}
+        <ProfessionalInfo activeIngredient={product.active_ingredient} />
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (

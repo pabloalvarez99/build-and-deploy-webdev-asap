@@ -4,6 +4,35 @@
 
 ---
 
+## 2026-05-10 — Info profesional por producto (prospecto adulto mayor)
+
+Nueva sección "Información profesional" en `/producto/[slug]` para cada medicamento.
+
+**KB curada** `src/lib/drug-info.ts`: 80+ principios activos (los más vendidos en farmacia ambulatoria CL) con 8 secciones cada uno:
+- Composición/categoría · Indicaciones · Posología · Efectos adversos · Contraindicaciones · **Precauciones adulto mayor** (criterios Beers) · Interacciones · Conservación
+
+Fuente: Formulario Nacional ISP Chile + Vademécum + Beers Criteria.
+
+**Lookup** `lookupDrugInfo(active_ingredient)`:
+- Tokeniza el campo `active_ingredient` de DB (split por `,` `+` `Y`, strip dosis/unidades/tildes).
+- Match combinación completa (ej "PARACETAMOL + TRAMADOL") o componente individual.
+- Alias de nomenclatura local (AAS→ÁCIDO ACETILSALICÍLICO, etc.).
+- Zero costo, zero migración: archivo TS server+client.
+
+**UI** `ProfessionalInfo.tsx`:
+- Tipografía grande (text-base/lg), iconos por sección, acordeón por principio activo (primero abierto).
+- Banner ámbar prominente: "Información referencial. Consulte a su médico/farmacéutico" (cobertura legal).
+- Solo aparece si el producto tiene `active_ingredient` con match en KB (medicamentos), invisible en pañales/dermo.
+- Footer cita fuentes.
+
+Wire en `ProductPageClient.tsx` debajo de Descripción.
+
+Build local OK. `/producto/[slug]` pasó de 17→30 kB.
+
+Próximo: ampliar KB cola larga (oftálmicos, dermo OTC) cuando admin reporte productos sin info.
+
+---
+
 ## 2026-05-09 — V12 Sweep P2/P3 audit extendido (R2/R5/R17/R19)
 
 Cierre 4 diferidos del audit V11:
