@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Search, Package, CheckCircle, Clock, Store, XCircle, Truck, AlertCircle, ChevronRight } from 'lucide-react';
+import { Search, Package, CheckCircle, Clock, Store, XCircle, Truck, AlertCircle, ChevronRight, Copy, Check } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 import Link from 'next/link';
 
@@ -36,6 +36,17 @@ function TrackContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<TrackResult | null>(null);
   const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard unavailable
+    }
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,9 +163,19 @@ function TrackContent() {
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Pedido #{result.short_id}</p>
             <h2 className={`text-2xl font-black ${statusConf.color}`}>{result.status_label}</h2>
             {result.pickup_code && (
-              <div className="mt-3 bg-white dark:bg-slate-800 rounded-xl px-4 py-3 inline-block">
-                <p className="text-xs text-slate-500 mb-1">Código de retiro</p>
-                <p className="text-3xl font-mono font-black tracking-widest text-emerald-800 dark:text-emerald-300">{result.pickup_code}</p>
+              <div className="mt-3 bg-white dark:bg-slate-800 rounded-xl px-4 py-3 inline-flex items-center gap-3">
+                <div>
+                  <p className="text-xs text-slate-500 mb-1">Código de retiro</p>
+                  <p className="text-3xl font-mono font-black tracking-widest text-emerald-800 dark:text-emerald-300">{result.pickup_code}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleCopyCode(result.pickup_code as string)}
+                  aria-label={copied ? 'Código copiado' : 'Copiar código de retiro'}
+                  className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                >
+                  {copied ? <Check className="w-5 h-5 text-emerald-600" aria-hidden="true" /> : <Copy className="w-5 h-5 text-slate-600 dark:text-slate-300" aria-hidden="true" />}
+                </button>
               </div>
             )}
           </div>
@@ -198,9 +219,32 @@ function TrackContent() {
   );
 }
 
+function TrackSkeleton() {
+  return (
+    <div className="min-h-[80vh] max-w-lg mx-auto px-4 py-8 sm:py-12 animate-pulse">
+      <div className="text-center mb-8">
+        <div className="w-16 h-16 bg-slate-200 dark:bg-slate-700 rounded-2xl mx-auto mb-4" />
+        <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-48 mx-auto mb-2" />
+        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-72 mx-auto" />
+      </div>
+      <div className="card p-5 sm:p-8 space-y-5">
+        <div className="space-y-2">
+          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-32" />
+          <div className="h-14 bg-slate-200 dark:bg-slate-700 rounded-xl" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-32" />
+          <div className="h-14 bg-slate-200 dark:bg-slate-700 rounded-xl" />
+        </div>
+        <div className="h-14 bg-slate-200 dark:bg-slate-700 rounded-2xl" />
+      </div>
+    </div>
+  );
+}
+
 export default function TrackOrderPage() {
   return (
-    <Suspense fallback={<div className="min-h-[80vh]" />}>
+    <Suspense fallback={<TrackSkeleton />}>
       <TrackContent />
     </Suspense>
   );
