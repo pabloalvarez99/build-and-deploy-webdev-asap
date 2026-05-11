@@ -60,10 +60,16 @@ const SEVERITY_CONF: Record<
 
 export default function DrugInteractionAlert({
   interactions,
+  headerTitle,
+  headerSubtitle,
+  defaultOpen = true,
 }: {
   interactions: InteractionDetail[];
+  headerTitle?: string;
+  headerSubtitle?: string;
+  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(defaultOpen);
 
   if (interactions.length === 0) return null;
 
@@ -71,6 +77,14 @@ export default function DrugInteractionAlert({
   const conf = SEVERITY_CONF[top];
   const TopIcon = conf.icon;
   const count = interactions.length;
+  const titleText =
+    headerTitle ??
+    (count === 1
+      ? '1 interacción medicamentosa detectada'
+      : `${count} interacciones medicamentosas detectadas`);
+  const subtitleText =
+    headerSubtitle ??
+    'Revise antes de continuar. Esta verificación es referencial — consulte siempre con su médico o farmacéutico.';
 
   const counts: Record<Severity, number> = { critica: 0, mayor: 0, moderada: 0 };
   for (const it of interactions) counts[it.severity]++;
@@ -91,12 +105,10 @@ export default function DrugInteractionAlert({
         <TopIcon className={`w-6 h-6 ${conf.text} flex-shrink-0 mt-0.5`} aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <h3 className={`font-bold text-lg leading-tight ${conf.text}`}>
-            {count === 1
-              ? '1 interacción medicamentosa detectada'
-              : `${count} interacciones medicamentosas detectadas`}
+            {titleText}
           </h3>
           <p className={`text-sm mt-0.5 ${conf.text} opacity-90`}>
-            Revise antes de continuar. Esta verificación es referencial — consulte siempre con su médico o farmacéutico.
+            {subtitleText}
           </p>
           <div className="flex flex-wrap gap-1.5 mt-2">
             {(['critica', 'mayor', 'moderada'] as const).map((sev) =>

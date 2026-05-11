@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { productApi, ProductWithCategory, Product } from '@/lib/api';
 import { useCartStore } from '@/store/cart';
@@ -9,11 +9,29 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { formatPrice, discountedPrice } from '@/lib/format';
 import ProfessionalInfo from './ProfessionalInfo';
+import DrugInteractionAlert from '@/components/DrugInteractionAlert';
+import { checkInteractions } from '@/lib/drug-interactions';
 
 export default function ProductPage({ initialProduct }: { initialProduct: ProductWithCategory | null }) {
   const router = useRouter();
 
-  const { addToCart } = useCartStore();
+  const { addToCart, cart, fetchCart } = useCartStore();
+
+  useEffect(() => {
+    if (!cart) fetchCart();
+  }, [cart, fetchCart]);
+
+  const newInteractions = useMemo(() => {
+    if (!cart || cart.items.length === 0 || !initialProduct?.active_ingredient) return [];
+    const inCart = cart.items
+      .filter((it) => it.product_id !== initialProduct.id)
+      .map((it) => it.active_ingredient);
+    if (inCart.length === 0) return [];
+    const baseline = checkInteractions(inCart);
+    const hypothetical = checkInteractions([...inCart, initialProduct.active_ingredient]);
+    const baseSet = new Set(baseline.map((b) => `${b.drugs[0]}|${b.drugs[1]}`));
+    return hypothetical.filter((h) => !baseSet.has(`${h.drugs[0]}|${h.drugs[1]}`));
+  }, [cart, initialProduct?.id, initialProduct?.active_ingredient]);
 
   const [product] = useState<ProductWithCategory | null>(initialProduct);
   const [quantity, setQuantity] = useState(1);
@@ -265,6 +283,18 @@ export default function ProductPage({ initialProduct }: { initialProduct: Produc
               </div>
             ) : product.stock > 0 ? (
               <div className="space-y-5">
+                {newInteractions.length > 0 && !added && (
+                  <DrugInteractionAlert
+                    interactions={newInteractions}
+                    headerTitle={
+                      newInteractions.length === 1
+                        ? 'Posible interacción con un producto de su carrito'
+                        : `Posibles interacciones con productos de su carrito (${newInteractions.length})`
+                    }
+                    headerSubtitle="Si agrega este producto, podría tener estas interacciones medicamentosas. Consulte con su médico o farmacéutico antes de continuar."
+                    defaultOpen={true}
+                  />
+                )}
                 {/* Quantity selector */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">

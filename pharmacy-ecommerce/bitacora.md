@@ -2739,3 +2739,26 @@ Nueva feature: verificador de interacciones medicamentosas en `/carrito` para de
 - `app/carrito/page.tsx`: `useMemo(checkInteractions(items.map(active_ingredient)))` skip si `items.length < 2`. Render `<DrugInteractionAlert>` arriba de la lista de items.
 
 Build OK 160/160. Carrito JS sin impacto medible (drug-info ya en shared chunk porque `/producto/[slug]` también lo importa — split a `chunks/2117-*.js`).
+
+## 2026-05-10 — PDP pre-emptive interaction warning
+
+Extiende verificador (Frente D) al PDP `/producto/[slug]` para detección anticipada.
+
+**Cambio**: si el carrito tiene ≥1 producto con `active_ingredient`, antes de mostrar el botón "Agregar al carrito" se computan:
+- `baseline = checkInteractions(cart.items.active_ingredient)`
+- `hypothetical = checkInteractions([...cart, currentProduct.active_ingredient])`
+- `newInteractions = hypothetical - baseline` (diff por par drugs[0]+drugs[1])
+
+Solo se muestran las interacciones **nuevas** que aparecerían SI agregara este producto (evita repetir alertas ya visibles en carrito).
+
+Filtro adicional: si el producto YA está en carrito (`item.product_id === product.id`), se excluye de baseline para no doble contar (caso usuario aumenta cantidad).
+
+**DrugInteractionAlert** refactor: nuevas props opcionales `headerTitle`, `headerSubtitle`, `defaultOpen` para reusar component con copy contextual.
+
+PDP copy:
+- title: `Posible interacción con un producto de su carrito` / `Posibles interacciones con productos de su carrito (N)`
+- subtitle: `Si agrega este producto, podría tener estas interacciones medicamentosas. Consulte con su médico o farmacéutico antes de continuar.`
+
+Banner aparece arriba del qty selector + botón agregar (`product.stock > 0 && !added`). Auto-fetch del carrito en mount si aún null (cubre primera visita post-cold-start).
+
+Archivos: `components/DrugInteractionAlert.tsx` (+15/-7), `app/producto/[slug]/ProductPageClient.tsx` (+27/-1). Build OK 160/160.
