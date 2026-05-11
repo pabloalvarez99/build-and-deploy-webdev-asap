@@ -5,12 +5,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
-import { ShoppingBag, ArrowRight, Trash2, Plus, Minus, Package, Star, RotateCcw } from 'lucide-react';
+import { ShoppingBag, ArrowRight, Trash2, Plus, Minus, Package, Star, RotateCcw, Printer } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 import { calcPoints } from '@/lib/loyalty-utils';
 import CheckoutProgress from '@/components/CheckoutProgress';
 import DrugInteractionAlert from '@/components/DrugInteractionAlert';
 import { checkInteractions } from '@/lib/drug-interactions';
+import PrintMedicationList from '@/components/PrintMedicationList';
 
 export default function CartPage() {
   const { cart, fetchCart, updateQuantity, removeFromCart, addToCart, isLoading } = useCartStore();
@@ -41,6 +42,15 @@ export default function CartPage() {
     setUndoToast({ productId, name, quantity });
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
     undoTimerRef.current = setTimeout(() => setUndoToast(null), 5000);
+  };
+
+  const handlePrintMedList = () => {
+    if (typeof document === 'undefined') return;
+    document.body.classList.add('printing-med-list');
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => document.body.classList.remove('printing-med-list'), 400);
+    }, 80);
   };
 
   const handleUndo = async () => {
@@ -254,6 +264,16 @@ export default function CartPage() {
                 <ArrowRight className="w-5 h-5" />
               </Link>
 
+              <button
+                type="button"
+                onClick={handlePrintMedList}
+                className="w-full mt-3 flex items-center justify-center gap-2 bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 py-3 px-4 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-semibold text-base min-h-[52px]"
+                aria-label="Imprimir lista de medicamentos para llevar al médico"
+              >
+                <Printer className="w-5 h-5" aria-hidden="true" />
+                Imprimir lista para el médico
+              </button>
+
               <div className="mt-4 text-center">
                 <Link
                   href="/"
@@ -300,6 +320,14 @@ export default function CartPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {cart && cart.items.length > 0 && (
+        <PrintMedicationList
+          items={cart.items}
+          patientName={user?.name ?? null}
+          patientEmail={user?.email ?? null}
+        />
       )}
     </div>
   );

@@ -2762,3 +2762,32 @@ PDP copy:
 Banner aparece arriba del qty selector + botón agregar (`product.stock > 0 && !added`). Auto-fetch del carrito en mount si aún null (cubre primera visita post-cold-start).
 
 Archivos: `components/DrugInteractionAlert.tsx` (+15/-7), `app/producto/[slug]/ProductPageClient.tsx` (+27/-1). Build OK 160/160.
+
+## 2026-05-10 — Print Lista de Medicamentos (Frente F)
+
+Feature: botón "Imprimir lista para el médico" en `/carrito` genera documento A4 papel con datos de tratamiento, pensado para adulto mayor que lleva físicamente al control.
+
+**Nuevo `components/PrintMedicationList.tsx`** (~160 líneas):
+- Componente print-only (visible solo durante `body.printing-med-list`).
+- Encabezado: logo Tu Farmacia + dirección Coquimbo + WhatsApp + fecha localizada `es-CL`.
+- Datos paciente en grilla: Paciente (auto: `user.name`), RUT (blank), Edad (blank), Email (auto: `user.email`), Médico tratante (blank), Diagnóstico (blank).
+- Tabla medicamentos: #, Producto, Principio activo, Posología orientativa (de `lookupDrugInfo`), Cantidad, **Dosis indicada por médico** (espacio en blanco para llenar).
+- Sección Interacciones (si las hay): mismas reglas que carrito (`checkInteractions`), border rojo, sev badge crítica/mayor/moderada.
+- Notas médico/farmacéutico: 4 líneas en blanco.
+- Footer: firma médico + firma paciente.
+- Disclaimer legal abajo.
+
+**Print CSS scoped** (`globals.css` +130 líneas):
+- `.print-only { display: none }` por default; visible solo bajo `body.printing-med-list`.
+- A4 portrait `@page { size: A4 portrait; margin: 8mm }`.
+- Serif `Georgia` 11pt para look profesional papel.
+- Grid 2-col paciente, table con border negro 1px, severidad badges con border colorido.
+- `position: fixed top:0 left:0 right:0` reemplaza viewport completo.
+
+**Integración `/carrito/page.tsx`**:
+- `handlePrintMedList`: agrega class → `window.print()` → cleanup 400ms.
+- Botón Printer secundario (no-cyan, slate outline) abajo de "Continuar al pago".
+- Render `<PrintMedicationList>` solo si hay items, fuera del flujo visual normal (visible vía CSS print).
+- Auto-fill paciente desde `useAuthStore.user.name/email` si logueado.
+
+Archivos: `components/PrintMedicationList.tsx` (+162), `app/globals.css` (+130), `app/carrito/page.tsx` (+18). Build OK 160/160.

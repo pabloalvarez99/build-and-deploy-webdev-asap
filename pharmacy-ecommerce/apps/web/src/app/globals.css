@@ -168,6 +168,148 @@ html.dark .text-slate-300 { color: #cbd5e1 !important; }
   @page { size: 80mm auto; margin: 0; }
 }
 
+/* Print medication list — hidden on screen, visible only during print */
+.print-only { display: none; }
+
+@media print {
+  body.printing-med-list * { visibility: hidden; }
+  body.printing-med-list #print-med-list,
+  body.printing-med-list #print-med-list * { visibility: visible; }
+  body.printing-med-list .print-only { display: block; }
+  body.printing-med-list #print-med-list {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    width: 100%;
+    padding: 10mm;
+    background: white !important;
+    color: black !important;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+  body.printing-med-list .med-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #000;
+    padding-bottom: 6mm;
+    margin-bottom: 6mm;
+  }
+  body.printing-med-list .med-header h1 {
+    font-size: 22pt;
+    font-weight: bold;
+    margin: 0;
+  }
+  body.printing-med-list .muted { color: #555; font-size: 9pt; margin: 0; }
+  body.printing-med-list .med-date-value { font-size: 12pt; font-weight: bold; margin: 0; }
+  body.printing-med-list .med-title {
+    font-size: 16pt;
+    font-weight: bold;
+    margin: 0 0 1mm 0;
+    text-align: center;
+  }
+  body.printing-med-list .med-subtitle {
+    text-align: center;
+    font-style: italic;
+    font-size: 10pt;
+    margin: 0 0 6mm 0;
+    color: #444;
+  }
+  body.printing-med-list .med-patient {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3mm 6mm;
+    border: 1px solid #000;
+    padding: 4mm;
+    margin-bottom: 6mm;
+  }
+  body.printing-med-list .med-field { display: flex; align-items: baseline; gap: 2mm; }
+  body.printing-med-list .med-field-wide { grid-column: 1 / -1; }
+  body.printing-med-list .med-label { font-weight: bold; min-width: 28mm; }
+  body.printing-med-list .med-value { flex: 1; border-bottom: 1px dotted #444; min-height: 5mm; padding: 0 1mm; }
+  body.printing-med-list .med-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 6mm;
+    font-size: 10pt;
+  }
+  body.printing-med-list .med-table th,
+  body.printing-med-list .med-table td {
+    border: 1px solid #000;
+    padding: 2mm 2.5mm;
+    text-align: left;
+    vertical-align: top;
+  }
+  body.printing-med-list .med-table th {
+    background: #f0f0f0 !important;
+    font-weight: bold;
+    font-size: 9pt;
+  }
+  body.printing-med-list .med-product { font-weight: bold; }
+  body.printing-med-list .med-posologia { font-size: 9pt; color: #333; }
+  body.printing-med-list .med-qty { text-align: center; font-weight: bold; }
+  body.printing-med-list .med-blank { min-width: 28mm; min-height: 8mm; }
+  body.printing-med-list .med-interactions {
+    border: 2px solid #b91c1c;
+    padding: 4mm;
+    margin-bottom: 6mm;
+    background: #fef2f2 !important;
+  }
+  body.printing-med-list .med-interactions h3 {
+    margin: 0 0 2mm 0;
+    color: #991b1b;
+    font-size: 12pt;
+  }
+  body.printing-med-list .med-interactions ul {
+    list-style: none;
+    padding: 0;
+    margin: 3mm 0 0 0;
+  }
+  body.printing-med-list .med-interactions li {
+    padding: 2mm 0;
+    border-bottom: 1px dashed #999;
+    font-size: 10pt;
+  }
+  body.printing-med-list .med-interactions li:last-child { border-bottom: none; }
+  body.printing-med-list .med-sev {
+    display: inline-block;
+    font-size: 8pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 0.5mm 2mm;
+    border-radius: 2mm;
+    margin-left: 2mm;
+  }
+  body.printing-med-list .med-sev-critica { background: #fee2e2 !important; color: #991b1b; border: 1px solid #991b1b; }
+  body.printing-med-list .med-sev-mayor { background: #ffedd5 !important; color: #9a3412; border: 1px solid #9a3412; }
+  body.printing-med-list .med-sev-moderada { background: #fef3c7 !important; color: #92400e; border: 1px solid #92400e; }
+  body.printing-med-list .med-notes h3 { font-size: 12pt; margin: 0 0 3mm 0; }
+  body.printing-med-list .med-blank-lines { display: flex; flex-direction: column; gap: 6mm; }
+  body.printing-med-list .med-blank-lines span { display: block; border-bottom: 1px solid #888; height: 5mm; }
+  body.printing-med-list .med-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12mm;
+    margin-top: 12mm;
+  }
+  body.printing-med-list .med-sign-line {
+    border-bottom: 1px solid #000;
+    margin-top: 12mm;
+  }
+  body.printing-med-list .med-disclaimer {
+    font-size: 8pt;
+    color: #555;
+    text-align: center;
+    margin-top: 8mm;
+    border-top: 1px solid #ccc;
+    padding-top: 3mm;
+    font-style: italic;
+  }
+  body.printing-med-list .no-print { display: none !important; }
+  body.printing-med-list nav, body.printing-med-list footer, body.printing-med-list .fixed, body.printing-med-list .sticky { display: none !important; }
+  @page { size: A4 portrait; margin: 8mm; }
+}
+
 /* Professional drug info: print only the section, force-expanded, no toolbar */
 @media print {
   body.printing-prof-info * { visibility: hidden; }
