@@ -1,0 +1,2586 @@
+[
+  {
+    "active_ingredient": "LEVOTIROXINA",
+    "n": "13"
+  },
+  {
+    "active_ingredient": "IBUPROFENO",
+    "n": "11"
+  },
+  {
+    "active_ingredient": "PARACETAMOL",
+    "n": "11"
+  },
+  {
+    "active_ingredient": "SILDENAFIL",
+    "n": "10"
+  },
+  {
+    "active_ingredient": "AMOXICILINA",
+    "n": "8"
+  },
+  {
+    "active_ingredient": "CLORFENAMINA  , PARACETAMOL  , PSEUDOEFEDRINA",
+    "n": "6"
+  },
+  {
+    "active_ingredient": "CLOTRIMAZOL",
+    "n": "6"
+  },
+  {
+    "active_ingredient": "HIALURONATO DE SODIO",
+    "n": "6"
+  },
+  {
+    "active_ingredient": "VITAMINA C  1000mg",
+    "n": "6"
+  },
+  {
+    "active_ingredient": "AZITROMICINA",
+    "n": "5"
+  },
+  {
+    "active_ingredient": "BETAMETASONA",
+    "n": "5"
+  },
+  {
+    "active_ingredient": "DICLOFENACO SODICO",
+    "n": "5"
+  },
+  {
+    "active_ingredient": "KETOCONAZOL",
+    "n": "5"
+  },
+  {
+    "active_ingredient": "PREGABALINA",
+    "n": "5"
+  },
+  {
+    "active_ingredient": "ACICLOVIR",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "ALCOHOL DESNATURALIZADO",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "ALGINATO  , BICARBONATO DE SODIO  , CARBONATO DE CALCIO",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "AMBROXOL",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "ATENOLOL",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "CIPROFLOXACINO",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "CLOBETASOL",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "CLORHEXIDINA",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "DICLOFENACO DIETILAMINA",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "DIETILTOLUAMIDA",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "ETINILESTRADIOL  , LEVONORGESTREL",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "GENTAMICINA",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "KETOROLACO",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "LEVOCETIRIZINA",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "LIDOCAINA",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "METFORMINA  , VILDAGLIPTINA",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "METRONIDAZOL",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "OXOLAMINA",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "PARGEVERINA CLORHIDRATO",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "PROBIOTICOS",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "SALBUTAMOL",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "TERBINAFINA",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "VITAMINA C",
+    "n": "4"
+  },
+  {
+    "active_ingredient": "ACE.DE RICINO",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "AC.FOLICO  , ACIDO FOLICO",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "ALCANFOR  , EUCALIPTO  , MENTOL",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "ALCOHOL DESNATURALIZADO  70",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "AMLODIPINO",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "BETAMETASONA  , DEXCLORFENIRAMINA",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "CAFEINA  , PARACETAMOL",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "CARVEDILOL",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "CIANOCOBALAMINA  , PIRIDOXINA  , TIAMINA",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "CICLOBENZAPRINA",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "CLORURO DE SODIO",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "CLOTRIMAZOL  1%",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "CONDROITINA  , GLUCOSAMINA",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "DHA",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "DIENOGEST  , ETINILESTRADIOL",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "DOMPERIDONA",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "DROSPIRENONA  , ETINILESTRADIOL",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "ENALAPRIL",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "ESTRADIOL",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "ETINILESTRADIOL  , GESTODENO",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "ETORICOXIB",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "EXTRACTO HEDERA HELIX",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "FEXOFENADINA",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "FLAVOXATO CLORHIDRATO",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "GEMFIBROZILO",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "GLICERINA",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "ISOTRETINOINA",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "KETOPROFENO",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "LAMOTRIGINA",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "METAMIZOL",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "MINERALES  , PROTEINAS  , VITAMINAS",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "PEROXIDO DE HIDROGENO",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "PREDNISONA",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "QUETIAPINA",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "RISPERIDONA",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "SACCHAROMYCES",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "TADALAFILO  20mg",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "VITAMINA C  500mg",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "ZINC  15mg",
+    "n": "3"
+  },
+  {
+    "active_ingredient": "AC.ACETILSALICILICO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "AC.ACETILSALICILICO  100mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "AC.ACETILSALICILICO  , CAFEINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "AC.ACETILSALICILICO  , CAFEINA  , PARACETAMOL",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "AC.CITRICO  , BICARBONATO DE SODIO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "AC.CITRICO  , BICARBONATO DE SODIO  , CARBONATO DE SODIO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "AC.CLAVULANICO  , AMOXICILINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "AC.UNDECILENICO  , ALCOHOL ISOPROPILICO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "ALBENDAZOL",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "ALCANFOR  , MENTOL",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "ALUMINIO HIDROXIDO  , CARBONATO DE CALCIO  , MAGNESIO HIDROXIDO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "AMLODIPINO  5mg, OLMESARTAN  20mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "ARIPIPRAZOL  5mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "ARNICA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "ATAPULGITA  , NIFUROXAZIDA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "ATORVASTATINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "ATROPINA  , PAPAVERINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "BETAHISTINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "BETAMETASONA  , CLOTRIMAZOL",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "BETAMETASONA  , GENTAMICINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "BIFOSFATO SODICO  , FOSFATO SODICO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "BILASTINA  10mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "BIOTINA  150mcg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "BISOPROLOL",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "BISOPROLOL  5mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "BROMHEXINA  8mg/5ml",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CAFEINA  , CLORFENAMINA  , ERGOTAMINA  , METAMIZOL",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CAFEINA  , CLORFENAMINA  , NOSCAPINA  , PARACETAMOL  , VITAMINA C",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CAFEINA  , NOSCAPINA  , PARACETAMOL  , VITAMINA C",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CANDESARTAN  , HIDROCLOROTIAZIDA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CARBOCISTEINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CARBON  , SULFAGUANIDINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CARBOXIMETILCELULOSA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CASSIA ANGUSTIFOLIA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CEFADROXILO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CELECOXIB  200mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CENTELLA ASIATICA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CETILPIRIDINIO  , CLORHEXIDINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CETIRIZINA  10mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CETIRIZINA  , PSEUDOEFEDRINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CIANOCOBALAMINA  1mg, PIRIDOXINA  50mg, TIAMINA  100mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CIANOCOBALAMINA  , DICLOFENACO  , DICLOFENACO SODICO  , PIRIDOXINA  , TIAMINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CIPROFIBRATO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CIPROFLOXACINO  0,3%",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CITRATO DE SODIO  , CLORURO DE POTASIO  , CLORURO DE SODIO  , GLUCOSA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CLAVO OLOR  , LIMON  , MELISA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CLINDAMICINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CLONIXINATO DE LISINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CLORFENAMINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CLORFENAMINA  , IBUPROFENO  , PSEUDOEFEDRINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CLORHEXIDINA  , NOSCAPINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "CLOTRIMAZOL  , DEXAMETASONA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "DEXAMETASONA  , TOBRAMICINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "DICLOFENACO DIETILAMINA  1,16%",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "DICLOFENACO SODICO  75mg/3ml",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "DIENOGEST",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "DIFENIDOL CLORHIDRATO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "DILTIAZEM",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "DIOSMINA  , HESPERIDINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "DOXICICLINA  100mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "DULOXETINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "DUTASTERIDA  0,5mg, TAMSULOSINA  0,4mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "EMPAGLIFLOZINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "ESOMEPRAZOL",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "ESOMEPRAZOL  20mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "ESOMEPRAZOL  40mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "ESPINO  , PASIFLORA  , VALERIANA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "ESTRADIOL  , MEDROXIPROGESTERONA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "FAMOTIDINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "FLUCONAZOL",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "FLUNARIZINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "FLUTICASONA FUROATO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "FLUTICASONA PROPIONATO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "HIDROCLOROTIAZIDA  12,5mg, OLMESARTAN  20mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "HIDROCLOROTIAZIDA  , TRIAMTERENO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "HIDROCLOROTIAZIDA  , VALSARTAN",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "HIDROXICINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "IBUPROFENO  , PSEUDOEFEDRINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "IVERMECTINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "LACTOBACILLUS REUTERI",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "LACTOBACILLUS RHAMNOSUS  , SACCHAROMYCES",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "LACTULOSA  66,7%",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "LEVODROPROPIZINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "LORATADINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "LOSARTAN POTASICO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "MACROGOL 3350",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "MAGALDRATE  , SIMETICONA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "MANTECA DE CACAO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "MANZANILLA  , PASIFLORA  , VALERIANA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "MELATONINA  3mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "MELISA  , PASIFLORA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "MELOXICAM",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "MENTOL  , SALICILATO DE METILO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "METFORMINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "MICONAZOL  , TINIDAZOL",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "MIEL ABEJAS  , PALTO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "MINERALES  , PROBIOTICOS  , PROTEINAS  , VITAMINAS",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "MINERALES  , PROTEINAS",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "MINOXIDIL",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "MUPIROCINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "NAPROXENO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "NISTATINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "NITROFURANTOINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "NOSCAPINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "OLMESARTAN  40mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "OMEPRAZOL",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "OXIBUTININA CLORHIDRATO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "OX.ZINC  , VITAMINA A  , VITAMINA D",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "PARACETAMOL  325mg, TRAMADOL  37,5mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "PARACETAMOL  , TRAMADOL",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "PERMETRINA  5%",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "PROPOLEO",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "PROPRANOLOL",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "SERTRALINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "SUCRALOSA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "TADALAFILO  5mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "TAMSULOSINA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "TELMISARTAN",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "TIAMAZOL",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "TIMOLOL",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "VALSARTAN  160mg",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "VITAMINA D3  800ui",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "ZOPICLONA",
+    "n": "2"
+  },
+  {
+    "active_ingredient": "AC.BORICO  , CLOROCRESOL  , OX.ZINC",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.CITRICO  , BELLADONA  , FENOFTALEINA  , NUX VOMICA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.CLAVULANICO  125mg, AMOXICILINA  500mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ACENOCUMAROL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ACETAZOLAMIDA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.FOLICO  2mg, CIANOCOBALAMINA  1mg, FUMARATO FERROSO  331,6mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.FOLICO  , ACIDO FOLICO  , CIANOCOBALAMINA  , FUMARATO FERROSO  , VITAMINA C",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.FOLICO  , ACIDO FOLICO  , HIERRO BISGLICINATO QUELATO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.FUSIDICO  2%, BETAMETASONA  0,1%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.GLICOLICO  , AC.SALICILICO  , AZUFRE",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.GLUTAMICO  , PANTOTENATO DE CALCIO  , VITAMINAS B",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.GRASOS  , MINERALES  , PROTEINAS  , VITAMINAS",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.HIALURONICO  0,2%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.HIGADO DE BACALAO  790mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ACICLOVIR  400mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ACICLOVIR  5%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ACIDO FOLICO  , BIOTINA  , CALCIO  , HIERRO  , MINERALES  , VITAMINA A  , VITAMINA D3  , VITAMINA E  , VITAMINAS  , ZINC",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ACIDO FOLICO  , CALCIO  , COBRE  , FOSFORO  , HIERRO  , MAGNESIO  , MANGANESO  , MINERALES  , NICOTINAMIDA  , PANTOTENATO DE CALCIO  , VITAMINA A  , VITAMINA D  , VITAMINA E  , VITAMINAS  , ZINC",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ACIDO IBANDRONICO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.LACTICO  , AC.SALICILICO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.MEFENAMICO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.MEFENAMICO  500mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.SALICILICO  , ACETATO AMILO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.TRANEXAMICO  650mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.UNDECILENICO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.VALPROICO  200mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AC.VALPROICO  500mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ADIFENINA  , PROPIFENAZONA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALANTOINA  , CETILPIRIDINIO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALCANFOR  , BENZOCAINA  , MENTOL  , TRICLOSAN",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALCANFOR  , FENOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALCANFOR  , MENTOL  , SALICILATO DE METILO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALCANFOR  , MENTOL  , SALICILATO DE METILO  , TIMOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALCANFOR  , SALICILATO DE METILO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALCOHOL BENCILICO  , BENZOCAINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALCOHOL ISOPROPILICO  70%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALGINATO  500mg, BICARBONATO DE SODIO  213mg, CARBONATO DE CALCIO  325mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALGINATO  , BICARBONATO DE SODIO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALOE VERA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALOINA  , LINAZA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALOPURINOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALOPURINOL  100mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALOPURINOL  300mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALQUITRAN DE HULLA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALUMBRE  10g",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALUMINIO HIDROXIDO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALUMINIO HIDROXIDO  200mg, MAGNESIO HIDROXIDO  200mg, SIMETICONA  25mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ALUMINIO HIDROXIDO  282mg, MAGNESIO HIDROXIDO  85mg, SIMETICONA  25mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AMBROXOL  30mg/5ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AMIODARONA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AMITRIPTILINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AMLODIPINO  10mg, TELMISARTAN  80mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AMLODIPINO  5mg, OLMESARTAN  40mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AMLODIPINO  5mg, VALSARTAN  160mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AMLODIPINO  , HIDROCLOROTIAZIDA  , VALSARTAN",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AMOROLFINA  5g/100ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AMOXICILINA  1000mg/5ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AMOXICILINA  250mg/5ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AMOXICILINA  500mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AMOXICILINA  500mg/5ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AMOXICILINA  , CLARITROMICINA  , ESOMEPRAZOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ANASTROZOL  1mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ANTAZOLINA  , BACITRACINA  , NEOMICINA  , XILOMETAZOLINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ARIPIPRAZOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ARIPIPRAZOL  10mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ARNICA  , CALENDULA  , HAMAMELIS",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ARNICA  , ES.ROSMARINUS  , EUCALIPTO  , MENTOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ATORVASTATINA  80mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ATROPINA  , ATROPINA SULFATO  , PAPAVERINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AVANAFILO  100mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AZITROMICINA  200mg/5ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AZUFRE",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "AZUL DE METILENO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BACITRACINA  , NEOMICINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BACLOFENO  10mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BECLOMETASONA  , SALBUTAMOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BENSERAZIDA  , LEVODOPA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BENZOCAINA  5g, CETILPIRIDINIO  0,5g",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BENZOCAINA  , CETILPIRIDINIO  , DEXPANTENOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BETAMETASONA  0,05%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BETAMETASONA  0,05g/100g, CLOTRIMAZOL  1g/100g",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BETAMETASONA  0,05g, CLOTRIMAZOL  1g",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BETAMETASONA  1mg/1ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BETAMETASONA  , LIDOCAINA  , NEOMICINA  , POLIMIXINA B",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BETAMETASONA  , NEOMICINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BETAXOLOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BICARBONATO DE SODIO  100g",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BICARBONATO DE SODIO  150g",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BICARBONATO DE SODIO  250g",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BIFOSFATO SODICO  6g/100ml, FOSFATO SODICO  16g/100ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BILASTINA  20mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BILASTINA  2,5mg/1ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BILIS  25mg, PANCREATINA  100mg, SIMETICONA  60mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BILIS  , PANCREATINA  , SIMETICONA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BIOTINA  , CISTINA  , METIONINA  , PANTOTENATO DE CALCIO  , PIRIDOXINA  , ZINC",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BIOTINA  , VITAMINAS",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BISGLICINATO DE MAGNESIO  400mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BISGLICINATO DE MAGNESIO  500mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BRIMONIDINA  , TIMOLOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BRINZOLAMIDA  , TIMOLOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BROMEXINA  , BROMHEXINA  , CLOFEDIANOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BROMHEXINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BROMHEXINA  4mg/5ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BROMURO CLIDINIO  , CLORDIAZEPOXIDO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BUDESONIDA  0,322gr/100gr",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BUDESONIDA  , FORMOTEROL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BUPROPION (ANFEBUTAMONA)  150mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BUPROPION (ANFEBUTAMONA)  300mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "BURSA PASTORIS  , CASTAÑO DE INDIAS  , HAMAMELIS",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CAFEINA  40mg, PARACETAMOL  650mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CAFEINA  , CLORFENAMINA  , METAMIZOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CAFEINA  , CLORFENAMINA  , NOSCAPINA  , PARACETAMOL  , SACARINA  , VITAMINA C",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CAFEINA  , CLORFENAMINA  , PARACETAMOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CAFEINA  , ERGOTAMINA  , METAMIZOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CALAMINA  , DIFENHIDRAMINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CALCIFEDIOL  0,266mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CAPSAICINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CAPTOPRIL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CARBAMAZEPINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CARBIDOPA  , LEVODOPA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CARBONATO DE CALCIO  1250mg, VITAMINA D3  4mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CARBONATO DE LITIO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CARBONATO DE LITIO  300mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CARDO MARIANO  500mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CASSIA ANGUSTIFOLIA   , CIRUELA  , HIERBAS Y MIEL  , LINAZA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CEFRADINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CETIRIZINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CETIRIZINA  5mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CIANOCOBALAMINA  , NICOTINAMIDA  , VITAMINAS B",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CICLOPIROXOLAMINA  8%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CIMICIFUGA RACEMOSA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CIPROFLOXACINO  , HIDROCORTISONA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CIPROTERONA  , ETINILESTRADIOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CIRUELA  , HIERBAS Y MIEL  , LINAZA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CITALOPRAM",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CITRATO DE CALCIO  , VITAMINA D3",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CITRATO DE MAGNESIO  500mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CITRATO DE POTASIO  , CITRATO DE SODIO  , CLORURO DE SODIO  , DEXTROSA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLARITROMICINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLARITROMICINA  250mg/5ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLINDAMICINA  1%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLOBETASOL  0,05%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLONIXINATO DE LISINA  125mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLOPIDOGREL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLORANFENICOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLORANFENICOL  5%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLORDIAZEPOXIDO  5mg, METOCLOPRAMIDA  5mg, SIMETICONA  100mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLORFENAMINA  4mg, PARACETAMOL  500mg, PSEUDOEFEDRINA  60mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLORFENAMINA  , PARACETAMOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLORFENAMINA  , PSEUDOEFEDRINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLORHEXIDINA  2%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLORHEXIDINA  , FLUORURO DE SODIO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLOROCARVACROL  , HIGADO BACALAO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLOROCARVACROL  , HIGADO BACALAO  , LANOLINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLORURO DE POTASIO  600mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLORURO DE SODIO  0,9%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLORURO DE SODIO  , PECTINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLORZOXAZONA  , PARACETAMOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLOXACILINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CLOXACILINA  500mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CMP  , HIDROXOCOBALAMINA  , UTP",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "COLAGENO HIDROLIZADO  10g",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "COLAGENO HIDROLIZADO  250mg, GELATINA  90mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "COLCHICINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "COLECALCIFEROL  100000ui/2ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "COLECALCIFEROL  50000ui",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "COLECALCIFEROL  800ui/4gts",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "COLECALCIFEROL  , VITAMINA D  , VITAMINA D3",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CRANBERRY  500mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "CREATINA  1000mg, VITAMINA C  200mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DAPAGLIFOZINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DESLORATADINA  2,5mg/5ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DESLORATADINA  5mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DESOGESTREL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DESVENLAFAXINA  100mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DESVENLAFAXINA  50mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DEXAMETASONA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DEXPANTENOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DEXPANTENOL  5%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DEXPANTENOL  50mg/1g",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DEXTRAN  , HIDROXIPROPILMETILCELULOSA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DEXTRAN  , HIDROXIPROPILMETILCELULOSA  , NAFAZOLINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DICLOFENACO COLESTIRAMINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DICLOFENACO DIETILAMINA  , DICLOFENACO SODICO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DICLOFENACO EPOLAMINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DICLOFENACO SODICO  100mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DICLOFENACO SODICO  25mg, TRAMADOL  25mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DICLOFENACO SODICO  50mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DIDROGESTERONA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DIGOXINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DIHEXAZIN  , NICOTINAMIDA  , VITAMINA C  , VITAMINAS B",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DIMENHIDRINATO  100mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DIMETICONA  , OXIBENZONA  , PABA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DIOSMINA  450mg, HESPERIDINA  50mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DORZOLAMIDA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DORZOLAMIDA  , TIMOLOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DOXAZOSINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DOXICICLINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DOXILAMINA  , PIRIDOXINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DROSPIRENONA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DROSPIRENONA  , ESTRADIOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "DUTASTERIDA  , TAMSULOSINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ECHINACEA  180mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ELETRIPTAN",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "EMPAGLIFLOZINA  10mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "EMPAGLIFLOZINA  12,5mg, METFORMINA  1000mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "EMPAGLIFLOZINA  , METFORMINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ERITROMICINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ESCITALOPRAM",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ESCOPOLAMINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ESCOPOLAMINA  20mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ESCOPOLAMINA  , METAMIZOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ESOMEPRAZOL  , NAPROXENO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ESPIRONOLACTONA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ESPIRONOLACTONA  25mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ESTRADIOL  , ESTRADIOL HEMIHIDRATO  , NOMEGESTROL ACETATO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ESTRADIOL  , ESTRADIOL VALERIANATO  , NORETISTERONA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ESTRIOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ESZOPICLONA  3mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ETINILESTRADIOL  , ETONOGESTREL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ETORICOXIB  90mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "EUGENOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "EZETIMIBA  10mg, ROSUVASTATINA  10mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "EZETIMIBA  10mg, SIMVASTATINA  20mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "FENITOINA SODICA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "FENOFIBRATO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "FENOTEROL  , IPRATROPIO BROMURO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "FENTERMINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "FENTICONAZOL  2%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "FINASTERIDE",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "FLOURURO DE SODIO  , FLUORURO DE SODIO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "FLUCLOXACILINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "FLUCLOXACILINA  500mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "FLUOXETINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "FLURBIPROFENO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "FLUTICASONA PROPIONATO  250mcg, SALMETEROL  25mcg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "FOSFATO DISÓDICO  6g/100ml, FOSFATO SODICO  16g/100ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "FTALILSULFACETAMIDA  , FTALILSULFATIAZOL  , NIFUROXAZIDA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "FUROSEMIDA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "GABA  75mg, GABOB  37mg, GLUTAMATO  75mg, VITAMINAS B  37mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "GLIBENCLAMIDA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "GLYCINE MAX  , PERSEA GRATISSIMA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "HALOPERIDOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "HIALURONATO DE SODIO  0,54%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "HIDRALAZINA  50mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "HIDROCLOROTIAZIDA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "HIDROCLOROTIAZIDA  12,5mg, LOSARTAN POTASICO  50mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "HIDROCLOROTIAZIDA  12,5mg, OLMESARTAN  40mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "HIDROCLOROTIAZIDA  12,5mg, VALSARTAN  160mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "HIDROCLOROTIAZIDA  , LOSARTAN POTASICO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "HIDROCORTISONA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "HIDROCORTISONA  1%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "HIDROXICLOROQUINA SULFATO  200mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "HIDROXIPROPILMETILCELULOSA  0,3%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "HIERRO  100mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "HIERRO  , HIERRO MALTOSADO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "HINOJO  , MANZANILLA  , MENTA  , SCHOLTZIA  , TILO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "HIPROMELOSA  0,7%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "HOJAS DE SEN",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "IBUPROFENO  100mg/5ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "IBUPROFENO  200mg/5ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "IBUPROFENO  200mg, PARACETAMOL  300mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "IBUPROFENO  400mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "IMIPRAMINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "INDOMETACINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "IPRATROPIO BROMURO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "IPRATROPIO BROMURO  , SALBUTAMOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ISOSORBIDE DINITRATO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ITRACONAZOL  100mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "IVERMECTINA  3mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "KETOCONAZOL  1%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "KETOCONAZOL  2%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "KETOPROFENO  150mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "KETOROLACO  30mg/1ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LACTOBACILLUS  , LACTOBACILLUS RHAMNOSUS",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LANSOPRAZOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LATANOPROST",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LEVADURA DE CERVEZA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LEVETIRACETAM",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LEVETIRACETAM  500mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LEVOCETIRIZINA  5mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LEVOFLOXACINO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LEVOFLOXACINO  750mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LEVONORGESTREL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LEVONORGESTREL  1,5mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LEVOSULPIRIDA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LEVOSULPIRIDA  25mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LEVOTIROXINA  50mcg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LIDOCAINA  2gr/100gr, TRIBENOSIDO  5gr/100gr",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LIDOCAINA  5%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LIMON  , MELISA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LINAGLIPTINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LINAGLIPTINA  2,5mg, METFORMINA  1000mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LOPERAMIDA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LORATADINA  5mg/5ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LORATADINA  , PSEUDOEFEDRINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LOSARTAN POTASICO  50mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "LOVASTATINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MACROGOL 3350  17g",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MAGNESIO  300mg, SELENIO  200mg, ZINC  20mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MAGNESIO  300mg, ZINC  10mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MAGNESIO  , MINERALES  , VITAMINAS  , VITAMINAS B",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MANTECA DE CACAO  3g",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MEBENDAZOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MEBEVERINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MEDROXIPROGESTERONA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MELATONINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MELATONINA  3mg/1ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MEMANTINA  10mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MEMANTINA  20mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MEPIRAMINA  15mg, PAMABROM  25mg, PARACETAMOL  500mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MEPIRAMINA  , PAMABROM  , PARACETAMOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "METAMIZOL  300mg, PARGEVERINA CLORHIDRATO  6mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "METAMIZOL  , PARGEVERINA CLORHIDRATO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "METFORMINA  1000mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "METFORMINA  500mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "METFORMINA  750mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "METFORMINA  850mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "METILDOPA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "METOCLOPRAMIDA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "METOTREXATO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "METRONIDAZOL  0,75%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MINERALES  , VITAMINAS",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MIRISTATO DE ISOPROPILO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MIRTAZAPINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MIRTAZAPINA  30mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MOMETASONA FUROATO  0,1%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MOMETASONA FUROATO  50mcg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MONTELUKAST",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MONTELUKAST  10mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "MORINGA  300mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "N-ACETILCISTEINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "NAFAZOLINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "NAFAZOLINA  0,1%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "NAPROXENO  550mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "NARATRIPTAN",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "NARATRIPTAN  2,5mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "NEBIVOLOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "NIFEDIPINO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "NISTATINA  , OX.ZINC  , VITAMINA A  , VITAMINA D  , ZINC",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "NITRATO DE PLATA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "OLANZAPINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "OLMESARTAN",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "OLMESARTAN  20mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "OLOPATADINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ONDANSETRON  4mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ONDANSETRON  8mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ORLISTAT",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "OTILONIO BROMURO  40mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "OXIMETAZOLINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "OX.ZINC",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "OX.ZINC  10g",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "OX.ZINC  25gr/100gr",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PANTENOL  5%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PAPAINA  10mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PARACETAMOL  1000mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PARACETAMOL  120mg/5ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PARACETAMOL  160mg/5ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PARACETAMOL  1g",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PARACETAMOL  500mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PARACETAMOL  500mg, PSEUDOEFEDRINA  60mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PARGEVERINA CLORHIDRATO  5mg/1ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PAROXETINA  20mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PELARGONIUM SIDOIDES",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PENICILINA BENZATINA  0,991g",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PEROXIDO DE HIDROGENO  3%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PICOSULFATO DE SODIO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PICOSULFATO DE SODIO  7,5mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PILOCARPINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PIROXICAM",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "POLIETILENGLICOL 400   0,4%, PROPILENGLICOL  0,3%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "POLIVIDONA YODADA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "POTASIO GLUCONATO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PRIMIDONA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PROGESTERONA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PROPOLEO  , VITAMINA C",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PROPRANOLOL  10mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PSIDIUM GUAJAVA  166,6mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "PSYLLIUM",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "QUETIAPINA  25mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "RACECADOTRILO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "RESVERATROL  300mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "RIVAROXABAN  10mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "RIVAROXABAN  15mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "RIVAROXABAN  20mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ROSUVASTATINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ROSUVASTATINA  10mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ROSUVASTATINA  20mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "RUPATADINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "RUPATADINA  1mg/1ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "SACCHAROMYCES  250mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "SALBUTAMOL  100mcg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "SALICILATO DE METILO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "SAL INGLESA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "SELENIO  200mcg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "SILDENAFIL  100mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "SILICONA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "SIMETICONA  4%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "SODIO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "STEVIA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "STEVIA  , SUCRALOSA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "SUBSALICILATO BISMUTO  262,5mg/15ml",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "SUCRALFATO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "SULFAMETOXAZOL  , TRIMETOPRIM",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "SULFATO DE ZINC",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "SULFATO DE ZINC  360mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "SULFATO FERROSO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "SYMPHYTUM OFFICINALE I  35%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TAMOXIFENO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TAMSULOSINA  0,4mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TEOFILINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TESTOSTERONA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "THUJA D4  2mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TIAMINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TIBOLONA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TIBOLONA  2,5mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TIOCOLCHICOSIDO  8mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TOBRAMICINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TOLNAFTATO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TOLTERODINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TOPIRAMATO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TRAMADOL",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TRAMADOL  50mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TRAZODONA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TRAZODONA  100mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TRETINOINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TRICLOSAN",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TRIMEBUTINO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TRIMETAZIDINA DICLORHIDRATO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "TROSPIO CLORURO",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "UREA  10%",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "VALACICLOVIR",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "VALERIANA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "VALSARTAN",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "VALSARTAN  80mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "VASELINA  , VASELINA SOLIDA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "VENLAFAXINA",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "VENLAFAXINA  150mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "VENLAFAXINA  75mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "VILDAGLIPTINA  50mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "VITAMINA A  15mg/100gr",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "VITAMINA C  1000mg, ZINC  20mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "VITAMINA D3  800ui, VITAMINA K2  100mcg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "VITAMINA D  , VITAMINA D3",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "VITAMINA E  400mg",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "VITAMINA E  400ui",
+    "n": "1"
+  },
+  {
+    "active_ingredient": "ZOPICLONA  7,5mg",
+    "n": "1"
+  }
+]

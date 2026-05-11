@@ -2932,3 +2932,19 @@ El audio se construye verbalmente: `{drug1} más {drug2}. Severidad {Crítica/Ma
 Adulto mayor con dificultad visual puede ESCUCHAR cada alerta sin tener que leer.
 
 Archivos: `hooks/useSpeech.ts` (nuevo, +52), `app/producto/[slug]/ProfessionalInfo.tsx` (-32 código duplicado, +1 import), `components/DrugInteractionAlert.tsx` (+30 TTS btn por interacción). Build OK 160/160.
+
+## 2026-05-10 — drug-info cobertura 100%
+
+Cierre cobertura KB: 1004/1004 productos (antes 999/1004, 99.5%).
+
+**Bugs raíz en `stripDoses` (drug-info.ts:4207)**:
+1. Regex trailing `\b` falla cuando unidad es `%` seguida de espacio/coma. `%` non-word, espacio non-word → no word boundary → la dosis `0,3%` no se elimina y el token queda `HIDROXIPROPILMETILCELULOSA 0`. Fix: trailing `(?![A-Za-z0-9])` lookahead en lugar de `\b`. Cubre `%`, fin de string, y signos de puntuación.
+2. Unidad `gr` (gramos) faltante en alternancia → `25gr/100gr` no se eliminaba. Agregado.
+
+**Alias agregados** (homeopatía con sufijo de dilución D1..D30 + variante con sufijo I):
+- `THUJA D1|D2|D3|D4|D6|D12|D30` → `HOMEOPATICO`
+- `SYMPHYTUM OFFICINALE I` → `CONSUELDA`
+
+**Verificación**: nuevo script `scripts/check-drug-coverage.mjs` (corre `lookupDrugInfo` contra `scripts/ai.json` del dump SQL) reporta 646/646 rows = 1004/1004 productos. Sin regresiones en combos bidireccionales (`TRAMADOL + PARACETAMOL` y `PARACETAMOL + TRAMADOL` → misma key combo).
+
+Archivos: `src/lib/drug-info.ts` (regex + 9 aliases), `scripts/check-drug-coverage.mjs` (+25 nuevo), `scripts/ai.json` (snapshot dump). Build OK 160/160.

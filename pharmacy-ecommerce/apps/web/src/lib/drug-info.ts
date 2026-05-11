@@ -4203,10 +4203,11 @@ function stripDiacritics(s: string): string {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
 
-/** Quita tokens de dosis: "500mg", "0,5%", "100 UI", "2,5 mg/ml", etc. */
+/** Quita tokens de dosis: "500mg", "0,5%", "100 UI", "2,5 mg/ml", "25gr", etc. */
 function stripDoses(s: string): string {
-  // Comma decimal: "0,5"; dot decimal: "0.5"; units: mg, mcg, μg, g, ml, %, ui
-  return s.replace(/\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|μg|ug|g|%|ui|ml|cc|kg|mg\/ml|mg\/kg)\b/gi, '');
+  // Comma decimal: "0,5"; dot decimal: "0.5". Trailing lookahead (not \b) so units
+  // ending in non-word chars like "%" funcionan ante espacio/coma/fin de string.
+  return s.replace(/\b\d+(?:[.,]\d+)?\s*(?:mg\/ml|mg\/kg|mg|mcg|μg|ug|gr|g|%|ui|ml|cc|kg)(?![A-Za-z0-9])/gi, '');
 }
 
 /** Aliases de nomenclatura común en Chile → clave canónica del KB. */
@@ -4341,7 +4342,15 @@ const ALIASES: Record<string, string> = {
   'BELLADONA': 'FITO ESPASMOLITICO',
   'NUX VOMICA': 'HOMEOPATICO',
   'THUJA D': 'HOMEOPATICO',
+  'THUJA D1': 'HOMEOPATICO',
+  'THUJA D2': 'HOMEOPATICO',
+  'THUJA D3': 'HOMEOPATICO',
+  'THUJA D4': 'HOMEOPATICO',
+  'THUJA D6': 'HOMEOPATICO',
+  'THUJA D12': 'HOMEOPATICO',
+  'THUJA D30': 'HOMEOPATICO',
   'SYMPHYTUM OFFICINALE': 'CONSUELDA',
+  'SYMPHYTUM OFFICINALE I': 'CONSUELDA',
   'ALCOHOL BENCILICO': 'BENZOCAINA',
   'BISMUTO': 'SUBSALICILATO BISMUTO',
   'FENOFTALEINA': 'LAXANTE ESTIMULANTE',
