@@ -2867,3 +2867,24 @@ Casos detectados típicos en farmacia Chile:
 - CAFEINA en analgésicos compuestos + suplementos energéticos
 
 Archivos: `lib/drug-duplicates.ts` (+62), `components/DrugDuplicateAlert.tsx` (+98), `app/carrito/page.tsx` (+6). Build OK 160/160.
+
+## 2026-05-10 — PDP duplicate warning + print duplicates section
+
+Extiende detección de duplicados al PDP y a la Lista de Medicamentos impresa.
+
+**PDP `ProductPageClient.tsx`**:
+- `useMemo` newDuplicates: construye item hipotético del producto actual, ejecuta `checkDuplicates([...otherItems, hypothetical])` vs baseline, devuelve solo grupos NUEVOS (por `drug` canonical name).
+- Filtro `item.product_id !== initialProduct.id` evita doble cuenta cuando el producto YA está en carrito.
+- Render `<DrugDuplicateAlert>` ANTES de `<DrugInteractionAlert>` (orden: duplicado primero, interacción luego). Solo si `product.stock > 0 && !added`.
+
+**PrintMedicationList**:
+- `useMemo` duplicates via `checkDuplicates(items)`.
+- Nueva sección "Principios activos duplicados" border fuchsia, antes de Interacciones.
+- Lista jerárquica: principio activo → productos involucrados con qty.
+
+**Print CSS** (`globals.css` +30):
+- `.med-duplicates` border `#a21caf` fuchsia con background `#fdf4ff`.
+- `.med-dup-items` lista anidada disc, font 9pt.
+- Visual diferenciado de interacciones (rojo) — adulto mayor identifica los dos tipos de alerta de un vistazo.
+
+Archivos: `ProductPageClient.tsx` (+24/-1), `PrintMedicationList.tsx` (+24/-1), `globals.css` (+30). Build OK 160/160.

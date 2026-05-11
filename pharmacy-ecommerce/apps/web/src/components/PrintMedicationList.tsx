@@ -17,6 +17,7 @@ import { useMemo } from 'react';
 import type { CartItem } from '@/lib/api';
 import { lookupDrugInfo, prettifyDrugName } from '@/lib/drug-info';
 import { checkInteractions } from '@/lib/drug-interactions';
+import { checkDuplicates } from '@/lib/drug-duplicates';
 
 export default function PrintMedicationList({
   items,
@@ -41,6 +42,8 @@ export default function PrintMedicationList({
     () => checkInteractions(items.map((i) => i.active_ingredient)),
     [items],
   );
+
+  const duplicates = useMemo(() => checkDuplicates(items), [items]);
 
   return (
     <div id="print-med-list" className="print-only">
@@ -120,6 +123,30 @@ export default function PrintMedicationList({
           })}
         </tbody>
       </table>
+
+      {duplicates.length > 0 && (
+        <section className="med-duplicates">
+          <h3>Principios activos duplicados</h3>
+          <p className="muted">
+            Productos con el mismo principio activo. Riesgo de doble dosis — confirme con su médico antes de combinarlos.
+          </p>
+          <ul>
+            {duplicates.map((g) => (
+              <li key={g.drug}>
+                <strong>{g.prettyDrug}</strong> ({g.items.length} productos)
+                <ul className="med-dup-items">
+                  {g.items.map((it) => (
+                    <li key={it.product_id}>
+                      {it.product_name}
+                      {it.quantity > 1 ? ` × ${it.quantity}` : ''}
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {interactions.length > 0 && (
         <section className="med-interactions">

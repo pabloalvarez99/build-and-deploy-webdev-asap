@@ -11,6 +11,8 @@ import { formatPrice, discountedPrice } from '@/lib/format';
 import ProfessionalInfo from './ProfessionalInfo';
 import DrugInteractionAlert from '@/components/DrugInteractionAlert';
 import { checkInteractions } from '@/lib/drug-interactions';
+import DrugDuplicateAlert from '@/components/DrugDuplicateAlert';
+import { checkDuplicates } from '@/lib/drug-duplicates';
 
 export default function ProductPage({ initialProduct }: { initialProduct: ProductWithCategory | null }) {
   const router = useRouter();
@@ -20,6 +22,27 @@ export default function ProductPage({ initialProduct }: { initialProduct: Produc
   useEffect(() => {
     if (!cart) fetchCart();
   }, [cart, fetchCart]);
+
+  const newDuplicates = useMemo(() => {
+    if (!cart || cart.items.length === 0 || !initialProduct?.active_ingredient) return [];
+    const otherItems = cart.items.filter((it) => it.product_id !== initialProduct.id);
+    if (otherItems.length === 0) return [];
+    const hypotheticalItem = {
+      product_id: initialProduct.id,
+      product_name: initialProduct.name,
+      product_slug: initialProduct.slug,
+      product_image: initialProduct.image_url,
+      price: initialProduct.price,
+      quantity: 1,
+      subtotal: initialProduct.price,
+      stock: initialProduct.stock,
+      active_ingredient: initialProduct.active_ingredient,
+    };
+    const baseline = checkDuplicates(otherItems);
+    const hypothetical = checkDuplicates([...otherItems, hypotheticalItem]);
+    const baseSet = new Set(baseline.map((b) => b.drug));
+    return hypothetical.filter((h) => !baseSet.has(h.drug));
+  }, [cart, initialProduct?.id, initialProduct?.active_ingredient, initialProduct?.name, initialProduct?.slug, initialProduct?.image_url, initialProduct?.price, initialProduct?.stock]);
 
   const newInteractions = useMemo(() => {
     if (!cart || cart.items.length === 0 || !initialProduct?.active_ingredient) return [];
@@ -283,6 +306,9 @@ export default function ProductPage({ initialProduct }: { initialProduct: Produc
               </div>
             ) : product.stock > 0 ? (
               <div className="space-y-5">
+                {newDuplicates.length > 0 && !added && (
+                  <DrugDuplicateAlert duplicates={newDuplicates} />
+                )}
                 {newInteractions.length > 0 && !added && (
                   <DrugInteractionAlert
                     interactions={newInteractions}
