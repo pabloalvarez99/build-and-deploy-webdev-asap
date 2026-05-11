@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-05-11 — Info producto pro: signos alarma, FAQ, JSON-LD Drug+FAQPage
+
+**Schema DrugInfo** extendido con campos opcionales: `signos_alarma`, `consejos_uso`, `riesgo_beers` (`EVITAR|PRECAUCION|SEGURO`), `via`, `embarazo`, `lactancia`, `receta`. Inferencia automática `inferRiesgoBeers()` desde texto cuando falta declarado.
+
+**Nueva fuente** `src/lib/drug-info-extras.ts` (no toca las 380+ entries base): 50 fármacos top (analgésicos, AINEs, antibióticos, antihipertensivos, estatinas, metformina, levotiroxina, IBP, salbutamol, antihistamínicos, ansiolíticos, ISRS, gabapentinoides, hierro, vitaminas, sildenafil/tadalafil, tamsulosina, finasterida) con signos de alarma concretos y consejos prácticos de uso (horario, alimentos, técnica inhalador, separación con antiácidos, etc.). Merge en `lookupDrugInfo()`.
+
+**UI ProfessionalInfo**:
+- Nuevas secciones acordeón: "Cómo tomarlo correctamente", "Embarazo", "Lactancia".
+- Banner rojo prominente "Cuándo consultar de urgencia" sobre acordeón cuando hay `signos_alarma`, con TTS dedicado.
+- Chips de cabecera: Beers (3 niveles, color-coded), vía de administración, condición de venta.
+- `BeersBadge` reutilizable.
+
+**ProductFAQ** nuevo componente: genera FAQ dinámico desde KB (cómo tomar, dosis, urgencia, interacciones, embarazo, lactancia, adulto mayor, conservación, dosis olvidada). Marcado microdata Question/Answer.
+
+**JSON-LD enriquecido** en `producto/[slug]/page.tsx`:
+- `Product.additionalProperty`: principio activo, presentación, condición de venta, vía.
+- Nuevo nodo `Drug`: activeIngredient, indication, contraindication, interactingDrug, adverseOutcome, administrationRoute, pregnancyCategory.
+- Nuevo nodo `FAQPage` con mainEntity Question/Answer (mejora rich results Google y AI summaries).
+
+Build OK. PDP bundle 12.4 → 13.1 kB.
+
+---
+
 ## 2026-05-10 — KB drug-info push V2: 99,5% cobertura catálogo
 
 Segunda iteración tras `a176d76`. Cobertura **91,0% → 99,5%** (999/1004 productos).

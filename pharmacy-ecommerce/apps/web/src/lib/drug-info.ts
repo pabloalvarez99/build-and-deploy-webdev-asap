@@ -27,6 +27,30 @@ export interface DrugInfo {
   interacciones: string;
   /** Conservación */
   conservacion?: string;
+  /** Signos de alarma — cuándo consultar urgente (banner rojo destacado). */
+  signos_alarma?: string;
+  /** Consejos prácticos de uso (horario, alimentos, técnica). */
+  consejos_uso?: string;
+  /** Clasificación riesgo en adulto mayor (criterios Beers/AGS). Si se omite se infiere del texto. */
+  riesgo_beers?: 'EVITAR' | 'PRECAUCION' | 'SEGURO';
+  /** Vía de administración principal. */
+  via?: 'oral' | 'topica' | 'inyectable' | 'oftalmica' | 'inhalatoria' | 'otica' | 'nasal' | 'rectal' | 'vaginal' | 'sublingual';
+  /** Embarazo: categoría o nota breve. */
+  embarazo?: string;
+  /** Lactancia: nota breve. */
+  lactancia?: string;
+  /** Si requiere receta médica retenida/cheque (informativo). */
+  receta?: 'venta_directa' | 'simple' | 'retenida' | 'cheque';
+}
+
+/** Infiere riesgo Beers desde el texto de precauciones cuando no está declarado. */
+export function inferRiesgoBeers(info: DrugInfo): 'EVITAR' | 'PRECAUCION' | 'SEGURO' | null {
+  if (info.riesgo_beers) return info.riesgo_beers;
+  const t = info.precauciones_adulto_mayor || '';
+  if (/\bEVITAR\b/i.test(t)) return 'EVITAR';
+  if (/alto riesgo|ALTO RIESGO/.test(t)) return 'EVITAR';
+  if (/precaución|precaucion|vigilar|ajustar|reducir|cautela|cuidado/i.test(t)) return 'PRECAUCION';
+  return null;
 }
 
 /**
@@ -4549,6 +4573,15 @@ const COMBO_INDEX: Map<string, string> = (() => {
   return idx;
 })();
 
+import { DRUG_EXTRAS } from './drug-info-extras';
+
+/** Mezcla campos extra opcionales (signos_alarma, consejos_uso, etc.) al info base. */
+function mergeExtras(name: string, base: DrugInfo): DrugInfo {
+  const extras = DRUG_EXTRAS[name];
+  if (!extras) return base;
+  return { ...base, ...extras };
+}
+
 /** Busca info para cada componente del principio activo. Devuelve los que existan en KB. */
 export function lookupDrugInfo(activeIngredient: string | null | undefined): DrugLookupResult[] {
   const tokens = tokenizeIngredients(activeIngredient);
@@ -4559,7 +4592,7 @@ export function lookupDrugInfo(activeIngredient: string | null | undefined): Dru
     const sortedQuery = tokens.slice().sort().join(' + ');
     const canonical = COMBO_INDEX.get(sortedQuery);
     if (canonical) {
-      return [{ name: canonical, info: DRUG_INFO[canonical] }];
+      return [{ name: canonical, info: mergeExtras(canonical, DRUG_INFO[canonical]) }];
     }
   }
 
@@ -4567,7 +4600,7 @@ export function lookupDrugInfo(activeIngredient: string | null | undefined): Dru
   const results: DrugLookupResult[] = [];
   for (const token of tokens) {
     if (DRUG_INFO[token]) {
-      results.push({ name: token, info: DRUG_INFO[token] });
+      results.push({ name: token, info: mergeExtras(token, DRUG_INFO[token]) });
       continue;
     }
     // Coincidencia parcial: si la clave del KB es prefijo del token o viceversa
@@ -4575,7 +4608,7 @@ export function lookupDrugInfo(activeIngredient: string | null | undefined): Dru
       (k) => k.split(' + ').length === 1 && (token.startsWith(k) || k.startsWith(token))
     );
     if (partial) {
-      results.push({ name: partial, info: DRUG_INFO[partial] });
+      results.push({ name: partial, info: mergeExtras(partial, DRUG_INFO[partial]) });
     }
   }
   return results;

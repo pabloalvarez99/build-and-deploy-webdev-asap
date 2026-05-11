@@ -3,6 +3,7 @@ import { cache } from 'react';
 import { getDb } from '@/lib/db';
 import type { ProductWithCategory } from '@/lib/api';
 import ProductPageClient from './ProductPageClient';
+import { lookupDrugInfo, prettifyDrugName } from '@/lib/drug-info';
 
 const siteUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://tu-farmacia.cl';
 
@@ -105,6 +106,60 @@ export default async function ProductPage({
     return d.toISOString().slice(0, 10);
   })();
 
+  const drugLookup = product ? lookupDrugInfo(product.active_ingredient) : [];
+  const primaryDrug = drugLookup[0];
+
+  const additionalProps: Array<{ '@type': string; name: string; value: string }> = [];
+  if (product?.active_ingredient) {
+    additionalProps.push({ '@type': 'PropertyValue', name: 'Principio activo', value: product.active_ingredient });
+  }
+  if (product?.presentation) {
+    additionalProps.push({ '@type': 'PropertyValue', name: 'Presentación', value: product.presentation });
+  }
+  if (product?.prescription_type) {
+    additionalProps.push({ '@type': 'PropertyValue', name: 'Condición de venta', value: product.prescription_type });
+  }
+  if (primaryDrug?.info.via) {
+    additionalProps.push({ '@type': 'PropertyValue', name: 'Vía de administración', value: primaryDrug.info.via });
+  }
+
+  const faqJsonLd = primaryDrug ? (() => {
+    const info = primaryDrug.info;
+    const pretty = prettifyDrugName(primaryDrug.name);
+    const faqs: Array<{ q: string; a: string }> = [];
+    if (info.consejos_uso) faqs.push({ q: `¿Cómo debo tomar ${pretty}?`, a: info.consejos_uso });
+    if (info.posologia) faqs.push({ q: '¿Cuál es la dosis habitual?', a: `${info.posologia} Siempre seguir indicación de su médico.` });
+    if (info.signos_alarma) faqs.push({ q: '¿Cuándo debo consultar de urgencia?', a: info.signos_alarma });
+    if (info.interacciones) faqs.push({ q: '¿Con qué medicamentos no se puede combinar?', a: info.interacciones });
+    if (info.embarazo) faqs.push({ q: '¿Es seguro durante el embarazo?', a: info.embarazo });
+    if (info.precauciones_adulto_mayor) faqs.push({ q: '¿Es seguro en adultos mayores de 65 años?', a: info.precauciones_adulto_mayor });
+    if (faqs.length === 0) return null;
+    return {
+      '@type': 'FAQPage',
+      '@id': `${siteUrl}/producto/${product!.slug}#faq`,
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    };
+  })() : null;
+
+  const drugJsonLd = primaryDrug ? {
+    '@type': 'Drug',
+    '@id': `${siteUrl}/producto/${product!.slug}#drug`,
+    name: prettifyDrugName(primaryDrug.name),
+    activeIngredient: primaryDrug.name,
+    description: primaryDrug.info.categoria,
+    ...(primaryDrug.info.indicaciones && { indication: primaryDrug.info.indicaciones }),
+    ...(primaryDrug.info.efectos_adversos && { adverseOutcome: primaryDrug.info.efectos_adversos }),
+    ...(primaryDrug.info.contraindicaciones && { contraindication: primaryDrug.info.contraindicaciones }),
+    ...(primaryDrug.info.interacciones && { interactingDrug: primaryDrug.info.interacciones }),
+    ...(primaryDrug.info.posologia && { dosageForm: primaryDrug.info.posologia }),
+    ...(primaryDrug.info.via && { administrationRoute: primaryDrug.info.via }),
+    ...(primaryDrug.info.embarazo && { pregnancyCategory: primaryDrug.info.embarazo }),
+  } : null;
+
   const jsonLd = product
     ? {
         '@context': 'https://schema.org',
@@ -122,6 +177,7 @@ export default async function ProductPage({
             mpn: product.external_id || undefined,
             category: product.categories?.name || undefined,
             brand: { '@type': 'Brand', name: product.laboratory || 'Genérico' },
+            ...(additionalProps.length > 0 && { additionalProperty: additionalProps }),
             offers: {
               '@type': 'Offer',
               url: `${siteUrl}/producto/${product.slug}`,
@@ -173,6 +229,8 @@ export default async function ProductPage({
               },
             ],
           },
+          ...(drugJsonLd ? [drugJsonLd] : []),
+          ...(faqJsonLd ? [faqJsonLd] : []),
         ],
       }
     : null;

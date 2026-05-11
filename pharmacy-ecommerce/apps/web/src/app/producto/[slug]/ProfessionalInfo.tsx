@@ -36,7 +36,7 @@ import {
   ChevronsDownUp,
   ShieldAlert,
 } from 'lucide-react';
-import { lookupDrugInfo, prettifyDrugName, type DrugInfo } from '@/lib/drug-info';
+import { lookupDrugInfo, prettifyDrugName, inferRiesgoBeers, type DrugInfo } from '@/lib/drug-info';
 import { useSpeech } from '@/hooks/useSpeech';
 
 interface Section {
@@ -50,12 +50,35 @@ const SECTIONS: Section[] = [
   { key: 'categoria', label: 'Composición y categoría', icon: Beaker, tone: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300' },
   { key: 'indicaciones', label: 'Indicaciones (para qué sirve)', icon: Stethoscope, tone: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300' },
   { key: 'posologia', label: 'Posología (cómo tomarlo)', icon: Clock, tone: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' },
+  { key: 'consejos_uso', label: 'Cómo tomarlo correctamente', icon: BookOpen, tone: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300' },
   { key: 'efectos_adversos', label: 'Efectos adversos', icon: AlertCircle, tone: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' },
   { key: 'contraindicaciones', label: 'Contraindicaciones', icon: Ban, tone: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' },
   { key: 'precauciones_adulto_mayor', label: 'Precauciones para adulto mayor', icon: Heart, tone: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300' },
   { key: 'interacciones', label: 'Interacciones medicamentosas', icon: Shuffle, tone: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' },
+  { key: 'embarazo', label: 'Embarazo', icon: Heart, tone: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300' },
+  { key: 'lactancia', label: 'Lactancia', icon: Heart, tone: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300' },
   { key: 'conservacion', label: 'Conservación', icon: Thermometer, tone: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300' },
 ];
+
+const VIA_LABEL: Record<NonNullable<DrugInfo['via']>, string> = {
+  oral: 'Vía oral',
+  topica: 'Uso tópico',
+  inyectable: 'Inyectable',
+  oftalmica: 'Uso oftálmico',
+  inhalatoria: 'Inhalatoria',
+  otica: 'Uso ótico',
+  nasal: 'Uso nasal',
+  rectal: 'Vía rectal',
+  vaginal: 'Vía vaginal',
+  sublingual: 'Sublingual',
+};
+
+const RECETA_LABEL: Record<NonNullable<DrugInfo['receta']>, string> = {
+  venta_directa: 'Venta directa',
+  simple: 'Receta simple',
+  retenida: 'Receta retenida',
+  cheque: 'Receta cheque',
+};
 
 type FontScale = 'lg' | 'xl' | 'xxl';
 const SCALE_FONT: Record<FontScale, string> = { lg: '1rem', xl: '1.2rem', xxl: '1.4rem' };
@@ -103,6 +126,20 @@ function isBeersWarning(text: string | undefined): boolean {
   return /\bEVITAR\b|\bBeers\b|alto riesgo|riesgo alto|inapropiado/i.test(text);
 }
 
+function BeersBadge({ level }: { level: 'EVITAR' | 'PRECAUCION' | 'SEGURO' }) {
+  const cfg = {
+    EVITAR: { label: 'Evitar en mayores de 65', cls: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300' },
+    PRECAUCION: { label: 'Precaución adulto mayor', cls: 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300' },
+    SEGURO: { label: 'Perfil seguro adulto mayor', cls: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' },
+  }[level];
+  return (
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[0.75em] font-bold uppercase tracking-wide ${cfg.cls}`}>
+      <ShieldAlert className="w-3.5 h-3.5" aria-hidden="true" />
+      {cfg.label}
+    </span>
+  );
+}
+
 function DrugBlock({
   name,
   info,
@@ -123,7 +160,8 @@ function DrugBlock({
   ttsSupported: boolean;
 }) {
   const pretty = prettifyDrugName(name);
-  const beers = isBeersWarning(info.precauciones_adulto_mayor);
+  const beersLevel = inferRiesgoBeers(info);
+  const beers = beersLevel === 'EVITAR' || (beersLevel === null && isBeersWarning(info.precauciones_adulto_mayor));
 
   return (
     <div className="border-2 border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden bg-white dark:bg-slate-800">
@@ -162,6 +200,22 @@ function DrugBlock({
 
       {open && (
         <div id={`drug-${name}`}>
+          {(beersLevel || info.via || info.receta) && (
+            <div className="px-4 sm:px-5 pt-4 flex flex-wrap items-center gap-2">
+              {beersLevel && <BeersBadge level={beersLevel} />}
+              {info.via && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[0.75em] font-semibold uppercase tracking-wide">
+                  {VIA_LABEL[info.via]}
+                </span>
+              )}
+              {info.receta && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-cyan-100 dark:bg-cyan-900/40 text-cyan-800 dark:text-cyan-300 text-[0.75em] font-semibold uppercase tracking-wide">
+                  {RECETA_LABEL[info.receta]}
+                </span>
+              )}
+            </div>
+          )}
+
           {beers && (
             <div className="mx-4 sm:mx-5 mt-4 flex items-start gap-3 p-3 rounded-xl border-2 border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/30">
               <ShieldAlert className="w-6 h-6 text-red-700 dark:text-red-300 flex-shrink-0 mt-0.5" aria-hidden="true" />
@@ -169,6 +223,37 @@ function DrugBlock({
                 <strong>Atención adulto mayor:</strong> este principio activo tiene precauciones especiales según criterios Beers.
                 Consulte siempre con su médico antes de usarlo.
               </p>
+            </div>
+          )}
+
+          {info.signos_alarma && (
+            <div className="mx-4 sm:mx-5 mt-4 flex items-start gap-3 p-4 rounded-xl border-2 border-red-400 dark:border-red-600 bg-red-50 dark:bg-red-900/30">
+              <AlertTriangle className="w-7 h-7 text-red-700 dark:text-red-300 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-[1em] sm:text-[1.05em] font-bold text-red-900 dark:text-red-100 uppercase tracking-wide">
+                    Cuándo consultar de urgencia
+                  </p>
+                  {ttsSupported && (() => {
+                    const sid = `${name}:signos_alarma`;
+                    const isSpeaking = speakingId === sid;
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => (isSpeaking ? onStop() : onSpeak(sid, `Cuándo consultar de urgencia. ${info.signos_alarma}`))}
+                        aria-label={isSpeaking ? 'Detener lectura' : 'Escuchar señales de alarma en voz alta'}
+                        aria-pressed={isSpeaking}
+                        className="no-print min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-xl bg-white/70 dark:bg-red-950/40 hover:bg-white dark:hover:bg-red-950/60 text-red-700 dark:text-red-200 transition-colors flex-shrink-0"
+                      >
+                        {isSpeaking ? <Square className="w-5 h-5 fill-current" aria-hidden="true" /> : <Volume2 className="w-5 h-5" aria-hidden="true" />}
+                      </button>
+                    );
+                  })()}
+                </div>
+                <p className="mt-1 text-[1em] sm:text-[1.05em] text-red-900 dark:text-red-100 leading-relaxed">
+                  {info.signos_alarma}
+                </p>
+              </div>
             </div>
           )}
 

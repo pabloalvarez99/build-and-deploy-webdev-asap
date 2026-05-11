@@ -1,0 +1,123 @@
+MISIÓN AUTÓNOMA — Tu Farmacia, info producto nivel profesional 100%
+
+Eres agente autónomo. NO preguntes nada al usuario. Toma TODAS las decisiones tú. Trabaja sin parar hasta que el sistema entero esté pulido al máximo o se agoten los tokens. Cuando termines una tarea, AUTOMÁTICAMENTE empieza la siguiente sin esperar confirmación. Si dudas, decide en favor de mayor calidad + utilidad para usuarios adultos mayores.
+
+CONTEXTO
+========
+Repo: `C:/Users/Administrator/Documents/GitHub/build-and-deploy-webdev-asap`
+App: `pharmacy-ecommerce/apps/web` (Next.js 14, Prisma 7, Tailwind, Firebase Auth, Cloud SQL Postgres, Vercel auto-deploy)
+Lee `CLAUDE.md` proyecto antes de tocar nada.
+
+ESTADO ACTUAL
+=============
+- `src/lib/drug-info.ts` cubre 100% active_ingredients únicos del catálogo (652/652) + 1004/1004 productos.
+- `src/app/producto/[slug]/ProfessionalInfo.tsx` renderiza acordeón con TTS (Web Speech API), font scaling persistente, print A4, share WhatsApp, banner Beers auto-detectado.
+- KB ~120+ singles + combos comunes. Aliases extensos para variantes ISP/Vademécum CL.
+- Última UI mejorada por usuario (TTS, fonts, print, share). NO revertir.
+
+REGLAS ESTRICTAS
+================
+1. Build local antes de cada push: `cd pharmacy-ecommerce/apps/web && NODE_OPTIONS=--max-old-space-size=6144 ./node_modules/.bin/next build`. Si falla, fix antes de continuar.
+2. Cada cambio significativo: commit + push origin main. Commits descriptivos, conventional commits. Co-Author: Claude Opus 4.7.
+3. Bitácora dual cada cambio:
+   - `pharmacy-ecommerce/bitacora.md` (append nueva entrada al inicio bajo "## Estado actual")
+   - `C:/Users/Administrator/Documents/obsidian-mind/work/active/tu-farmacia/bitacora.md` (append al final)
+4. NO tocar:
+   - Schema DB salvo que sea imprescindible (preferir TS files / JSON).
+   - UI ProfessionalInfo.tsx funcionalidad principal (TTS/fonts/print/share). Mejoras OK, regresiones NO.
+   - Auth, pagos Webpay, prescription_type logic.
+5. CLI-first. Usa `gh`, `git`, `node`, `rg`, `glow`, `obs`. NO MCP.
+6. Idioma: Español Chile, claro para adulto mayor. NO tildes faltantes en archivos. NO emojis en código.
+7. Texto farmacológico: basado en ISP Chile, Vademécum Chileno, Beers Criteria, NIH ODS, EMA herbal monographs. NO inventar dosis. Si dudas, omite el campo o di "según indicación médica".
+8. NUNCA terminar push sin verificar `git log` y `git status` limpios.
+
+ORDEN DE TRABAJO (prioridad descendente)
+=========================================
+
+FASE 1 — AUDITORÍA KB DRUG-INFO
+-------------------------------
+1.1. Para cada entry en `DRUG_INFO`, verifica que tenga las 8 secciones rellenas con texto sustantivo (≥80 chars cada uno cuando aplique). Identifica entries pobres.
+1.2. Mejora entries con texto stub o demasiado corto. Profundiza con: mecanismo de acción, evidencia clínica, ejemplos concretos de interacción, signos de alarma específicos.
+1.3. Cruza con dump fresco: `cd pharmacy-ecommerce/apps/web && node scripts/dump-active-ingredients.mjs > /tmp/ai.json`. Para cada AI con count >=2 que NO matchee, agregar entry.
+1.4. Para combos frecuentes, asegurar que tokenize+lookup produzca buena UX (combo dedicado O componentes individuales con info clara).
+1.5. Agrega meta-info por entry: `riesgo_beers?: 'EVITAR' | 'PRECAUCION' | 'SEGURO'` y `via?: 'oral' | 'topica' | 'inyectable' | 'oftalmica' | 'inhalatoria'`. UI puede mostrarlo como chip.
+
+FASE 2 — FEATURES NUEVAS UTILIDAD USUARIO
+------------------------------------------
+2.1. **Sección "¿Cuándo consultar urgente?"** por principio activo: signos de alarma concretos (ej "dolor abdominal intenso", "orina oscura", "sangrado", "confusión nueva"). Agregar campo opcional `signos_alarma?: string` al schema DrugInfo. Renderizar como banner rojo destacado dentro del acordeón.
+2.2. **Sección "Cómo tomarlo correctamente"** — tips prácticos (con/sin alimentos, horario óptimo, evitar tomar acostado, separar de antiácidos, etc.). Campo `consejos_uso?: string`.
+2.3. **FAQ por producto** (estático genérico desde drug-info): "¿Puedo tomarlo con alcohol?", "¿Qué hago si olvido una dosis?", "¿Puedo partir el comprimido?", "¿Es seguro en lactancia?". Componente nuevo `ProductFAQ.tsx`. Render bajo ProfessionalInfo.
+2.4. **Comparador rápido** dentro de producto: si hay genéricos equivalentes (mismo `active_ingredient`) en catálogo, mostrar bloque "Equivalentes disponibles" con precio comparado. Reutilizar API `/api/products`.
+2.5. **Indicador de seguridad por edad** — chip prominente cuando entry tiene `riesgo_beers = EVITAR` indicando "Atención: precauciones especiales para mayores 65".
+2.6. **JSON-LD enriquecido** — en `producto/[slug]/page.tsx` ampliar Product schema con `additionalProperty` para activeIngredient, prescription_type, dosageForm (de presentation), drug:contraindication, drug:warning (de KB). Mejora SEO + AI summaries de Google.
+
+FASE 3 — ACCESIBILIDAD + UX ADULTO MAYOR
+-----------------------------------------
+3.1. Auditar ProfessionalInfo + ProductPageClient con criterios WCAG AA: contraste 4.5:1, focus visible, aria-labels, skip-links.
+3.2. Botones mínimo 48x48 px en mobile (algunos podrían estar bajo).
+3.3. Verificar tap targets adecuados.
+3.4. Probar TTS con principios activos comunes — corregir pronunciación rara con `<phoneme>` SSML si el TTS lo soporta o reescribir con pausas.
+3.5. Modo alto contraste opcional (toggle en ProfessionalInfo).
+
+FASE 4 — PERFORMANCE
+--------------------
+4.1. `drug-info.ts` está creciendo. Verificar bundle size de `/producto/[slug]` (debería estar ~30 kB). Si crece >50 kB, considerar split:
+   - Mover `DRUG_INFO` a `src/lib/drug-info-data.ts` separado.
+   - O dynamic import lazy si supera 60 kB.
+4.2. Memoizar lookup result (ya useMemo, verificar).
+4.3. Verificar tree-shaking de lucide-react icons.
+
+FASE 5 — EDITOR ADMIN OPCIONAL
+------------------------------
+5.1. En `/admin/productos`, agregar campo "Notas farmacéuticas custom" por producto (extensión del `description` actual o columna nueva `pharmacist_notes`). Esto permite override manual cuando KB no aplica perfectamente.
+5.2. Frontend muestra notas custom ARRIBA de la info KB cuando existen.
+5.3. Migration Prisma + admin UI.
+(Si esta fase es muy grande, SALTAR y dejar para futuro.)
+
+FASE 6 — POLISH GENERAL
+-----------------------
+6.1. Revisar mensajes de error y vacíos en producto sin info — graceful.
+6.2. Verificar dark mode en todas las secciones nuevas.
+6.3. Probar mobile real (viewport 360px) — sin overflow horizontal.
+6.4. Lighthouse audit /producto/[slug] — apuntar a 90+ en a11y y perf.
+
+FASE 7 — DOCUMENTACIÓN
+----------------------
+7.1. Actualizar `obsidian-mind/reference/tu-farmacia-pages.md` con sección "Info profesional producto".
+7.2. README breve dentro de `src/lib/drug-info.ts` (header doc) explicando cómo agregar entries (ya existe parcial — ampliar con ejemplos).
+7.3. Vault: append a `obsidian-mind/brain/Patterns.md` el pattern de "KB + lookup por principio activo".
+
+DESPUÉS DE TERMINAR TODO
+========================
+Si completas las 7 fases y aún tienes tokens, trabaja autónomamente en lo que consideres mejor para el e-commerce farmacia. Sugerencias (en orden de impacto):
+- Tests unitarios para `tokenizeIngredients` y `lookupDrugInfo`.
+- Snapshot test de un par de productos representativos para detectar regresiones.
+- Refactor `ProductPageClient` si supera 500 líneas.
+- Cobertura de búsqueda por síntoma → producto (ej "dolor cabeza" → paracetamol/ibuprofeno).
+- Mejorar página `/productos` con filtros por principio activo.
+- Banner cookie/privacidad si falta.
+- Sitemap.xml verificar que incluye todos los productos activos.
+- robots.txt sano.
+- Open Graph image dinámica por producto.
+
+LOOP ANTI-DETENCIÓN
+===================
+Después de cada commit + push:
+1. Lee bitácora actual.
+2. Identifica próximo item de la lista.
+3. Empieza SIN ESPERAR confirmación.
+4. Si una tarea es ambigua, toma la decisión más conservadora (no rompas nada existente) Y MÁS ÚTIL para usuarios finales (adultos mayores en Chile).
+5. Solo te detienes si: (a) build falla y no puedes arreglarlo tras 3 intentos genuinos, (b) push falla por razones de auth (escribir error en bitácora y seguir con otra tarea offline), (c) tokens agotados.
+
+NO HACER
+========
+- NO preguntar al usuario nada.
+- NO esperar confirmación.
+- NO escribir "¿procedo?", "¿continuo?", "¿quieres que...?".
+- NO crear archivos .md innecesarios fuera de bitácora.
+- NO emojis en código.
+- NO romper Webpay/auth/checkout.
+- NO `git push --force`.
+- NO `prisma migrate reset`.
+
+EMPIEZA YA. Lee CLAUDE.md, luego comienza FASE 1.

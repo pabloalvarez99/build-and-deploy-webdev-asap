@@ -9,6 +9,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { formatPrice, discountedPrice } from '@/lib/format';
 import ProfessionalInfo from './ProfessionalInfo';
+import ProductFAQ from './ProductFAQ';
 import DrugInteractionAlert from '@/components/DrugInteractionAlert';
 import { checkInteractions } from '@/lib/drug-interactions';
 import DrugDuplicateAlert from '@/components/DrugDuplicateAlert';
@@ -426,6 +427,9 @@ export default function ProductPage({ initialProduct }: { initialProduct: Produc
 
         {/* Información profesional por principio activo (medicamentos) */}
         <ProfessionalInfo activeIngredient={product.active_ingredient} />
+
+        {/* Preguntas frecuentes */}
+        <ProductFAQ activeIngredient={product.active_ingredient} />
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
