@@ -2791,3 +2791,31 @@ Feature: botón "Imprimir lista para el médico" en `/carrito` genera documento 
 - Auto-fill paciente desde `useAuthStore.user.name/email` si logueado.
 
 Archivos: `components/PrintMedicationList.tsx` (+162), `app/globals.css` (+130), `app/carrito/page.tsx` (+18). Build OK 160/160.
+
+## 2026-05-10 — Badge interacción en ProductCard /productos (Frente G)
+
+Cierra ciclo interacciones: PDP (preview), Carrito (full), **ProductCard listings (subtle hint)**.
+
+**`lib/drug-interactions.ts` +2 helpers**:
+- `checkProductInteractions(cartIngredients, productIngredient)`: devuelve solo pares NUEVOS (producto × carrito). Eficiente para listados — pre-tokeniza cart drugs una vez.
+- `topInteractionSeverity(cartIngredients, productIngredient)`: shortcut, devuelve `Severity | null` para banner cards.
+- Fix iteración Set→Array (TS target no permite Set iter directo sin `--downlevelIteration`).
+
+**`components/catalog/ProductCard.tsx`**:
+- Nueva prop opcional `interactionSeverity?: Severity | null`.
+- Badge top-right en card overlay imagen: `AlertTriangle` + texto "Interacción" (oculto `<sm`). Color según severidad:
+  - crítica → rojo
+  - mayor → naranja
+  - moderada → ámbar
+- `role="status"`, `aria-label` + `title` con texto completo ("Interacción crítica con tu carrito" / "Interacción con tu carrito" / "Posible interacción con tu carrito").
+- No invasivo: badge pequeño (10px text), no bloquea agregar.
+
+**`app/productos/page.tsx`**:
+- `useEffect` auto-fetch cart si null.
+- `useMemo` cart ingredients.
+- Pasa `interactionSeverity={topInteractionSeverity(cartIngredients, product.active_ingredient)}` a cada `<ProductCard>`.
+- Costo per render: O(N_productos × tokens_producto × |cart_drugs|) — tokens chicos, cart típicamente <10 drugs → negligible.
+
+Resultado: navegando catálogo con carrito poblado, productos riesgosos resaltan visualmente antes de hacer click. Adulto mayor identifica potenciales conflictos sin tener que abrir cada producto.
+
+Archivos: `lib/drug-interactions.ts` (+45/-3), `components/catalog/ProductCard.tsx` (+24/-2), `app/productos/page.tsx` (+8/-1). Build OK 160/160.

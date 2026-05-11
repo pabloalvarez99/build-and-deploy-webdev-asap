@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Package, ShoppingCart, Check } from 'lucide-react';
+import { Package, ShoppingCart, Check, AlertTriangle } from 'lucide-react';
 import { Product } from '@/lib/api';
 import { formatPrice, discountedPrice } from '@/lib/format';
+import type { Severity } from '@/lib/drug-interactions';
 
 interface Props {
   product: Product;
@@ -13,12 +14,21 @@ interface Props {
   onAdd: (p: Product) => void;
   brokenImg: boolean;
   onImgError: (id: string) => void;
+  /** Si el producto tiene interacción con items del carrito, severidad máxima. */
+  interactionSeverity?: Severity | null;
 }
 
-export function ProductCard({ product, index = 0, adding, onAdd, brokenImg, onImgError }: Props) {
+const SEV_PILL: Record<Severity, { bg: string; text: string; label: string }> = {
+  critica: { bg: 'bg-red-100 dark:bg-red-900/40', text: 'text-red-700 dark:text-red-300', label: 'Interacción crítica con tu carrito' },
+  mayor: { bg: 'bg-orange-100 dark:bg-orange-900/40', text: 'text-orange-700 dark:text-orange-300', label: 'Interacción con tu carrito' },
+  moderada: { bg: 'bg-amber-100 dark:bg-amber-900/40', text: 'text-amber-700 dark:text-amber-300', label: 'Posible interacción con tu carrito' },
+};
+
+export function ProductCard({ product, index = 0, adding, onAdd, brokenImg, onImgError, interactionSeverity }: Props) {
   const finalPrice = product.discount_percent
     ? discountedPrice(Number(product.price), product.discount_percent)
     : Number(product.price);
+  const sevConf = interactionSeverity ? SEV_PILL[interactionSeverity] : null;
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col hover:border-cyan-200 dark:hover:border-cyan-800 hover:shadow-md transition-all group">
@@ -43,6 +53,17 @@ export function ProductCard({ product, index = 0, adding, onAdd, brokenImg, onIm
           {product.discount_percent && (
             <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-md">
               -{product.discount_percent}% OFF
+            </div>
+          )}
+          {sevConf && (
+            <div
+              className={`absolute top-2 right-2 inline-flex items-center gap-1 ${sevConf.bg} ${sevConf.text} text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-sm`}
+              role="status"
+              aria-label={sevConf.label}
+              title={sevConf.label}
+            >
+              <AlertTriangle className="w-3 h-3" aria-hidden="true" />
+              <span className="hidden sm:inline">Interacción</span>
             </div>
           )}
           {product.stock <= 0 && (

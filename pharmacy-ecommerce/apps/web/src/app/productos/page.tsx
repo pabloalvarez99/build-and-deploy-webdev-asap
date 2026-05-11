@@ -9,6 +9,7 @@ import { useCartStore } from '@/store/cart';
 import { Filters, CatalogFilters } from '@/components/catalog/Filters';
 import { SortSelect, SortOption } from '@/components/catalog/SortSelect';
 import { ProductCard } from '@/components/catalog/ProductCard';
+import { topInteractionSeverity } from '@/lib/drug-interactions';
 
 const ITEMS_PER_PAGE = 24;
 
@@ -75,7 +76,12 @@ function CatalogContent() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
   const [addingId, setAddingId] = useState<string | null>(null);
-  const { addToCart } = useCartStore();
+  const { addToCart, cart, fetchCart } = useCartStore();
+  const cartIngredients = useMemo(() => (cart?.items ?? []).map((i) => i.active_ingredient), [cart]);
+
+  useEffect(() => {
+    if (!cart) fetchCart();
+  }, [cart, fetchCart]);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -292,6 +298,7 @@ function CatalogContent() {
                       onAdd={handleAdd}
                       brokenImg={brokenImages.has(product.id)}
                       onImgError={(id) => setBrokenImages((prev) => new Set(prev).add(id))}
+                      interactionSeverity={topInteractionSeverity(cartIngredients, product.active_ingredient)}
                     />
                   ))}
                 </div>

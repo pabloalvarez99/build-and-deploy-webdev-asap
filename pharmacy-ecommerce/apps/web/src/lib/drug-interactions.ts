@@ -296,6 +296,54 @@ const PAIR_MAP: Map<string, InteractionDetail> = (() => {
  * todos los pares únicos y consulta PAIR_MAP. Devuelve ordenado por
  * severidad descendente (críticas primero).
  */
+/**
+ * Verifica interacciones que aparecerían al combinar un nuevo principio
+ * activo con los del carrito. Devuelve solo los pares NUEVOS (no incluye
+ * interacciones que ya existieran entre items del carrito). Eficiente para
+ * uso por producto en listados (`/productos`, home).
+ */
+export function checkProductInteractions(
+  cartIngredients: Array<string | null | undefined>,
+  productIngredient: string | null | undefined,
+): InteractionDetail[] {
+  if (!productIngredient) return [];
+  const cartDrugs = new Set<string>();
+  for (const ing of cartIngredients) {
+    for (const t of tokenizeIngredients(ing)) cartDrugs.add(t);
+  }
+  if (cartDrugs.size === 0) return [];
+  const productDrugs = tokenizeIngredients(productIngredient);
+  const cartArr = Array.from(cartDrugs);
+  const out: InteractionDetail[] = [];
+  const seen = new Set<string>();
+  for (const a of productDrugs) {
+    for (const b of cartArr) {
+      if (a === b) continue;
+      const k = pairKey(a, b);
+      if (seen.has(k)) continue;
+      const hit = PAIR_MAP.get(k);
+      if (hit) {
+        out.push(hit);
+        seen.add(k);
+      }
+    }
+  }
+  out.sort((a, b) => severityRank(b.severity) - severityRank(a.severity));
+  return out;
+}
+
+/**
+ * Devuelve la severidad máxima de interacción entre el producto y el
+ * carrito, o `null` si no hay. Útil para mostrar badges en cards.
+ */
+export function topInteractionSeverity(
+  cartIngredients: Array<string | null | undefined>,
+  productIngredient: string | null | undefined,
+): Severity | null {
+  const list = checkProductInteractions(cartIngredients, productIngredient);
+  return list.length > 0 ? list[0].severity : null;
+}
+
 export function checkInteractions(
   activeIngredients: Array<string | null | undefined>,
 ): InteractionDetail[] {
