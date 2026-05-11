@@ -5,7 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
-import { ShoppingBag, ArrowRight, Trash2, Plus, Minus, Package, Star, RotateCcw, Printer } from 'lucide-react';
+import { ShoppingBag, ArrowRight, Trash2, Plus, Minus, Package, Star, RotateCcw, Printer, Share2 } from 'lucide-react';
+import { prettifyDrugName } from '@/lib/drug-info';
 import { formatPrice } from '@/lib/format';
 import { calcPoints } from '@/lib/loyalty-utils';
 import CheckoutProgress from '@/components/CheckoutProgress';
@@ -49,6 +50,54 @@ export default function CartPage() {
     setUndoToast({ productId, name, quantity });
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
     undoTimerRef.current = setTimeout(() => setUndoToast(null), 5000);
+  };
+
+  const buildShareText = (): string => {
+    if (!cart || cart.items.length === 0) return '';
+    const lines: string[] = [];
+    lines.push('*Mis medicamentos — Tu Farmacia*');
+    lines.push(`Fecha: ${new Date().toLocaleDateString('es-CL')}`);
+    lines.push('');
+    cart.items.forEach((it, i) => {
+      lines.push(`${i + 1}. *${it.product_name}* × ${it.quantity}`);
+      if (it.active_ingredient) {
+        lines.push(`   Principio activo: ${it.active_ingredient}`);
+      }
+    });
+    if (duplicates.length > 0) {
+      lines.push('');
+      lines.push('⚠ *Principios activos duplicados:*');
+      duplicates.forEach((g) => {
+        lines.push(`- ${g.prettyDrug} (${g.items.length} productos)`);
+      });
+    }
+    if (interactions.length > 0) {
+      lines.push('');
+      lines.push('⚠ *Interacciones detectadas:*');
+      interactions.forEach((it) => {
+        const sev = it.severity === 'critica' ? 'CRÍTICA' : it.severity === 'mayor' ? 'MAYOR' : 'MODERADA';
+        lines.push(`- ${prettifyDrugName(it.drugs[0])} + ${prettifyDrugName(it.drugs[1])} [${sev}]`);
+      });
+    }
+    lines.push('');
+    lines.push('Pregunta: ¿es seguro combinar estos medicamentos?');
+    return lines.join('\n');
+  };
+
+  const handleShareList = async () => {
+    if (typeof window === 'undefined') return;
+    const text = buildShareText();
+    if (!text) return;
+    const nav = window.navigator as Navigator & { share?: (d: ShareData) => Promise<void> };
+    if (typeof nav.share === 'function') {
+      try {
+        await nav.share({ title: 'Mis medicamentos — Tu Farmacia', text });
+        return;
+      } catch {
+        // fallback
+      }
+    }
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
   };
 
   const handlePrintMedList = () => {
@@ -272,15 +321,26 @@ export default function CartPage() {
                 <ArrowRight className="w-5 h-5" />
               </Link>
 
-              <button
-                type="button"
-                onClick={handlePrintMedList}
-                className="w-full mt-3 flex items-center justify-center gap-2 bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 py-3 px-4 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-semibold text-base min-h-[52px]"
-                aria-label="Imprimir lista de medicamentos para llevar al médico"
-              >
-                <Printer className="w-5 h-5" aria-hidden="true" />
-                Imprimir lista para el médico
-              </button>
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={handlePrintMedList}
+                  className="flex items-center justify-center gap-2 bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 py-3 px-4 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-semibold text-base min-h-[52px]"
+                  aria-label="Imprimir lista de medicamentos para llevar al médico"
+                >
+                  <Printer className="w-5 h-5" aria-hidden="true" />
+                  Imprimir lista
+                </button>
+                <button
+                  type="button"
+                  onClick={handleShareList}
+                  className="flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-900/30 border-2 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 py-3 px-4 rounded-2xl hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors font-semibold text-base min-h-[52px]"
+                  aria-label="Compartir lista de medicamentos por WhatsApp"
+                >
+                  <Share2 className="w-5 h-5" aria-hidden="true" />
+                  Compartir por WhatsApp
+                </button>
+              </div>
 
               <div className="mt-4 text-center">
                 <Link

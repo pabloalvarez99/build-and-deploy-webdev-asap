@@ -2888,3 +2888,35 @@ Extiende detección de duplicados al PDP y a la Lista de Medicamentos impresa.
 - Visual diferenciado de interacciones (rojo) — adulto mayor identifica los dos tipos de alerta de un vistazo.
 
 Archivos: `ProductPageClient.tsx` (+24/-1), `PrintMedicationList.tsx` (+24/-1), `globals.css` (+30). Build OK 160/160.
+
+## 2026-05-10 — Compartir lista medicamentos por WhatsApp
+
+Botón secundario "Compartir por WhatsApp" en `/carrito` junto a "Imprimir lista". Útil cuando adulto mayor quiere consultar con familiar o médico antes de comprar.
+
+**`buildShareText`** genera texto plano formato WhatsApp:
+```
+*Mis medicamentos — Tu Farmacia*
+Fecha: 10-05-2026
+
+1. *Paracetamol 500mg* × 2
+   Principio activo: PARACETAMOL
+2. *Tapsin Día* × 1
+   Principio activo: PARACETAMOL + CLORFENAMINA + FENILEFRINA
+
+⚠ *Principios activos duplicados:*
+- Paracetamol (2 productos)
+
+⚠ *Interacciones detectadas:*
+- Sertralina + Tramadol [MAYOR]
+
+Pregunta: ¿es seguro combinar estos medicamentos?
+```
+
+**`handleShareList`**:
+- Prefiere `navigator.share` (Web Share API nativa iOS/Android) para abrir picker del sistema.
+- Fallback `wa.me/?text=` con `encodeURIComponent` si no soporta.
+- Try/catch silencioso para cancelación user.
+
+**Layout**: grid 1-col mobile, 2-col `sm` (imprimir + compartir lado a lado). Botón emerald distinto del print (slate) para diferenciación visual.
+
+Archivos: `app/carrito/page.tsx` (+62/-7). Build OK 160/160.
