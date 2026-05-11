@@ -362,6 +362,33 @@ html.dark .text-slate-300 { color: #cbd5e1 !important; }
   @page { size: A4 portrait; margin: 10mm; }
 }
 
+/* High-contrast mode for ProfessionalInfo (accessibility — adultos mayores) */
+.prof-info-hc,
+.prof-info-hc * {
+  color: #000 !important;
+  background-color: #fff !important;
+  border-color: #000 !important;
+}
+.prof-info-hc button,
+.prof-info-hc [role="note"],
+.prof-info-hc [role="toolbar"] {
+  background-color: #fff !important;
+  color: #000 !important;
+  border: 2px solid #000 !important;
+}
+.prof-info-hc h2,
+.prof-info-hc h3,
+.prof-info-hc h4,
+.prof-info-hc strong {
+  color: #000 !important;
+  font-weight: 900 !important;
+}
+.prof-info-hc a { text-decoration: underline !important; }
+.prof-info-hc *:focus-visible {
+  outline: 3px solid #000 !important;
+  outline-offset: 2px !important;
+}
+
 /* Reduced motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

@@ -62,6 +62,7 @@ export default function ProductPage({ initialProduct }: { initialProduct: Produc
   const [isAdding, setIsAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [equivalents, setEquivalents] = useState<Product[]>([]);
   const [zoomOpen, setZoomOpen] = useState(false);
 
   useEffect(() => {
@@ -87,6 +88,18 @@ export default function ProductPage({ initialProduct }: { initialProduct: Produc
       .catch(() => {});
     return () => { cancelled = true; };
   }, [product?.category_slug, product?.slug]);
+
+  useEffect(() => {
+    if (!product?.active_ingredient) return;
+    let cancelled = false;
+    productApi.list({ active_ingredient: product.active_ingredient, limit: 12, in_stock: true })
+      .then(res => {
+        if (cancelled) return;
+        setEquivalents(res.products.filter(p => p.slug !== product.slug).slice(0, 6));
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [product?.active_ingredient, product?.slug]);
 
   const handleAddToCart = async () => {
     if (!product) return;
@@ -430,6 +443,65 @@ export default function ProductPage({ initialProduct }: { initialProduct: Produc
 
         {/* Preguntas frecuentes */}
         <ProductFAQ activeIngredient={product.active_ingredient} />
+
+        {/* Equivalentes con el mismo principio activo */}
+        {equivalents.length > 0 && (
+          <section
+            aria-labelledby="equiv-title"
+            className="mt-8 rounded-3xl border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/20 p-4 sm:p-6"
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <div className="p-2.5 rounded-2xl bg-emerald-600 text-white flex-shrink-0">
+                <Check className="w-6 h-6" aria-hidden="true" />
+              </div>
+              <div className="min-w-0">
+                <h2 id="equiv-title" className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 leading-tight">
+                  Otras opciones con el mismo principio activo
+                </h2>
+                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-1">
+                  Mismo medicamento, distintas marcas o presentaciones. Compare precio.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {equivalents.map((eq) => {
+                const eqFinal = eq.discount_percent ? discountedPrice(Number(eq.price), eq.discount_percent) : Number(eq.price);
+                const curr = product.discount_percent ? discountedPrice(Number(product.price), product.discount_percent) : Number(product.price);
+                const cheaper = eqFinal < curr;
+                return (
+                  <Link
+                    key={eq.id}
+                    href={`/producto/${eq.slug}`}
+                    className="flex gap-3 p-3 rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-400 dark:hover:border-emerald-500 transition-colors min-h-[80px]"
+                  >
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 relative bg-slate-50 dark:bg-slate-900 rounded-xl overflow-hidden flex-shrink-0">
+                      {eq.image_url ? (
+                        <Image src={eq.image_url} alt={eq.name} fill sizes="80px" className="object-contain p-1" />
+                      ) : (
+                        <Package className="w-full h-full p-3 text-slate-300 dark:text-slate-600" aria-hidden="true" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-slate-900 dark:text-slate-100 line-clamp-2">{eq.name}</p>
+                      {eq.laboratory && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{eq.laboratory}</p>
+                      )}
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="text-base font-black text-slate-900 dark:text-slate-100">{formatPrice(eqFinal)}</span>
+                        {cheaper && (
+                          <span className="text-[0.7rem] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/50 px-2 py-0.5 rounded-md">
+                            Más económico
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (

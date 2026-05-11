@@ -35,6 +35,7 @@ import {
   ChevronsUpDown,
   ChevronsDownUp,
   ShieldAlert,
+  Contrast,
 } from 'lucide-react';
 import { lookupDrugInfo, prettifyDrugName, inferRiesgoBeers, type DrugInfo } from '@/lib/drug-info';
 import { useSpeech } from '@/hooks/useSpeech';
@@ -314,6 +315,21 @@ export default function ProfessionalInfo({
   const { scale, inc, dec, canInc, canDec } = useFontScale();
   const { supported: ttsSupported, speakingId, speak, stop } = useSpeech();
 
+  const [highContrast, setHighContrast] = useState(false);
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem('tf:prof-info:hc');
+      if (v === '1') setHighContrast(true);
+    } catch { /* ignore */ }
+  }, []);
+  const toggleHC = useCallback(() => {
+    setHighContrast((v) => {
+      const next = !v;
+      try { localStorage.setItem('tf:prof-info:hc', next ? '1' : '0'); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
+
   const [openIds, setOpenIds] = useState<Set<string>>(() => new Set(results.slice(0, 1).map((r) => r.name)));
 
   useEffect(() => {
@@ -373,7 +389,11 @@ export default function ProfessionalInfo({
     <section
       id="prof-info-print"
       aria-labelledby="info-prof-title"
-      className="mt-8 sm:mt-10 rounded-3xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 p-4 sm:p-6"
+      className={`mt-8 sm:mt-10 rounded-3xl border-2 p-4 sm:p-6 ${
+        highContrast
+          ? 'prof-info-hc border-black bg-white text-black'
+          : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40'
+      }`}
       style={{ fontSize: SCALE_FONT[scale] }}
     >
       <header className="mb-5">
@@ -461,6 +481,21 @@ export default function ProfessionalInfo({
           >
             <Printer className="w-5 h-5" aria-hidden="true" />
             <span>Imprimir</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={toggleHC}
+            aria-label={highContrast ? 'Desactivar alto contraste' : 'Activar alto contraste'}
+            aria-pressed={highContrast}
+            className={`min-h-[44px] inline-flex items-center gap-2 px-3 rounded-xl text-[0.9em] font-semibold transition-colors ${
+              highContrast
+                ? 'bg-black text-white hover:bg-slate-800'
+                : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200'
+            }`}
+          >
+            <Contrast className="w-5 h-5" aria-hidden="true" />
+            <span>Contraste</span>
           </button>
 
           <button

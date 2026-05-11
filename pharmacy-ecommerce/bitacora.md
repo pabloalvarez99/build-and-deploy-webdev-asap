@@ -4,6 +4,18 @@
 
 ---
 
+## 2026-05-11 — Info producto pro v3: +47 extras, alto contraste, equivalentes
+
+**drug-info-extras**: +47 fármacos top con signos_alarma + consejos_uso (zolpidem, diazepam, lorazepam, haloperidol, quetiapina, amitriptilina, fluoxetina, venlafaxina, carbamazepina, fenitoína, levetiracetam, levodopa, donepezilo, memantina, furosemida, espironolactona, digoxina, rivaroxabán, apixabán, dabigatrán, insulina, glibenclamida, glimepirida, empagliflozina, levofloxacino, cefalexina, claritromicina, nitrofurantoína, cotrimoxazol, aciclovir, fluconazol, prednisolona, budesonida, montelukast, bilastina, fexofenadina, domperidona, metoclopramida, ondansetrón, loperamida, lactulosa, macrogol, oxibutinina, escopolamina, alopurinol, colchicina).
+
+**Alto contraste** toggle en ProfessionalInfo: clase `prof-info-hc` + CSS override blanco/negro con bordes negros y outline focus para visión reducida. Persiste en localStorage.
+
+**Equivalentes**: nuevo bloque en PDP cuando hay otros productos con mismo `active_ingredient`. Llama `productApi.list({active_ingredient, limit:12, in_stock:true})`, muestra hasta 6 con imagen mini + lab + precio + chip "Más económico" cuando el comparativo es más barato.
+
+Build OK.
+
+---
+
 ## 2026-05-11 — Info producto pro: signos alarma, FAQ, JSON-LD Drug+FAQPage
 
 **Schema DrugInfo** extendido con campos opcionales: `signos_alarma`, `consejos_uso`, `riesgo_beers` (`EVITAR|PRECAUCION|SEGURO`), `via`, `embarazo`, `lactancia`, `receta`. Inferencia automática `inferRiesgoBeers()` desde texto cuando falta declarado.

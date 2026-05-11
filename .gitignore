@@ -60,3 +60,4 @@ tu-farmacia-prod-*.json
 # Added by code-review-graph
 .code-review-graph/
 lighthouse-*.json
+.tmp-autonomous-prompt.txt
