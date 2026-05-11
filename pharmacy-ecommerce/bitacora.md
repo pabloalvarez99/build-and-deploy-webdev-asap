@@ -2670,3 +2670,38 @@ R11: `TrackSkeleton` reemplaza fallback Suspense vacío (`<div min-h-[80vh] />`)
 
 Archivos: `src/app/rastrear-pedido/page.tsx` (+49/-5).
 Build OK 160/160. Commit `e5a48c4`.
+
+## 2026-05-10 — ProfessionalInfo expansion adulto mayor móvil
+
+Refactor `ProfessionalInfo.tsx` (162→394 líneas) con suite completa de herramientas accesibilidad pensadas para adulto mayor móvil:
+
+**Toolbar superior** (`role="toolbar"`, no-print) con touch targets 44×44:
+- **Font A- / A+** (3 niveles `lg`/`xl`/`xxl` = 1rem/1.2rem/1.4rem). Persiste en `localStorage` key `tf:prof-info:font`. Aplicado vía `style={{ fontSize }}` en root + clases `text-[Nem]` internas (em cascade, escala uniforme todo el bloque).
+- **Expandir/Colapsar todo** — toggle inteligente según estado (`allOpen` derivado de `openIds.size === results.length`).
+- **Imprimir** — `window.print()` precedido por `setOpenIds(all)` + `document.body.classList.add('printing-prof-info')` con cleanup post-print.
+- **Compartir** — `navigator.share` preferido (Android/iOS nativos) → fallback `wa.me/?text=` deep-link WhatsApp.
+
+**TTS lectura en voz alta** (Web Speech API `speechSynthesis`):
+- Hook `useSpeech` SSR-safe (`supported` false until `useEffect` confirma `'speechSynthesis' in window`).
+- Botón Volume2 44×44 en cada section (8 por bloque). `lang='es-CL'`, `rate=0.92`, `pitch=1`.
+- `aria-pressed` indica playing. Click mismo botón → `stop()`. Cambio a otra section → cancela actual.
+- Botón global "Detener lectura" aparece en toolbar (`speakingId !== null`).
+
+**Beers auto-detector**:
+- Regex `/\bEVITAR\b|\bBeers\b|alto riesgo|riesgo alto|inapropiado/i` sobre `precauciones_adulto_mayor`.
+- Badge rojo `Beers` compact en header del accordion (≥sm) + banner ShieldAlert grande dentro del body al abrir.
+- Texto: "Atención adulto mayor: este principio activo tiene precauciones especiales según criterios Beers. Consulte siempre con su médico antes de usarlo."
+
+**Print CSS** (`globals.css` +20 líneas):
+- `body.printing-prof-info` scope: `visibility:hidden` global, visible solo `#prof-info-print`.
+- `position:fixed` top-left, `padding:8mm`, fondo blanco forzado.
+- `.no-print` (toolbar, TTS btns) `display:none !important`.
+- `@page { size: A4 portrait; margin: 10mm }`.
+- `pointer-events:none` en botones expand para evitar collapse accidental durante render.
+
+**Font escalado uniforme**:
+- Todas las clases `text-{xs,sm,base,lg,xl,2xl,3xl}` reemplazadas por `text-[Nem]` (e.g., `text-[1em]`, `text-[1.5em]`, `text-[0.875em]`).
+- Cascade desde root section permite que A+/A++ escale TODO proporcionalmente sin reescribir Tailwind ni media queries adicionales.
+- Iconos w-5/w-6 mantienen rem fijo (intencional — no escalar UI controls).
+
+Archivos: `src/app/producto/[slug]/ProfessionalInfo.tsx` (+232/-65), `src/app/globals.css` (+20). Build OK 160/160. `/producto/[slug]` 69.3→71.5 kB (+2.2 kB nuevos controles).

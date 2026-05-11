@@ -168,6 +168,27 @@ html.dark .text-slate-300 { color: #cbd5e1 !important; }
   @page { size: 80mm auto; margin: 0; }
 }
 
+/* Professional drug info: print only the section, force-expanded, no toolbar */
+@media print {
+  body.printing-prof-info * { visibility: hidden; }
+  body.printing-prof-info #prof-info-print,
+  body.printing-prof-info #prof-info-print * { visibility: visible; }
+  body.printing-prof-info #prof-info-print {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: 8mm;
+    background: white !important;
+    color: black !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+  body.printing-prof-info .no-print { display: none !important; }
+  body.printing-prof-info #prof-info-print button[aria-expanded] {
+    pointer-events: none;
+  }
+  @page { size: A4 portrait; margin: 10mm; }
+}
+
 /* Reduced motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
