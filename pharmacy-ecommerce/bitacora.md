@@ -2840,3 +2840,30 @@ Archivos: `lib/drug-interactions.ts` (+45/-3), `components/catalog/ProductCard.t
 Resultado: usuario con carrito poblado puede esconder productos riesgosos del catálogo con un click. Senior dev pattern: precompute en parent, pass to child, no recompute en card.
 
 Archivos: `lib/drug-info.ts` (+15/-9), `app/productos/page.tsx` (+34/-2). Build OK 160/160.
+
+## 2026-05-10 — Detector de principio activo duplicado (Frente I)
+
+Feature: detección de duplicación de principios activos en carrito → alerta de riesgo de sobredosis (caso paradigmático: paracetamol oculto en antigripales sumado a paracetamol puro).
+
+**Nuevo `lib/drug-duplicates.ts`** (~60 líneas):
+- `DuplicateGroup`: `{ drug, prettyDrug, items: CartItem[] }`.
+- `checkDuplicates(items)`: tokeniza cada `active_ingredient`, agrupa por canonical name vía `Map<drug, items[]>`, devuelve grupos con `length > 1`. De-dup tokens dentro del mismo item.
+- TS-safe iteration via `Map.forEach` (target ES2015 no soporta `for...of` sobre `Map.entries()` sin downlevelIteration).
+
+**Nuevo `components/DrugDuplicateAlert.tsx`** (~95 líneas):
+- Banner fuchsia (color distinto a interacciones — semánticamente separado).
+- `role=alert`, `aria-live=polite`, colapsable (`aria-expanded`, `aria-controls`).
+- Header con `AlertOctagon` icon: "N principios activos duplicados".
+- Mensaje claro: "Riesgo de doble dosis. Algunos productos comparten el mismo principio activo (por ejemplo, paracetamol presente en antigripales). Verifique con su médico o farmacéutico antes de combinarlos."
+- Por grupo: principio activo pretty + count items + lista de productos involucrados (nombre + qty).
+
+**Integración `/carrito/page.tsx`**:
+- `useMemo` duplicates (skip si `items.length < 2`).
+- Render DrugDuplicateAlert ARRIBA de DrugInteractionAlert (orden semántico: primero verificar duplicados, luego interacciones cruzadas).
+
+Casos detectados típicos en farmacia Chile:
+- PARACETAMOL puro + (PARACETAMOL+CLORFENAMINA+FENILEFRINA) antigripal → doble paracetamol
+- IBUPROFENO + (IBUPROFENO+PSEUDOEFEDRINA) → doble AINE mismo principio
+- CAFEINA en analgésicos compuestos + suplementos energéticos
+
+Archivos: `lib/drug-duplicates.ts` (+62), `components/DrugDuplicateAlert.tsx` (+98), `app/carrito/page.tsx` (+6). Build OK 160/160.

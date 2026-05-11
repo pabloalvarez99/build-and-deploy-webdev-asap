@@ -11,6 +11,8 @@ import { calcPoints } from '@/lib/loyalty-utils';
 import CheckoutProgress from '@/components/CheckoutProgress';
 import DrugInteractionAlert from '@/components/DrugInteractionAlert';
 import { checkInteractions } from '@/lib/drug-interactions';
+import DrugDuplicateAlert from '@/components/DrugDuplicateAlert';
+import { checkDuplicates } from '@/lib/drug-duplicates';
 import PrintMedicationList from '@/components/PrintMedicationList';
 
 export default function CartPage() {
@@ -24,6 +26,11 @@ export default function CartPage() {
   const interactions = useMemo(() => {
     if (!cart || cart.items.length < 2) return [];
     return checkInteractions(cart.items.map((i) => i.active_ingredient));
+  }, [cart]);
+
+  const duplicates = useMemo(() => {
+    if (!cart || cart.items.length < 2) return [];
+    return checkDuplicates(cart.items);
   }, [cart]);
 
   const handleQtyChange = (productId: string, nextQty: number, stock: number) => {
@@ -108,6 +115,7 @@ export default function CartPage() {
           </div>
         ) : (
           <div className="space-y-4">
+            {duplicates.length > 0 && <DrugDuplicateAlert duplicates={duplicates} />}
             {interactions.length > 0 && <DrugInteractionAlert interactions={interactions} />}
             {/* Cart Items */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden">
