@@ -272,6 +272,7 @@ export interface CartItem {
   quantity: number
   subtotal: string
   stock: number
+  active_ingredient?: string | null
 }
 
 export interface CartResponse {

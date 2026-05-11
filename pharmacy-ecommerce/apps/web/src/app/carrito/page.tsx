@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCartStore } from '@/store/cart';
@@ -9,6 +9,8 @@ import { ShoppingBag, ArrowRight, Trash2, Plus, Minus, Package, Star, RotateCcw 
 import { formatPrice } from '@/lib/format';
 import { calcPoints } from '@/lib/loyalty-utils';
 import CheckoutProgress from '@/components/CheckoutProgress';
+import DrugInteractionAlert from '@/components/DrugInteractionAlert';
+import { checkInteractions } from '@/lib/drug-interactions';
 
 export default function CartPage() {
   const { cart, fetchCart, updateQuantity, removeFromCart, addToCart, isLoading } = useCartStore();
@@ -17,6 +19,11 @@ export default function CartPage() {
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pendingQty, setPendingQty] = useState<Record<string, number>>({});
   const qtyTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const interactions = useMemo(() => {
+    if (!cart || cart.items.length < 2) return [];
+    return checkInteractions(cart.items.map((i) => i.active_ingredient));
+  }, [cart]);
 
   const handleQtyChange = (productId: string, nextQty: number, stock: number) => {
     const clamped = Math.max(1, Math.min(stock, nextQty));
@@ -91,6 +98,7 @@ export default function CartPage() {
           </div>
         ) : (
           <div className="space-y-4">
+            {interactions.length > 0 && <DrugInteractionAlert interactions={interactions} />}
             {/* Cart Items */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden">
               <div className="divide-y divide-slate-100 dark:divide-slate-700">

@@ -2705,3 +2705,37 @@ Refactor `ProfessionalInfo.tsx` (162→394 líneas) con suite completa de herram
 - Iconos w-5/w-6 mantienen rem fijo (intencional — no escalar UI controls).
 
 Archivos: `src/app/producto/[slug]/ProfessionalInfo.tsx` (+232/-65), `src/app/globals.css` (+20). Build OK 160/160. `/producto/[slug]` 69.3→71.5 kB (+2.2 kB nuevos controles).
+
+## 2026-05-10 — Drug interactions checker carrito (Frente D)
+
+Nueva feature: verificador de interacciones medicamentosas en `/carrito` para detectar pares riesgosos cuando adulto mayor (polifarmacia común) agrega varios productos.
+
+**Nuevo `src/lib/drug-interactions.ts`** (~280 líneas):
+- `Severity` = `'critica' | 'mayor' | 'moderada'`.
+- `GROUPS`: 12 grupos farmacológicos (AINE×13, ANTICOAGULANTE×6, IBP×5, BENZODIAZEPINA×6, IECA×4, ARA2×5, ISRS×5, NITRATO×4, ESTATINA_3A4×3, MACROLIDO_3A4×2, PDE5×3, HIPOGLICEMIANTE×5).
+- `RULES`: 30 reglas explícitas grupo×grupo / fármaco×grupo / fármaco×fármaco. Incluye `exclude` pairs (ej. `CLOPIDOGREL+PANTOPRAZOL` excluido del rule IBP genérico).
+- `PAIR_MAP`: expansión al module load → `Map<sortedPair, InteractionDetail>` con dedup por mayor severidad.
+- `checkInteractions(activeIngredients[])`: tokeniza vía `tokenizeIngredients` (drug-info), genera pares únicos, consulta map, devuelve ordenado por severidad descendente.
+
+**Reglas críticas** (algunas):
+- ANTICOAGULANTE × AINE → sangrado mayor
+- SIMVASTATINA × CLARITROMICINA → rabdomiolisis
+- METOTREXATO × AINE → toxicidad grave
+- METOTREXATO × COTRIMOXAZOL → toxicidad hematológica
+- PDE5 × NITRATO → hipotensión severa contraindicada
+- BENZODIAZEPINA × BENZODIAZEPINA → Beers adulto mayor
+
+**Mayores** (selección): CLOPIDOGREL×IBP (exc. pantoprazol), ESTATINA_3A4×MACROLIDO_3A4, IECA×ESPIRONOLACTONA, IECA×AINE, ARA2×AINE, LITIO×AINE, ISRS×TRAMADOL, DIGOXINA×AMIODARONA, WARFARINA×AMIODARONA/CIPROFLOXACINO/METRONIDAZOL, BENZODIAZEPINA×TRAMADOL/CODEINA, METFORMINA×CONTRASTE.
+
+**Nuevo `src/components/DrugInteractionAlert.tsx`** (~150 líneas):
+- `role="alert"` `aria-live="polite"` en root.
+- Header colapsable (`aria-expanded`, `aria-controls`) con icono según severidad máxima, conteo total, breakdown por nivel (chips `2 Crítica · 1 Mayor · 3 Moderada`).
+- Lista por par: nombres prettify, badge severidad, **Efecto** + **Recomendación**.
+- Color-coding: rojo (crítica/ShieldAlert), naranja (mayor/AlertTriangle), ámbar (moderada/AlertCircle). Dark mode incluido.
+
+**Integraciones**:
+- `lib/api.ts`: `CartItem.active_ingredient?: string | null`.
+- `store/cart.ts:fetchCart`: incluye `product.active_ingredient ?? null` en enriched item.
+- `app/carrito/page.tsx`: `useMemo(checkInteractions(items.map(active_ingredient)))` skip si `items.length < 2`. Render `<DrugInteractionAlert>` arriba de la lista de items.
+
+Build OK 160/160. Carrito JS sin impacto medible (drug-info ya en shared chunk porque `/producto/[slug]` también lo importa — split a `chunks/2117-*.js`).

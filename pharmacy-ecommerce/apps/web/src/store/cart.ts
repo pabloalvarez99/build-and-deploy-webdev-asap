@@ -87,6 +87,7 @@ export const useCartStore = create<CartState>((set, get) => ({
           quantity,
           subtotal: (effectivePrice * quantity).toString(),
           stock: product.stock,
+          active_ingredient: product.active_ingredient ?? null,
         });
         syncedLocalItems.push({ product_id: item.product_id, quantity });
       }
