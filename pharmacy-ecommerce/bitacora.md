@@ -2948,3 +2948,17 @@ Cierre cobertura KB: 1004/1004 productos (antes 999/1004, 99.5%).
 **Verificación**: nuevo script `scripts/check-drug-coverage.mjs` (corre `lookupDrugInfo` contra `scripts/ai.json` del dump SQL) reporta 646/646 rows = 1004/1004 productos. Sin regresiones en combos bidireccionales (`TRAMADOL + PARACETAMOL` y `PARACETAMOL + TRAMADOL` → misma key combo).
 
 Archivos: `src/lib/drug-info.ts` (regex + 9 aliases), `scripts/check-drug-coverage.mjs` (+25 nuevo), `scripts/ai.json` (snapshot dump). Build OK 160/160.
+
+## 2026-05-11 — Cobertura suplementos: 6 entradas singles + 18 aliases nuevos
+
+Extensión KB `drug-info.ts` para mejor cobertura de nutracéuticos. Gap-analysis sobre 652 AIs únicos del catálogo:
+- 100% match (652/652) con tokenize+lookup actual (combos vía COMBO_INDEX).
+- 4 AIs sin match previo: `CONDROITINA, GLUCOSAMINA` (n=3), `DIOSMINA, HESPERIDINA` (n=3), `BRIMONIDINA` (n=1). Las dos combinaciones ya tenían combo en KB; los singles faltaban para uso aislado.
+
+**Entradas nuevas (singles)**: `GLUCOSAMINA`, `CONDROITINA`, `DIOSMINA`, `HESPERIDINA`, `CAFEINA`, `BRIMONIDINA`. Lenguaje nutracéutico en suplementos ("apoyo nutricional", "uso tradicional"). Estructura completa: categoria, indicaciones, posologia, efectos_adversos, contraindicaciones, precauciones_adulto_mayor, interacciones, conservacion.
+
+**Aliases nuevos (18)**: `VIT C|D|D3|E|A|B1|B6|B12|B9`, `ACIDO ASCORBICO`, `TOCOFEROL`, `RETINOL`, `METILCOBALAMINA`, `FOLATO`, `ACIDO FOLINICO`, `SULFATO/CLORHIDRATO DE GLUCOSAMINA`, `SULFATO DE CONDROITINA`, `DIOSMINA HESPERIDINA` → claves canónicas KB.
+
+**Verificación**: re-corrida análisis → 0 misses (147/147 suplementos detectados matchean). Build local OK (Next 14.2.35).
+
+Archivos: `pharmacy-ecommerce/apps/web/src/lib/drug-info.ts` (+~100 líneas).

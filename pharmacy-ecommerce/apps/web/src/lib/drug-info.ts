@@ -4192,6 +4192,76 @@ export const DRUG_INFO: Record<string, DrugInfo> = {
     interacciones: 'Reduce absorción de fármacos (separar 1 h).',
     conservacion: 'Temperatura ambiente.',
   },
+
+  // ──────────────────────────────────────────────────────────────────────
+  // Suplementos / nutracéuticos adicionales
+  // ──────────────────────────────────────────────────────────────────────
+
+  GLUCOSAMINA: {
+    categoria: 'Aminoazúcar precursor de glicosaminoglicanos del cartílago. Suplemento nutricional condroprotector.',
+    indicaciones: 'Apoyo nutricional en artrosis leve a moderada de rodilla. Uso tradicional para alivio sintomático del dolor articular y mejora de la movilidad. La evidencia clínica es variable según presentación (sulfato vs clorhidrato).',
+    posologia: 'Adultos: 1500 mg al día (en una toma única o repartidos). Tomar con alimentos. Efecto sintomático puede tardar 4–8 semanas.',
+    efectos_adversos: 'Generalmente bien tolerado. Molestias gástricas leves, náuseas, distensión abdominal. Raramente cefalea, somnolencia.',
+    contraindicaciones: 'Alergia a mariscos o crustáceos (la mayoría se extrae de caparazones). Embarazo y lactancia (datos insuficientes).',
+    precauciones_adulto_mayor: 'Útil como complemento al manejo de artrosis, especialmente cuando se desea reducir uso de AINEs. Monitorear glicemia en personas con diabetes (puede afectar levemente el control glucémico). Verificar alergia a mariscos.',
+    interacciones: 'Warfarina (reportes de aumento del INR — controlar coagulación). Antidiabéticos (vigilar glicemia).',
+    conservacion: 'Temperatura ambiente, protegido de humedad.',
+  },
+
+  CONDROITINA: {
+    categoria: 'Glicosaminoglicano natural del cartílago articular. Suplemento condroprotector, frecuentemente combinado con glucosamina.',
+    indicaciones: 'Apoyo nutricional en artrosis. Uso tradicional para alivio del dolor articular y soporte de la matriz cartilaginosa.',
+    posologia: 'Adultos: 800–1200 mg al día, en una o dos tomas. Tomar con alimentos. Efecto puede tardar 4–8 semanas en evidenciarse.',
+    efectos_adversos: 'Bien tolerado. Molestias gástricas, náuseas, estreñimiento o diarrea leves.',
+    contraindicaciones: 'Hipersensibilidad. Embarazo y lactancia (datos insuficientes). Cautela en asma (reportes anecdóticos).',
+    precauciones_adulto_mayor: 'Complemento útil en artrosis. La mayoría se obtiene de cartílago bovino, porcino o de tiburón — verificar origen si hay preocupaciones dietarias o alergias.',
+    interacciones: 'Warfarina (puede aumentar el INR — controlar coagulación).',
+    conservacion: 'Temperatura ambiente.',
+  },
+
+  DIOSMINA: {
+    categoria: 'Flavonoide cítrico semisintético. Venotónico y vasoprotector de uso tradicional.',
+    indicaciones: 'Apoyo en síntomas de insuficiencia venosa crónica: pesadez de piernas, edema, dolor, calambres nocturnos. Coadyuvante en hemorroides agudas y crónicas.',
+    posologia: 'Adultos: 450–900 mg al día (frecuentemente combinada con hesperidina). En crisis hemorroidal: hasta 2700–3000 mg/día los primeros 4 días, luego dosis de mantenimiento. Tomar con alimentos.',
+    efectos_adversos: 'Bien tolerada. Molestias gástricas, náuseas, diarrea leve, cefalea ocasional.',
+    contraindicaciones: 'Hipersensibilidad. Embarazo y lactancia (datos limitados — consultar profesional).',
+    precauciones_adulto_mayor: 'Útil para síntomas de insuficiencia venosa, frecuente en adulto mayor. No sustituye medidas físicas (elevación, medias de compresión, caminata).',
+    interacciones: 'Sin interacciones farmacológicas significativas conocidas a dosis habituales.',
+    conservacion: 'Temperatura ambiente, protegido de luz.',
+  },
+
+  HESPERIDINA: {
+    categoria: 'Flavonoide cítrico, venotónico y antioxidante. Habitualmente combinado con diosmina.',
+    indicaciones: 'Apoyo en insuficiencia venosa crónica y fragilidad capilar. Coadyuvante en hemorroides.',
+    posologia: 'Habitualmente 50–100 mg combinada con diosmina (450 mg). Seguir indicación del producto.',
+    efectos_adversos: 'Bien tolerada. Molestias gástricas ocasionales.',
+    contraindicaciones: 'Hipersensibilidad. Embarazo y lactancia (datos limitados).',
+    precauciones_adulto_mayor: 'Bien tolerado. Complemento útil para síntomas venosos.',
+    interacciones: 'Sin interacciones significativas conocidas.',
+    conservacion: 'Temperatura ambiente.',
+  },
+
+  CAFEINA: {
+    categoria: 'Metilxantina estimulante del sistema nervioso central. Adyuvante analgésico en combinaciones.',
+    indicaciones: 'Adyuvante en analgésicos para cefalea (potencia efecto de paracetamol/AAS). Estimulante leve para somnolencia.',
+    posologia: 'En combinaciones analgésicas: 30–65 mg por dosis. Como estimulante OTC: hasta 200 mg por dosis, máximo 400 mg/día en adultos sanos.',
+    efectos_adversos: 'Insomnio, nerviosismo, taquicardia, palpitaciones, temblor, acidez, aumento de presión arterial. Dependencia y cefalea de rebote con uso crónico.',
+    contraindicaciones: 'Arritmias, hipertensión no controlada, ansiedad severa, úlcera péptica activa, insomnio. Embarazo (limitar a <200 mg/día).',
+    precauciones_adulto_mayor: 'Mayor sensibilidad a efectos cardiovasculares y al insomnio. Evitar después del mediodía. Vigilar interacción con antihipertensivos.',
+    interacciones: 'Ciprofloxacino y otros inhibidores de CYP1A2 (aumentan niveles). Teofilina (toxicidad aditiva). Litio (reduce niveles). Anticonceptivos orales (prolongan vida media).',
+    conservacion: 'Temperatura ambiente.',
+  },
+
+  BRIMONIDINA: {
+    categoria: 'Agonista alfa-2 adrenérgico. Antiglaucomatoso de uso oftálmico tópico.',
+    indicaciones: 'Reducción de la presión intraocular en glaucoma de ángulo abierto e hipertensión ocular.',
+    posologia: 'Adultos: 1 gota en el ojo afectado cada 8 horas (o según indicación).',
+    efectos_adversos: 'Hiperemia conjuntival, ardor, prurito ocular, visión borrosa, sequedad ocular, sabor amargo, somnolencia, hipotensión, sequedad bucal.',
+    contraindicaciones: 'Hipersensibilidad. Tratamiento con IMAO. Lactantes (riesgo de depresión SNC).',
+    precauciones_adulto_mayor: 'Mayor riesgo de somnolencia, mareo, hipotensión postural. Cautela en enfermedad cardiovascular severa, depresión, insuficiencia hepática o renal.',
+    interacciones: 'IMAO (contraindicado). Depresores del SNC (alcohol, benzodiacepinas, opioides) — efecto aditivo. Antihipertensivos, betabloqueadores.',
+    conservacion: 'Temperatura ambiente, frasco bien cerrado. Desechar 4 semanas tras apertura.',
+  },
 };
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -4396,6 +4466,39 @@ const ALIASES: Record<string, string> = {
   // Antifúngicos
   'CICLOPIROX OLAMINA': 'CICLOPIROXOLAMINA',
   'CICLOPIROX': 'CICLOPIROXOLAMINA',
+
+  // Suplementos — sinónimos comunes
+  'VIT C': 'VITAMINA C',
+  'ACIDO ASCORBICO': 'VITAMINA C',
+  'AC ASCORBICO': 'VITAMINA C',
+  'VIT D': 'VITAMINA D3',
+  'VITAMINA D3': 'VITAMINA D3',
+  'VIT D3': 'VITAMINA D3',
+  'VIT E': 'VITAMINA E',
+  'TOCOFEROL': 'VITAMINA E',
+  'ALFA TOCOFEROL': 'VITAMINA E',
+  'VIT A': 'VITAMINA A',
+  'RETINOL': 'VITAMINA A',
+  'VIT B1': 'TIAMINA',
+  'VIT B6': 'PIRIDOXINA',
+  'VITAMINA B6': 'PIRIDOXINA',
+  'VIT B12': 'CIANOCOBALAMINA',
+  'METILCOBALAMINA': 'CIANOCOBALAMINA',
+  'VIT B9': 'ACIDO FOLICO',
+  'FOLATO': 'ACIDO FOLICO',
+  'ACIDO FOLINICO': 'ACIDO FOLICO',
+
+  // Condroprotectores
+  'SULFATO DE GLUCOSAMINA': 'GLUCOSAMINA',
+  'CLORHIDRATO DE GLUCOSAMINA': 'GLUCOSAMINA',
+  'GLUCOSAMINA SULFATO': 'GLUCOSAMINA',
+  'GLUCOSAMINA CLORHIDRATO': 'GLUCOSAMINA',
+  'SULFATO DE CONDROITINA': 'CONDROITINA',
+  'CONDROITINA SULFATO': 'CONDROITINA',
+  'CONDROITIN SULFATO': 'CONDROITINA',
+
+  // Venotónicos
+  'DIOSMINA HESPERIDINA': 'DIOSMINA + HESPERIDINA',
 
 };
 
