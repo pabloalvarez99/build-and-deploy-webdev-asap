@@ -2659,3 +2659,14 @@ Fix: condición skeleton ahora `isLoading && allProducts.length === 0` (solo car
 Drop `setAllProducts([])` de tres lugares (`handleCategoryChange`, search debounce x2, `setShowDiscountOnly` toggle) — ahora `loadProducts(1, true)` reemplaza al resolver.
 
 Build OK 160/160. Sweep: A11y 16/16, Perf **10/11**, UX 14/15, Mobile 8/10. Único Perf restante: P1 (RSC home refactor — esfuerzo grande, no priorizado).
+
+## 2026-05-10 — rastrear-pedido copy code + skeleton (cierre R10/R11 audit V11)
+
+Cierra **R10/R11** diferidos en sweep V11 (2026-05-09).
+
+R10: botón copy junto al código de retiro. Touch target 44×44, `aria-label` dinámico (`Copiar código de retiro` / `Código copiado`), feedback visual Check icon 2s, fallback silencioso si `navigator.clipboard` no disponible. Layout: `inline-flex items-center gap-3` mantiene código + botón alineados.
+
+R11: `TrackSkeleton` reemplaza fallback Suspense vacío (`<div min-h-[80vh] />`). Skeleton animado replica estructura — header icon + título + 2 inputs + submit btn. Evita layout shift en carga inicial `useSearchParams()`.
+
+Archivos: `src/app/rastrear-pedido/page.tsx` (+49/-5).
+Build OK 160/160. Commit `e5a48c4`.
