@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Filter, Search, X, Loader2, Package } from 'lucide-react';
+import { Filter, Search, X, Loader2, Package, AlertTriangle } from 'lucide-react';
 import { productApi, Category, PaginatedProducts, Product } from '@/lib/api';
 import { useCartStore } from '@/store/cart';
 import { Filters, CatalogFilters } from '@/components/catalog/Filters';
@@ -78,10 +78,27 @@ function CatalogContent() {
   const [addingId, setAddingId] = useState<string | null>(null);
   const { addToCart, cart, fetchCart } = useCartStore();
   const cartIngredients = useMemo(() => (cart?.items ?? []).map((i) => i.active_ingredient), [cart]);
+  const [hideInteractions, setHideInteractions] = useState(false);
 
   useEffect(() => {
     if (!cart) fetchCart();
   }, [cart, fetchCart]);
+
+  const itemsWithSev = useMemo(() => {
+    return items.map((p) => ({
+      product: p,
+      severity: topInteractionSeverity(cartIngredients, p.active_ingredient),
+    }));
+  }, [items, cartIngredients]);
+
+  const visibleItems = useMemo(() => {
+    return hideInteractions ? itemsWithSev.filter((x) => x.severity === null) : itemsWithSev;
+  }, [itemsWithSev, hideInteractions]);
+
+  const interactionCount = useMemo(
+    () => itemsWithSev.filter((x) => x.severity !== null).length,
+    [itemsWithSev],
+  );
 
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -288,8 +305,30 @@ function CatalogContent() {
               </div>
             ) : (
               <>
+                {interactionCount > 0 && (
+                  <div className="mb-4 flex items-center gap-3 p-3 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-700">
+                    <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0" aria-hidden="true" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+                        {interactionCount} {interactionCount === 1 ? 'producto podría interactuar' : 'productos podrían interactuar'} con tu carrito
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setHideInteractions((v) => !v)}
+                      aria-pressed={hideInteractions}
+                      className={`min-h-[40px] inline-flex items-center gap-1.5 px-3 rounded-xl font-semibold text-sm transition-colors flex-shrink-0 ${
+                        hideInteractions
+                          ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                          : 'bg-white dark:bg-slate-800 border-2 border-amber-300 dark:border-amber-600 text-amber-800 dark:text-amber-200 hover:bg-amber-50 dark:hover:bg-amber-900/30'
+                      }`}
+                    >
+                      {hideInteractions ? 'Mostrar todos' : 'Ocultar interacciones'}
+                    </button>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-                  {items.map((product, idx) => (
+                  {visibleItems.map(({ product, severity }, idx) => (
                     <ProductCard
                       key={product.id}
                       product={product}
@@ -298,7 +337,7 @@ function CatalogContent() {
                       onAdd={handleAdd}
                       brokenImg={brokenImages.has(product.id)}
                       onImgError={(id) => setBrokenImages((prev) => new Set(prev).add(id))}
-                      interactionSeverity={topInteractionSeverity(cartIngredients, product.active_ingredient)}
+                      interactionSeverity={severity}
                     />
                   ))}
                 </div>

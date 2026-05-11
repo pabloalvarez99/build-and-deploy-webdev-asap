@@ -4420,21 +4420,34 @@ export interface DrugLookupResult {
   info: DrugInfo;
 }
 
+/**
+ * Índice combo → clave canónica KB. Construido una vez al module load.
+ * Permite resolver combinaciones independientemente del orden de tokens
+ * en `active_ingredient` vs orden usado en la clave KB.
+ *   "PARACETAMOL + TRAMADOL" y "TRAMADOL + PARACETAMOL" → misma entrada.
+ */
+const COMBO_INDEX: Map<string, string> = (() => {
+  const idx = new Map<string, string>();
+  for (const key of Object.keys(DRUG_INFO)) {
+    if (key.includes(' + ')) {
+      const sorted = key.split(' + ').sort().join(' + ');
+      idx.set(sorted, key);
+    }
+  }
+  return idx;
+})();
+
 /** Busca info para cada componente del principio activo. Devuelve los que existan en KB. */
 export function lookupDrugInfo(activeIngredient: string | null | undefined): DrugLookupResult[] {
   const tokens = tokenizeIngredients(activeIngredient);
   if (tokens.length === 0) return [];
 
-  // 1) Combinación completa (ej "PARACETAMOL + TRAMADOL")
+  // 1) Combinación completa bidireccional (sorted-match contra COMBO_INDEX)
   if (tokens.length > 1) {
-    const comboKey = tokens.slice().sort().join(' + ');
-    if (DRUG_INFO[comboKey]) {
-      return [{ name: comboKey, info: DRUG_INFO[comboKey] }];
-    }
-    // También intentar orden original
-    const orderedKey = tokens.join(' + ');
-    if (DRUG_INFO[orderedKey]) {
-      return [{ name: orderedKey, info: DRUG_INFO[orderedKey] }];
+    const sortedQuery = tokens.slice().sort().join(' + ');
+    const canonical = COMBO_INDEX.get(sortedQuery);
+    if (canonical) {
+      return [{ name: canonical, info: DRUG_INFO[canonical] }];
     }
   }
 

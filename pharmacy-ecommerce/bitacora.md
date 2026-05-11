@@ -2819,3 +2819,24 @@ Cierra ciclo interacciones: PDP (preview), Carrito (full), **ProductCard listing
 Resultado: navegando catálogo con carrito poblado, productos riesgosos resaltan visualmente antes de hacer click. Adulto mayor identifica potenciales conflictos sin tener que abrir cada producto.
 
 Archivos: `lib/drug-interactions.ts` (+45/-3), `components/catalog/ProductCard.tsx` (+24/-2), `app/productos/page.tsx` (+8/-1). Build OK 160/160.
+
+## 2026-05-10 — Combo lookup bidireccional + Filter toggle interacciones (Frente B + H)
+
+**Frente B — Combo bidireccional `drug-info.ts`**:
+- Nuevo `COMBO_INDEX: Map<sortedComboKey, canonicalKey>` construido al module load. Itera todas las keys de DRUG_INFO con ` + `, las sortea y mapea al canonical.
+- `lookupDrugInfo` ahora consulta `COMBO_INDEX.get(sortedQuery)` — match independiente del orden en KB key vs orden de tokens en `active_ingredient`.
+- Elimina necesidad de orden alfabético al agregar entradas combo nuevas al KB (era restricción artificial).
+- También elimina el fallback "orden original" (ya no necesario porque sorted-vs-sorted siempre matchea).
+
+**Frente H — Filter toggle interacciones `/productos`**:
+- Banner ámbar con `AlertTriangle` arriba del grid productos cuando `interactionCount > 0`: "N productos podrían interactuar con tu carrito".
+- Botón toggle "Ocultar interacciones" / "Mostrar todos" — `aria-pressed`, color invertido según estado (ámbar fill ↔ outline).
+- Memoización 2 niveles:
+  - `itemsWithSev`: map de `{product, severity}` computado una vez por (items, cartIngredients).
+  - `visibleItems`: filter aplicado solo si `hideInteractions=true`.
+  - `interactionCount`: count de severity !== null, derivado de `itemsWithSev`.
+- `ProductCard` consume `severity` precomputada (evita doble cómputo).
+
+Resultado: usuario con carrito poblado puede esconder productos riesgosos del catálogo con un click. Senior dev pattern: precompute en parent, pass to child, no recompute en card.
+
+Archivos: `lib/drug-info.ts` (+15/-9), `app/productos/page.tsx` (+34/-2). Build OK 160/160.
