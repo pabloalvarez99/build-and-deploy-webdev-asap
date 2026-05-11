@@ -4,6 +4,34 @@
 
 ---
 
+## 2026-05-10 — KB drug-info ampliada a 91% cobertura del catálogo
+
+Expansión masiva de `src/lib/drug-info.ts`: de 132 a 304 principios activos y de 40 a ~95 aliases de nomenclatura.
+
+**Cobertura**: 59,9% → **91,0%** de productos con `active_ingredient` (914/1004).
+
+Categorías nuevas:
+- Anticonceptivos/hormonales (etinilestradiol, levonorgestrel, dienogest, drospirenona, gestodeno, desogestrel, medroxiprogesterona, estradiol, estriol, progesterona, didrogesterona, tibolona, testosterona).
+- Antiácidos/GI (alginato, bicarbonato, carbonato calcio, hidróxido aluminio/magnesio, sucralfato, lansoprazol, loperamida, ondansetrón, metoclopramida, trimebutino, mebeverina, escopolamina, picosulfato, sen, difenidol, dimenhidrinato, racecadotrilo).
+- Cardio/metabólico (ciprofibrato, fenofibrato, lovastatina, rosuvastatina, captopril, metildopa, hidralazina, nifedipino, espironolactona, furosemida, digoxina, nebivolol, betaxolol, doxazosina, isosorbide, clopidogrel, **rivaroxabán**, colchicina, trimetazidina).
+- Diabetes (dapaglifozina, linagliptina, vildagliptina, glibenclamida).
+- Psicofármacos/neuro (bupropión, mirtazapina, venlafaxina, desvenlafaxina, citalopram, imipramina, trazodona, olanzapina, haloperidol, eszopiclona, baclofeno, topiramato, levetiracetam, fenitoína, primidona, litio, memantina, eletriptán, naratriptán, hidroxicloroquina, tamoxifeno, anastrozol, metotrexato, ác. ibandrónico, tiocolchicósido).
+- Antibióticos/antifúngicos/antivirales (cloxacilina, flucloxacilina, cefradina, levofloxacino, claritromicina, eritromicina, cloranfenicol, mebendazol, itraconazol, amorolfina, ciclopiroxolamina, tolnaftato, fenticonazol, valaciclovir).
+- Respiratorios/antihistamínicos (ipratropio, montelukast, teofilina, N-acetilcisteína, desloratadina, rupatadina, hedera helix, pelargonium).
+- Oftálmicos (latanoprost, dorzolamida, pilocarpina, olopatadina, nafazolina, oximetazolina).
+- Urología (tolterodina, trospio, flavoxato).
+- Dermo (tretinoína, urea, hidrocortisona, capsaicina, dexpantenol, povidona yodada, ác. hialurónico, triclosán, ác. salicílico/glicólico/láctico).
+- OTC/químicos (alcohol denat./isopropílico, peróxido de hidrógeno, suero fisiológico, glicerina, DEET, aceite de ricino, manteca de cacao).
+- Vitaminas/minerales (vit. E, A, B1, biotina, DHA, hierro, óx./sulfato zinc, potasio, magnesio, ac. hígado de bacalao).
+- Fitoterapia (valeriana, pasiflora, melisa, manzanilla, árnica, aloe vera, centella, propóleo, cranberry, moringa, echinacea, cimicifuga, cardo mariano, resveratrol, colágeno, psyllium, levadura cerveza).
+- Otros (orlistat, levosulpirida, otilonio, avanafilo, fentermina, piroxicam, indometacina, flurbiprofeno, lactobacillus/saccharomyces como probióticos por cepa).
+
+**Reglas**: precauciones Beers donde aplica (marcado EVITAR), posología adulto, lenguaje claro adulto mayor, dosis "según indicación médica" cuando variable.
+
+Sin cambios en UI ni schema. Build local OK.
+
+---
+
 ## 2026-05-10 — Info profesional por producto (prospecto adulto mayor)
 
 Nueva sección "Información profesional" en `/producto/[slug]` para cada medicamento.
