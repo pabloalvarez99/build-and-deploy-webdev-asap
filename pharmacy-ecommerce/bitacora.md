@@ -4,7 +4,25 @@
 
 ---
 
-## 2026-05-10 — KB drug-info ampliada a 91% cobertura del catálogo
+## 2026-05-10 — KB drug-info push V2: 99,5% cobertura catálogo
+
+Segunda iteración tras `a176d76`. Cobertura **91,0% → 99,5%** (999/1004 productos).
+
+**Fixes**:
+- Rename KB key `GLUCOSAMINA + CONDROITINA` → `CONDROITINA + GLUCOSAMINA` (orden alfabético para que sorted-combo match funcione).
+- Fix alias `ACE.DE RICINO` → `ACE DE RICINO` (tokenizer ya strippea el punto).
+
+**~40 entradas nuevas**: alcanfor, mentol, eucalipto, salicilato de metilo, calamina, difenhidramina, cetilpiridinio, alantoína, bacitracina, neomicina, levodopa, carbidopa, benserazida, budesonida, formoterol, sulfametoxazol, trimetoprim, tinidazol, miconazol, paroxetina, piridoxina, doxilamina, hipromelosa, dextran, subsalicilato bismuto, atapulgita, nifuroxazida, atropina, papaverina, clordiazepóxido, clidinio, azufre, eugenol, ac. undecilénico, alquitrán, alumbre, aloína, linaza, fenol, vaselina, silicona, miristato isopropilo, pantenol, papaína, fluoruro de sodio, mometasona, penicilina, selenio, sodio, fosfato sodio, soja, palto, miel, consuelda, hamamelis, espino, propifenazona, benzocaína, xilometazolina, antazolina. + categorías genéricas para fórmulas multinutrientes/fito (POLIVITAMINICO, PROTECTOR SOLAR, EMOLIENTE, FITO VENOTONICO, FITO ANTIDIARREICO, FITO BUCAL, FITO ESPASMOLITICO, TOPICO RESPIRATORIO, LAXANTE ESTIMULANTE, LAXANTE NATURAL, HOMEOPATICO).
+
+**~60 aliases nuevos** mapean variantes (CALCIFEDIOL→VITAMINA D3, HIDROXOCOBALAMINA→CIANOCOBALAMINA, DIMETICONA→SIMETICONA, POLIETILENGLICOL→MACROGOL, BIFOSFATO/FOSFATO/FOSFATO DISODICO→FOSFATO SODIO, MOMETASONA FUROATO→MOMETASONA, BURSA PASTORIS/CASTAÑO INDIAS→FITO VENOTONICO, etc.).
+
+KB final: **376 keys, 154 aliases**. Beers EVITAR aplicado en: difenhidramina, doxilamina, paroxetina, atropina sistémica, clordiazepóxido, clidinio, fitoespasmolítico (belladona).
+
+5 productos residuales sin cobertura (0,5%): edge cases con formato de dosis raro o ingredientes muy específicos (THUJA D4 homeopatía dosis variable, OX.ZINC con dosis pegada al punto, etc.).
+
+Build OK. Push → Vercel.
+
+---
 
 Expansión masiva de `src/lib/drug-info.ts`: de 132 a 304 principios activos y de 40 a ~95 aliases de nomenclatura.
 
