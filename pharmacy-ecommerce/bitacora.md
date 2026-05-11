@@ -2920,3 +2920,15 @@ Pregunta: ¿es seguro combinar estos medicamentos?
 **Layout**: grid 1-col mobile, 2-col `sm` (imprimir + compartir lado a lado). Botón emerald distinto del print (slate) para diferenciación visual.
 
 Archivos: `app/carrito/page.tsx` (+62/-7). Build OK 160/160.
+
+## 2026-05-10 — useSpeech hook compartido + TTS en DrugInteractionAlert
+
+Refactor: extrae `useSpeech` de `ProfessionalInfo.tsx` a `hooks/useSpeech.ts` (config es-CL rate 0.92 SSR-safe). `ProfessionalInfo` ahora importa el hook (drop código duplicado).
+
+Nueva feature: botón TTS por interacción en `DrugInteractionAlert`. Lee en voz alta el par + severidad + efecto + recomendación. `aria-pressed` indica estado playing. `aria-label` contextual ("Escuchar interacción Sertralina más Tramadol" / "Detener lectura"). Botón 44×44 touch target.
+
+El audio se construye verbalmente: `{drug1} más {drug2}. Severidad {Crítica/Mayor/Moderada}. Efecto: ... Recomendación: ...`. La conjunción "más" en lugar de "+" suena natural en español.
+
+Adulto mayor con dificultad visual puede ESCUCHAR cada alerta sin tener que leer.
+
+Archivos: `hooks/useSpeech.ts` (nuevo, +52), `app/producto/[slug]/ProfessionalInfo.tsx` (-32 código duplicado, +1 import), `components/DrugInteractionAlert.tsx` (+30 TTS btn por interacción). Build OK 160/160.

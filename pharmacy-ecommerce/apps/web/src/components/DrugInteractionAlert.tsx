@@ -13,9 +13,12 @@ import {
   AlertTriangle,
   AlertCircle,
   ChevronDown,
+  Volume2,
+  Square,
 } from 'lucide-react';
 import { prettifyDrugName } from '@/lib/drug-info';
 import type { InteractionDetail, Severity } from '@/lib/drug-interactions';
+import { useSpeech } from '@/hooks/useSpeech';
 
 const SEVERITY_CONF: Record<
   Severity,
@@ -70,6 +73,7 @@ export default function DrugInteractionAlert({
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const { supported: ttsSupported, speakingId, speak, stop } = useSpeech();
 
   if (interactions.length === 0) return null;
 
@@ -134,6 +138,9 @@ export default function DrugInteractionAlert({
           {interactions.map((it, i) => {
             const c = SEVERITY_CONF[it.severity];
             const Icon = c.icon;
+            const sid = `int:${it.drugs[0]}|${it.drugs[1]}`;
+            const isSpeaking = speakingId === sid;
+            const pair = `${prettifyDrugName(it.drugs[0])} más ${prettifyDrugName(it.drugs[1])}`;
             return (
               <li key={`${it.drugs[0]}|${it.drugs[1]}|${i}`} className="px-4 py-4 bg-white dark:bg-slate-800">
                 <div className="flex items-start gap-3">
@@ -142,15 +149,36 @@ export default function DrugInteractionAlert({
                     aria-hidden="true"
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-2">
-                      <span className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100">
-                        {prettifyDrugName(it.drugs[0])} + {prettifyDrugName(it.drugs[1])}
-                      </span>
-                      <span
-                        className={`text-xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${c.accentBg} ${c.accentText}`}
-                      >
-                        {c.label}
-                      </span>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0">
+                        <span className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100">
+                          {prettifyDrugName(it.drugs[0])} + {prettifyDrugName(it.drugs[1])}
+                        </span>
+                        <span
+                          className={`text-xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${c.accentBg} ${c.accentText}`}
+                        >
+                          {c.label}
+                        </span>
+                      </div>
+                      {ttsSupported && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            isSpeaking
+                              ? stop()
+                              : speak(sid, `${pair}. Severidad ${c.label}. Efecto: ${it.effect}. Recomendación: ${it.recommendation}`)
+                          }
+                          aria-label={isSpeaking ? 'Detener lectura' : `Escuchar interacción ${pair}`}
+                          aria-pressed={isSpeaking}
+                          className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 flex-shrink-0 transition-colors"
+                        >
+                          {isSpeaking ? (
+                            <Square className="w-5 h-5 fill-current" aria-hidden="true" />
+                          ) : (
+                            <Volume2 className="w-5 h-5" aria-hidden="true" />
+                          )}
+                        </button>
+                      )}
                     </div>
                     <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed mb-1.5">
                       <strong className="font-semibold text-slate-900 dark:text-slate-100">Efecto:</strong>{' '}

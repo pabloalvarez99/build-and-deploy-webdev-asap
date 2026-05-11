@@ -37,6 +37,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { lookupDrugInfo, prettifyDrugName, type DrugInfo } from '@/lib/drug-info';
+import { useSpeech } from '@/hooks/useSpeech';
 
 interface Section {
   key: keyof DrugInfo;
@@ -95,41 +96,6 @@ function useFontScale() {
   }, []);
 
   return { scale, inc, dec, set: update, canInc: scale !== 'xxl', canDec: scale !== 'lg' };
-}
-
-function useSpeech() {
-  const [supported, setSupported] = useState(false);
-  const [speakingId, setSpeakingId] = useState<string | null>(null);
-
-  useEffect(() => {
-    setSupported(typeof window !== 'undefined' && 'speechSynthesis' in window);
-    return () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, []);
-
-  const speak = useCallback((id: string, text: string) => {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const utt = new SpeechSynthesisUtterance(text);
-    utt.lang = 'es-CL';
-    utt.rate = 0.92;
-    utt.pitch = 1;
-    utt.onend = () => setSpeakingId(null);
-    utt.onerror = () => setSpeakingId(null);
-    setSpeakingId(id);
-    window.speechSynthesis.speak(utt);
-  }, []);
-
-  const stop = useCallback(() => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    setSpeakingId(null);
-  }, []);
-
-  return { supported, speakingId, speak, stop };
 }
 
 function isBeersWarning(text: string | undefined): boolean {
