@@ -207,6 +207,10 @@ model purchase_orders {
   invoice_date   DateTime?              @db.Date
   status         String                 @default("draft") @db.VarChar(20)
   total_cost     Decimal?               @db.Decimal(10, 2)
+  subtotal_net   Decimal?               @db.Decimal(10, 2)
+  tax_amount     Decimal?               @db.Decimal(10, 2)
+  invoice_format String?                @db.VarChar(20)
+  po_reference   String?                @db.VarChar(100)
   notes          String?
   image_url      String?                @db.VarChar(500)
   ocr_raw        String?
@@ -231,6 +235,8 @@ model purchase_order_items {
   quantity              Int
   unit_cost             Decimal         @db.Decimal(10, 2)
   subtotal              Decimal         @db.Decimal(10, 2)
+  batch_code            String?         @db.VarChar(100)
+  expiry_date           DateTime?       @db.Date
   purchase_orders       purchase_orders @relation(fields: [purchase_order_id], references: [id], onDelete: Cascade)
   products              products?       @relation(fields: [product_id], references: [id], onDelete: SetNull)
 }

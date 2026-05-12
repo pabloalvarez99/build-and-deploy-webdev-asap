@@ -2997,3 +2997,22 @@ Extensión KB `drug-info.ts` para mejor cobertura de nutracéuticos. Gap-analysi
 **Verificación**: re-corrida análisis → 0 misses (147/147 suplementos detectados matchean). Build local OK (Next 14.2.35).
 
 Archivos: `pharmacy-ecommerce/apps/web/src/lib/drug-info.ts` (+~100 líneas).
+
+---
+
+## 2026-05-12 — Importación facturas proveedor: parser modular + lote/vto
+
+**Por qué**: digitalizar facturas Mediven (SII) y pedidos Global (Comprobante de Pedido) en lugar de cargar manual con software antiguo "golan". Captura completa: header + líneas + lote + vencimiento.
+
+**Cambios**:
+- Refactor `src/lib/invoice-parser/`: nuevos `types.ts`, `util.ts`, `index.ts` + `parsers/{global,mediven,generic}.ts`. Entry: `parseInvoice(text) → {format, header, lines}`. Detección automática por keywords/RUT.
+- **Mediven** (nuevo, RUT 76.425.071-0): factura SII con tabla `Descripción|Cant|Precio|Total|Lote(MM-YYYY+code)`. Layout duplicado original/cedible → dedupe. Header: folio, fecha, vence, OC ref, neto/IVA/total. `MM-YYYY` → último día del mes ISO.
+- **Global** (extraído): lógica `Comprobante de Pedido` actual + header (Pedido N°, fecha, total). RUT impreso es del comprador, no del proveedor → `supplier_rut=null`.
+- Schema: `purchase_order_items` +`batch_code`, +`expiry_date`. `purchase_orders` +`subtotal_net`, +`tax_amount`, +`invoice_format`, +`po_reference`. `prisma db push` aplicado a prod.
+- API `/api/admin/purchase-orders/scan`: usa `parseInvoice`, devuelve `{format, header, lines, detected_supplier_id}`. Auto-match proveedor por RUT.
+- API POST `/api/admin/purchase-orders`: persiste header completo + batch/expiry por línea.
+- API receive: crea `product_batches` por cada item con `expiry_date`.
+- UI `/admin/compras/nueva`: campos cabecera (vence, OC), badge formato detectado, inputs lote+vto editables por línea, auto-llenado desde scan.
+- Cliente `lib/api.ts`: nuevos tipos `InvoiceHeader`, `InvoiceFormat`, `ScanResponse`. `purchaseOrderApi.create` acepta batch/header.
+
+Archivos: `pharmacy-ecommerce/apps/web/src/lib/invoice-parser/**`, `prisma/schema.prisma`, `app/api/admin/purchase-orders/{route.ts,scan/route.ts,[id]/receive/route.ts}`, `app/admin/compras/nueva/page.tsx`, `lib/api.ts`.

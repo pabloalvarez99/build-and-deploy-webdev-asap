@@ -72,6 +72,19 @@ export async function POST(
             },
           });
         }
+
+        // Registrar lote/vencimiento si la línea los trae (Mediven y demás facturas SII)
+        if (item.expiry_date) {
+          await tx.product_batches.create({
+            data: {
+              product_id: item.product_id,
+              batch_code: item.batch_code,
+              expiry_date: item.expiry_date,
+              quantity: item.quantity,
+              notes: order.invoice_number ? `Factura ${order.invoice_number}` : null,
+            },
+          });
+        }
       }
 
       // Marcar OC como recibida

@@ -383,6 +383,30 @@ export interface ScannedLine {
   subtotal: number
   product_id: string | null
   product_name_matched: string | null
+  batch_code: string | null
+  expiry_date: string | null
+}
+
+export interface InvoiceHeader {
+  invoice_number: string | null
+  supplier_rut: string | null
+  supplier_name: string | null
+  invoice_date: string | null
+  due_date: string | null
+  po_reference: string | null
+  subtotal_net: number | null
+  tax_amount: number | null
+  total: number | null
+}
+
+export type InvoiceFormat = 'global' | 'mediven' | 'generic'
+
+export interface ScanResponse {
+  format: InvoiceFormat
+  header: InvoiceHeader
+  lines: ScannedLine[]
+  ocr_raw: string
+  detected_supplier_id: string | null
 }
 
 // ============================================
@@ -431,9 +455,14 @@ export const purchaseOrderApi = {
     supplier_id: string
     invoice_number?: string
     invoice_date?: string
+    due_date?: string
     notes?: string
     ocr_raw?: string
     image_url?: string
+    invoice_format?: string
+    po_reference?: string
+    subtotal_net?: number | null
+    tax_amount?: number | null
     items: Array<{
       product_id?: string
       supplier_product_code?: string
@@ -441,6 +470,8 @@ export const purchaseOrderApi = {
       quantity: number
       unit_cost: number
       subtotal: number
+      batch_code?: string | null
+      expiry_date?: string | null
     }>
   }) => apiRequest<PurchaseOrder>('/api/admin/purchase-orders', { body: data }),
 

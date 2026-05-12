@@ -81,8 +81,13 @@ export async function POST(request: NextRequest) {
         supplier_id: body.supplier_id,
         invoice_number: body.invoice_number?.trim() || null,
         invoice_date: body.invoice_date ? new Date(body.invoice_date) : null,
+        due_date: body.due_date ? new Date(body.due_date) : null,
         status: 'draft',
         total_cost,
+        subtotal_net: body.subtotal_net ?? null,
+        tax_amount: body.tax_amount ?? null,
+        invoice_format: body.invoice_format || null,
+        po_reference: body.po_reference?.trim() || null,
         notes: body.notes?.trim() || null,
         ocr_raw: body.ocr_raw || null,
         image_url: body.image_url || null,
@@ -95,6 +100,8 @@ export async function POST(request: NextRequest) {
             quantity: number;
             unit_cost: number;
             subtotal: number;
+            batch_code?: string | null;
+            expiry_date?: string | null;
           }) => ({
             product_id: item.product_id || null,
             supplier_product_code: item.supplier_product_code || null,
@@ -102,6 +109,8 @@ export async function POST(request: NextRequest) {
             quantity: item.quantity,
             unit_cost: item.unit_cost,
             subtotal: item.subtotal,
+            batch_code: item.batch_code || null,
+            expiry_date: item.expiry_date ? new Date(item.expiry_date) : null,
           })),
         },
       },
