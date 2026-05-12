@@ -50,6 +50,8 @@ export default function ComprasPage() {
   const [page, setPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '')
   const [supplierFilter, setSupplierFilter] = useState(searchParams.get('supplier_id') || '')
+  const [dateFrom, setDateFrom] = useState(searchParams.get('from') || '')
+  const [dateTo, setDateTo] = useState(searchParams.get('to') || '')
   const [suggestions, setSuggestions] = useState<ReorderSuggestions | null>(null)
   const [showSuggestions, setShowSuggestions] = useState(true)
   const [expandedSupplier, setExpandedSupplier] = useState<string | null>(null)
@@ -62,6 +64,8 @@ export default function ComprasPage() {
         limit: 20,
         status: statusFilter || undefined,
         supplier_id: supplierFilter || undefined,
+        from: dateFrom || undefined,
+        to: dateTo || undefined,
       })
       setOrders(data.orders)
       setTotal(data.total)
@@ -70,7 +74,7 @@ export default function ComprasPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [page, statusFilter, supplierFilter])
+  }, [page, statusFilter, supplierFilter, dateFrom, dateTo])
 
   useEffect(() => {
     if (!user || !isOwnerRole(user.role)) { router.push('/'); return }
@@ -221,6 +225,33 @@ export default function ComprasPage() {
             <option key={s.id} value={s.id}>{s.name}</option>
           ))}
         </select>
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => { setDateFrom(e.target.value); setPage(1) }}
+          className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm"
+          title="Desde"
+        />
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => { setDateTo(e.target.value); setPage(1) }}
+          className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm"
+          title="Hasta"
+        />
+        {(statusFilter || supplierFilter || dateFrom || dateTo) && (
+          <button
+            onClick={() => { setStatusFilter(''); setSupplierFilter(''); setDateFrom(''); setDateTo(''); setPage(1) }}
+            className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 underline"
+          >
+            limpiar
+          </button>
+        )}
+        <span className="ml-auto text-sm text-slate-600 dark:text-slate-400">
+          Suma página: <strong className="text-slate-900 dark:text-white">
+            ${orders.reduce((s, o) => s + (parseInt(o.total_cost ?? '0') || 0), 0).toLocaleString('es-CL')}
+          </strong>
+        </span>
       </div>
 
       {/* Table */}
@@ -267,6 +298,16 @@ export default function ComprasPage() {
                     <span className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${st.cls}`}>
                       {st.icon}{st.label}
                     </span>
+                    {o.invoice_format && (
+                      <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400">
+                        {o.invoice_format}
+                      </span>
+                    )}
+                    {o.status === 'draft' && (Date.now() - new Date(o.created_at).getTime()) > 7 * 86400000 && (
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400">
+                        Sin recibir &gt;7d
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-3 mt-1 text-sm text-slate-500 dark:text-slate-400 flex-wrap">
                     <span>{new Date(o.created_at).toLocaleDateString('es-CL')}</span>

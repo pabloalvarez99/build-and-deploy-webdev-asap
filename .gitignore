@@ -61,3 +61,5 @@ tu-farmacia-prod-*.json
 .code-review-graph/
 lighthouse-*.json
 .tmp-autonomous-prompt.txt
+*.pdf
+.env.prod-temp

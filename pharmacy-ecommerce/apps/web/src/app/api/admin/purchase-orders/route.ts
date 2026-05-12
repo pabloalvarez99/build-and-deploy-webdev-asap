@@ -22,11 +22,22 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(sp.get('limit') || '20');
     const status = sp.get('status') || undefined;
     const supplier_id = sp.get('supplier_id') || undefined;
+    const from = sp.get('from') || undefined;
+    const to = sp.get('to') || undefined;
     const offset = (page - 1) * limit;
+
+    const dateFilter: { gte?: Date; lte?: Date } = {};
+    if (from) dateFilter.gte = new Date(from);
+    if (to) {
+      const toDate = new Date(to);
+      toDate.setHours(23, 59, 59, 999);
+      dateFilter.lte = toDate;
+    }
 
     const where = {
       ...(status ? { status } : {}),
       ...(supplier_id ? { supplier_id } : {}),
+      ...(from || to ? { created_at: dateFilter } : {}),
     };
 
     const db = await getDb();

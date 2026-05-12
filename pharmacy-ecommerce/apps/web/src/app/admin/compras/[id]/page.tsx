@@ -315,6 +315,19 @@ export default function CompraDetailPage() {
         )}
       </div>
 
+      {/* OCR raw (debug) */}
+      {order.ocr_raw && (
+        <details className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 print:hidden">
+          <summary className="px-6 py-3 cursor-pointer text-sm font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Texto OCR original ({order.ocr_raw.length} chars)
+          </summary>
+          <pre className="px-6 pb-4 text-xs text-slate-500 dark:text-slate-400 font-mono whitespace-pre-wrap max-h-96 overflow-auto bg-slate-50 dark:bg-slate-900 mx-4 mb-4 rounded-lg p-3">
+            {order.ocr_raw}
+          </pre>
+        </details>
+      )}
+
       {/* Invoice image */}
       {order.image_url && (
         <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 overflow-hidden print:hidden">

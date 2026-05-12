@@ -3048,3 +3048,15 @@ Archivos: `pharmacy-ecommerce/apps/web/src/lib/invoice-parser/**`, `prisma/schem
 ### Scripts:
 - `scripts/import-pdf-invoices.ts` (tsx): pipeline ingestion idempotente que crea OCs y mappings desde PDFs.
 - `scripts/extract-pdf-text.mjs`: genera fixtures de prueba desde PDFs reales.
+
+## 2026-05-12 (cont.) — Receive + UI fixes
+
+- BUG fix prod: `stock_movements.reason` constraint NO permitía 'purchase' → cambié receive route a 'reposicion' (constraint allow: reposicion/correccion/merma/inventario/venta/import_excel/ventas_historicas).
+- Script `scripts/receive-draft-ocs.ts`: recibió las 3 OCs draft → stock +955 unidades, 9 lotes Mediven creados con notes "Factura 3625647", supplier_product_mappings upserts.
+- Script `scripts/remap-unmapped-items.ts`: 2da pasada fuzzy match (tokens ≥4 chars + stopwords) → 6/10 de los items Global sin mapear quedaron mapeados.
+- UI mejoras:
+  · /admin/compras lista: badge formato + flag "Sin recibir >7d" + filtros desde/hasta + suma página.
+  · /admin/compras/[id]: collapsible "Texto OCR original" para debug.
+  · /admin/compras/nueva: drag-and-drop PDF/imagen en zona upload + badge "PDF nativo" vs "Vision OCR".
+- Parser: detector `isCreditNote()` (NCE/Nota Crédito) → short-circuits a generic con lines=[]. UI bloquea import con alert "es NOTA DE CRÉDITO".
+- Tests: 17/17 pass (vitest). Build local OK.

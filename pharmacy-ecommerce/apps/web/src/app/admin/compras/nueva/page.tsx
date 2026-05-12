@@ -38,6 +38,8 @@ export default function NuevaCompraPage() {
   const [pdfFile, setPdfFile] = useState<File | null>(null)
   const [isScanning, setIsScanning] = useState(false)
   const [ocrRaw, setOcrRaw] = useState('')
+  const [textSource, setTextSource] = useState<'pdf' | 'vision' | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
 
   // Líneas OCR
   const [lines, setLines] = useState<LineState[]>([])
@@ -86,9 +88,25 @@ export default function NuevaCompraPage() {
   function handlePdfChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    setImageFile(null)
-    setImagePreview(null)
-    setPdfFile(file)
+    acceptFile(file)
+  }
+
+  function acceptFile(file: File) {
+    if (file.type === 'application/pdf') {
+      setImageFile(null); setImagePreview(null); setPdfFile(file)
+    } else if (file.type.startsWith('image/')) {
+      setPdfFile(null)
+      setImageFile(file)
+      setImagePreview(URL.createObjectURL(file))
+    } else {
+      alert('Archivo no soportado. Sube un PDF o imagen.')
+    }
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault(); setIsDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) acceptFile(file)
   }
 
   function fileToBase64(file: File): Promise<string> {
@@ -139,8 +157,14 @@ export default function NuevaCompraPage() {
         throw new Error(err.error || `Error ${ocrRes.status}`)
       }
       const data = await ocrRes.json()
+      if (data.is_credit_note) {
+        alert('Este documento es una NOTA DE CRÉDITO, no una factura. No se puede importar como compra (no aumenta stock).')
+        setIsScanning(false)
+        return
+      }
       setOcrRaw(data.ocr_raw)
       setInvoiceFormat(data.format ?? null)
+      setTextSource(data.text_source ?? null)
       // Auto-llenar header desde el parser
       if (data.header) {
         if (data.header.invoice_number) setInvoiceNumber(data.header.invoice_number)
@@ -387,10 +411,19 @@ export default function NuevaCompraPage() {
 
           {/* Upload zone — show when no file selected */}
           {!imagePreview && !pdfFile && (
-            <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-10 text-center">
+            <div
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors ${
+                isDragging ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-300 dark:border-slate-600'
+              }`}
+            >
               <Camera className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-              <p className="text-slate-600 dark:text-slate-400 font-medium">Sube una foto o PDF de la factura</p>
-              <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">JPG, PNG o PDF</p>
+              <p className="text-slate-600 dark:text-slate-400 font-medium">
+                {isDragging ? 'Suelta el archivo aquí' : 'Sube una foto o PDF de la factura'}
+              </p>
+              <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">JPG, PNG o PDF · arrastra y suelta</p>
             </div>
           )}
 
@@ -463,10 +496,22 @@ export default function NuevaCompraPage() {
 
             {/* Formato detectado */}
             {invoiceFormat && (
-              <div className="mb-3 inline-flex items-center gap-2 text-xs px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                Formato: <strong className="uppercase">{invoiceFormat}</strong>
-                {subtotalNet != null && <span> · Neto ${subtotalNet.toLocaleString('es-CL')}</span>}
-                {taxAmount != null && <span> · IVA ${taxAmount.toLocaleString('es-CL')}</span>}
+              <div className="mb-3 flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-2 text-xs px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                  Formato: <strong className="uppercase">{invoiceFormat}</strong>
+                  {subtotalNet != null && <span> · Neto ${subtotalNet.toLocaleString('es-CL')}</span>}
+                  {taxAmount != null && <span> · IVA ${taxAmount.toLocaleString('es-CL')}</span>}
+                </span>
+                {textSource === 'pdf' && (
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" title="Texto extraído directo del PDF (sin Vision OCR)">
+                    PDF nativo
+                  </span>
+                )}
+                {textSource === 'vision' && (
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400" title="Texto vía Vision OCR (imagen/PDF escaneado)">
+                    Vision OCR
+                  </span>
+                )}
               </div>
             )}
 

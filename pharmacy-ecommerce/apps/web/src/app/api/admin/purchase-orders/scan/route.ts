@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
-import { parseInvoice } from '@/lib/invoice-parser';
+import { parseInvoice, isCreditNote } from '@/lib/invoice-parser';
 import type { InvoiceLine, InvoiceHeader, InvoiceFormat } from '@/lib/invoice-parser';
 
 export interface ScannedLine extends InvoiceLine {
@@ -65,6 +65,7 @@ export interface ScanResponse {
   ocr_raw: string;
   detected_supplier_id: string | null;
   text_source: 'pdf' | 'vision';
+  is_credit_note: boolean;
 }
 
 export async function POST(request: NextRequest) {
@@ -113,9 +114,12 @@ export async function POST(request: NextRequest) {
         ocr_raw: '',
         detected_supplier_id: null,
         text_source: textSource,
+        is_credit_note: false,
       });
     }
 
+    // Rechazar Nota de Crédito explícitamente (no afecta stock)
+    const creditNote = isCreditNote(fullText);
     const parsed = parseInvoice(fullText);
     const db = await getDb();
 
@@ -175,6 +179,7 @@ export async function POST(request: NextRequest) {
       ocr_raw: fullText,
       detected_supplier_id: resolvedSupplierId,
       text_source: textSource,
+      is_credit_note: creditNote,
     });
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);

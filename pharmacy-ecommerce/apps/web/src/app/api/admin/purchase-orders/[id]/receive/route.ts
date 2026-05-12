@@ -50,7 +50,7 @@ export async function POST(
           data: {
             product_id: item.product_id,
             delta: item.quantity,
-            reason: 'purchase',
+            reason: 'reposicion',
             admin_id: admin.email || admin.uid,
           },
         });
