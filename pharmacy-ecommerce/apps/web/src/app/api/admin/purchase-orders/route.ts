@@ -70,6 +70,27 @@ export async function POST(request: NextRequest) {
 
     const db = await getDb();
 
+    // Idempotencia: rechazar si ya existe OC con la misma (supplier_id, invoice_number)
+    const trimmedInvoice = body.invoice_number?.trim() || null;
+    if (trimmedInvoice) {
+      const existing = await db.purchase_orders.findFirst({
+        where: { supplier_id: body.supplier_id, invoice_number: trimmedInvoice },
+        select: { id: true, created_at: true, invoice_date: true },
+      });
+      if (existing) {
+        return NextResponse.json(
+          {
+            error: 'duplicate_invoice',
+            message: `Factura ${trimmedInvoice} ya importada`,
+            existing_id: existing.id,
+            existing_created_at: existing.created_at.toISOString(),
+            existing_invoice_date: existing.invoice_date?.toISOString() ?? null,
+          },
+          { status: 409 }
+        );
+      }
+    }
+
     // Calcular total_cost desde los items
     const total_cost = body.items.reduce(
       (sum: number, item: { subtotal: number }) => sum + (item.subtotal || 0),
@@ -122,6 +143,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(serializePO(order as unknown as Record<string, unknown>));
   } catch (error) {
+    // Race-condition fallback: si el unique index nos pilla, devolver 409
+    const err = error as { code?: string; meta?: { target?: string[] | string } };
+    if (err?.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'duplicate_invoice', message: 'Factura ya importada (race)' },
+        { status: 409 }
+      );
+    }
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);
   }
 }

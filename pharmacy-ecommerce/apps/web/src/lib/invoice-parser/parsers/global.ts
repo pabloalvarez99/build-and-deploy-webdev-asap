@@ -16,7 +16,9 @@ function parseHeader(text: string): InvoiceHeader {
   const rutMatch = text.match(/Rut:\s*([\d\.]+\-[\dkK])/i);
   const nombreMatch = text.match(/Nombre:\s*(.+?)(?:\r?\n|Rut:)/i);
   const montoMatch = text.match(/Monto:\s*\$?\s*([\d\.]+)/i);
-  const totalMatch = text.match(/(?:^|\s)Total:\s*\$?\s*([\d\.]+)/i);
+  // Buscar "Total: $..." al final del doc, ignorando "Sub Total:".
+  const totalAllMatches = Array.from(text.matchAll(/(?<!Sub\s)\bTotal:\s*\$?\s*([\d\.]+)/gi));
+  const totalMatch = totalAllMatches.length ? totalAllMatches[totalAllMatches.length - 1] : null;
 
   return {
     invoice_number: pedidoMatch?.[1] ?? null,

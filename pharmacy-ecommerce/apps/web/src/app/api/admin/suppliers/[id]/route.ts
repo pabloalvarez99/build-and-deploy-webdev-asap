@@ -78,6 +78,7 @@ export async function PUT(
     if (body.website !== undefined) updateData.website = body.website?.trim() || null;
     if (body.notes !== undefined) updateData.notes = body.notes?.trim() || null;
     if (body.active !== undefined) updateData.active = body.active;
+    if (body.default_invoice_format !== undefined) updateData.default_invoice_format = body.default_invoice_format || null;
 
     const supplier = await db.suppliers.update({
       where: { id },

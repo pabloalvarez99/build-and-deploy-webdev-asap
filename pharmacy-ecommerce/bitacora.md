@@ -3016,3 +3016,35 @@ Archivos: `pharmacy-ecommerce/apps/web/src/lib/drug-info.ts` (+~100 líneas).
 - Cliente `lib/api.ts`: nuevos tipos `InvoiceHeader`, `InvoiceFormat`, `ScanResponse`. `purchaseOrderApi.create` acepta batch/header.
 
 Archivos: `pharmacy-ecommerce/apps/web/src/lib/invoice-parser/**`, `prisma/schema.prisma`, `app/api/admin/purchase-orders/{route.ts,scan/route.ts,[id]/receive/route.ts}`, `app/admin/compras/nueva/page.tsx`, `lib/api.ts`.
+
+## 2026-05-12 — Digitalización facturas proveedor (full pipeline)
+
+### DB (prod, vía cloud-sql-connector):
+- `ALTER suppliers ADD COLUMN default_invoice_format VARCHAR(20)`.
+- Reasignada fila Mediven existente (tenía RUT del comprador) → `Mediven SpA`, RUT `76425071-0`, email/teléfono completos, `default_invoice_format='mediven'`.
+- Insertado supplier `Global` (rut=null, `default_invoice_format='global'`).
+- `CREATE UNIQUE INDEX purchase_orders_supplier_invoice_unique ON (supplier_id, invoice_number) WHERE invoice_number IS NOT NULL`.
+
+### Backend:
+- `src/app/api/admin/purchase-orders/scan/route.ts`: pdf-parse v2 como primaria (texto nativo PDF), Vision OCR como fallback si <100 chars. Nuevo campo `text_source: 'pdf'|'vision'` en respuesta. Fallback de auto-match: si no hay RUT match, busca supplier por `default_invoice_format` (resuelve Global).
+- `src/app/api/admin/purchase-orders/route.ts`: POST chequea duplicado `(supplier_id, invoice_number)` → 409 con `existing_id`. Catch `P2002` race-cond.
+- `src/app/api/admin/purchase-orders/[id]/route.ts` GET: ahora serializa `due_date`, `subtotal_net`, `tax_amount`, `expiry_date` por item.
+- `src/app/api/admin/suppliers/route.ts` (POST) + `[id]/route.ts` (PUT): aceptan `default_invoice_format`.
+
+### Frontend:
+- `/admin/compras/nueva`: badge formato en cada supplier, pre-llena `invoiceFormat` con el default del supplier al elegir. Manejo de 409 → confirma navegar a OC existente.
+- `/admin/compras/[id]`: badge formato en header, filas `due_date` (rojo) y `po_reference`, línea-item con lote+vto, breakdown neto/IVA/total, botón "Exportar JSON" con `ocr_raw` completo.
+
+### Tests:
+- `vitest` configurado. `npm test` → 12/12 PASS.
+- `src/lib/invoice-parser/__tests__/{global,mediven}.test.ts` validan header completo, conteo de líneas, lote+vto BENTLEY=5L332/2027-12-31, sin lotes en Global, ningún item sin código en Global, sum(items) ≈ neto en Mediven.
+- Fixtures en `__tests__/fixtures/{global,mediven}.txt` (capturados con pdf-parse de los PDFs reales).
+
+### Datos cargados en prod (3 OCs en estado draft):
+- `0000750277` Global · 71 items (66 mapeados) · $1.297.766.
+- `0000740850` Global · 53 items (48 mapeados) · $963.461.
+- `3625647`   Mediven · 9 items (9 mapeados, todos con lote+vto) · $121.451 (neto $102.060 + IVA $19.391).
+
+### Scripts:
+- `scripts/import-pdf-invoices.ts` (tsx): pipeline ingestion idempotente que crea OCs y mappings desde PDFs.
+- `scripts/extract-pdf-text.mjs`: genera fixtures de prueba desde PDFs reales.

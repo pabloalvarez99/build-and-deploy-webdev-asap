@@ -26,10 +26,11 @@ async function apiRequest<T>(
     if (parsed && typeof parsed === 'object') {
       const obj = parsed as Record<string, unknown>
       const msg = typeof obj.error === 'string' ? obj.error : `HTTP error! status: ${response.status}`
-      const err = new Error(msg) as Error & { code?: string; items?: unknown; status?: number }
+      const err = new Error(msg) as Error & { code?: string; items?: unknown; status?: number; payload?: Record<string, unknown> }
       if (typeof obj.code === 'string') err.code = obj.code
       if (Array.isArray(obj.items)) err.items = obj.items
       err.status = response.status
+      err.payload = obj
       throw err
     }
     throw new Error(raw || `HTTP error! status: ${response.status}`)
@@ -340,6 +341,7 @@ export interface Supplier {
   website: string | null
   notes: string | null
   active: boolean
+  default_invoice_format: 'mediven' | 'global' | 'generic' | null
   created_at: string
   updated_at: string
   _count?: { purchase_orders: number }
@@ -355,6 +357,8 @@ export interface PurchaseOrderItem {
   quantity: number
   unit_cost: string
   subtotal: string
+  batch_code: string | null
+  expiry_date: string | null
   products?: { id: string; name: string; slug: string } | null
 }
 
@@ -363,10 +367,16 @@ export interface PurchaseOrder {
   supplier_id: string
   invoice_number: string | null
   invoice_date: string | null
+  due_date: string | null
+  po_reference: string | null
+  invoice_format: 'global' | 'mediven' | 'generic' | null
+  subtotal_net: string | null
+  tax_amount: string | null
   status: 'draft' | 'received' | 'cancelled'
   total_cost: string | null
   notes: string | null
   image_url: string | null
+  ocr_raw: string | null
   created_by: string
   created_at: string
   updated_at: string

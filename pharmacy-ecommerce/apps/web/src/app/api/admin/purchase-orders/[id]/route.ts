@@ -7,6 +7,7 @@ function serializeItem(item: Record<string, unknown>) {
     ...item,
     unit_cost: String(item.unit_cost),
     subtotal: String(item.subtotal),
+    expiry_date: item.expiry_date instanceof Date ? item.expiry_date.toISOString() : item.expiry_date,
     created_at: item.created_at instanceof Date ? item.created_at.toISOString() : item.created_at,
   };
 }
@@ -39,7 +40,10 @@ export async function GET(
     return NextResponse.json({
       ...order,
       total_cost: order.total_cost?.toString() ?? null,
+      subtotal_net: order.subtotal_net?.toString() ?? null,
+      tax_amount: order.tax_amount?.toString() ?? null,
       invoice_date: order.invoice_date?.toISOString() ?? null,
+      due_date: order.due_date?.toISOString() ?? null,
       created_at: order.created_at.toISOString(),
       updated_at: order.updated_at.toISOString(),
       suppliers: {

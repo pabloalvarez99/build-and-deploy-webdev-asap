@@ -250,7 +250,18 @@ export default function NuevaCompraPage() {
 
       router.push(`/admin/compras/${order.id}`)
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al confirmar')
+      const e = err as Error & { status?: number; payload?: { existing_id?: string; existing_invoice_date?: string | null } }
+      if (e?.status === 409 && e.payload?.existing_id) {
+        const when = e.payload.existing_invoice_date
+          ? new Date(e.payload.existing_invoice_date).toLocaleDateString('es-CL')
+          : 'fecha desconocida'
+        const ok = window.confirm(
+          `Factura ${invoiceNumber} ya fue importada el ${when}. ¿Ver la OC existente?`
+        )
+        if (ok) { router.push(`/admin/compras/${e.payload.existing_id}`); return }
+      } else {
+        alert(err instanceof Error ? err.message : 'Error al confirmar')
+      }
       setIsSubmitting(false)
     }
   }
@@ -295,15 +306,28 @@ export default function NuevaCompraPage() {
               suppliers.map((s) => (
                 <button
                   key={s.id}
-                  onClick={() => setSelectedSupplier(s)}
+                  onClick={() => {
+                    setSelectedSupplier(s)
+                    if (s.default_invoice_format) setInvoiceFormat(s.default_invoice_format as InvoiceFormat)
+                  }}
                   className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all ${
                     selectedSupplier?.id === s.id
                       ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
                       : 'border-slate-200 dark:border-slate-600 hover:border-emerald-300 dark:hover:border-emerald-700'
                   }`}
                 >
-                  <div className="font-medium text-slate-900 dark:text-white">{s.name}</div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="font-medium text-slate-900 dark:text-white">{s.name}</div>
+                    {s.default_invoice_format && (
+                      <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                        {s.default_invoice_format}
+                      </span>
+                    )}
+                  </div>
                   {s.rut && <div className="text-xs text-slate-500 dark:text-slate-400">RUT {s.rut}</div>}
+                  {!s.rut && s.default_invoice_format && (
+                    <div className="text-xs text-amber-600 dark:text-amber-400">Sin RUT — auto-detect via formato</div>
+                  )}
                 </button>
               ))
             )}

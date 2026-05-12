@@ -25,6 +25,16 @@ async function ocrImage(apiKey: string, base64Content: string): Promise<string> 
   return data.responses?.[0]?.fullTextAnnotation?.text ?? '';
 }
 
+async function extractPdfText(base64Content: string): Promise<string> {
+  // pdf-parse v2 — texto directo desde PDF nativo (facturas SII son siempre digitales).
+  // Mucho más rápido y barato que Vision OCR; fallback si layout es escaneado.
+  const { PDFParse } = await import('pdf-parse');
+  const buf = Buffer.from(base64Content, 'base64');
+  const parser = new PDFParse({ data: buf });
+  const r = await parser.getText();
+  return r.text || '';
+}
+
 async function ocrPdf(apiKey: string, base64Content: string): Promise<string> {
   const res = await fetch(
     `https://vision.googleapis.com/v1/files:annotate?key=${apiKey}`,
@@ -54,6 +64,7 @@ export interface ScanResponse {
   lines: ScannedLine[];
   ocr_raw: string;
   detected_supplier_id: string | null;
+  text_source: 'pdf' | 'vision';
 }
 
 export async function POST(request: NextRequest) {
@@ -67,11 +78,28 @@ export async function POST(request: NextRequest) {
     if (!image_base64 && !pdf_base64) return errorResponse('image_base64 or pdf_base64 is required', 400);
 
     const apiKey = process.env.GOOGLE_CLOUD_VISION_API_KEY;
-    if (!apiKey) return errorResponse('Vision API not configured', 500);
 
-    const fullText = pdf_base64
-      ? await ocrPdf(apiKey, pdf_base64)
-      : await ocrImage(apiKey, image_base64);
+    // Estrategia: PDF nativo (gratis, instantáneo) → fallback a Vision OCR (escaneados/imágenes).
+    let fullText = '';
+    let textSource: 'pdf' | 'vision' = 'vision';
+    if (pdf_base64) {
+      try {
+        fullText = await extractPdfText(pdf_base64);
+        textSource = 'pdf';
+      } catch {
+        fullText = '';
+      }
+      // Si pdf-parse devolvió poco texto (PDF escaneado), recurrir a Vision
+      if (fullText.length < 100) {
+        if (!apiKey) return errorResponse('Vision API not configured (PDF escaneado o sin texto)', 500);
+        fullText = await ocrPdf(apiKey, pdf_base64);
+        textSource = 'vision';
+      }
+    } else {
+      if (!apiKey) return errorResponse('Vision API not configured', 500);
+      fullText = await ocrImage(apiKey, image_base64);
+      textSource = 'vision';
+    }
 
     if (!fullText) {
       return NextResponse.json<ScanResponse>({
@@ -84,6 +112,7 @@ export async function POST(request: NextRequest) {
         lines: [],
         ocr_raw: '',
         detected_supplier_id: null,
+        text_source: textSource,
       });
     }
 
@@ -103,6 +132,14 @@ export async function POST(request: NextRequest) {
           ],
           active: true,
         },
+        select: { id: true },
+      });
+      resolvedSupplierId = supplier?.id ?? null;
+    }
+    // Fallback: match by default_invoice_format (útil cuando el PDF no imprime RUT del proveedor, p.ej. Global)
+    if (!resolvedSupplierId && parsed.format !== 'generic') {
+      const supplier = await db.suppliers.findFirst({
+        where: { default_invoice_format: parsed.format, active: true },
         select: { id: true },
       });
       resolvedSupplierId = supplier?.id ?? null;
@@ -137,6 +174,7 @@ export async function POST(request: NextRequest) {
       lines,
       ocr_raw: fullText,
       detected_supplier_id: resolvedSupplierId,
+      text_source: textSource,
     });
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : 'Internal error', 500);

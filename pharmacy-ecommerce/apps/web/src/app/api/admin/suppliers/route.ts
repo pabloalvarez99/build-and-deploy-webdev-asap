@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
         website: body.website?.trim() || null,
         notes: body.notes?.trim() || null,
         active: body.active !== false,
+        default_invoice_format: body.default_invoice_format || null,
       },
     });
 

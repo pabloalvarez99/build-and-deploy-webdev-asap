@@ -193,6 +193,7 @@ model suppliers {
   website                   String?                     @db.VarChar(255)
   notes                     String?
   active                    Boolean                     @default(true)
+  default_invoice_format    String?                     @db.VarChar(20)
   created_at                DateTime                    @default(now()) @db.Timestamptz(6)
   updated_at                DateTime                    @default(now()) @updatedAt @db.Timestamptz(6)
   purchase_orders           purchase_orders[]

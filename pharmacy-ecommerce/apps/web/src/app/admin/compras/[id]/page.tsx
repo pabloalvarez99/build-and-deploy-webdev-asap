@@ -187,14 +187,41 @@ export default function CompraDetailPage() {
           <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${st.cls}`}>
             {st.icon}{st.label}
           </span>
+          {order.invoice_format && (
+            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+              {order.invoice_format}
+            </span>
+          )}
         </div>
-        <button
-          onClick={() => window.print()}
-          className="ml-auto flex items-center gap-2 px-3 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-xl text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-        >
-          <Printer className="w-4 h-4" />
-          Imprimir
-        </button>
+        <div className="ml-auto flex gap-2">
+          {order.ocr_raw && (
+            <button
+              onClick={() => {
+                const blob = new Blob([
+                  JSON.stringify({ order, ocr_raw: order.ocr_raw }, null, 2),
+                ], { type: 'application/json' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `oc-${order.invoice_number || order.id}.json`
+                a.click()
+                URL.revokeObjectURL(url)
+              }}
+              className="flex items-center gap-2 px-3 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-xl text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              title="Exportar JSON con OCR raw"
+            >
+              <FileText className="w-4 h-4" />
+              JSON
+            </button>
+          )}
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-3 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-xl text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+          >
+            <Printer className="w-4 h-4" />
+            Imprimir
+          </button>
+        </div>
       </div>
 
       {/* Print-only header */}
@@ -239,6 +266,26 @@ export default function CompraDetailPage() {
                 <p className="font-semibold text-slate-900 dark:text-white">
                   {new Date(order.invoice_date).toLocaleDateString('es-CL')}
                 </p>
+              </div>
+            </div>
+          )}
+          {order.due_date && (
+            <div className="flex items-start gap-2">
+              <Calendar className="w-4 h-4 text-rose-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Vencimiento pago</p>
+                <p className="font-semibold text-rose-600 dark:text-rose-400">
+                  {new Date(order.due_date).toLocaleDateString('es-CL')}
+                </p>
+              </div>
+            </div>
+          )}
+          {order.po_reference && (
+            <div className="flex items-start gap-2">
+              <Hash className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">OC ref. proveedor</p>
+                <p className="font-semibold text-slate-900 dark:text-white">{order.po_reference}</p>
               </div>
             </div>
           )}
@@ -386,6 +433,13 @@ export default function CompraDetailPage() {
                     {item.supplier_product_code && (
                       <p className="text-xs text-slate-500 dark:text-slate-400">Código proveedor: {item.supplier_product_code}</p>
                     )}
+                    {(item.batch_code || item.expiry_date) && (
+                      <p className="text-xs text-blue-600 dark:text-blue-400">
+                        {item.batch_code && <>Lote <span className="font-mono">{item.batch_code}</span></>}
+                        {item.batch_code && item.expiry_date && ' · '}
+                        {item.expiry_date && <>Vto {new Date(item.expiry_date).toLocaleDateString('es-CL', { month: '2-digit', year: 'numeric' })}</>}
+                      </p>
+                    )}
                     {!item.product_id && (
                       <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full">Sin mapear</span>
                     )}
@@ -399,9 +453,21 @@ export default function CompraDetailPage() {
             </div>
           ))}
         </div>
-        <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center">
-          <span className="font-medium text-slate-700 dark:text-slate-300">Total</span>
-          <span className="text-xl font-bold text-slate-900 dark:text-white">{formatCLP(order.total_cost)}</span>
+        <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-700 space-y-1">
+          {order.subtotal_net && (
+            <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
+              <span>Neto</span><span>{formatCLP(order.subtotal_net)}</span>
+            </div>
+          )}
+          {order.tax_amount && (
+            <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
+              <span>IVA (19%)</span><span>{formatCLP(order.tax_amount)}</span>
+            </div>
+          )}
+          <div className="flex justify-between items-center pt-1">
+            <span className="font-medium text-slate-700 dark:text-slate-300">Total</span>
+            <span className="text-xl font-bold text-slate-900 dark:text-white">{formatCLP(order.total_cost)}</span>
+          </div>
         </div>
       </div>
 
