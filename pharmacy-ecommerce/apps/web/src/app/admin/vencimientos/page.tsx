@@ -126,7 +126,7 @@ export default function VencimientosPage() {
   }
 
   async function writeOff(batch: Batch) {
-    if (!confirm(`¿Dar de baja ${batch.quantity} unidades de ${batch.products.name}?`)) return;
+    if (!confirm(`¿Descartar ${batch.quantity} unidad(es) de ${batch.products.name} como merma?\n\nSe registrará movimiento de stock con razón "merma" y se eliminará el lote.`)) return;
     try {
       const res = await fetch('/api/admin/stock-movements/adjust', {
         method: 'POST',
@@ -134,11 +134,13 @@ export default function VencimientosPage() {
         body: JSON.stringify({
           product_id: batch.products.id,
           delta: -batch.quantity,
-          notes: `Vencimiento lote ${batch.batch_code || batch.id.slice(0, 8)} — ${batch.expiry_date.slice(0, 10)}`,
+          reason: 'merma',
+          notes: `Merma lote ${batch.batch_code || batch.id.slice(0, 8)} — vence ${batch.expiry_date.slice(0, 10)}`,
         }),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
-      await deleteBatch(batch.id);
+      await fetch(`/api/admin/batches/${batch.id}`, { method: 'DELETE' });
+      load();
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Error');
     }
@@ -313,8 +315,8 @@ export default function VencimientosPage() {
                             className="p-1.5 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 text-orange-600" >
                             <Tag className="w-4 h-4" />
                           </button>
-                          <button onClick={() => writeOff(b)} title="Dar de baja"
-                            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500">
+                          <button onClick={() => writeOff(b)} title="Descartar lote (merma)"
+                            className="p-1.5 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 text-amber-600">
                             <AlertTriangle className="w-4 h-4" />
                           </button>
                           <button onClick={() => deleteBatch(b.id)} title="Eliminar lote"

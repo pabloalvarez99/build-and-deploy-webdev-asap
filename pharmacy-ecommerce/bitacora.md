@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-05-13 — Trilogía alerts cerrada: stock-alerts push + merma lote
+
+**stock-alerts cron** (`vercel.json` `0 11 * * *` ya wireado) ahora cierra trilogía push: además del email Resend agrega `sendBroadcast` por producto out-of-stock / low-stock con `tag: stock-${id}` (dedupe), `url: /admin/stock`. Email pasa a ser opcional — si falta `alert_email` o `RESEND_API_KEY` la run sigue enviando push y retorna `email_skipped`. Misma plantilla que payment-alerts / expiry-alerts (1 push por entidad, tags estables).
+
+**Descartar lote (merma)** en `/admin/vencimientos`: endpoint `/api/admin/stock-movements/adjust` ahora acepta `reason` opcional con allowlist `['adjustment','merma','damage','transfer','count_correction']` (default `'adjustment'`). Frontend `writeOff()` pasa `reason: 'merma'`, confirm más explícito, botón pasa a amber. Crea `stock_movement` con razón trazable y elimina el lote — antes usaba `'adjustment'` genérico, ahora reportes pueden filtrar mermas.
+
+Build local OK.
+
+---
+
 ## 2026-05-13 — Margen mensual en tab Resumen compras
 
 **Nuevo endpoint** `GET /api/admin/purchase-orders/monthly-margin?months=N` (3/6/12, default 6, máx 24). Agrupa por mes:

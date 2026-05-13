@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { Resend } from 'resend'
+import { sendBroadcast } from '@/lib/push/broadcast'
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
@@ -18,11 +19,6 @@ export async function GET(request: NextRequest) {
 
   const threshold = thresholdRow?.value ? parseInt(thresholdRow.value, 10) : 10
   const alertEmail = alertEmailRow?.value
-
-  // No recipient configured → skip silently
-  if (!alertEmail) {
-    return NextResponse.json({ skipped: true, reason: 'no alert_email configured' })
-  }
 
   // Query out-of-stock products
   const outOfStock = await db.products.findMany({
@@ -53,8 +49,47 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ skipped: true, reason: 'no low-stock products' })
   }
 
-  if (!process.env.RESEND_API_KEY) {
-    return NextResponse.json({ error: 'RESEND_API_KEY not configured' }, { status: 500 })
+  // Push notifications: 1 por producto, tag stock-{id} (dedupe). Out-of-stock primero.
+  let pushSent = 0
+  let pushFailed = 0
+  for (const p of outOfStock) {
+    try {
+      const r = await sendBroadcast({
+        title: `⛔ Sin stock: ${p.name}`.slice(0, 120),
+        body: `${p.categories?.name ?? 'Sin categoría'} · agotado`.slice(0, 200),
+        url: '/admin/stock',
+        tag: `stock-${p.id}`,
+      })
+      pushSent += r.sent
+      pushFailed += r.failed
+    } catch { pushFailed++ }
+  }
+  for (const p of lowStock) {
+    try {
+      const r = await sendBroadcast({
+        title: `📉 Bajo stock: ${p.name}`.slice(0, 120),
+        body: `${p.categories?.name ?? 'Sin categoría'} · ${p.stock} uds (umbral ${threshold})`.slice(0, 200),
+        url: '/admin/stock',
+        tag: `stock-${p.id}`,
+      })
+      pushSent += r.sent
+      pushFailed += r.failed
+    } catch { pushFailed++ }
+  }
+
+  // Email opcional (solo si alert_email + RESEND_API_KEY configurados)
+  if (!alertEmail || !process.env.RESEND_API_KEY) {
+    const result = {
+      out_of_stock: outOfStock.length,
+      low_stock: lowStock.length,
+      threshold,
+      push_sent: pushSent,
+      push_failed: pushFailed,
+      email_skipped: !alertEmail ? 'no alert_email configured' : 'no RESEND_API_KEY',
+      ran_at: new Date().toISOString(),
+    }
+    console.log('Cron stock-alerts (push only):', result)
+    return NextResponse.json(result)
   }
 
   const date = new Date().toLocaleDateString('es-CL', {
@@ -140,6 +175,8 @@ export async function GET(request: NextRequest) {
     out_of_stock: outOfStock.length,
     low_stock: lowStock.length,
     threshold,
+    push_sent: pushSent,
+    push_failed: pushFailed,
     ran_at: new Date().toISOString(),
   }
 

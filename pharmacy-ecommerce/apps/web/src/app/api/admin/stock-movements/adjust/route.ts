@@ -9,10 +9,13 @@ export async function POST(request: NextRequest) {
     const admin = await getAdminUser();
     if (!admin) return errorResponse('Unauthorized', 403);
 
-    const { product_id, delta, notes } = await request.json();
+    const { product_id, delta, notes, reason: rawReason } = await request.json();
 
     if (!product_id) return errorResponse('product_id requerido', 400);
     if (typeof delta !== 'number' || delta === 0) return errorResponse('delta debe ser un número distinto de 0', 400);
+
+    const ALLOWED_REASONS = new Set(['adjustment', 'merma', 'damage', 'transfer', 'count_correction']);
+    const reason = typeof rawReason === 'string' && ALLOWED_REASONS.has(rawReason) ? rawReason : 'adjustment';
 
     const db = await getDb();
 
@@ -35,7 +38,7 @@ export async function POST(request: NextRequest) {
         data: {
           product_id,
           delta,
-          reason: 'adjustment',
+          reason,
           admin_id: `${admin.email || admin.uid}${notes ? ` — ${notes}` : ''}`,
         },
       });
