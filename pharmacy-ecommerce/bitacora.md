@@ -3182,3 +3182,9 @@ Build local OK. Push → Vercel.
 - **a11y (73b4179)**: `AccessibilityMenu` en navbar storefront. 3 tamaños (normal/grande/extra) + alto contraste. localStorage (`tf:a11y-fontsize`, `tf:a11y-highcontrast`). Inline script en `layout.tsx` aplica pre-paint → sin FOUC. CSS `html.a11y-large/xl` escala todo via rem; `html.a11y-contrast` endurece muted text + bordes + focus ring. Fix lateral: `MarginChart.tsx` formatter recharts type assertion.
 - **mobile bottom nav (68d62b5)**: `MobileBottomNav` 4 tabs (Inicio/Catálogo/Carrito/Cuenta), md:hidden, badge en carrito. Auto-oculta en /admin /carrito /checkout /auth y en home con items (sticky cart bar ya visible). `main pb-[68px] md:pb-0`.
 - **search synonyms (da7f24c)**: `lib/search-synonyms.expandQuery` expande término en ≤6 variantes (sinónimos comerciales chilenos: tapsin/kitadol/panadol↔paracetamol, advil↔ibuprofeno, etc), folding tildes (ascorbico↔ascórbico, losartan↔losartán), plural simple. `/api/search/suggest` + `/api/products` buscan OR sobre todas variantes. 9 tests vitest (26/26 total). Build verde.
+
+## 2026-05-13 — Dashboard owner KPIs extras
+
+- **dashboard 9 stats**: `/api/admin/dashboard-extras` (GET, getAdminUser) consulta `purchase_orders` (status=received + paid=false, total + due_date<today) y `product_batches` (expiry_date<=now+30d AND quantity>0, count + productos distintos). Endpoint usa `getAdminUser` para no bloquear admins no-owner (vs `/api/admin/ejecutivo` que es owner-only).
+- **frontend**: `admin/dashboard/page.tsx` interface `Stats` +5 campos. `loadStats` agrega `extrasPromise` paralelo. 2 StatCards nuevas: "Por pagar" (Wallet, amber, hint=$total, alert si overdue>0, link `/admin/compras?paid=unpaid`) y "Vencen 30d" (CalendarClock, red, hint=N productos, link `/admin/vencimientos?filter=soon30`). Grid `lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-9` (wrap progresivo); skeleton 9 cards.
+- Build local OK. Push → Vercel.

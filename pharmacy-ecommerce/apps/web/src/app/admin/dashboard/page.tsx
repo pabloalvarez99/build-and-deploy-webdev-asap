@@ -20,6 +20,8 @@ import {
  Store,
  CheckCircle,
  LayoutDashboard,
+ Wallet,
+ CalendarClock,
 } from 'lucide-react';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { StatCard } from '@/components/admin/ui/StatCard';
@@ -53,6 +55,11 @@ interface Stats {
  todayRevenue: number;
  todayOrders: number;
  yesterdayRevenue: number;
+ ocsToPayCount: number;
+ ocsToPayTotal: number;
+ ocsOverdueCount: number;
+ expiringBatchesCount: number;
+ expiringProductsCount: number;
 }
 
 interface LowStockProduct {
@@ -183,6 +190,8 @@ export default function AdminPage() {
  const toStr = new Date().toISOString().split('T')[0];
  const reportesPromise = fetch(`/api/admin/reportes?from=${fromStr}&to=${toStr}`)
   .then((r) => r.json()).catch(() => null);
+ const extrasPromise = fetch('/api/admin/dashboard-extras', { credentials: 'include' })
+  .then((r) => r.ok ? r.json() : null).catch(() => null);
 
  // Run all queries in parallel — count-only (limit:1) for accurate totals
  const [allProducts, activeProducts, categories, allOrders, pendingOrders, reservedOrders, outOfStockCount, lowStockCount, outOfStockDisplay] = await Promise.all([
@@ -213,6 +222,7 @@ export default function AdminPage() {
 
  // Await the reportes API (already running in parallel since promise was created earlier)
  const reportData = await reportesPromise;
+ const extras = await extrasPromise;
 
  // Revenue and top products from accurate server-side reports API (no 1000-order limit)
  const totalRevenue = reportData?.kpis?.totalRevenue ?? 0;
@@ -263,6 +273,11 @@ export default function AdminPage() {
  todayRevenue,
  todayOrders,
  yesterdayRevenue,
+ ocsToPayCount: extras?.ocs_to_pay?.count ?? 0,
+ ocsToPayTotal: extras?.ocs_to_pay?.total ?? 0,
+ ocsOverdueCount: extras?.ocs_overdue?.count ?? 0,
+ expiringBatchesCount: extras?.expiring_batches?.count ?? 0,
+ expiringProductsCount: extras?.expiring_batches?.products ?? 0,
  });
 
  // Calculate status distribution
@@ -340,8 +355,8 @@ export default function AdminPage() {
 
  {/* Statistics */}
  {isLoading ? (
- <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
- {[...Array(7)].map((_, i) => (
+ <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-9 gap-4">
+ {[...Array(9)].map((_, i) => (
  <div key={i} className="admin-surface p-5 animate-pulse">
  <div className="h-3 w-16 bg-[color:var(--admin-border-strong)] rounded mb-3" />
  <div className="h-7 w-20 bg-[color:var(--admin-border-strong)] rounded" />
@@ -349,7 +364,7 @@ export default function AdminPage() {
  ))}
  </div>
  ) : stats ? (
- <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
+ <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-9 gap-4">
    <StatCard label="Productos" value={stats.totalProducts.toLocaleString('es-CL')} icon={<Package className="w-4 h-4" />} accent="indigo" href="/admin/productos" />
    <StatCard label="Categorías" value={stats.totalCategories.toLocaleString('es-CL')} icon={<Tags className="w-4 h-4" />} accent="violet" href="/admin/categorias" />
    <StatCard label="Ventas hoy" value={stats.todayRevenue > 0 ? formatPrice(stats.todayRevenue) : '$0'} icon={<TrendingUp className="w-4 h-4" />} accent="emerald" href="/admin/reportes" hint={stats.todayOrders > 0 ? `${stats.todayOrders} orden(es)` : undefined} delta={todayDelta} />
@@ -357,6 +372,24 @@ export default function AdminPage() {
    <StatCard label="Por atender" value={stats.pendingOrders.toLocaleString('es-CL')} icon={<Clock className="w-4 h-4" />} accent="amber" href="/admin/ordenes" alert={stats.pendingOrders > 0} />
    <StatCard label="Stock bajo" value={stats.lowStockProducts.toLocaleString('es-CL')} icon={<AlertTriangle className="w-4 h-4" />} accent="amber" href="/admin/inventario" alert={stats.lowStockProducts > 0} />
    <StatCard label="Agotados" value={stats.outOfStockProducts.toLocaleString('es-CL')} icon={<XCircle className="w-4 h-4" />} accent="red" href="/admin/inventario" alert={stats.outOfStockProducts > 0} />
+   <StatCard
+     label="Por pagar"
+     value={stats.ocsToPayCount.toLocaleString('es-CL')}
+     icon={<Wallet className="w-4 h-4" />}
+     accent="amber"
+     href="/admin/compras?paid=unpaid"
+     hint={stats.ocsToPayTotal > 0 ? formatPrice(stats.ocsToPayTotal) : undefined}
+     alert={stats.ocsOverdueCount > 0}
+   />
+   <StatCard
+     label="Vencen 30d"
+     value={stats.expiringBatchesCount.toLocaleString('es-CL')}
+     icon={<CalendarClock className="w-4 h-4" />}
+     accent="red"
+     href="/admin/vencimientos?filter=soon30"
+     hint={stats.expiringProductsCount > 0 ? `${stats.expiringProductsCount} producto(s)` : undefined}
+     alert={stats.expiringBatchesCount > 0}
+   />
  </div>
  ) : null}
 
