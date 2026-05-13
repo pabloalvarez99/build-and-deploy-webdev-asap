@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { getDb } from '@/lib/db';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 
@@ -127,6 +128,9 @@ export async function POST(request: NextRequest) {
 
       return dev;
     });
+
+    const restocked = devolucion.items.some(i => i.restock && i.product_id);
+    if (restocked) revalidateTag('products');
 
     return NextResponse.json({
       ...devolucion,
