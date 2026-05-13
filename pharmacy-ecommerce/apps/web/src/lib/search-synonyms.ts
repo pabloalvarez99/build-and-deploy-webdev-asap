@@ -1,48 +1,102 @@
 // Sinónimos comunes y nombres comerciales chilenos.
 const RAW_SYNONYMS: Record<string, string[]> = {
-  paracetamol: ['acetaminofén', 'tapsin', 'kitadol', 'panadol'],
-  acetaminofen: ['paracetamol', 'tapsin', 'kitadol', 'panadol'],
+  // Analgésicos / antipiréticos
+  paracetamol: ['acetaminofén', 'tapsin', 'kitadol', 'panadol', 'tylenol'],
+  acetaminofen: ['paracetamol', 'tapsin', 'kitadol', 'panadol', 'tylenol'],
   tapsin: ['paracetamol', 'acetaminofén'],
   kitadol: ['paracetamol', 'acetaminofén'],
   panadol: ['paracetamol', 'acetaminofén'],
+  tylenol: ['paracetamol', 'acetaminofén'],
+  metamizol: ['dipirona', 'novalgina'],
+  dipirona: ['metamizol', 'novalgina'],
+  novalgina: ['metamizol', 'dipirona'],
+
+  // AINEs
   ibuprofeno: ['advil', 'motrin'],
   advil: ['ibuprofeno'],
   motrin: ['ibuprofeno'],
   ketoprofeno: ['profenid'],
   diclofenaco: ['cataflam', 'voltarén'],
+  voltaren: ['diclofenaco'],
+  naproxeno: ['flanax', 'naprosyn'],
+  flanax: ['naproxeno'],
   aspirina: ['ácido acetilsalicílico', 'aas'],
   aas: ['aspirina', 'ácido acetilsalicílico'],
+  'ácido acetilsalicílico': ['aspirina', 'aas'],
 
-  omeprazol: ['prilosec'],
+  // Gástricos
+  omeprazol: ['prilosec', 'losec'],
+  losec: ['omeprazol'],
+  esomeprazol: ['nexium'],
+  lansoprazol: ['prevacid'],
   ranitidina: ['zantac'],
   domperidona: ['motilium'],
+  motilium: ['domperidona'],
+  metoclopramida: ['reglan', 'primperan'],
+  primperan: ['metoclopramida'],
 
+  // Antialérgicos / antihistamínicos
   loratadina: ['claritin'],
+  claritin: ['loratadina'],
   cetirizina: ['zyrtec', 'alercet'],
   desloratadina: ['aerius'],
   clorfenamina: ['clorfenil'],
 
+  // Vitaminas
   'vitamina c': ['ácido ascórbico', 'redoxon'],
   'vitamina d': ['colecalciferol'],
   'vitamina b12': ['cianocobalamina'],
-  'ácido ascórbico': ['vitamina c'],
+  'ácido ascórbico': ['vitamina c', 'redoxon'],
+  redoxon: ['vitamina c', 'ácido ascórbico'],
   colecalciferol: ['vitamina d'],
 
+  // Anticonceptivos
   anticonceptivo: ['anticonceptiva', 'pastilla del día después'],
   'pastilla del día después': ['levonorgestrel', 'postinor'],
 
+  // Respiratorios / tos
   ambroxol: ['mucosolvan'],
+  mucosolvan: ['ambroxol'],
   bromhexina: ['bisolvon'],
+  salbutamol: ['ventolin', 'aerolin'],
+  ventolin: ['salbutamol'],
+  'vick vaporub': ['mentol', 'alcanfor'],
 
+  // Antibióticos
   amoxicilina: ['amoxidal'],
   azitromicina: ['zitromax'],
+  ciprofloxacino: ['cipro'],
+  cipro: ['ciprofloxacino'],
 
+  // Endocrino / diabetes
   metformina: ['glucophage'],
+  glibenclamida: ['daonil'],
+  levotiroxina: ['eutirox', 'synthroid'],
+  eutirox: ['levotiroxina'],
 
-  losartán: ['losartan'],
-  losartan: ['losartán'],
+  // Cardiovasculares
+  losartán: ['losartan', 'cozaar'],
+  losartan: ['losartán', 'cozaar'],
   enalapril: ['renitec'],
+  atenolol: ['tenormin'],
+  propranolol: ['inderal'],
+  amlodipino: ['norvasc'],
   atorvastatina: ['lipitor'],
+  simvastatina: ['zocor'],
+  furosemida: ['lasix'],
+  hidroclorotiazida: ['diural'],
+
+  // Corticoides
+  prednisona: ['meticorten'],
+
+  // Ansiolíticos / benzodiazepinas
+  lorazepam: ['ativan'],
+  ativan: ['lorazepam'],
+  clonazepam: ['ravotril', 'klonopin'],
+  ravotril: ['clonazepam'],
+  bromazepam: ['transilium', 'lexotanil'],
+  transilium: ['bromazepam'],
+  alprazolam: ['xanax'],
 };
 
 const COMBINING = /[̀-ͯ]/g;

@@ -49,4 +49,52 @@ describe('expandQuery', () => {
     const v = expandQuery('xyzunknown')
     expect(v).toEqual(['xyzunknown'])
   })
+
+  it('expands tylenol → paracetamol', () => {
+    const v = expandQuery('tylenol')
+    expect(v).toContain('paracetamol')
+  })
+
+  it('expands dipirona ↔ metamizol ↔ novalgina', () => {
+    const v = expandQuery('dipirona')
+    expect(v).toContain('metamizol')
+    expect(v).toContain('novalgina')
+  })
+
+  it('expands ravotril → clonazepam', () => {
+    const v = expandQuery('ravotril')
+    expect(v).toContain('clonazepam')
+  })
+
+  it('expands ativan ↔ lorazepam', () => {
+    const v = expandQuery('ativan')
+    expect(v).toContain('lorazepam')
+    const v2 = expandQuery('lorazepam')
+    expect(v2).toContain('ativan')
+  })
+
+  it('expands transilium → bromazepam', () => {
+    const v = expandQuery('transilium')
+    expect(v).toContain('bromazepam')
+  })
+
+  it('expands ventolin → salbutamol', () => {
+    const v = expandQuery('ventolin')
+    expect(v).toContain('salbutamol')
+  })
+
+  it('expands cipro → ciprofloxacino', () => {
+    const v = expandQuery('cipro')
+    expect(v).toContain('ciprofloxacino')
+  })
+
+  it('expands eutirox → levotiroxina', () => {
+    const v = expandQuery('eutirox')
+    expect(v).toContain('levotiroxina')
+  })
+
+  it('expands losec → omeprazol', () => {
+    const v = expandQuery('losec')
+    expect(v).toContain('omeprazol')
+  })
 })
