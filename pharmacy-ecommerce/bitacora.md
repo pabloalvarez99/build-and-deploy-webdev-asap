@@ -3099,3 +3099,12 @@ Archivos: `pharmacy-ecommerce/apps/web/src/lib/invoice-parser/**`, `prisma/schem
 - `vercel.json`: +2 crons, ambos schedule `0 12 * * *` (12 UTC = 09 Chile invierno).
 - Gotchas TS: Prisma 7 no acepta `{ lte: x, not: null }` en campos DateTime nullable (devuelve null types). Eliminar `not: null` — el `lte` ya excluye NULL implícitamente. Map iteration requiere `Array.from(map.values())` con target pre-ES2015.
 - 17/17 tests pass · build local OK.
+
+## 2026-05-13 (cont.2) — Tab "Resumen" en /admin/compras con BarChart mensual
+
+- `GET /api/admin/purchase-orders/monthly-summary?months=N` (N=1..24): buckets por mes (`YYYY-MM`), agrupado por proveedor. Solo `status='received'`. Devuelve `{ data: [{ month, label, total, [supplierName]: n }], suppliers: [{id,name}] }`.
+- Componente `MonthlySummaryChart.tsx` (recharts): `BarChart` stacked por proveedor, ResponsiveContainer h-72. Selector `3/6/12 meses`. Tooltip formato CLP completo, YAxis k/M abreviado. Card secundaria con total período + breakdown por proveedor (%, monto, color dot).
+- `/admin/compras/page.tsx`: tabs "Listado" / "Resumen". `activeTab` state default `'listado'`. En `resumen` se oculta banner reorden + filtros + tabla + paginación.
+- Gotcha recharts 3.x: `Tooltip formatter` recibe `ValueType | undefined` → tipar como `(v) => …` + cast `Number(v)`.
+- Colors palette 8 valores (emerald/blue/amber/pink/violet/cyan/red/lime).
+- 17/17 tests · build OK.

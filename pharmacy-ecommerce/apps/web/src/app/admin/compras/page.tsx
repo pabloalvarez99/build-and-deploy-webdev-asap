@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
 import { isOwnerRole } from '@/lib/roles'
 import { purchaseOrderApi, supplierApi, type PurchaseOrder, type Supplier } from '@/lib/api'
-import { ClipboardList, Plus, Eye, Filter, CheckCircle2, Clock, XCircle, AlertTriangle, ChevronDown, ChevronRight, ShoppingCart } from 'lucide-react'
+import { ClipboardList, Plus, Eye, Filter, CheckCircle2, Clock, XCircle, AlertTriangle, ChevronDown, ChevronRight, ShoppingCart, TrendingUp } from 'lucide-react'
+import { MonthlySummaryChart } from '@/components/admin/MonthlySummaryChart'
 
 interface ReorderItem {
   product_id: string
@@ -55,6 +56,7 @@ export default function ComprasPage() {
   const [suggestions, setSuggestions] = useState<ReorderSuggestions | null>(null)
   const [showSuggestions, setShowSuggestions] = useState(true)
   const [expandedSupplier, setExpandedSupplier] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'listado' | 'resumen'>('listado')
 
   const load = useCallback(async () => {
     setIsLoading(true)
@@ -109,8 +111,36 @@ export default function ComprasPage() {
         </button>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-slate-200 dark:border-slate-700">
+        <button
+          onClick={() => setActiveTab('listado')}
+          className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'listado'
+              ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
+              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+          }`}
+        >
+          <ClipboardList className="w-4 h-4" />
+          Listado
+        </button>
+        <button
+          onClick={() => setActiveTab('resumen')}
+          className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'resumen'
+              ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
+              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+          }`}
+        >
+          <TrendingUp className="w-4 h-4" />
+          Resumen
+        </button>
+      </div>
+
+      {activeTab === 'resumen' && <MonthlySummaryChart />}
+
       {/* Reorder Suggestions Banner */}
-      {suggestions && suggestions.total_products > 0 && (
+      {activeTab === 'listado' && suggestions && suggestions.total_products > 0 && (
         <div className="rounded-2xl border-2 border-orange-200 dark:border-orange-800/50 bg-orange-50 dark:bg-orange-900/10 overflow-hidden">
           <button
             onClick={() => setShowSuggestions((v) => !v)}
@@ -199,6 +229,8 @@ export default function ComprasPage() {
         </div>
       )}
 
+      {activeTab === 'listado' && (
+      <>
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
         <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
@@ -341,6 +373,8 @@ export default function ComprasPage() {
             Siguiente
           </button>
         </div>
+      )}
+      </>
       )}
     </div>
   )
