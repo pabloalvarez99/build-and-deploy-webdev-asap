@@ -24,6 +24,10 @@
     {
       "path": "/api/cron/expiry-alerts",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/weekly-purchases-summary",
+      "schedule": "0 11 * * 1"
     }
   ]
 }

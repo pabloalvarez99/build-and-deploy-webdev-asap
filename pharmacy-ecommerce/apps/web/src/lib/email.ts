@@ -584,3 +584,101 @@ export async function sendLowStockAlert(
     ].join('\n'),
   });
 }
+
+export interface WeeklyPurchasesData {
+  to: string;
+  weekStart: Date;
+  weekEnd: Date;
+  receivedOrders: Array<{
+    invoice_number: string | null;
+    supplier_name: string;
+    invoice_date: Date | null;
+    total: number;
+  }>;
+  totalReceived: number;
+  expiringBatches: Array<{
+    product_name: string;
+    batch_code: string | null;
+    expiry_date: Date;
+    quantity: number;
+  }>;
+  pendingFaltas: number;
+}
+
+export async function sendWeeklyPurchasesSummary(data: WeeklyPurchasesData) {
+  if (!process.env.RESEND_API_KEY) return;
+
+  const fmtDate = (d: Date) => d.toLocaleDateString('es-CL');
+  const weekLbl = `${fmtDate(data.weekStart)} – ${fmtDate(data.weekEnd)}`;
+
+  const ordersRows = data.receivedOrders.length === 0
+    ? `<tr><td colspan="3" style="padding:12px;color:#94a3b8;text-align:center;font-style:italic;">Sin OCs recibidas esta semana</td></tr>`
+    : data.receivedOrders.map((o) => `
+      <tr>
+        <td style="padding:8px 12px;font-size:13px;color:#0f172a;border-top:1px solid #e2e8f0;">${o.supplier_name}</td>
+        <td style="padding:8px 12px;font-size:13px;color:#64748b;border-top:1px solid #e2e8f0;">${o.invoice_number ?? '—'}</td>
+        <td style="padding:8px 12px;font-size:13px;color:#0f172a;text-align:right;font-weight:600;border-top:1px solid #e2e8f0;">${formatCLP(o.total)}</td>
+      </tr>`).join('');
+
+  const expiringRows = data.expiringBatches.length === 0
+    ? `<tr><td colspan="3" style="padding:12px;color:#94a3b8;text-align:center;font-style:italic;">Sin lotes próximos a vencer</td></tr>`
+    : data.expiringBatches.slice(0, 20).map((b) => `
+      <tr>
+        <td style="padding:8px 12px;font-size:13px;color:#0f172a;border-top:1px solid #e2e8f0;">${b.product_name}</td>
+        <td style="padding:8px 12px;font-size:12px;color:#64748b;border-top:1px solid #e2e8f0;font-family:monospace;">${b.batch_code ?? '—'} · vence ${fmtDate(b.expiry_date)}</td>
+        <td style="padding:8px 12px;font-size:13px;color:#0f172a;text-align:right;font-weight:600;border-top:1px solid #e2e8f0;">${b.quantity} uds</td>
+      </tr>`).join('');
+
+  const truncatedNote = data.expiringBatches.length > 20
+    ? `<p style="margin:8px 0 0;font-size:12px;color:#94a3b8;text-align:right;">+${data.expiringBatches.length - 20} más en /admin/vencimientos</p>`
+    : '';
+
+  const html = emailWrapper(`
+    <h1 style="margin:0 0 8px;font-size:22px;color:#0f172a;">Resumen semanal de compras</h1>
+    <p style="margin:0 0 24px;color:#64748b;font-size:14px;">${weekLbl}</p>
+
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:16px;margin-bottom:24px;">
+      <p style="margin:0 0 4px;color:#065f46;font-size:13px;font-weight:600;">Recibido esta semana</p>
+      <p style="margin:0;font-size:28px;font-weight:800;color:#059669;">${formatCLP(data.totalReceived)}</p>
+      <p style="margin:4px 0 0;color:#10b981;font-size:12px;">${data.receivedOrders.length} OC${data.receivedOrders.length !== 1 ? 's' : ''}</p>
+    </div>
+
+    <h2 style="margin:0 0 12px;font-size:16px;color:#0f172a;">OCs recibidas</h2>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:12px;margin-bottom:24px;overflow:hidden;">
+      <thead><tr style="background:#f8fafc;">
+        <th style="padding:10px 12px;text-align:left;font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;">Proveedor</th>
+        <th style="padding:10px 12px;text-align:left;font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;">Factura</th>
+        <th style="padding:10px 12px;text-align:right;font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;">Total</th>
+      </tr></thead>
+      <tbody>${ordersRows}</tbody>
+    </table>
+
+    <h2 style="margin:0 0 12px;font-size:16px;color:#0f172a;">Lotes vencen en ≤60 días</h2>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:12px;margin-bottom:8px;overflow:hidden;">
+      <thead><tr style="background:#fef3c7;">
+        <th style="padding:10px 12px;text-align:left;font-size:11px;color:#92400e;font-weight:600;text-transform:uppercase;">Producto</th>
+        <th style="padding:10px 12px;text-align:left;font-size:11px;color:#92400e;font-weight:600;text-transform:uppercase;">Lote</th>
+        <th style="padding:10px 12px;text-align:right;font-size:11px;color:#92400e;font-weight:600;text-transform:uppercase;">Stock</th>
+      </tr></thead>
+      <tbody>${expiringRows}</tbody>
+    </table>
+    ${truncatedNote}
+
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;margin-top:24px;">
+      <p style="margin:0;color:#991b1b;font-size:14px;">
+        <strong>Faltas pendientes:</strong> ${data.pendingFaltas} producto${data.pendingFaltas !== 1 ? 's' : ''} solicitado${data.pendingFaltas !== 1 ? 's' : ''} sin reponer.
+      </p>
+    </div>
+
+    <p style="margin:24px 0 0;text-align:center;">
+      <a href="${BASE}/admin/compras" style="display:inline-block;padding:12px 24px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;">Ver panel completo →</a>
+    </p>
+  `);
+
+  await getResend().emails.send({
+    from: FROM,
+    to: data.to,
+    subject: `Resumen semanal Tu Farmacia · ${formatCLP(data.totalReceived)} en compras`,
+    html,
+  });
+}

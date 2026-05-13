@@ -3108,3 +3108,12 @@ Archivos: `pharmacy-ecommerce/apps/web/src/lib/invoice-parser/**`, `prisma/schem
 - Gotcha recharts 3.x: `Tooltip formatter` recibe `ValueType | undefined` → tipar como `(v) => …` + cast `Number(v)`.
 - Colors palette 8 valores (emerald/blue/amber/pink/violet/cyan/red/lime).
 - 17/17 tests · build OK.
+
+## 2026-05-13 (cont.3) — Email semanal compras (Resend, lunes 8am Chile)
+
+- `/api/cron/weekly-purchases-summary` (GET, Bearer CRON_SECRET): query lunes anterior 00:00 → domingo 23:59 UTC. Resend a `admin_settings.alert_email`.
+- Body: OCs received en ventana (`updated_at` = momento recepción) + total recibido + lotes vencen ≤60 días (top 20 + nota truncado) + count faltas pending.
+- `sendWeeklyPurchasesSummary()` en `src/lib/email.ts`: HTML con header verde, tabla OCs, tabla lotes (amarillo), banner faltas (rojo), CTA `/admin/compras`.
+- `vercel.json`: cron `0 11 * * 1` (11 UTC lun = 08 Chile invierno).
+- Si no hay `alert_email` configurado → response `{skipped:true}` sin error.
+- 17/17 tests · build OK.
