@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { unstable_cache } from 'next/cache'
 import { getDb } from '@/lib/db'
 import type { MatchField } from '@/lib/api'
+import { expandQuery } from '@/lib/search-synonyms'
 
 function sanitizeImageUrl(url: string | null): string | null {
   if (!url) return null
@@ -12,14 +13,19 @@ function getMatchField(
   p: { name: string | null; active_ingredient: string | null; therapeutic_action: string | null; laboratory: string | null },
   q: string
 ): { match_field: MatchField; match_value: string | null } {
-  const lq = q.toLowerCase()
-  if (p.name?.toLowerCase().includes(lq)) return { match_field: null, match_value: null }
-  if (p.active_ingredient?.toLowerCase().includes(lq))
-    return { match_field: 'active_ingredient', match_value: p.active_ingredient }
-  if (p.therapeutic_action?.toLowerCase().includes(lq))
-    return { match_field: 'therapeutic_action', match_value: p.therapeutic_action }
-  if (p.laboratory?.toLowerCase().includes(lq))
-    return { match_field: 'laboratory', match_value: p.laboratory }
+  const variants = expandQuery(q)
+  const name = p.name?.toLowerCase() ?? ''
+  for (const v of variants) {
+    if (name.includes(v)) return { match_field: null, match_value: null }
+  }
+  for (const v of variants) {
+    if (p.active_ingredient?.toLowerCase().includes(v))
+      return { match_field: 'active_ingredient', match_value: p.active_ingredient }
+    if (p.therapeutic_action?.toLowerCase().includes(v))
+      return { match_field: 'therapeutic_action', match_value: p.therapeutic_action }
+    if (p.laboratory?.toLowerCase().includes(v))
+      return { match_field: 'laboratory', match_value: p.laboratory }
+  }
   return { match_field: null, match_value: null }
 }
 
@@ -154,13 +160,14 @@ export async function GET(request: NextRequest) {
     if (activeOnly) where.active = true
 
     if (searchQ) {
-      where.OR = [
-        { name: { contains: searchQ, mode: 'insensitive' } },
-        { description: { contains: searchQ, mode: 'insensitive' } },
-        { laboratory: { contains: searchQ, mode: 'insensitive' } },
-        { active_ingredient: { contains: searchQ, mode: 'insensitive' } },
-        { therapeutic_action: { contains: searchQ, mode: 'insensitive' } },
-      ]
+      const variants = expandQuery(searchQ)
+      where.OR = variants.flatMap((v) => [
+        { name: { contains: v, mode: 'insensitive' } },
+        { description: { contains: v, mode: 'insensitive' } },
+        { laboratory: { contains: v, mode: 'insensitive' } },
+        { active_ingredient: { contains: v, mode: 'insensitive' } },
+        { therapeutic_action: { contains: v, mode: 'insensitive' } },
+      ])
     }
 
     if (barcodeVal) {

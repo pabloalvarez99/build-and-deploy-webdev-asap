@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
+import { expandQuery } from '@/lib/search-synonyms'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,12 +13,21 @@ type MatchField = 'name' | 'active_ingredient' | 'laboratory' | 'therapeutic_act
 
 function pickMatch(
   p: { name: string | null; active_ingredient: string | null; laboratory: string | null; therapeutic_action: string | null },
-  lq: string,
+  variants: string[],
 ): { match_field: MatchField; match_value: string | null } {
-  if (p.name?.toLowerCase().includes(lq)) return { match_field: 'name', match_value: p.name }
-  if (p.active_ingredient?.toLowerCase().includes(lq)) return { match_field: 'active_ingredient', match_value: p.active_ingredient }
-  if (p.laboratory?.toLowerCase().includes(lq)) return { match_field: 'laboratory', match_value: p.laboratory }
-  if (p.therapeutic_action?.toLowerCase().includes(lq)) return { match_field: 'therapeutic_action', match_value: p.therapeutic_action }
+  const fields: Array<[MatchField, string | null]> = [
+    ['name', p.name],
+    ['active_ingredient', p.active_ingredient],
+    ['laboratory', p.laboratory],
+    ['therapeutic_action', p.therapeutic_action],
+  ]
+  for (const [field, value] of fields) {
+    if (!value) continue
+    const lower = value.toLowerCase()
+    for (const v of variants) {
+      if (lower.includes(v)) return { match_field: field, match_value: value }
+    }
+  }
   return { match_field: null, match_value: null }
 }
 
@@ -35,17 +45,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ q, products: [], categories: [], error: 'DB' }, { status: 500 })
   }
 
+  const variants = expandQuery(q)
+  const orConds = variants.flatMap((v) => [
+    { name: { contains: v, mode: 'insensitive' as const } },
+    { active_ingredient: { contains: v, mode: 'insensitive' as const } },
+    { laboratory: { contains: v, mode: 'insensitive' as const } },
+    { therapeutic_action: { contains: v, mode: 'insensitive' as const } },
+  ])
+
   try {
     const [products, categories] = await Promise.all([
       db.products.findMany({
         where: {
           active: true,
-          OR: [
-            { name: { contains: q, mode: 'insensitive' } },
-            { active_ingredient: { contains: q, mode: 'insensitive' } },
-            { laboratory: { contains: q, mode: 'insensitive' } },
-            { therapeutic_action: { contains: q, mode: 'insensitive' } },
-          ],
+          OR: orConds,
         },
         select: {
           id: true, name: true, slug: true, image_url: true,
@@ -57,17 +70,20 @@ export async function GET(request: NextRequest) {
         take: 8,
       }),
       db.categories.findMany({
-        where: { active: true, name: { contains: q, mode: 'insensitive' } },
+        where: {
+          active: true,
+          OR: variants.map((v) => ({ name: { contains: v, mode: 'insensitive' as const } })),
+        },
         select: { name: true, slug: true },
         take: 3,
       }),
     ])
 
-    const lq = q.toLowerCase()
     return NextResponse.json({
       q,
+      variants,
       products: products.map((p) => {
-        const { match_field, match_value } = pickMatch(p, lq)
+        const { match_field, match_value } = pickMatch(p, variants)
         return {
           id: p.id,
           name: p.name,
