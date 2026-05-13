@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useDeferredValue, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Search, X, Loader2, Clock, Tag, ArrowRight } from 'lucide-react';
@@ -79,6 +79,7 @@ interface Props {
 export function SearchBar({ variant = 'desktop', onClose, autoFocus = false }: Props) {
   const router = useRouter();
   const [q, setQ] = useState('');
+  const deferredQ = useDeferredValue(q);
   const [open, setOpen] = useState(false);
   const [products, setProducts] = useState<Suggestion[]>([]);
   const [categories, setCategories] = useState<CategorySuggestion[]>([]);
@@ -97,23 +98,23 @@ export function SearchBar({ variant = 'desktop', onClose, autoFocus = false }: P
     if (autoFocus) inputRef.current?.focus();
   }, [autoFocus]);
 
-  // Debounced fetch
+  // Debounced fetch — uses deferredQ so typing stays responsive.
   useEffect(() => {
-    const term = q.trim();
+    const term = deferredQ.trim();
     if (term.length < 2) {
-      setProducts([]);
-      setCategories([]);
-      setError(null);
-      setLoading(false);
       abortRef.current?.abort();
+      setProducts((p) => (p.length ? [] : p));
+      setCategories((c) => (c.length ? [] : c));
+      setError((e) => (e ? null : e));
+      setLoading((l) => (l ? false : l));
       return;
     }
-    setLoading(true);
-    setError(null);
     const t = setTimeout(async () => {
       abortRef.current?.abort();
       const ac = new AbortController();
       abortRef.current = ac;
+      setLoading(true);
+      setError(null);
       try {
         const res = await fetch(`/api/search/suggest?q=${encodeURIComponent(term)}`, { signal: ac.signal });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -129,9 +130,9 @@ export function SearchBar({ variant = 'desktop', onClose, autoFocus = false }: P
       } finally {
         setLoading(false);
       }
-    }, 200);
+    }, 220);
     return () => clearTimeout(t);
-  }, [q]);
+  }, [deferredQ]);
 
   // Click-outside (desktop only)
   useEffect(() => {
@@ -145,24 +146,6 @@ export function SearchBar({ variant = 'desktop', onClose, autoFocus = false }: P
     return () => document.removeEventListener('mousedown', handler);
   }, [variant]);
 
-  const items: Array<{ kind: 'product' | 'category' | 'recent'; key: string; navigate: () => void }> = [];
-  const term = q.trim();
-  if (term.length >= 2) {
-    categories.forEach((c) => items.push({
-      kind: 'category', key: `c-${c.slug}`,
-      navigate: () => go(`/?category=${c.slug}`, c.name),
-    }));
-    products.forEach((p) => items.push({
-      kind: 'product', key: `p-${p.id}`,
-      navigate: () => go(`/producto/${p.slug}`, p.name),
-    }));
-  } else {
-    recent.forEach((r) => items.push({
-      kind: 'recent', key: `r-${r}`,
-      navigate: () => { setQ(r); inputRef.current?.focus(); },
-    }));
-  }
-
   const go = useCallback((path: string, term: string) => {
     saveRecent(term);
     setRecent(loadRecent());
@@ -170,6 +153,29 @@ export function SearchBar({ variant = 'desktop', onClose, autoFocus = false }: P
     onClose?.();
     router.push(path);
   }, [router, onClose]);
+
+  const term = deferredQ.trim();
+  const { items, indexByKey } = useMemo(() => {
+    const arr: Array<{ kind: 'product' | 'category' | 'recent'; key: string; navigate: () => void }> = [];
+    if (term.length >= 2) {
+      categories.forEach((c) => arr.push({
+        kind: 'category', key: `c-${c.slug}`,
+        navigate: () => go(`/?category=${c.slug}`, c.name),
+      }));
+      products.forEach((p) => arr.push({
+        kind: 'product', key: `p-${p.id}`,
+        navigate: () => go(`/producto/${p.slug}`, p.name),
+      }));
+    } else {
+      recent.forEach((r) => arr.push({
+        kind: 'recent', key: `r-${r}`,
+        navigate: () => { setQ(r); inputRef.current?.focus(); },
+      }));
+    }
+    const map = new Map<string, number>();
+    arr.forEach((it, i) => map.set(it.key, i));
+    return { items: arr, indexByKey: map };
+  }, [term, categories, products, recent, go]);
 
   const submitSearch = useCallback(() => {
     const t = q.trim();
@@ -272,7 +278,7 @@ export function SearchBar({ variant = 'desktop', onClose, autoFocus = false }: P
                 >Limpiar</button>
               </div>
               {recent.map((r, i) => {
-                const itemIdx = items.findIndex((it) => it.key === `r-${r}`);
+                const itemIdx = indexByKey.get(`r-${r}`) ?? -1;
                 const active = itemIdx === activeIdx;
                 return (
                   <button
@@ -301,7 +307,7 @@ export function SearchBar({ variant = 'desktop', onClose, autoFocus = false }: P
             <div>
               <div className="px-4 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Categorías</div>
               {categories.map((c) => {
-                const itemIdx = items.findIndex((it) => it.key === `c-${c.slug}`);
+                const itemIdx = indexByKey.get(`c-${c.slug}`) ?? -1;
                 const active = itemIdx === activeIdx;
                 return (
                   <button
@@ -324,7 +330,7 @@ export function SearchBar({ variant = 'desktop', onClose, autoFocus = false }: P
             <div>
               <div className="px-4 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Productos</div>
               {products.map((p) => {
-                const itemIdx = items.findIndex((it) => it.key === `p-${p.id}`);
+                const itemIdx = indexByKey.get(`p-${p.id}`) ?? -1;
                 const active = itemIdx === activeIdx;
                 const dp = p.discount_percent
                   ? discountedPrice(Number(p.price), p.discount_percent)
