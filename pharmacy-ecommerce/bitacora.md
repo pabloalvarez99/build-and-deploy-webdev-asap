@@ -3090,3 +3090,12 @@ Archivos: `pharmacy-ecommerce/apps/web/src/lib/invoice-parser/**`, `prisma/schem
 - Regla viva post-PROPOLEO: fuzzy NUNCA aplica sin confirmación humana → modal con radio + botón explícito "Aplicar".
 - Regex `\p{L}` (Unicode property) no compila en target TS pre-ES6 → fallback ASCII + diacríticos ES (`[A-Za-zÁÉÍÓÚÑÜáéíóúñü0-9\s]`).
 - Tests: 17/17 pass. Build local OK.
+
+## 2026-05-13 (cont.) — Cron alerts pagos + vencimientos
+
+- `/api/cron/payment-alerts` (GET, CRON_SECRET): query `purchase_orders WHERE status='received' AND paid=false AND due_date <= today+2`. Push por OC (no agrupado, operador ve cada factura). Tag `payment-{id}`. Title diferenciado: "⏰ Pago próximo" vs "⚠️ Pago vencido" (si due_date < hoy). URL `/admin/compras/{id}`.
+- `/api/cron/expiry-alerts` (GET, CRON_SECRET): query `product_batches WHERE quantity>0 AND expiry_date <= today+30`. Agrupa por producto (suma quantity, cuenta lotes, marca vencidos). Title "⏰ Vencen pronto" o "⚠️ Vencidos". Body: "${nombre} · N unid. en M lotes · vence DD/MM/YYYY". Tag `expiry-{product_id}`. URL `/admin/vencimientos`.
+- Ambos usan `sendBroadcast()` (web-push existente) — push a todas las subs registradas en `push_subscriptions`. Auto-cleanup stale endpoints (410/404).
+- `vercel.json`: +2 crons, ambos schedule `0 12 * * *` (12 UTC = 09 Chile invierno).
+- Gotchas TS: Prisma 7 no acepta `{ lte: x, not: null }` en campos DateTime nullable (devuelve null types). Eliminar `not: null` — el `lte` ya excluye NULL implícitamente. Map iteration requiere `Array.from(map.values())` con target pre-ES2015.
+- 17/17 tests pass · build local OK.
