@@ -3067,3 +3067,17 @@ Archivos: `pharmacy-ecommerce/apps/web/src/lib/invoice-parser/**`, `prisma/schem
 - Migración `20260512_revert_propoleo_mismatch.sql`: stock-=9 producto incorrecto, DELETE stock_movement, DELETE supplier_product_mapping, item.product_id=NULL.
 - Hardening: scripts/remap-unmapped-items.ts ahora requiere `inter≥2 OR score≥0.60`. Previene regresiones single-token.
 - Item PROPOLEO ahora pendiente para mapeo manual del operador.
+
+## 2026-05-12 (cont.3) — Resolver 5 items unmapped (3 productos nuevos + 1 map existente)
+
+- 5 `purchase_order_items` quedaban con `product_id=NULL` en OCs Global recibidas (`0000740850`, `0000750277`) tras revert PROPOLEO. Stock real con agujero.
+- Script `scripts/resolve-unmapped.mjs` (transaccional, dry-run + `--execute`): mapea/crea + stock + movement + supplier_product_mapping en BEGIN/COMMIT atómico.
+- Resoluciones:
+  · BURTEN-SL 30 MG 2 COMP SUBLINGUALES (KETOROLACO) (sup_code 100000516, qty 5) → mapeado a `BURTEN SL 30MG.2COM.` (`198f4362…`) existente. Stock 1 → 6.
+  · PROPOLEO+VITC SP.AD.30 ML (sup_code 9990256, qty 9) → producto NUEVO. Categoría `productos-naturales`. cost 1370, price 1790. Stock 9.
+  · TRIOVAL DIA-NOCHE 20 COMP.REC. (sup_code 6256, qty 12+6=18 en ambas OCs) → producto NUEVO. Categoría `dolor-fiebre`. cost 3420, price 4450. Stock 18.
+  · ALL-OUT PREVENCION PIOJOS SPRAY 120 ML (sup_code 27701044, qty 3) → producto NUEVO. Categoría `higiene-cuidado-personal`. cost 3405, price 4430. Stock 3.
+- 4 `supplier_product_mappings` upsert para Global → futuras facturas auto-match por código.
+- 5 `stock_movements` (`reason='reposicion'`, `admin_id='system-unmapped-resolve'`).
+- `purchase_order_items.product_id IS NULL AND status='received'`: 5 → **0**. Stock real consistente.
+- Decisiones price: margen ~30% sobre cost para que productos sean vendibles inmediatamente; owner ajusta en `/admin/productos` si lo desea.
