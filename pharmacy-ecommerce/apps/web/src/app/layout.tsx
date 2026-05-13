@@ -4,6 +4,7 @@ import './globals.css';
 import { Navbar } from '@/components/Navbar';
 import { WhatsAppButton } from '@/components/WhatsAppButton';
 import { DeferredClientBundle } from '@/components/DeferredClientBundle';
+import MobileBottomNav from '@/components/MobileBottomNav';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
@@ -140,7 +141,8 @@ export default function RootLayout({
           Ir al contenido principal
         </a>
         <Navbar />
-        <main id="main-content" className="min-h-screen">{children}</main>
+        <main id="main-content" className="min-h-screen pb-[68px] md:pb-0">{children}</main>
+        <MobileBottomNav />
         <WhatsAppButton />
         <DeferredClientBundle />
         <footer className="bg-slate-50 dark:bg-slate-800 border-t-2 border-slate-100 dark:border-slate-700 py-10 mt-8" role="contentinfo">
