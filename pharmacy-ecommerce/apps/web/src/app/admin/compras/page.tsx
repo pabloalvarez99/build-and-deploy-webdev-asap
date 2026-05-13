@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
 import { isOwnerRole } from '@/lib/roles'
 import { purchaseOrderApi, supplierApi, type PurchaseOrder, type Supplier } from '@/lib/api'
-import { ClipboardList, Plus, Eye, Filter, CheckCircle2, Clock, XCircle, AlertTriangle, ChevronDown, ChevronRight, ShoppingCart, TrendingUp } from 'lucide-react'
+import { ClipboardList, Plus, Eye, Filter, CheckCircle2, Clock, XCircle, AlertTriangle, ChevronDown, ChevronRight, ShoppingCart, TrendingUp, Banknote } from 'lucide-react'
 import { MonthlySummaryChart } from '@/components/admin/MonthlySummaryChart'
 
 interface ReorderItem {
@@ -53,6 +53,9 @@ export default function ComprasPage() {
   const [supplierFilter, setSupplierFilter] = useState(searchParams.get('supplier_id') || '')
   const [dateFrom, setDateFrom] = useState(searchParams.get('from') || '')
   const [dateTo, setDateTo] = useState(searchParams.get('to') || '')
+  const [paidFilter, setPaidFilter] = useState<'' | 'paid' | 'unpaid'>(
+    (searchParams.get('paid') as 'paid' | 'unpaid') || ''
+  )
   const [suggestions, setSuggestions] = useState<ReorderSuggestions | null>(null)
   const [showSuggestions, setShowSuggestions] = useState(true)
   const [expandedSupplier, setExpandedSupplier] = useState<string | null>(null)
@@ -68,6 +71,7 @@ export default function ComprasPage() {
         supplier_id: supplierFilter || undefined,
         from: dateFrom || undefined,
         to: dateTo || undefined,
+        paid: paidFilter === 'paid' ? true : paidFilter === 'unpaid' ? false : undefined,
       })
       setOrders(data.orders)
       setTotal(data.total)
@@ -76,7 +80,7 @@ export default function ComprasPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [page, statusFilter, supplierFilter, dateFrom, dateTo])
+  }, [page, statusFilter, supplierFilter, dateFrom, dateTo, paidFilter])
 
   useEffect(() => {
     if (!user || !isOwnerRole(user.role)) { router.push('/'); return }
@@ -271,9 +275,19 @@ export default function ComprasPage() {
           className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm"
           title="Hasta"
         />
-        {(statusFilter || supplierFilter || dateFrom || dateTo) && (
+        <select
+          value={paidFilter}
+          onChange={(e) => { setPaidFilter(e.target.value as '' | 'paid' | 'unpaid'); setPage(1) }}
+          className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          title="Estado de pago"
+        >
+          <option value="">Pago: todos</option>
+          <option value="unpaid">Por pagar</option>
+          <option value="paid">Pagadas</option>
+        </select>
+        {(statusFilter || supplierFilter || dateFrom || dateTo || paidFilter) && (
           <button
-            onClick={() => { setStatusFilter(''); setSupplierFilter(''); setDateFrom(''); setDateTo(''); setPage(1) }}
+            onClick={() => { setStatusFilter(''); setSupplierFilter(''); setDateFrom(''); setDateTo(''); setPaidFilter(''); setPage(1) }}
             className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 underline"
           >
             limpiar
@@ -338,6 +352,12 @@ export default function ComprasPage() {
                     {o.status === 'draft' && (Date.now() - new Date(o.created_at).getTime()) > 7 * 86400000 && (
                       <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400">
                         Sin recibir &gt;7d
+                      </span>
+                    )}
+                    {o.status === 'received' && (
+                      <span className={`flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${o.paid ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'}`}>
+                        <Banknote className="w-3 h-3" />
+                        {o.paid ? 'Pagada' : (o.due_date && new Date(o.due_date) < new Date() ? 'Vencida' : 'Por pagar')}
                       </span>
                     )}
                   </div>

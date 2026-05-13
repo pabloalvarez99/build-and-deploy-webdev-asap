@@ -3133,3 +3133,19 @@ Archivos: `pharmacy-ecommerce/apps/web/src/lib/invoice-parser/**`, `prisma/schem
 - `@page A4 portrait margin 12mm`.
 - Sidebar/header admin se ocultan vía visibility-hidden global → solo se imprime contenido OC.
 - 17/17 tests · build OK.
+
+## 2026-05-13 (cont.5) — Marcar OC pagada + filtro pago (cierra ciclo payment-alerts)
+
+**Por qué**: cron `/api/cron/payment-alerts` dispara cada día sobre `purchase_orders WHERE paid=false AND due_date≤hoy+2`, pero NO existía UI/API para flippear `paid=true`. Alertas nunca silenciaban → ciclo Fase 5 alerts roto.
+
+**Backend**:
+- `PUT /api/admin/purchase-orders/[id]`: acepta `paid: boolean`. Setea `paid_at = new Date()` cuando true, `null` cuando false.
+- `GET /api/admin/purchase-orders/[id]`: serializa `paid_at` ISO.
+- `GET /api/admin/purchase-orders` (lista): nuevo query `paid=true|false` → filtro WHERE. `serializePO` agrega `due_date` + `paid_at`.
+
+**Frontend**:
+- `/admin/compras/[id]`: badge "Pagada"/"Por pagar" junto al status. Sección post-recepción con icon `Banknote` + fecha pago/vencimiento + botón "Marcar pagada" (emerald) / "Revertir" (outline). Confirmación nativa ambos sentidos.
+- `/admin/compras`: filtro select "Pago: todos/Por pagar/Pagadas". Badge en cada row (verde "Pagada", rojo "Vencida" si due_date<hoy, rojo "Por pagar" si no). `clearFilters` incluye paidFilter.
+- `lib/api.ts`: `PurchaseOrder` +`paid: boolean`, +`paid_at: string|null`. `purchaseOrderApi.list` acepta `paid?: boolean`.
+
+Build local OK. Push → Vercel.

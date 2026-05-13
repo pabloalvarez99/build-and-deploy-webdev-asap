@@ -8,7 +8,7 @@ import { purchaseOrderApi, type PurchaseOrder } from '@/lib/api'
 import {
   ClipboardList, ArrowLeft, CheckCircle2, Clock, XCircle,
   Package, Calendar, Hash, User, FileText, PackageCheck, Printer,
-  Pencil, Save, Trash2, X as XIcon, ImageIcon, Sparkles,
+  Pencil, Save, Trash2, X as XIcon, ImageIcon, Sparkles, Banknote,
 } from 'lucide-react'
 import Link from 'next/link'
 import { SuggestMatchesModal } from '@/components/admin/SuggestMatchesModal'
@@ -39,6 +39,7 @@ export default function CompraDetailPage() {
   const [editDraft, setEditDraft] = useState<Record<string, { quantity: string; unit_cost: string }>>({})
   const [deletingItem, setDeletingItem] = useState<string | null>(null)
   const [showSuggestModal, setShowSuggestModal] = useState(false)
+  const [isTogglingPaid, setIsTogglingPaid] = useState(false)
 
   useEffect(() => {
     if (!user || !isOwnerRole(user.role)) { router.push('/'); return }
@@ -148,6 +149,27 @@ export default function CompraDetailPage() {
     }
   }
 
+  async function handleTogglePaid() {
+    if (!order) return
+    const next = !order.paid
+    if (next && !confirm('¿Marcar esta OC como pagada?')) return
+    if (!next && !confirm('¿Revertir el pago de esta OC?')) return
+    setIsTogglingPaid(true)
+    try {
+      const res = await fetch(`/api/admin/purchase-orders/${order.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paid: next }),
+      })
+      if (!res.ok) { alert((await res.text()) || 'Error'); return }
+      await load()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error')
+    } finally {
+      setIsTogglingPaid(false)
+    }
+  }
+
   async function handleCancel() {
     if (!order || !confirm('¿Cancelar esta orden de compra?')) return
     setIsCancelling(true)
@@ -204,6 +226,12 @@ export default function CompraDetailPage() {
           {order.invoice_format && (
             <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
               {order.invoice_format}
+            </span>
+          )}
+          {order.status === 'received' && (
+            <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${order.paid ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'}`}>
+              <Banknote className="w-4 h-4" />
+              {order.paid ? 'Pagada' : 'Por pagar'}
             </span>
           )}
         </div>
@@ -531,9 +559,40 @@ export default function CompraDetailPage() {
         </div>
       )}
       {order.status === 'received' && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl text-emerald-700 dark:text-emerald-400 text-sm font-medium">
-          <CheckCircle2 className="w-4 h-4" />
-          Orden recibida — stock actualizado
+        <div className="space-y-3 print:hidden">
+          <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl text-emerald-700 dark:text-emerald-400 text-sm font-medium">
+            <CheckCircle2 className="w-4 h-4" />
+            Orden recibida — stock actualizado
+          </div>
+          <div className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl">
+            <Banknote className={`w-5 h-5 ${order.paid ? 'text-emerald-600' : 'text-rose-500'}`} />
+            <div className="flex-1 text-sm">
+              <p className="font-medium text-slate-900 dark:text-white">
+                {order.paid ? 'Factura pagada' : 'Factura por pagar'}
+              </p>
+              {order.paid && order.paid_at && (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  el {new Date(order.paid_at).toLocaleDateString('es-CL')}
+                </p>
+              )}
+              {!order.paid && order.due_date && (
+                <p className="text-xs text-rose-600 dark:text-rose-400">
+                  Vence {new Date(order.due_date).toLocaleDateString('es-CL')}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={handleTogglePaid}
+              disabled={isTogglingPaid}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-40 ${
+                order.paid
+                  ? 'border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
+                  : 'bg-emerald-600 text-white hover:bg-emerald-700'
+              }`}
+            >
+              {isTogglingPaid ? '...' : order.paid ? 'Revertir' : 'Marcar pagada'}
+            </button>
+          </div>
         </div>
       )}
 

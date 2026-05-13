@@ -373,6 +373,8 @@ export interface PurchaseOrder {
   subtotal_net: string | null
   tax_amount: string | null
   status: 'draft' | 'received' | 'cancelled'
+  paid: boolean
+  paid_at: string | null
   total_cost: string | null
   notes: string | null
   image_url: string | null
@@ -446,7 +448,7 @@ export const supplierApi = {
 // Purchase Order API
 // ============================================
 export const purchaseOrderApi = {
-  list: (params?: { page?: number; limit?: number; status?: string; supplier_id?: string; from?: string; to?: string }) => {
+  list: (params?: { page?: number; limit?: number; status?: string; supplier_id?: string; from?: string; to?: string; paid?: boolean }) => {
     const qs = new URLSearchParams()
     if (params?.page) qs.set('page', String(params.page))
     if (params?.limit) qs.set('limit', String(params.limit))
@@ -454,6 +456,7 @@ export const purchaseOrderApi = {
     if (params?.supplier_id) qs.set('supplier_id', params.supplier_id)
     if (params?.from) qs.set('from', params.from)
     if (params?.to) qs.set('to', params.to)
+    if (params?.paid !== undefined) qs.set('paid', String(params.paid))
     return apiRequest<{ orders: PurchaseOrder[]; total: number; total_pages: number }>(
       `/api/admin/purchase-orders?${qs.toString()}`,
       { method: 'GET' }

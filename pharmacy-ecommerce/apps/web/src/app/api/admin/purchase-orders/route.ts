@@ -7,6 +7,8 @@ function serializePO(po: Record<string, unknown>) {
     ...po,
     total_cost: po.total_cost != null ? String(po.total_cost) : null,
     invoice_date: po.invoice_date instanceof Date ? po.invoice_date.toISOString() : po.invoice_date,
+    due_date: po.due_date instanceof Date ? po.due_date.toISOString() : po.due_date,
+    paid_at: po.paid_at instanceof Date ? po.paid_at.toISOString() : po.paid_at,
     created_at: po.created_at instanceof Date ? po.created_at.toISOString() : po.created_at,
     updated_at: po.updated_at instanceof Date ? po.updated_at.toISOString() : po.updated_at,
   };
@@ -24,6 +26,8 @@ export async function GET(request: NextRequest) {
     const supplier_id = sp.get('supplier_id') || undefined;
     const from = sp.get('from') || undefined;
     const to = sp.get('to') || undefined;
+    const paidParam = sp.get('paid');
+    const paid = paidParam === 'true' ? true : paidParam === 'false' ? false : undefined;
     const offset = (page - 1) * limit;
 
     const dateFilter: { gte?: Date; lte?: Date } = {};
@@ -38,6 +42,7 @@ export async function GET(request: NextRequest) {
       ...(status ? { status } : {}),
       ...(supplier_id ? { supplier_id } : {}),
       ...(from || to ? { created_at: dateFilter } : {}),
+      ...(paid !== undefined ? { paid } : {}),
     };
 
     const db = await getDb();

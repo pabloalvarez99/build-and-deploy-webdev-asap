@@ -44,6 +44,7 @@ export async function GET(
       tax_amount: order.tax_amount?.toString() ?? null,
       invoice_date: order.invoice_date?.toISOString() ?? null,
       due_date: order.due_date?.toISOString() ?? null,
+      paid_at: order.paid_at?.toISOString() ?? null,
       created_at: order.created_at.toISOString(),
       updated_at: order.updated_at.toISOString(),
       suppliers: {
@@ -77,6 +78,10 @@ export async function PUT(
     if (body.invoice_date !== undefined) updateData.invoice_date = body.invoice_date ? new Date(body.invoice_date) : null;
     if (body.notes !== undefined) updateData.notes = body.notes?.trim() || null;
     if (body.status !== undefined) updateData.status = body.status;
+    if (body.paid !== undefined) {
+      updateData.paid = Boolean(body.paid);
+      updateData.paid_at = body.paid ? new Date() : null;
+    }
 
     const order = await db.purchase_orders.update({
       where: { id },
@@ -87,6 +92,7 @@ export async function PUT(
       ...order,
       total_cost: order.total_cost?.toString() ?? null,
       invoice_date: order.invoice_date?.toISOString() ?? null,
+      paid_at: order.paid_at?.toISOString() ?? null,
       created_at: order.created_at.toISOString(),
       updated_at: order.updated_at.toISOString(),
     });
