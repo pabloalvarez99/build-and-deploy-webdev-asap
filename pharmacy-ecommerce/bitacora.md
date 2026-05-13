@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-05-13 — Margen mensual en tab Resumen compras
+
+**Nuevo endpoint** `GET /api/admin/purchase-orders/monthly-margin?months=N` (3/6/12, default 6, máx 24). Agrupa por mes:
+- `sales`: suma `orders.total` con `status in ('paid','completed')` por `created_at`
+- `costs`: suma `purchase_orders.total_cost` con `status='received'` por `invoice_date`
+- `margin = sales - costs`, `margin_pct = margin / sales * 100`
+
+Devuelve `data[]` por mes (label `May 26` etc.) + `totals` agregados del período.
+
+**Componente** `MarginChart.tsx` (Recharts `ComposedChart`): bars verdes ventas + rojas costos (eje izq CLP), line violeta % margen (eje der %). Tarjetas KPI arriba: ventas, costos, margen ($), % margen — colores cambian si margen negativo (amber). Selector 3/6/12 meses, fetch con abort, manejo loading/error.
+
+**Wiring** `/admin/compras` tab Resumen ahora renderiza `<MarginChart />` arriba y `<MonthlySummaryChart />` abajo (stack por proveedor sigue intacto). Cierra gap KPI #1 Fase 5: visibilidad rentabilidad mes a mes sin abrir reportes externos.
+
+Build local OK (Next 14.2.35, 6GB).
+
+---
+
 ## 2026-05-11 — Info producto pro v3: +47 extras, alto contraste, equivalentes
 
 **drug-info-extras**: +47 fármacos top con signos_alarma + consejos_uso (zolpidem, diazepam, lorazepam, haloperidol, quetiapina, amitriptilina, fluoxetina, venlafaxina, carbamazepina, fenitoína, levetiracetam, levodopa, donepezilo, memantina, furosemida, espironolactona, digoxina, rivaroxabán, apixabán, dabigatrán, insulina, glibenclamida, glimepirida, empagliflozina, levofloxacino, cefalexina, claritromicina, nitrofurantoína, cotrimoxazol, aciclovir, fluconazol, prednisolona, budesonida, montelukast, bilastina, fexofenadina, domperidona, metoclopramida, ondansetrón, loperamida, lactulosa, macrogol, oxibutinina, escopolamina, alopurinol, colchicina).

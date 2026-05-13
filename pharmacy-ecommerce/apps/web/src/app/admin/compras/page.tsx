@@ -7,6 +7,7 @@ import { isOwnerRole } from '@/lib/roles'
 import { purchaseOrderApi, supplierApi, type PurchaseOrder, type Supplier } from '@/lib/api'
 import { ClipboardList, Plus, Eye, Filter, CheckCircle2, Clock, XCircle, AlertTriangle, ChevronDown, ChevronRight, ShoppingCart, TrendingUp, Banknote } from 'lucide-react'
 import { MonthlySummaryChart } from '@/components/admin/MonthlySummaryChart'
+import { MarginChart } from '@/components/admin/MarginChart'
 
 interface ReorderItem {
   product_id: string
@@ -141,7 +142,12 @@ export default function ComprasPage() {
         </button>
       </div>
 
-      {activeTab === 'resumen' && <MonthlySummaryChart />}
+      {activeTab === 'resumen' && (
+        <div className="space-y-4">
+          <MarginChart />
+          <MonthlySummaryChart />
+        </div>
+      )}
 
       {/* Reorder Suggestions Banner */}
       {activeTab === 'listado' && suggestions && suggestions.total_products > 0 && (
