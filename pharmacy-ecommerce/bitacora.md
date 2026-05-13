@@ -3117,3 +3117,19 @@ Archivos: `pharmacy-ecommerce/apps/web/src/lib/invoice-parser/**`, `prisma/schem
 - `vercel.json`: cron `0 11 * * 1` (11 UTC lun = 08 Chile invierno).
 - Si no hay `alert_email` configurado → response `{skipped:true}` sin error.
 - 17/17 tests · build OK.
+
+## 2026-05-13 (cont.4) — Print-friendly OC (factura compacta A4)
+
+- CSS scoped en `src/app/globals.css` bajo `body.printing-purchase-order`. Patrón visibility-hidden + scope `#purchase-order-print` (igual que prof-info).
+- Toggle body class vía `beforeprint`/`afterprint` listeners en `/admin/compras/[id]/page.tsx`.
+- Mejoras visuales print:
+  · Todos colores → negro (incl. lotes/vto azules → bold black, totales emerald → negro).
+  · Border-radius → 0, borders → negro.
+  · Tipografías: h1 18pt · h2 12pt con underline · text-xs/sm 9pt · total 14pt.
+  · Items: row 2mm padding, `page-break-inside: avoid` por item → no se cortan a la mitad.
+  · Totales: border-top 2px negro + margen 3mm.
+  · Imágenes max 60mm height para no acaparar página.
+  · `details` + `.print:hidden` ocultos.
+- `@page A4 portrait margin 12mm`.
+- Sidebar/header admin se ocultan vía visibility-hidden global → solo se imprime contenido OC.
+- 17/17 tests · build OK.

@@ -367,7 +367,6 @@ function HomeContent() {
         page,
         limit: ITEMS_PER_PAGE,
         sort_by: 'name',
-        in_stock: true,
         has_discount: showDiscountOnly || undefined,
       });
       if (reset) setAllProducts(data.products);

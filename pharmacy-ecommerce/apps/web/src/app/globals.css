@@ -525,6 +525,77 @@ html.dark .text-slate-300 { color: #cbd5e1 !important; }
 .dark .dark\:text-slate-700 { color: #3c3c54; }
 .dark .dark\:text-slate-800 { color: #2a2a3e; }
 
+/* Print: Orden de Compra (factura compacta legible) */
+@media print {
+  body.printing-purchase-order * { visibility: hidden; }
+  body.printing-purchase-order #purchase-order-print,
+  body.printing-purchase-order #purchase-order-print * { visibility: visible; }
+  body.printing-purchase-order #purchase-order-print {
+    position: absolute; top: 0; left: 0; right: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    background: white !important;
+    color: black !important;
+  }
+  body.printing-purchase-order #purchase-order-print * {
+    color: black !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  body.printing-purchase-order #purchase-order-print .bg-blue-600,
+  body.printing-purchase-order #purchase-order-print [class*="text-blue-"],
+  body.printing-purchase-order #purchase-order-print [class*="text-emerald-"],
+  body.printing-purchase-order #purchase-order-print [class*="text-rose-"] {
+    color: black !important;
+  }
+  body.printing-purchase-order #purchase-order-print .rounded-2xl,
+  body.printing-purchase-order #purchase-order-print .rounded-xl,
+  body.printing-purchase-order #purchase-order-print .rounded-lg,
+  body.printing-purchase-order #purchase-order-print .rounded-full {
+    border-radius: 0 !important;
+  }
+  body.printing-purchase-order #purchase-order-print .border-2,
+  body.printing-purchase-order #purchase-order-print [class*="border-"] {
+    border-color: #000 !important;
+  }
+  body.printing-purchase-order #purchase-order-print h1 { font-size: 18pt !important; margin: 0 0 4mm !important; }
+  body.printing-purchase-order #purchase-order-print h2 { font-size: 12pt !important; margin: 4mm 0 2mm !important; padding: 1mm 0 !important; border-bottom: 1px solid #000 !important; }
+  body.printing-purchase-order #purchase-order-print .text-xs,
+  body.printing-purchase-order #purchase-order-print .text-sm { font-size: 9pt !important; }
+  body.printing-purchase-order #purchase-order-print .text-xl { font-size: 14pt !important; }
+  body.printing-purchase-order #purchase-order-print .text-2xl { font-size: 16pt !important; }
+  /* Items list rows: compact + page-break-inside avoid */
+  body.printing-purchase-order #purchase-order-print .divide-y > div {
+    padding: 2mm 0 !important;
+    border-top: 1px solid #ccc !important;
+    page-break-inside: avoid;
+  }
+  body.printing-purchase-order #purchase-order-print .divide-y > div:first-child {
+    border-top: none !important;
+  }
+  /* Totals row: bold + larger */
+  body.printing-purchase-order #purchase-order-print .border-t.border-slate-100 {
+    border-top: 2px solid #000 !important;
+    margin-top: 3mm !important;
+    padding-top: 2mm !important;
+  }
+  /* Lote/vto: bold black so visible */
+  body.printing-purchase-order #purchase-order-print .text-blue-600,
+  body.printing-purchase-order #purchase-order-print .text-blue-400 {
+    color: black !important;
+    font-weight: 600;
+  }
+  body.printing-purchase-order #purchase-order-print .grid {
+    display: grid !important;
+  }
+  body.printing-purchase-order #purchase-order-print img { max-width: 100% !important; max-height: 60mm !important; }
+  body.printing-purchase-order details,
+  body.printing-purchase-order .print\:hidden { display: none !important; }
+  @page { size: A4 portrait; margin: 12mm; }
+}
+
 /* Hover states for dark mode colored badges */
 .dark .hover\:bg-green-900\/50:hover { background-color: rgba(16, 185, 129, 0.25) !important; }
 .dark .hover\:bg-emerald-900\/50:hover { background-color: rgba(16, 185, 129, 0.25) !important; }

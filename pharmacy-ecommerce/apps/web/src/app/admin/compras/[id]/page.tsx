@@ -45,6 +45,18 @@ export default function CompraDetailPage() {
     load()
   }, [user, router, params.id])
 
+  useEffect(() => {
+    const onBefore = () => document.body.classList.add('printing-purchase-order')
+    const onAfter = () => document.body.classList.remove('printing-purchase-order')
+    window.addEventListener('beforeprint', onBefore)
+    window.addEventListener('afterprint', onAfter)
+    return () => {
+      window.removeEventListener('beforeprint', onBefore)
+      window.removeEventListener('afterprint', onAfter)
+      document.body.classList.remove('printing-purchase-order')
+    }
+  }, [])
+
   async function load() {
     setIsLoading(true)
     try {
