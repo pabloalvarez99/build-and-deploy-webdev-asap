@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { isOwnerRole } from '@/lib/roles';
@@ -63,6 +64,8 @@ export default function CostosPage() {
     overhead_sales_target: 1, overhead_margin_alert: 10,
   });
   const [showSettings, setShowSettings] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'' | 'red' | 'amber' | 'green' | 'no_cost'>('');
   const [sortField, setSortField] = useState<SortField>('net_margin_pct');
@@ -203,8 +206,8 @@ export default function CostosPage() {
         </div>
       </div>
 
-      {/* Overhead config — modal overlay (no layout shift) */}
-      {showSettings && (
+      {/* Overhead config — modal overlay (portaled to body to escape transformed ancestor) */}
+      {showSettings && mounted && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowSettings(false)}>
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 space-y-4 w-full max-w-2xl shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between">
@@ -242,7 +245,8 @@ export default function CostosPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* KPI cards */}
