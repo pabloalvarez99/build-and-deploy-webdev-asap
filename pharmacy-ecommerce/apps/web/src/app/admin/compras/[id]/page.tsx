@@ -8,9 +8,10 @@ import { purchaseOrderApi, type PurchaseOrder } from '@/lib/api'
 import {
   ClipboardList, ArrowLeft, CheckCircle2, Clock, XCircle,
   Package, Calendar, Hash, User, FileText, PackageCheck, Printer,
-  Pencil, Save, Trash2, X as XIcon, ImageIcon,
+  Pencil, Save, Trash2, X as XIcon, ImageIcon, Sparkles,
 } from 'lucide-react'
 import Link from 'next/link'
+import { SuggestMatchesModal } from '@/components/admin/SuggestMatchesModal'
 
 const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; cls: string }> = {
   draft: { label: 'Borrador', icon: <Clock className="w-4 h-4" />, cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
@@ -37,6 +38,7 @@ export default function CompraDetailPage() {
   // editDraft: itemId → { quantity, unit_cost }
   const [editDraft, setEditDraft] = useState<Record<string, { quantity: string; unit_cost: string }>>({})
   const [deletingItem, setDeletingItem] = useState<string | null>(null)
+  const [showSuggestModal, setShowSuggestModal] = useState(false)
 
   useEffect(() => {
     if (!user || !isOwnerRole(user.role)) { router.push('/'); return }
@@ -365,13 +367,25 @@ export default function CompraDetailPage() {
             Productos ({order.items?.length ?? 0})
           </h2>
           {order.status === 'draft' && !isEditing && (
-            <button
-              onClick={startEdit}
-              className="print:hidden flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-              Editar
-            </button>
+            <div className="flex gap-2">
+              {(order.items ?? []).some((i) => !i.product_id) && (
+                <button
+                  onClick={() => setShowSuggestModal(true)}
+                  className="print:hidden flex items-center gap-1.5 px-3 py-1.5 text-sm text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+                  title="Sugerir matches para items sin mapear"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Sugerir matches
+                </button>
+              )}
+              <button
+                onClick={startEdit}
+                className="print:hidden flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                Editar
+              </button>
+            </div>
           )}
           {isEditing && (
             <div className="flex gap-2">
@@ -509,6 +523,14 @@ export default function CompraDetailPage() {
           <CheckCircle2 className="w-4 h-4" />
           Orden recibida — stock actualizado
         </div>
+      )}
+
+      {showSuggestModal && (
+        <SuggestMatchesModal
+          orderId={order.id}
+          onClose={() => setShowSuggestModal(false)}
+          onApplied={() => load()}
+        />
       )}
     </div>
   )

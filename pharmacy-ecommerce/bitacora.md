@@ -3081,3 +3081,12 @@ Archivos: `pharmacy-ecommerce/apps/web/src/lib/invoice-parser/**`, `prisma/schem
 - 5 `stock_movements` (`reason='reposicion'`, `admin_id='system-unmapped-resolve'`).
 - `purchase_order_items.product_id IS NULL AND status='received'`: 5 → **0**. Stock real consistente.
 - Decisiones price: margen ~30% sobre cost para que productos sean vendibles inmediatamente; owner ajusta en `/admin/productos` si lo desea.
+
+## 2026-05-13 — UI auto-match button (suggest-matches)
+
+- Nuevo endpoint `POST /api/admin/purchase-orders/[id]/suggest-matches`: token fuzzy (≥4 chars, stopwords, inter≥2 OR score≥0.60) → devuelve top-3 candidatos por item unmapped + flag `confident`. NUNCA aplica cambios.
+- Componente `src/components/admin/SuggestMatchesModal.tsx`: modal con radio por item (omitir + N candidatos), badge confidence (verde si confident, ámbar si débil), pre-selecciona primer candidato confident. "Aplicar N" loop POST `/map-product` por cada selección.
+- Botón "Sugerir matches" en `/admin/compras/[id]` aparece solo si status=draft AND existe ≥1 item sin `product_id`.
+- Regla viva post-PROPOLEO: fuzzy NUNCA aplica sin confirmación humana → modal con radio + botón explícito "Aplicar".
+- Regex `\p{L}` (Unicode property) no compila en target TS pre-ES6 → fallback ASCII + diacríticos ES (`[A-Za-zÁÉÍÓÚÑÜáéíóúñü0-9\s]`).
+- Tests: 17/17 pass. Build local OK.
