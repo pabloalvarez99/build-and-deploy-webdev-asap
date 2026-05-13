@@ -3060,3 +3060,10 @@ Archivos: `pharmacy-ecommerce/apps/web/src/lib/invoice-parser/**`, `prisma/schem
   · /admin/compras/nueva: drag-and-drop PDF/imagen en zona upload + badge "PDF nativo" vs "Vision OCR".
 - Parser: detector `isCreditNote()` (NCE/Nota Crédito) → short-circuits a generic con lines=[]. UI bloquea import con alert "es NOTA DE CRÉDITO".
 - Tests: 17/17 pass (vitest). Build local OK.
+
+## 2026-05-12 (cont.2) — Revert PROPOLEO false-positive
+
+- Detectado: fuzzy remap mapeó "PROPOLEO+VITC SP.AD.30 ML" (sup_code 9990256, qty 9) a "SL.VITC EFV.NAR.1000MG.20" (totalmente distinto). Score 0.50 inflado por single-token "VITC" en nombres cortos.
+- Migración `20260512_revert_propoleo_mismatch.sql`: stock-=9 producto incorrecto, DELETE stock_movement, DELETE supplier_product_mapping, item.product_id=NULL.
+- Hardening: scripts/remap-unmapped-items.ts ahora requiere `inter≥2 OR score≥0.60`. Previene regresiones single-token.
+- Item PROPOLEO ahora pendiente para mapeo manual del operador.

@@ -52,15 +52,16 @@ async function main() {
       const invTokens = tokens(item.product_name_invoice || '');
       if (invTokens.length < 1) { console.log(`✗ "${item.product_name_invoice}" — sin tokens útiles`); continue; }
 
-      let best: { id: string; name: string; score: number } | null = null;
+      let best: { id: string; name: string; score: number; inter: number } | null = null;
       for (const p of products.rows) {
         const prodTokens = tokens(p.name);
         const inter = invTokens.filter((t) => prodTokens.includes(t)).length;
         if (inter === 0) continue;
         const score = inter / Math.max(invTokens.length, prodTokens.length);
-        if (!best || score > best.score) best = { id: p.id, name: p.name, score };
+        if (!best || score > best.score) best = { id: p.id, name: p.name, score, inter };
       }
-      if (best && best.score >= 0.35) {
+      // Anti false-positive: requiere ≥2 tokens compartidos O score ≥ 0.60 (un solo token coincidente con score alto = nombre corto idéntico, OK)
+      if (best && (best.inter >= 2 || best.score >= 0.60)) {
         await c.query('UPDATE purchase_order_items SET product_id = $1 WHERE id = $2', [best.id, item.id]);
         if (item.supplier_product_code) {
           await c.query(

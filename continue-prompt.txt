@@ -1,0 +1,67 @@
+Continúa Tu Farmacia post-commit f0119b3 (main). Pipeline ingestion PDF facturas + UI mejoras + NC detection ya en prod.
+
+ESTADO ACTUAL:
+- 3 OCs recibidas: 0000750277 Global (69/71), 0000740850 Global (51/53), 3625647 Mediven (9/9 con lotes). Stock +955 unidades aplicado.
+- 9 lotes Mediven en product_batches con notes "Factura 3625647" (visibles en /admin/vencimientos).
+- 17/17 vitest tests pass. Build verde. Vercel deployed.
+- Suppliers Mediven SpA (76425071-0) + Global (rut=null) con default_invoice_format.
+- BUG fixed: receive route usaba 'purchase' en stock_movements.reason (constraint reject) → 'reposicion'.
+
+PENDIENTE (orden):
+
+1. ITEMS NO MAPEADOS (4 todavía):
+   - 2x TRIOVAL DIA-NOCHE 20 COMP.REC. (PARACETAMOL+PSEUDOEF+CLORFEN — duplicado en ambas OCs Global)
+   - ALL-OUT PREVENCION PIOJOS SPRAY 120 ML [DM]
+   - BURTEN-SL 30 MG 2 COMP. SUBLINGUALES (KETOROLACO)
+   - Query: SELECT i.id, i.product_name_invoice, po.invoice_number FROM purchase_order_items i JOIN purchase_orders po ON po.id=i.purchase_order_id WHERE i.product_id IS NULL AND po.status='received';
+   - Buscar producto coincidente vía /admin/productos search → vincular manualmente vía supplier_product_mappings o UPDATE purchase_order_items SET product_id=...
+   - Si producto no existe en catálogo, crearlo (esos son productos nuevos del proveedor).
+
+2. RUT GLOBAL — pedir al user. UPDATE suppliers SET rut='XX.XXX.XXX-X' WHERE id='97736b06-e53c-46f5-9a62-b32b94399975';
+
+3. PROPOLEO+VITC false positive del fuzzy match (mapeó a SL.VITC EFV.NAR.1000MG.20). Revertir:
+   - SELECT id, product_id, product_name_invoice FROM purchase_order_items WHERE product_name_invoice ILIKE '%PROPOLEO%VITC%';
+   - Si el mapping está mal, UPDATE purchase_order_items SET product_id=NULL WHERE id='...'; y borrar el supplier_product_mapping correspondiente. Reverter stock_movements + product stock incremental.
+
+4. UI: AUTO-MATCH FALTANTES button en /admin/compras/[id]:
+   - Endpoint nuevo POST /api/admin/purchase-orders/[id]/auto-match-items
+   - Lógica: igual que remap-unmapped-items.ts pero por OC específica, retorna sugerencias sin aplicar
+   - UI muestra modal con cada item unmapped + best product match + score + checkbox aceptar
+   - Apply → UPDATE product_id por cada acepted
+
+5. PARSER EXTENSIONS:
+   - Probar parser Global con PDFs de Socofar/FASA si user los provee. Estructura similar ("Comprobante de Pedido", U/E, PvP). Ajustar matchesGlobal regex si difieren.
+   - Mediven: testear si nota crédito real activa correctamente isCreditNote (capturar fixture).
+
+6. NUEVOS PROVEEDORES (cuando user los agregue):
+   - Socofar, FASA, Salcobrand, Drogería SOCOFAR — todos formato Comprobante Pedido similar a Global.
+   - Salcobrand mayorista (Drogería 21) puede usar formato distinto — pedir PDF sample antes de codear parser.
+
+7. REPORTES AVANZADOS:
+   - /admin/compras: agregar pestaña "Resumen mensual" con total $ por proveedor por mes (recharts).
+   - Email semanal a owner con resumen de OCs recibidas + lotes vencen <60 días + faltas notified.
+
+8. ALERTAS PROACTIVAS:
+   - Cron daily: notificar vía push si vto pago próximo (due_date <= hoy+2) en alguna OC received.
+   - Cron daily: notificar lotes vencen <30 días con cantidad > 0.
+
+REGLAS PROYECTO (siempre):
+- Build local antes de push: cd pharmacy-ecommerce/apps/web && NODE_OPTIONS=--max-old-space-size=6144 ./node_modules/.bin/next build
+- NUNCA `npx next build`
+- Bitácora dual: pharmacy-ecommerce/bitacora.md + /c/Users/Administrator/Documents/obsidian-mind/work/active/tu-farmacia/bitacora.md
+- Migraciones Cloud SQL via `node scripts/run-migration.mjs <sql>` (usa .env.prod-temp, NO COMMITEAR — está en .gitignore).
+- Recrear .env.prod-temp: `grep -E '^(CLOUD_SQL_INSTANCE|DB_NAME|DB_USER|DB_PASSWORD|GOOGLE_SERVICE_ACCOUNT)=' .env.local > .env.prod-temp`
+- Cada cambio significativo termina en `git push origin main` → Vercel auto-deploy
+- CLI-first siempre. NUNCA MCP.
+- npm test pasa antes de push (vitest, 17 tests actualmente).
+- PDFs sample (0000750277.pdf, FA_7964633.pdf) están en raíz repo, gitignored. No commitear (contienen RUT clientes).
+
+EMPIEZA POR: paso 1 (resolver 4 items unmapped) + paso 3 (verificar PROPOLEO false positive).
+
+ARCHIVOS CLAVE:
+- src/lib/invoice-parser/{index,types,util}.ts + parsers/{global,mediven,generic}.ts (parser entry, NC detection)
+- src/lib/invoice-parser/__tests__/{global,mediven,credit-note}.test.ts + fixtures/*.txt
+- src/app/api/admin/purchase-orders/{scan,route,[id]/route,[id]/receive}.ts
+- src/app/admin/compras/{nueva/page,[id]/page,page}.tsx
+- scripts/{import-pdf-invoices,receive-draft-ocs,remap-unmapped-items,verify-receive}.{ts,mjs}
+- scripts/run-migration.mjs (DDL Cloud SQL)
