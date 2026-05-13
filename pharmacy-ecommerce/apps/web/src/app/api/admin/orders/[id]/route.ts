@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers'
 import { getDb } from '@/lib/db'
 import { awardLoyaltyPoints, restoreLoyaltyPoints } from '@/lib/loyalty'
@@ -90,6 +91,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
             }
           }
         })
+        revalidateTag('products')
       }
     }
 
@@ -143,6 +145,7 @@ async function approveReservation(db: Awaited<ReturnType<typeof getDb>>, orderId
   }
 
   const updated = await db.orders.update({ where: { id: orderId }, data: { status: 'processing' } })
+  revalidateTag('products')
 
   // Send approval email (non-blocking)
   if (order.guest_email && order.pickup_code) {
@@ -235,6 +238,7 @@ async function processRefund(db: Awaited<ReturnType<typeof getDb>>, orderId: str
       }
     }
   })
+  revalidateTag('products')
 
   // Restore loyalty points if user earned them
   restoreLoyaltyPoints(orderId).catch(() => {})

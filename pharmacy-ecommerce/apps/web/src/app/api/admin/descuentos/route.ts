@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 import { getDb } from '@/lib/db';
 import { sendBroadcast } from '@/lib/push/broadcast';
@@ -117,6 +118,7 @@ export async function POST(request: NextRequest) {
       }
 
       const result = await db.products.updateMany({ where, data: { discount_percent } });
+      if (result.count > 0) revalidateTag('products');
 
       let push: { sent: number; failed: number; total: number } | null = null;
       if (notify === true && discount_percent > 0 && result.count > 0) {
@@ -149,6 +151,7 @@ export async function POST(request: NextRequest) {
         where = { ...where, category_id };
       }
       const result = await db.products.updateMany({ where, data: { discount_percent: 0 } });
+      if (result.count > 0) revalidateTag('products');
       return NextResponse.json({ success: true, updated: result.count });
     }
 

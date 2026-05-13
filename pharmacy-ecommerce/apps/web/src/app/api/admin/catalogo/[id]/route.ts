@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { getDb } from '@/lib/db';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 
@@ -44,6 +45,7 @@ export async function PATCH(
       data: updateData,
       select: { id: true, name: true, price: true, active: true },
     });
+    revalidateTag('products');
 
     return NextResponse.json(updated);
   } catch (error) {

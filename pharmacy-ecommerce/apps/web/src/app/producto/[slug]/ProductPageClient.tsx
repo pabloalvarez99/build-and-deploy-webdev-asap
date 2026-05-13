@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { productApi, ProductWithCategory, Product } from '@/lib/api';
 import { useCartStore } from '@/store/cart';
-import { ShoppingCart, Minus, Plus, Package, Truck, ShieldCheck, ArrowLeft, Check, MessageCircle, X, ZoomIn } from 'lucide-react';
+import { ShoppingCart, Minus, Plus, Package, Truck, ShieldCheck, ArrowLeft, Check, MessageCircle, X, ZoomIn, Phone } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatPrice, discountedPrice } from '@/lib/format';
@@ -117,13 +117,36 @@ export default function ProductPage({ initialProduct }: { initialProduct: Produc
 
   if (!product) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-        <Package className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3">Producto no encontrado</h1>
-        <p className="text-slate-500 dark:text-slate-400 mb-6 text-lg">El producto que buscas no existe o fue eliminado.</p>
-        <Link href="/" className="btn btn-primary text-lg">
-          Volver al catálogo
-        </Link>
+      <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="card p-6 sm:p-8 text-center">
+          <Package className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3">Producto no encontrado</h1>
+          <p className="text-slate-500 dark:text-slate-400 mb-6 text-base sm:text-lg">El producto que buscas no existe o fue eliminado.</p>
+          <div className="space-y-3">
+            <Link
+              href="/"
+              className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold min-h-[48px] bg-cyan-600 hover:bg-cyan-700 text-white transition-colors text-lg"
+            >
+              Volver al catálogo
+            </Link>
+            <a
+              href="https://wa.me/56993649604?text=Hola%2C%20busco%20un%20producto%20que%20no%20encuentro%20en%20Tu%20Farmacia"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold min-h-[48px] border-2 border-[#25D366] text-[#25D366] hover:bg-[#25D366]/10 transition-colors"
+            >
+              <MessageCircle className="w-5 h-5" />
+              Buscar por WhatsApp
+            </a>
+            <a
+              href="tel:+56993649604"
+              className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold min-h-[48px] border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              <Phone className="w-5 h-5" />
+              Llamar +56 9 9364 9604
+            </a>
+          </div>
+        </div>
       </div>
     );
   }

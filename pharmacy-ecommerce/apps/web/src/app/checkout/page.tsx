@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/auth';
 import { useLoyaltyStore } from '@/store/loyalty';
 import { orderApi } from '@/lib/api';
 import { calcPoints, POINTS_TO_CLP } from '@/lib/loyalty-utils';
-import { Loader2, ShieldCheck, Store, Phone, User, Mail, CreditCard, Check, MessageCircle, X, Star, Banknote } from 'lucide-react';
+import { Loader2, ShieldCheck, Store, Phone, User, Mail, CreditCard, Check, MessageCircle, X, Star, Banknote, RefreshCw } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 type PaymentMethod = 'store' | 'webpay';
@@ -499,7 +499,7 @@ export default function CheckoutPage() {
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 mt-4" role="alert">
             <p className="text-red-700 dark:text-red-400 font-semibold text-center">{error}</p>
-            {stockShortages.length > 0 && (
+            {stockShortages.length > 0 ? (
               <ul className="mt-3 space-y-1 text-sm text-red-700 dark:text-red-300">
                 {stockShortages.map(s => (
                   <li key={s.product_name} className="flex justify-between gap-3">
@@ -514,6 +514,27 @@ export default function CheckoutPage() {
                   </button>
                 </li>
               </ul>
+            ) : (
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isProcessing}
+                  className="inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-semibold min-h-[44px] bg-red-600 hover:bg-red-700 text-white text-sm transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Reintentar
+                </button>
+                <a
+                  href={buildWhatsAppUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-semibold min-h-[44px] border-2 border-[#25D366] text-[#25D366] hover:bg-[#25D366]/10 text-sm transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Contactar por WhatsApp
+                </a>
+              </div>
             )}
           </div>
         )}

@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { orderApi, OrderWithItems } from '@/lib/api';
-import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck, MapPin, Store, Printer, MessageCircle, Check, RefreshCw, Star } from 'lucide-react';
+import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck, MapPin, Store, Printer, MessageCircle, Check, RefreshCw, Star, AlertTriangle, Phone } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 import { useCartStore } from '@/store/cart';
 
@@ -123,8 +123,16 @@ export default function OrderDetailPage() {
 
   const [order, setOrder] = useState<OrderWithItems | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<'network' | 'notfound' | null>(null);
   const [reordering, setReordering] = useState(false);
   const [reorderDone, setReorderDone] = useState(false);
+  const [reorderToast, setReorderToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
+
+  useEffect(() => {
+    if (!reorderToast) return;
+    const t = setTimeout(() => setReorderToast(null), 3500);
+    return () => clearTimeout(t);
+  }, [reorderToast]);
 
   useEffect(() => {
     if (!user) {
@@ -137,27 +145,40 @@ export default function OrderDetailPage() {
   const handleReorder = async () => {
     if (!order) return;
     setReordering(true);
-    // Add items sequentially to preserve quantities
-    for (const item of order.items) {
-      if (item.product_id) {
-        try {
-          await addToCart(item.product_id, item.quantity);
-        } catch {
-          // If a product no longer exists, skip silently
-        }
+    const valid = order.items.filter((i) => i.product_id);
+    let ok = 0;
+    let failed = 0;
+    for (const item of valid) {
+      try {
+        await addToCart(item.product_id as string, item.quantity);
+        ok++;
+      } catch {
+        failed++;
       }
     }
     setReordering(false);
+    if (ok === 0) {
+      setReorderToast({ message: 'No se pudo agregar ningún producto. Stock agotado o productos retirados.', tone: 'error' });
+      return;
+    }
+    if (failed > 0) {
+      setReorderToast({ message: `${ok} de ${valid.length} agregados. ${failed} sin stock.`, tone: 'error' });
+    }
     setReorderDone(true);
     setTimeout(() => setReorderDone(false), 3000);
   };
 
   const loadOrder = async () => {
+    setIsLoading(true);
+    setLoadError(null);
     try {
       const data = await orderApi.get(orderId);
       setOrder(data);
     } catch (error) {
       console.error('Error loading order:', error);
+      const msg = error instanceof Error ? error.message.toLowerCase() : '';
+      const isNotFound = msg.includes('404') || msg.includes('not found') || msg.includes('no encontr');
+      setLoadError(isNotFound ? 'notfound' : 'network');
     } finally {
       setIsLoading(false);
     }
@@ -179,12 +200,52 @@ export default function OrderDetailPage() {
   }
 
   if (!order) {
+    const isNetwork = loadError === 'network';
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">Pedido no encontrado</h1>
-        <Link href="/mis-pedidos" className="btn btn-primary">
-          Volver a mis pedidos
-        </Link>
+      <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="card p-6 sm:p-8 text-center">
+          <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isNetwork ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
+            {isNetwork ? <AlertTriangle className="w-8 h-8" /> : <Package className="w-8 h-8" />}
+          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+            {isNetwork ? 'No pudimos cargar tu pedido' : 'Pedido no encontrado'}
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400 mb-6">
+            {isNetwork
+              ? 'Revisa tu conexión a internet e intenta nuevamente.'
+              : 'Este pedido no existe o ya no está disponible.'}
+          </p>
+          <div className="space-y-3">
+            {isNetwork && (
+              <button
+                onClick={loadOrder}
+                className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold min-h-[48px] bg-cyan-600 hover:bg-cyan-700 text-white transition-colors"
+              >
+                <RefreshCw className="w-5 h-5" />
+                Reintentar
+              </button>
+            )}
+            <a
+              href={`https://wa.me/56993649604?text=${encodeURIComponent(`Hola, tengo problemas para ver mi pedido #${orderId.slice(0, 8)} en Tu Farmacia`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold min-h-[48px] border-2 border-[#25D366] text-[#25D366] hover:bg-[#25D366]/10 transition-colors"
+            >
+              <MessageCircle className="w-5 h-5" />
+              Contactar por WhatsApp
+            </a>
+            <a
+              href="tel:+56993649604"
+              className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold min-h-[48px] border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              <Phone className="w-5 h-5" />
+              Llamar +56 9 9364 9604
+            </a>
+            <Link href="/mis-pedidos" className="block w-full text-cyan-700 dark:text-cyan-400 hover:underline font-semibold py-2">
+              Volver a mis pedidos
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
@@ -210,6 +271,19 @@ export default function OrderDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {reorderToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-xl shadow-lg max-w-[90vw] text-sm font-semibold ${
+            reorderToast.tone === 'success'
+              ? 'bg-emerald-600 text-white'
+              : 'bg-red-600 text-white'
+          }`}
+        >
+          {reorderToast.message}
+        </div>
+      )}
       <Link
         href="/mis-pedidos"
         className="inline-flex items-center text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 mb-6 min-h-[48px]"

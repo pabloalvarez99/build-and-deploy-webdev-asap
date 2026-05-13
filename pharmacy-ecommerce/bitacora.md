@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-05-13 — Auditoría cache: revalidateTag('products') en 4 endpoints faltantes
+
+Tras fix 4bd40fa (devoluciones), grep sistemático sobre `/api/admin/*` reveló 4 endpoints que mutan tabla `products` sin invalidar tag — catálogo/home/buscador servían stock/precio stale:
+
+1. **`/api/admin/descuentos`** — `apply_bulk` / `remove_bulk` (`updateMany` discount_percent). Producto en oferta no aparecía rebajado en home hasta nuevo ISR tick.
+2. **`/api/admin/catalogo/[id]`** — PATCH `active`/`price`. Al activar producto desde catálogo seguía oculto.
+3. **`/api/admin/stock-movements/import`** — bulk import stock absoluto. Subir CSV de stock no refrescaba grid público.
+4. **`/api/admin/orders/[id]`** — 3 spots: cancel-restock, approve-reservation-decrement, refund-restore. Aprobar/cancelar/devolver orden no propagaba stock al frontend.
+
+Pattern uniforme: `import { revalidateTag } from 'next/cache'` + llamada post-mutación (condicional sobre `count > 0` cuando hay updateMany). Build local OK.
+
+---
+
 ## 2026-05-13 — Trilogía alerts cerrada: stock-alerts push + merma lote
 
 **stock-alerts cron** (`vercel.json` `0 11 * * *` ya wireado) ahora cierra trilogía push: además del email Resend agrega `sendBroadcast` por producto out-of-stock / low-stock con `tag: stock-${id}` (dedupe), `url: /admin/stock`. Email pasa a ser opcional — si falta `alert_email` o `RESEND_API_KEY` la run sigue enviando push y retorna `email_skipped`. Misma plantilla que payment-alerts / expiry-alerts (1 push por entidad, tags estables).

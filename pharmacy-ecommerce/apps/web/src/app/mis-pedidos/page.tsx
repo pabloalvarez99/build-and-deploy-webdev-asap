@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/auth';
 import { useLoyaltyStore } from '@/store/loyalty';
 import { orderApi, PaginatedOrders } from '@/lib/api';
 import { useCartStore } from '@/store/cart';
-import { Package, ChevronRight, Clock, CheckCircle, XCircle, Truck, Store, Star, ChevronDown, RotateCcw } from 'lucide-react';
+import { Package, ChevronRight, Clock, CheckCircle, XCircle, Truck, Store, Star, ChevronDown, RotateCcw, AlertTriangle, RefreshCw, MessageCircle } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -28,6 +28,7 @@ export default function MyOrdersPage() {
 
   const [orders, setOrders] = useState<PaginatedOrders | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [reordering, setReordering] = useState<string | null>(null);
   const [showLoyaltyHistory, setShowLoyaltyHistory] = useState(false);
@@ -70,11 +71,13 @@ export default function MyOrdersPage() {
 
   const loadOrders = async () => {
     setIsLoading(true);
+    setLoadError(false);
     try {
       const data = await orderApi.list({ page: currentPage, limit: 10 });
       setOrders(data);
     } catch (error) {
       console.error('Error loading orders:', error);
+      setLoadError(true);
     } finally {
       setIsLoading(false);
     }
@@ -149,6 +152,32 @@ export default function MyOrdersPage() {
               </div>
             </div>
           ))}
+        </div>
+      ) : loadError ? (
+        <div className="card p-6 sm:p-8 text-center max-w-md mx-auto">
+          <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+            <AlertTriangle className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">No pudimos cargar tus pedidos</h2>
+          <p className="text-slate-600 dark:text-slate-400 mb-6">Revisa tu conexión a internet e intenta nuevamente.</p>
+          <div className="space-y-3">
+            <button
+              onClick={loadOrders}
+              className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold min-h-[48px] bg-cyan-600 hover:bg-cyan-700 text-white transition-colors"
+            >
+              <RefreshCw className="w-5 h-5" />
+              Reintentar
+            </button>
+            <a
+              href="https://wa.me/56993649604?text=Hola%2C%20tengo%20problemas%20para%20ver%20mis%20pedidos%20en%20Tu%20Farmacia"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold min-h-[48px] border-2 border-[#25D366] text-[#25D366] hover:bg-[#25D366]/10 transition-colors"
+            >
+              <MessageCircle className="w-5 h-5" />
+              Contactar por WhatsApp
+            </a>
+          </div>
         </div>
       ) : !orders || orders.orders.length === 0 ? (
         <div className="text-center py-12">
