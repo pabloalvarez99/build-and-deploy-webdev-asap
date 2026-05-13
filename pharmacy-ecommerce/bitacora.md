@@ -3166,3 +3166,9 @@ Archivos: `pharmacy-ecommerce/apps/web/src/lib/invoice-parser/**`, `prisma/schem
 - `lib/api.ts`: `PurchaseOrder` +`paid: boolean`, +`paid_at: string|null`. `purchaseOrderApi.list` acepta `paid?: boolean`.
 
 Build local OK. Push → Vercel.
+
+## 2026-05-13 — UX adultos mayores (3 commits)
+
+- **a11y (73b4179)**: `AccessibilityMenu` en navbar storefront. 3 tamaños (normal/grande/extra) + alto contraste. localStorage (`tf:a11y-fontsize`, `tf:a11y-highcontrast`). Inline script en `layout.tsx` aplica pre-paint → sin FOUC. CSS `html.a11y-large/xl` escala todo via rem; `html.a11y-contrast` endurece muted text + bordes + focus ring. Fix lateral: `MarginChart.tsx` formatter recharts type assertion.
+- **mobile bottom nav (68d62b5)**: `MobileBottomNav` 4 tabs (Inicio/Catálogo/Carrito/Cuenta), md:hidden, badge en carrito. Auto-oculta en /admin /carrito /checkout /auth y en home con items (sticky cart bar ya visible). `main pb-[68px] md:pb-0`.
+- **search synonyms (da7f24c)**: `lib/search-synonyms.expandQuery` expande término en ≤6 variantes (sinónimos comerciales chilenos: tapsin/kitadol/panadol↔paracetamol, advil↔ibuprofeno, etc), folding tildes (ascorbico↔ascórbico, losartan↔losartán), plural simple. `/api/search/suggest` + `/api/products` buscan OR sobre todas variantes. 9 tests vitest (26/26 total). Build verde.
