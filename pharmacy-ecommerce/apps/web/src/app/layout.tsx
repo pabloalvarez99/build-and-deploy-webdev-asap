@@ -128,6 +128,8 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* Prevent flash of wrong theme */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()` }} />
+        {/* Apply a11y prefs before paint */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var fs=localStorage.getItem('tf:a11y-fontsize');var hc=localStorage.getItem('tf:a11y-highcontrast')==='true';var c=document.documentElement.classList;if(fs==='large')c.add('a11y-large');else if(fs==='xl')c.add('a11y-xl');if(hc)c.add('a11y-contrast');}catch(e){}})()` }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

@@ -10,6 +10,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from '@/hooks/useTheme';
 import { formatPrice } from '@/lib/format';
 import { NavbarSearch } from '@/components/search/NavbarSearch';
+import AccessibilityMenu from '@/components/AccessibilityMenu';
 
 function PharmacyLogo({ isAdmin }: { isAdmin: boolean }) {
   return (
@@ -101,6 +102,9 @@ export function Navbar() {
                 {pathname?.replace('/admin/', '').replace('/admin', 'inicio')}
               </span>
             )}
+
+            {/* A11y menu — always visible (storefront only) */}
+            {!isAdmin && <AccessibilityMenu />}
 
             {/* Theme toggle — hidden on mobile to reduce navbar density (also accessible inside user dropdown) */}
             {mounted && (

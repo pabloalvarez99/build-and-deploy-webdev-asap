@@ -12,6 +12,39 @@
     overflow-x: hidden;
     font-family: var(--font-sans);
   }
+  html.a11y-large { font-size: 20px; }
+  html.a11y-xl { font-size: 22px; }
+  html.a11y-contrast .text-slate-300,
+  html.a11y-contrast .text-slate-400,
+  html.a11y-contrast .text-slate-500 {
+    color: rgb(30 41 59) !important;
+  }
+  html.a11y-contrast.dark .text-slate-300,
+  html.a11y-contrast.dark .text-slate-400,
+  html.a11y-contrast.dark .text-slate-500 {
+    color: rgb(241 245 249) !important;
+  }
+  html.a11y-contrast .border-slate-100,
+  html.a11y-contrast .border-slate-200 {
+    border-color: rgb(100 116 139) !important;
+  }
+  html.a11y-contrast.dark .border-slate-700,
+  html.a11y-contrast.dark .border-slate-800 {
+    border-color: rgb(148 163 184) !important;
+  }
+  html.a11y-contrast input::placeholder,
+  html.a11y-contrast textarea::placeholder {
+    color: rgb(71 85 105) !important;
+    opacity: 1;
+  }
+  html.a11y-contrast a:focus-visible,
+  html.a11y-contrast button:focus-visible,
+  html.a11y-contrast input:focus-visible,
+  html.a11y-contrast select:focus-visible,
+  html.a11y-contrast textarea:focus-visible {
+    outline: 3px solid rgb(8 145 178) !important;
+    outline-offset: 2px !important;
+  }
   body {
     @apply bg-slate-50 text-slate-900 antialiased selection:bg-cyan-200 selection:text-cyan-900 dark:bg-slate-950 dark:text-slate-100 dark:selection:bg-cyan-700;
     overflow-x: hidden;
