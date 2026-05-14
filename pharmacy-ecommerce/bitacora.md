@@ -4,6 +4,40 @@
 
 ---
 
+## 2026-05-14 — Info pro: cobertura DB 100% productos farmacológicos
+
+Verificación pidió "todos los productos con info pro" → auditoría detectó 501 productos `active=true` SIN `active_ingredient` en BD (33% del catálogo). Estos productos renderizaban `/producto/[slug]` sin secciones profesionales (sin signos_alarma, sin posología, sin Beers, sin JSON-LD Drug).
+
+**Fix DB (179 updates)**: Script `match-missing-ai.ts` empareja productos por nombre vs `DRUG_INFO` keys + `BRAND_HINTS` (marcas chilenas):
+- Token-match longest-first contra principios activos canónicos.
+- `NON_PHARMA_KEYWORDS` rechaza insumos médicos (jeringa, gasa, venda, mamadera, chupete, etc.).
+- `BRAND_HINTS` mapea marcas → AI: Tapsin/Anacin/Aspirina/Geniol/Centrum/Bion3/Eucerin/Aquaphor/Blistex/Cicatricure/Listerine/Sensodyne/Aquafresh/Colgate/Cerave/Leti AT4/Naturaloe/All-Out/Sanitol/Broxul/Mylanta/Suerox/Vitalux/Vitakron/Nutrum/Heel/Olmepress/Rixovitae/Vildavitae/Cranberry-Cocedura/Mitosyl/etc.
+- Combos auto-bidireccionales vía `COMBO_INDEX` (ACIDO ACETILSALICILICO + CAFEINA, PARACETAMOL + CAFEINA + CLORFENAMINA, etc.).
+- 5 batches aplicados: 61 + 46 + 38 + 33 + 1 = 179 productos resueltos.
+
+**Restantes 322 productos sin AI**: insumos médicos (agujas, gasas, vendas, algodón, aerocámaras, autotests), bebés (pañales, mamaderas, chupetes), higiene puro (anilinas, talcos, preservativos, desodorantes, colonias, shampoos no medicados), prótesis dental (Corega). NO son farmacológicos → no aplica info pro.
+
+**Schema gaps cerrados**:
+- 6 entries `DRUG_INFO` sin extras: CASSIA ANGUSTIFOLIA, AC HIALURONICO, CLIDINIO, CONDROITINA, DIOSMINA, HESPERIDINA → agregadas a `DRUG_EXTRAS`.
+- 13 huérfanos en `DRUG_EXTRAS` sin entry base: CALCIO, ZOLPIDEM, DIAZEPAM, LORAZEPAM, FENITOINA, DONEPEZILO, APIXABAN, DABIGATRAN, INSULINA, GLIMEPIRIDA, CEFALEXINA, COTRIMOXAZOL, PREDNISOLONA → eliminados (no alcanzables, no usados en catálogo).
+- 79 entries con campos opcionales faltantes (mayoritariamente embarazo/lactancia, algunas riesgo_beers/signos_alarma) → script `fill-extras-gaps.ts` parchea inyectando bloques con datos curados de LactMed/Beers 2023/ISP. Aciertos: 79/79.
+
+**Verificación final** (`verify-extras-100.ts` — eliminado tras uso):
+```
+[1] DRUG_INFO entries: 382 / Sin extras: 0
+[2] DRUG_EXTRAS entries: 382 / Huérfanos: 0
+[3] Extras con campos faltantes: 0
+[4] Catálogo (ai.json): 1195/1195 con info+extras (100.00%)
+[5] Riesgo Beers resoluble: 382 / null: 0
+=== 100% OK ✓ ===
+```
+
+**Impacto**: cada producto farmacológico (1195 SKUs) renderiza ahora las 7 secciones pro completas en PDP — signos_alarma destacado rojo, consejos prácticos, badge Beers AGS 2023, vía, embarazo, lactancia, categoría receta, JSON-LD Drug enriquecido.
+
+Archivos modificados: `src/lib/drug-info-extras.ts` 3312→~3370 líneas (+7 entries, -13 huérfanos, +79 inyecciones de campos). DB: `UPDATE products SET active_ingredient` ×179.
+
+---
+
 ## 2026-05-14 — Dashboard mini-widget tendencia margen bruto (6m)
 
 Cierra Fase 5 dashboard owner. Consume endpoint existente `/api/admin/purchase-orders/monthly-margin?months=6` (creado 2026-05-13 para MarginChart en /admin/compras tab Resumen).
