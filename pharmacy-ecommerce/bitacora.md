@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-05-14 — Dashboard mini-widget tendencia margen bruto (6m)
+
+Cierra Fase 5 dashboard owner. Consume endpoint existente `/api/admin/purchase-orders/monthly-margin?months=6` (creado 2026-05-13 para MarginChart en /admin/compras tab Resumen).
+
+**Dashboard** (`/admin/dashboard`):
+- Interface `MarginMonth` + state `marginTrend`.
+- `loadStats` fetch paralelo `marginPromise` con `dashboard-extras`.
+- Mini-card linkea a `/admin/compras`: icon `TrendingUp` emerald, KPI `margin_pct` mes actual (color emerald si ≥0, rose si <0), monto `margin` CLP, delta vs mes anterior (`Δpp` con ▲/▼), sparkline Recharts 6m `LineChart` 128×48px sin dots (color emerald/rose según signo actual).
+- Render condicional `marginTrend.length >= 2` (necesita prev para delta).
+- Posición: ANTES de "Charts Section" (Ventas 7d / Estado / Top productos).
+
+Build OK.
+
+---
+
 ## 2026-05-14 — Info pro: extras 100% cobertura (suplementos + medicamentos)
 
 `drug-info-extras.ts` tenía 91 entradas con campos opcionales (`signos_alarma`, `consejos_uso`, `riesgo_beers`, `via`, `embarazo`, `lactancia`, `receta`). Faltaban 294 (294/385 = 76% sin extras) → 858 productos catálogo sin info reforzada (signos de alarma, consejos prácticos, Beers, embarazo/lactancia, receta).
