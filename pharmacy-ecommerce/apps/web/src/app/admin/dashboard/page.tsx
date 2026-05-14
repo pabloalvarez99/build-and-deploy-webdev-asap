@@ -63,6 +63,15 @@ interface Stats {
  expiringProductsCount: number;
 }
 
+interface MarginMonth {
+ month: string;
+ label: string;
+ sales: number;
+ costs: number;
+ margin: number;
+ margin_pct: number;
+}
+
 interface OverduePO {
  id: string;
  invoice_number: string | null;
@@ -131,6 +140,7 @@ export default function AdminPage() {
  const [pendingReservations, setPendingReservations] = useState<Order[]>([]);
  const [reservationActions, setReservationActions] = useState<Record<string, 'approving' | 'rejecting' | 'done'>>({});
  const [overduePOs, setOverduePOs] = useState<OverduePO[]>([]);
+ const [marginTrend, setMarginTrend] = useState<MarginMonth[]>([]);
 
  // Track dark mode for Recharts SVG props (can't use Tailwind dark: on SVG attributes)
  useEffect(() => {
@@ -202,6 +212,8 @@ export default function AdminPage() {
  const reportesPromise = fetch(`/api/admin/reportes?from=${fromStr}&to=${toStr}`)
   .then((r) => r.json()).catch(() => null);
  const extrasPromise = fetch('/api/admin/dashboard-extras', { credentials: 'include' })
+  .then((r) => r.ok ? r.json() : null).catch(() => null);
+ const marginPromise = fetch('/api/admin/purchase-orders/monthly-margin?months=6', { credentials: 'include' })
   .then((r) => r.ok ? r.json() : null).catch(() => null);
 
  // Run all queries in parallel — count-only (limit:1) for accurate totals
@@ -292,6 +304,9 @@ export default function AdminPage() {
  });
 
  setOverduePOs((extras?.overdue_pos_top ?? []) as OverduePO[]);
+
+ const marginData = await marginPromise;
+ setMarginTrend((marginData?.data ?? []) as MarginMonth[]);
 
  // Calculate status distribution
  const statusDistribution = calculateStatusDistribution(allOrders.orders);
@@ -405,6 +420,46 @@ export default function AdminPage() {
    />
  </div>
  ) : null}
+
+ {/* Margin Trend Mini Widget */}
+ {!isLoading && marginTrend.length >= 2 && (() => {
+  const cur = marginTrend[marginTrend.length - 1];
+  const prev = marginTrend[marginTrend.length - 2];
+  const deltaPP = cur.margin_pct - prev.margin_pct;
+  const curPos = cur.margin >= 0;
+  const valueCls = curPos ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400';
+  const deltaCls = deltaPP >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400';
+  return (
+   <Link href="/admin/compras" className="card p-5 mb-8 flex items-center gap-4 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors">
+    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+     <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+    </div>
+    <div className="min-w-0 flex-1">
+     <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Margen bruto · {cur.label}</p>
+     <div className="flex items-baseline gap-3 flex-wrap mt-0.5">
+      <span className={`text-2xl font-bold ${valueCls}`}>{cur.margin_pct.toFixed(1)}%</span>
+      <span className="text-sm text-slate-600 dark:text-slate-300">{formatPrice(cur.margin)}</span>
+      <span className={`text-xs font-semibold ${deltaCls}`}>
+       {deltaPP >= 0 ? '▲' : '▼'} {Math.abs(deltaPP).toFixed(1)}pp vs {prev.label}
+      </span>
+     </div>
+    </div>
+    <div className="hidden sm:block w-32 h-12 shrink-0">
+     <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={marginTrend} margin={{ top: 4, right: 0, left: 0, bottom: 4 }}>
+       <Line
+        type="monotone"
+        dataKey="margin_pct"
+        stroke={curPos ? '#10B981' : '#F43F5E'}
+        strokeWidth={2}
+        dot={false}
+       />
+      </LineChart>
+     </ResponsiveContainer>
+    </div>
+   </Link>
+  );
+ })()}
 
  {/* Charts Section */}
  {!isLoading && (

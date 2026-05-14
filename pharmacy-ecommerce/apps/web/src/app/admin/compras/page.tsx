@@ -8,6 +8,7 @@ import { purchaseOrderApi, supplierApi, type PurchaseOrder, type Supplier } from
 import { ClipboardList, Plus, Eye, Filter, CheckCircle2, Clock, XCircle, AlertTriangle, ChevronDown, ChevronRight, ShoppingCart, TrendingUp, Banknote } from 'lucide-react'
 import { MonthlySummaryChart } from '@/components/admin/MonthlySummaryChart'
 import { MarginChart } from '@/components/admin/MarginChart'
+import { ResumenComprasKpis } from '@/components/admin/ResumenComprasKpis'
 
 interface ReorderItem {
   product_id: string
@@ -144,6 +145,7 @@ export default function ComprasPage() {
 
       {activeTab === 'resumen' && (
         <div className="space-y-4">
+          <ResumenComprasKpis />
           <MarginChart />
           <MonthlySummaryChart />
         </div>

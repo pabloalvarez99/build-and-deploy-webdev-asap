@@ -10,6 +10,7 @@ interface Candidate {
   score: number
   inter: number
   confident: boolean
+  from_mapping?: boolean
 }
 
 interface ItemSuggestion {
@@ -187,16 +188,25 @@ export function SuggestMatchesModal({ orderId, onClose, onApplied }: Props) {
                       <span className="text-xs text-slate-500 dark:text-slate-400 shrink-0">
                         stock {c.product_stock}
                       </span>
-                      <span
-                        className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 ${
-                          c.confident
-                            ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
-                            : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-                        }`}
-                        title={`inter=${c.inter} score=${c.score.toFixed(2)}`}
-                      >
-                        {(c.score * 100).toFixed(0)}%
-                      </span>
+                      {c.from_mapping ? (
+                        <span
+                          className="text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0 bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400"
+                          title="Mapeado previamente por código de proveedor"
+                        >
+                          MAPPING
+                        </span>
+                      ) : (
+                        <span
+                          className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 ${
+                            c.confident
+                              ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                              : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                          }`}
+                          title={`inter=${c.inter} score=${c.score.toFixed(2)}`}
+                        >
+                          {(c.score * 100).toFixed(0)}%
+                        </span>
+                      )}
                     </label>
                   ))}
                 </div>

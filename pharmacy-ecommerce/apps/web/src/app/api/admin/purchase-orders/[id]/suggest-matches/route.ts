@@ -27,6 +27,7 @@ interface Suggestion {
   score: number;
   inter: number;
   confident: boolean;
+  from_mapping?: boolean;
 }
 
 export async function POST(
@@ -41,7 +42,7 @@ export async function POST(
 
     const order = await db.purchase_orders.findUnique({
       where: { id: params.id },
-      select: { id: true },
+      select: { id: true, supplier_id: true },
     });
     if (!order) return errorResponse('Orden no encontrada', 404);
 
@@ -59,19 +60,55 @@ export async function POST(
       return NextResponse.json({ suggestions: [], unmapped_count: 0 });
     }
 
-    const products = await db.products.findMany({
-      where: { active: true },
-      select: { id: true, name: true, stock: true },
-    });
+    // Pre-resolver vía supplier_product_mappings: bulk fetch para items con supplier_product_code
+    const codes = unmapped
+      .map((u) => u.supplier_product_code)
+      .filter((c): c is string => !!c);
+    const mappings = codes.length > 0
+      ? await db.supplier_product_mappings.findMany({
+          where: { supplier_id: order.supplier_id, supplier_code: { in: codes } },
+          include: { products: { select: { id: true, name: true, stock: true, active: true } } },
+        })
+      : [];
+    const mappingByCode = new Map<string, { id: string; name: string; stock: number }>();
+    for (const m of mappings) {
+      if (m.products.active) {
+        mappingByCode.set(m.supplier_code, { id: m.products.id, name: m.products.name, stock: m.products.stock });
+      }
+    }
 
-    const productTokens: { id: string; name: string; stock: number; toks: string[] }[] = products.map((p) => ({
-      id: p.id,
-      name: p.name,
-      stock: p.stock,
-      toks: tokens(p.name),
-    }));
+    // Para fuzzy fallback: cargar productos solo si quedan items sin mapping
+    const needsFuzzy = unmapped.some((u) => !u.supplier_product_code || !mappingByCode.has(u.supplier_product_code));
+    const productTokens: { id: string; name: string; stock: number; toks: string[] }[] = needsFuzzy
+      ? (await db.products.findMany({
+          where: { active: true },
+          select: { id: true, name: true, stock: true },
+        })).map((p) => ({ id: p.id, name: p.name, stock: p.stock, toks: tokens(p.name) }))
+      : [];
 
     const result = unmapped.map((item) => {
+      // Pre-select desde mapping si existe — skip fuzzy
+      if (item.supplier_product_code) {
+        const m = mappingByCode.get(item.supplier_product_code);
+        if (m) {
+          return {
+            item_id: item.id,
+            product_name_invoice: item.product_name_invoice,
+            supplier_product_code: item.supplier_product_code,
+            quantity: item.quantity,
+            candidates: [{
+              product_id: m.id,
+              product_name: m.name,
+              product_stock: m.stock,
+              score: 1,
+              inter: 0,
+              confident: true,
+              from_mapping: true,
+            }],
+          };
+        }
+      }
+
       const invToks = tokens(item.product_name_invoice ?? '');
       const candidates: Suggestion[] = [];
 
