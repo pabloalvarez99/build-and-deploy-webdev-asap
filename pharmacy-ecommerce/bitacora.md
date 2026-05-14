@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-05-14 — Dashboard widget OCs vencidas (top 5)
+
+StatCard "Por pagar" mostraba count + alert pero owner debía click → `/admin/compras` → filtrar para ver cuáles. Widget inline cierra ciclo: top 5 OCs vencidas ordenadas por `due_date asc`, c/u con proveedor, factura, total CLP, días vencido, link directo a detalle.
+
+**API** (`/api/admin/dashboard-extras`):
+- Nueva query `overdueTop`: 5 OCs `status=received, paid=false, due_date<today`, orderBy `due_date asc`.
+- Response += `overdue_pos_top: [{id, invoice_number, supplier_name, total, due_date, days_overdue}]`.
+- `days_overdue` server-side desde diff `today - due_date`.
+
+**Dashboard** (`/admin/dashboard`):
+- Interface `OverduePO` + state `overduePOs`.
+- `loadStats` setea desde `extras.overdue_pos_top`.
+- Widget gradient rose→red, `AlertOctagon`, header link `/admin/compras?paid=unpaid`, items linkean a `/admin/compras/[id]`. Render condicional `overduePOs.length > 0`. Posición: ANTES de "Reservas pendientes" (mayor prioridad financiera).
+
+Build OK.
+
+---
+
 ## 2026-05-14 — Fix UX: filtros URL `/admin/vencimientos?filter=`
 
 Dashboard owner KPI "Vencen 30d" linkea a `/admin/vencimientos?filter=soon30`, pero la página ignoraba el query param (estado `filter` iniciaba `''`). Click desde dashboard mostraba lista completa, no filtrada.
@@ -3223,3 +3241,10 @@ Build local OK. Push → Vercel.
 - **producto no-encontrado**: card centrado con CTAs "Volver al catálogo" + WhatsApp + Llamar (igual patrón mis-pedidos).
 - **synonyms extras**: `lib/search-synonyms.ts` +30 marcas comerciales: tylenol↔paracetamol, dipirona↔metamizol↔novalgina, voltaren↔diclofenaco, naproxeno↔flanax, losec↔omeprazol, nexium↔esomeprazol, motilium↔domperidona (bidireccional), primperan↔metoclopramida, claritin↔loratadina (bidireccional), redoxon↔vitamina c, ventolin↔salbutamol, vick vaporub↔mentol/alcanfor, cipro↔ciprofloxacino, eutirox↔levotiroxina, ravotril↔clonazepam, ativan↔lorazepam, transilium↔bromazepam, xanax↔alprazolam, atenolol↔tenormin, amlodipino↔norvasc, simvastatina↔zocor, furosemida↔lasix, prednisona↔meticorten, etc. 9 tests nuevos vitest (35/35 total).
 - Build local OK. Push → Vercel.
+
+## 2026-05-14 — KPIs Resumen /admin/compras + pre-select mappings suggest-matches
+
+- **/api/admin/purchase-orders/kpis** (GET, getAdminUser, ?months=6): retorna `draft` (total + over_7d + pct_over_7d), `avg_ticket` (received recientes), `received_count`, `top_products` (top 5 por gasto en ventana, qty+spend). Solo OCs received en agregación, drafts cuentan global.
+- **ResumenComprasKpis.tsx**: 3 KPI cards (Borradores >7d, Ticket promedio, Top productos count) + tabla top 5 con qty/spend. Inyectado en tab "Resumen" /admin/compras antes de MarginChart+MonthlySummaryChart. Skeleton + error panel.
+- **suggest-matches pre-select via mappings**: route `[id]/suggest-matches` ahora carga `supplier_product_mappings` (bulk, supplier_id + supplier_code IN codes) ANTES de fuzzy. Si existe mapping para item.supplier_product_code → retorna candidato único `from_mapping:true, score:1, confident:true` y skip fuzzy. Solo carga productos para fuzzy si quedan items sin mapping (perf). UI `SuggestMatchesModal` muestra badge azul "MAPPING" cuando aplica.
+- Build local verde. 35/35 tests verdes. Push → Vercel.

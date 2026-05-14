@@ -14,7 +14,7 @@ export async function GET() {
     const in30d = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
-    const [unpaidPOs, overduePOs, expiringBatches] = await Promise.all([
+    const [unpaidPOs, overduePOs, overdueTop, expiringBatches] = await Promise.all([
       db.purchase_orders.findMany({
         where: { status: 'received', paid: false },
         select: { total_cost: true, due_date: true },
@@ -26,6 +26,22 @@ export async function GET() {
           due_date: { lt: today },
         },
         select: { total_cost: true },
+      }),
+      db.purchase_orders.findMany({
+        where: {
+          status: 'received',
+          paid: false,
+          due_date: { lt: today },
+        },
+        select: {
+          id: true,
+          invoice_number: true,
+          total_cost: true,
+          due_date: true,
+          suppliers: { select: { name: true } },
+        },
+        orderBy: { due_date: 'asc' },
+        take: 5,
       }),
       db.product_batches.findMany({
         where: {
@@ -50,9 +66,23 @@ export async function GET() {
       products: distinctProducts.size,
     }
 
+    const overdueTopList = overdueTop.map((p) => {
+      const due = p.due_date ? new Date(p.due_date) : null
+      const daysOverdue = due ? Math.max(0, Math.floor((today.getTime() - due.getTime()) / 86400000)) : 0
+      return {
+        id: p.id,
+        invoice_number: p.invoice_number,
+        supplier_name: p.suppliers?.name ?? null,
+        total: Number(p.total_cost || 0),
+        due_date: p.due_date,
+        days_overdue: daysOverdue,
+      }
+    })
+
     return NextResponse.json({
       ocs_to_pay: ocsToPay,
       ocs_overdue: ocsOverdue,
+      overdue_pos_top: overdueTopList,
       expiring_batches: expiring,
     })
   } catch (e) {

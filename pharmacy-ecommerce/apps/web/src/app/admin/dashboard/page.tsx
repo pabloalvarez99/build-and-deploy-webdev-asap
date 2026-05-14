@@ -22,6 +22,7 @@ import {
  LayoutDashboard,
  Wallet,
  CalendarClock,
+ AlertOctagon,
 } from 'lucide-react';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { StatCard } from '@/components/admin/ui/StatCard';
@@ -60,6 +61,15 @@ interface Stats {
  ocsOverdueCount: number;
  expiringBatchesCount: number;
  expiringProductsCount: number;
+}
+
+interface OverduePO {
+ id: string;
+ invoice_number: string | null;
+ supplier_name: string | null;
+ total: number;
+ due_date: string | null;
+ days_overdue: number;
 }
 
 interface LowStockProduct {
@@ -120,6 +130,7 @@ export default function AdminPage() {
  const [isDark, setIsDark] = useState(false);
  const [pendingReservations, setPendingReservations] = useState<Order[]>([]);
  const [reservationActions, setReservationActions] = useState<Record<string, 'approving' | 'rejecting' | 'done'>>({});
+ const [overduePOs, setOverduePOs] = useState<OverduePO[]>([]);
 
  // Track dark mode for Recharts SVG props (can't use Tailwind dark: on SVG attributes)
  useEffect(() => {
@@ -279,6 +290,8 @@ export default function AdminPage() {
  expiringBatchesCount: extras?.expiring_batches?.count ?? 0,
  expiringProductsCount: extras?.expiring_batches?.products ?? 0,
  });
+
+ setOverduePOs((extras?.overdue_pos_top ?? []) as OverduePO[]);
 
  // Calculate status distribution
  const statusDistribution = calculateStatusDistribution(allOrders.orders);
@@ -484,6 +497,46 @@ export default function AdminPage() {
  </div>
  </div>
  </div>
+ )}
+
+ {/* Overdue Purchase Orders Widget */}
+ {!isLoading && overduePOs.length > 0 && (
+  <div className="card overflow-hidden mb-8">
+   <div className="bg-gradient-to-r from-rose-500 to-red-600 px-6 py-4">
+    <div className="flex items-center justify-between">
+     <div className="flex items-center gap-3 text-white">
+      <AlertOctagon className="w-6 h-6" />
+      <h3 className="text-lg font-semibold">Pagos vencidos a proveedores</h3>
+      <span className="bg-white/20 text-white text-xs font-bold px-2 py-0.5 rounded-full">{stats?.ocsOverdueCount ?? overduePOs.length}</span>
+     </div>
+     <Link href="/admin/compras?paid=unpaid" className="text-white/80 hover:text-white text-sm flex items-center gap-1">
+      Ver todas <ArrowRight className="w-4 h-4" />
+     </Link>
+    </div>
+   </div>
+   <div className="divide-y divide-slate-100 dark:divide-slate-700">
+    {overduePOs.map((po) => (
+     <Link
+      key={po.id}
+      href={`/admin/compras/${po.id}`}
+      className="px-5 py-3 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
+     >
+      <div className="flex-1 min-w-0">
+       <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{po.supplier_name ?? 'Proveedor'}</span>
+        {po.invoice_number && <span className="text-xs font-mono bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded">#{po.invoice_number}</span>}
+        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300">{po.days_overdue}d vencida</span>
+       </div>
+       <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+        <span className="font-semibold text-slate-700 dark:text-slate-300">{formatPrice(po.total)}</span>
+        {po.due_date && <span>venc. {new Date(po.due_date).toLocaleDateString('es-CL')}</span>}
+       </div>
+      </div>
+      <ExternalLink className="w-4 h-4 text-slate-400 shrink-0" />
+     </Link>
+    ))}
+   </div>
+  </div>
  )}
 
  {/* Pending Reservations Widget */}
