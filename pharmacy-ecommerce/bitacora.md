@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-05-14 — Fix UX: filtros URL `/admin/vencimientos?filter=`
+
+Dashboard owner KPI "Vencen 30d" linkea a `/admin/vencimientos?filter=soon30`, pero la página ignoraba el query param (estado `filter` iniciaba `''`). Click desde dashboard mostraba lista completa, no filtrada.
+
+**Fix** (`src/app/admin/vencimientos/page.tsx`):
+- `useSearchParams` import.
+- `initialFilter` lee `?filter=` y valida vs whitelist (`expired`/`soon30`/`soon90`), fallback `''`.
+- `useState(initialFilter)` reemplaza init hardcoded.
+
+API `/api/admin/batches?filter=` ya soportaba los 3 valores → solo fix client. Compras (`?paid=unpaid`) ya leía searchParams → OK, sin cambios.
+
+---
+
 ## 2026-05-13 — Auditoría cache: revalidateTag('products') en 4 endpoints faltantes
 
 Tras fix 4bd40fa (devoluciones), grep sistemático sobre `/api/admin/*` reveló 4 endpoints que mutan tabla `products` sin invalidar tag — catálogo/home/buscador servían stock/precio stale:

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { isAdminRole } from '@/lib/roles';
 import { formatPrice } from '@/lib/format';
@@ -34,11 +34,16 @@ interface BatchSummary {
 
 export default function VencimientosPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuthStore();
   const [batches, setBatches] = useState<Batch[]>([]);
   const [summary, setSummary] = useState<BatchSummary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'' | 'expired' | 'soon30' | 'soon90'>('');
+  const initialFilter = (() => {
+    const p = searchParams.get('filter');
+    return p === 'expired' || p === 'soon30' || p === 'soon90' ? p : '';
+  })();
+  const [filter, setFilter] = useState<'' | 'expired' | 'soon30' | 'soon90'>(initialFilter);
   const [showForm, setShowForm] = useState(false);
   const [liquidModal, setLiquidModal] = useState<Batch | null>(null);
   const [liquidDiscount, setLiquidDiscount] = useState(20);
