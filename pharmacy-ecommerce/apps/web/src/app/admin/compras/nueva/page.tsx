@@ -781,6 +781,47 @@ export default function NuevaCompraPage() {
             <span className="text-xl font-bold text-slate-900 dark:text-white">${totalCost.toLocaleString('es-CL')}</span>
           </div>
 
+          {/* Warning si suma items difiere mucho del neto declarado por header */}
+          {subtotalNet && lines.length > 0 && Math.abs(totalCost - subtotalNet) / subtotalNet > 0.10 && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-xl px-4 py-3 text-sm text-amber-800 dark:text-amber-300 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium">Discrepancia detectada</p>
+                <p className="text-xs mt-0.5">
+                  Suma items: <strong>${totalCost.toLocaleString('es-CL')}</strong> · Neto declarado en factura: <strong>${subtotalNet.toLocaleString('es-CL')}</strong>.
+                  Probablemente faltan items o algunos están mal detectados. Revisa el texto OCR abajo.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Toggle OCR raw SIEMPRE visible cuando hay ocrRaw — útil para verificar
+              cuando hay items pero parecen mal detectados (no solo cuando lines=0). */}
+          {ocrRaw && (
+            <details className="border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900/40">
+              <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 select-none flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-slate-500" />
+                  Ver texto OCR extraído ({ocrRaw.length.toLocaleString('es-CL')} chars · fuente: {textSource ?? 'desconocido'})
+                </span>
+                <span className="text-xs text-slate-400">para diagnóstico / soporte</span>
+              </summary>
+              <div className="border-t border-slate-200 dark:border-slate-700 p-3">
+                <div className="flex gap-2 mb-2">
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(ocrRaw).catch(() => {}) }}
+                    className="text-xs px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                  >
+                    Copiar al portapapeles
+                  </button>
+                </div>
+                <pre className="text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-950 rounded-lg p-3 overflow-auto max-h-72 whitespace-pre-wrap break-words border border-slate-200 dark:border-slate-700">
+{ocrRaw}
+                </pre>
+              </div>
+            </details>
+          )}
+
           <div className="flex gap-3">
             <button
               onClick={() => setStep('foto')}
