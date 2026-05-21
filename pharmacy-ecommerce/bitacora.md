@@ -3394,3 +3394,16 @@ Build local OK. Push → Vercel.
   - `apply_migration.mjs` — runner SQL directo Cloud SQL.
 - Endpoint admin `/api/admin/rp-catalog` (paginado, búsqueda, filtros enrich/imagen) + UI `/admin/rp-catalog`.
 - Heurística inline cubrió 34118 (forma/tipo/dosis/presentación). Scraper full corre en background a ~2.6 rows/s (~4h total).
+
+## 2026-05-21 — Mediven Vision OCR fallback: parser robusto a líneas rotas
+
+- **Bug**: factura Mediven nueva subida desde UI mostraba "0 reconocidas, $0" pese a header correctamente extraído (folio 3666640, fecha 19-05-2026, neto $395.659, badge "Vision OCR"). pdf-parse retornó <100 chars → fallback Vision OCR → texto retornado con line breaks por bounding box (cada celda en línea propia) → LINE_RE line-by-line `^(.+?) (qty) (pvp) (tot) (MM-YYYY).../` no matcheaba ninguna línea.
+- **Fix arquitectural**: `parsers/mediven.ts` ahora corre 2 estrategias:
+  1. **Line-by-line** (preferida): preciso, rápido, sigue funcionando con pdf-parse nativo. Sin cambios.
+  2. **Anchor-based fallback** (nueva): si lineByLine retorna 0, normaliza todo whitespace a single space y aplica regex global FLEX_ITEM_RE anclada en `MM-YYYY`. Captura ítems consecutivos sin depender de line breaks.
+- **Cleanup desc**: el regex flex puede arrastrar header leak ("FARMACIA TU FARMACIA (CQBO) Descripción Cant. Precio Total Lote BENTLEY..."). `cleanDescription()` busca último match de palabra-basura (Lote/Sucursal/Descripción/Cant/Total/Fecha/Vence/OC No Peds/Comuna/Teléfono/email/RUT/Mediven SpA/Razón social/Dirección/Giro/etc) y corta todo lo anterior — deja solo nombre real del producto.
+- **Compartido `buildLine()`**: validación + dedupe + InvoiceLine construction extraído en helper único reusado por ambas estrategias (DRY, mismo sanity check qty×precio≈total tolerancia 5%).
+- **Telemetría**: `/api/admin/purchase-orders/scan` ahora `console.warn` cuando `parsed.lines.length===0 && !creditNote` con `format`, `text_source`, `text_length`, `header_invoice_number`, `ocr_first_1200`. Visible en Vercel Functions logs → permite ajustar regex futuras sin pedir PDF al usuario.
+- **UI**: `/admin/compras/nueva` agrega `<details>` toggle "Ver texto OCR extraído (N chars · fuente: vision/pdf)" cuando `lines.length===0`. Incluye botón "Copiar al portapapeles" + pre block max-h-72 scrollable. User puede pegar al soporte o usar para debug.
+- **Test regresión**: `mediven-vision.test.ts` + fixture `mediven-vision.txt` simulan Vision OCR (cada celda en línea propia). 6 ítems, verifica desc limpia + qty/pvp/lote/vto correctos. Total tests 24/24 verdes (incluye fixture pdf-parse original sin regresión).
+- Build local OK.

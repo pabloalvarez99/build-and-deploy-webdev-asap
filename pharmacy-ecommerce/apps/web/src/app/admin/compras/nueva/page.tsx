@@ -579,10 +579,40 @@ export default function NuevaCompraPage() {
 
             {/* Líneas */}
             {lines.length === 0 ? (
-              <div className="text-center py-8 text-slate-500 dark:text-slate-400">
-                <AlertCircle className="w-8 h-8 mx-auto mb-2 text-amber-400" />
-                <p>No se detectaron líneas de productos en la imagen.</p>
-                <p className="text-sm mt-1">Intenta con una foto más clara o ingresa los productos manualmente.</p>
+              <div className="space-y-4">
+                <div className="text-center py-6 text-slate-500 dark:text-slate-400">
+                  <AlertCircle className="w-8 h-8 mx-auto mb-2 text-amber-400" />
+                  <p>No se detectaron líneas de productos en la imagen.</p>
+                  <p className="text-sm mt-1">Intenta con una foto más clara o ingresa los productos manualmente.</p>
+                </div>
+
+                {/* Toggle OCR raw para diagnóstico cuando el parser falla.
+                    Useful para: pegar al soporte, ajustar regex futuro, verificar
+                    que el texto extraído sea legible (ej Vision OCR vs PDF nativo). */}
+                {ocrRaw && (
+                  <details className="border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900/40">
+                    <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 select-none flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-slate-500" />
+                        Ver texto OCR extraído ({ocrRaw.length.toLocaleString('es-CL')} chars · fuente: {textSource ?? 'desconocido'})
+                      </span>
+                      <span className="text-xs text-slate-400">para diagnóstico</span>
+                    </summary>
+                    <div className="border-t border-slate-200 dark:border-slate-700 p-3">
+                      <div className="flex gap-2 mb-2">
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(ocrRaw).catch(() => {}) }}
+                          className="text-xs px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                        >
+                          Copiar al portapapeles
+                        </button>
+                      </div>
+                      <pre className="text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-950 rounded-lg p-3 overflow-auto max-h-72 whitespace-pre-wrap break-words border border-slate-200 dark:border-slate-700">
+{ocrRaw}
+                      </pre>
+                    </div>
+                  </details>
+                )}
               </div>
             ) : (
               <div className="space-y-3">

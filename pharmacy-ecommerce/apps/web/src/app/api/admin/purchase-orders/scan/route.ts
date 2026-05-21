@@ -128,6 +128,19 @@ export async function POST(request: NextRequest) {
     // Rechazar Nota de Crédito explícitamente (no afecta stock)
     const creditNote = isCreditNote(fullText);
     const parsed = parseInvoice(fullText);
+
+    // Telemetría server-side cuando el parser no detecta líneas: imprimir muestra
+    // del OCR raw para diagnosticar regex faltantes (ver en Vercel Functions logs).
+    if (parsed.lines.length === 0 && !creditNote) {
+      console.warn('[scan] lines=0 — diagnostico parser', {
+        format: parsed.format,
+        text_source: textSource,
+        text_length: fullText.length,
+        header_invoice_number: parsed.header.invoice_number,
+        ocr_first_1200: fullText.slice(0, 1200),
+      });
+    }
+
     const db = await getDb();
 
     // Auto-detectar supplier por RUT si no se pasó uno explícito
