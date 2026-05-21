@@ -3321,3 +3321,11 @@ Build local OK. Push → Vercel.
 - **scripts/fix-missing-barcodes.mjs**: asigna EAN-13 interno (prefix `299` GS1 in-store + seq 10 dígitos + checksum) a productos activos sin barcode. Insert en `product_barcodes` + `barcode_catalog` (si external_id). Transacción única.
 - Aplicado: 28 productos → barcodes `2999994793130X` a `2999994793157X`. Verify: still_missing=0.
 - Phase B (EAN-13 checksum inválido) y Phase C (SKU proveedor no-estándar) pendientes.
+
+## 2026-05-21 — barcode Phase B (post-ultrathink)
+
+- **Auditoría profunda** (`scripts/audit-barcodes-deep.mjs`): detecta clases ocultas — colisiones barcode==external_id de OTRO producto (POS mis-resolve), barcode==supplier_code, EAN-13/EAN-8 checksum, multi-barcode, whitespace, distribución por longitud. Salida JSON `reportes/barcode-issues-YYYY-MM-DD.json`.
+- **Hallazgo principal**: 89 colisiones ext_id (POS resolvía a producto incorrecto). Split active: 0 both, 81 none, 4 only-ext, 4 only-bc.
+- **Phase B** (`scripts/fix-collisions-phase-b.mjs`, transacción): DELETE 85 rows safe (none-active + only-ext-active → restaura ext_id fallback). DELETE 1 supplier_code collision (bc inactivo). DELETE 85 catálogo huérfanos. Trim whitespace 0 (era duplicado).
+- **Phase C decisión**: NO auto-fix de 165 EAN-13 bad checksum (adivinar dígito = enmascarar bug real). Solo 3 activos → CSV `reportes/ean13-checksum-active.csv` para revisión humana (GLUCOMETRO DIABECHECK, PEDIALYTE MANZANA 500, TIOF OFT). 4232 "no-estándar" son SKU proveedor legítimos, no se tocan (matching de compras los necesita).
+- **Verify** (`scripts/post-phase-b-verify.mjs`): activos sin barcode=0, colisiones ext_id restantes=4 (bc-active, OK), totales pb=39230 bc=39228.
