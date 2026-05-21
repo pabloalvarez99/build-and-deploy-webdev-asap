@@ -3357,3 +3357,13 @@ Build local OK. Push → Vercel.
   - `src/app/admin/pos/page.tsx`: en scan-fail, fire-and-forget POST.
 - **Como usar**: query SQL `SELECT barcode, scan_count, last_scanned_at FROM unknown_barcode_scans WHERE resolved_at IS NULL ORDER BY scan_count DESC` o agregar pagina admin futura.
 - Build local verde.
+
+## 2026-05-21 — UI /admin/barcodes/unknown (cierra loop scan-fail)
+
+- **`GET /api/admin/barcodes/unknown`** (admin): lista scan-fails pendientes, orden scan_count DESC, top 200.
+- **`POST /api/admin/barcodes/unknown/resolve`** (admin): asigna {barcode, product_id}. INSERT product_barcodes + UPDATE resolved. 409 si barcode ya asignado a otro producto.
+- **`DELETE /api/admin/barcodes/unknown`** (admin): marca resuelto sin asignar (falso positivo / ignorar).
+- **`/admin/barcodes/unknown`**: tabla con barcode + scan_count + last_scanned. Por row: buscador inline producto (reutiliza /api/admin/etiquetas/search), click asigna. Botón "Ignorar" alterno. Refresh button.
+- **Sidebar**: link en seccion Catálogo (icono Barcode).
+- Edit modal /admin/productos ya tiene chips + input para agregar/quitar barcodes (preexistente, sin cambios).
+- Loop completo: scan-fail POS → tabla → admin revisa → asigna o crea producto. Build verde.

@@ -50,6 +50,7 @@ import {
   Trophy,
   Sparkles,
   Heart,
+  Barcode,
   type LucideIcon,
 } from 'lucide-react';
 import { canAccessRoute } from '@/lib/roles';
@@ -110,6 +111,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/admin/categorias', icon: Tags, label: 'Categorías' },
       { href: '/admin/catalogo-calidad', icon: ClipboardCheck, label: 'Calidad' },
       { href: '/admin/etiquetas', icon: Tag, label: 'Etiquetas precio' },
+      { href: '/admin/barcodes/unknown', icon: Barcode, label: 'Códigos no encontrados' },
     ],
   },
   {
