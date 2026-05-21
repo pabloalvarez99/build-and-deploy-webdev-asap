@@ -3383,3 +3383,14 @@ Build local OK. Push → Vercel.
   - Counter header /step OCR: "3 código exacto · 5 fuzzy (verifica) · 1 sin mapear" (antes era binario reconocidas vs sin mapear).
 - **Confianza fuzzy**: misma heurística que suggest-matches — `inter >= 2 OR score >= 0.6`. Solo top-1 candidato confident se auto-aplica. No-confident sigue como "sin mapear" (manual).
 - 18/18 tests verdes. Build local OK. Push → Vercel.
+
+## 2026-05-21 — Catálogo RP (Ecosur) full import + enrich
+- **Nueva tabla `rp_catalog`** (separada de `products`): 34118 SKUs cargados desde `BACKUP_PRODUCTOS.txt` (snapshot dbecosur 20-04-2026).
+- Migración `20260521c_rp_catalog.sql` (PK ecosur_id, GIN trgm/barcodes, pg_trgm).
+- Scripts nuevos (`pharmacy-ecommerce/scripts/`):
+  - `rp_catalog_lib.mjs` — Cloud SQL connector + heurísticas (forma, tipo, dosis, presentación, laboratorio).
+  - `rp_catalog_import.mjs` — parser fixed-width (cols 1-9 ID, 10-77 desc, 78-90 PVP, 91-97 status, 98+ barcodes). Upsert idempotente.
+  - `rp_catalog_scrape.mjs` — enrich vía Salcobrand/CruzVerde/Ahumada/DuckDuckGo (concurrency configurable, resumable por `enrich_status`).
+  - `apply_migration.mjs` — runner SQL directo Cloud SQL.
+- Endpoint admin `/api/admin/rp-catalog` (paginado, búsqueda, filtros enrich/imagen) + UI `/admin/rp-catalog`.
+- Heurística inline cubrió 34118 (forma/tipo/dosis/presentación). Scraper full corre en background a ~2.6 rows/s (~4h total).

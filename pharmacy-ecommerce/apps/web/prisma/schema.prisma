@@ -512,3 +512,31 @@ model announcements {
   @@index([visible_to, pinned, created_at(sort: Desc)])
   @@index([expires_at])
 }
+
+model rp_catalog {
+  ecosur_id          String    @id @db.VarChar(20)
+  description        String    @db.VarChar(500)
+  suggested_price    Int?
+  status             String    @default("ACTV") @db.VarChar(10)
+  barcodes           String[]  @default([])
+  image_url          String?   @db.VarChar(800)
+  laboratory         String?   @db.VarChar(255)
+  active_ingredient  String?   @db.VarChar(500)
+  therapeutic_action String?   @db.VarChar(255)
+  product_type       String?   @db.VarChar(100)
+  presentation       String?   @db.VarChar(255)
+  dose               String?   @db.VarChar(100)
+  form               String?   @db.VarChar(50)
+  prescription_type  String?   @default("direct") @db.VarChar(50)
+  info_json          Json?
+  enrich_status      String?   @default("pending") @db.VarChar(20)
+  enrich_attempts    Int?      @default(0)
+  last_enriched_at   DateTime? @db.Timestamptz(6)
+  created_at         DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([status])
+  @@index([laboratory])
+  @@index([product_type])
+  @@index([enrich_status])
+}
