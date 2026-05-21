@@ -387,6 +387,8 @@ export interface PurchaseOrder {
   _count?: { items: number }
 }
 
+export type MatchSource = 'mapping' | 'fuzzy' | null
+
 export interface ScannedLine {
   supplier_product_code: string | null
   product_name_invoice: string
@@ -397,6 +399,10 @@ export interface ScannedLine {
   product_name_matched: string | null
   batch_code: string | null
   expiry_date: string | null
+  /** Origen del auto-match: 'mapping' (supplier_code exacto), 'fuzzy' (token-match nombre), null (manual). */
+  match_source: MatchSource
+  /** Score [0..1] cuando match_source==='fuzzy'. */
+  match_score?: number
 }
 
 export interface InvoiceHeader {

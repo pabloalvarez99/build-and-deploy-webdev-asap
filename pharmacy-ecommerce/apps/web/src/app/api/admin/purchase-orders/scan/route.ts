@@ -3,10 +3,17 @@ import { getDb } from '@/lib/db';
 import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 import { parseInvoice, isCreditNote } from '@/lib/invoice-parser';
 import type { InvoiceLine, InvoiceHeader, InvoiceFormat } from '@/lib/invoice-parser';
+import { preTokenize, fuzzyMatch } from '@/lib/invoice-parser/fuzzy-match';
+
+export type MatchSource = 'mapping' | 'fuzzy' | null;
 
 export interface ScannedLine extends InvoiceLine {
   product_id: string | null;
   product_name_matched: string | null;
+  /** Origen del auto-match: 'mapping' (supplier_code), 'fuzzy' (nombre token-match), o null. */
+  match_source: MatchSource;
+  /** Score fuzzy [0..1] cuando match_source==='fuzzy'. */
+  match_score?: number;
 }
 
 async function ocrImage(apiKey: string, base64Content: string): Promise<string> {
@@ -149,11 +156,11 @@ export async function POST(request: NextRequest) {
       resolvedSupplierId = supplier?.id ?? null;
     }
 
-    // Resolver mapping supplier_code → product_id por cada línea (cuando aplique)
-    const lines: ScannedLine[] = await Promise.all(
+    // FASE 1 — Resolver mapping supplier_code → product_id (preciso, instantáneo)
+    const linesAfterMapping: ScannedLine[] = await Promise.all(
       parsed.lines.map(async (line) => {
         if (!resolvedSupplierId || !line.supplier_product_code) {
-          return { ...line, product_id: null, product_name_matched: null };
+          return { ...line, product_id: null, product_name_matched: null, match_source: null };
         }
         const mapping = await db.supplier_product_mappings.findUnique({
           where: {
@@ -164,13 +171,43 @@ export async function POST(request: NextRequest) {
           },
           include: { products: { select: { id: true, name: true } } },
         });
+        if (!mapping) {
+          return { ...line, product_id: null, product_name_matched: null, match_source: null };
+        }
         return {
           ...line,
-          product_id: mapping?.products.id ?? null,
-          product_name_matched: mapping?.products.name ?? null,
+          product_id: mapping.products.id,
+          product_name_matched: mapping.products.name,
+          match_source: 'mapping' as MatchSource,
         };
       })
     );
+
+    // FASE 2 — Fuzzy match por nombre para líneas todavía sin product_id.
+    // Crítico para Mediven (no entrega supplier_code → sin esto, 100% manual).
+    const needsFuzzy = linesAfterMapping.some((l) => !l.product_id);
+    let lines: ScannedLine[] = linesAfterMapping;
+    if (needsFuzzy) {
+      const productTokens = preTokenize(
+        await db.products.findMany({
+          where: { active: true },
+          select: { id: true, name: true, stock: true },
+        })
+      );
+      lines = linesAfterMapping.map((l) => {
+        if (l.product_id) return l;
+        const candidates = fuzzyMatch(l.product_name_invoice, productTokens, 1);
+        const top = candidates[0];
+        if (!top || !top.confident) return l;
+        return {
+          ...l,
+          product_id: top.product_id,
+          product_name_matched: top.product_name,
+          match_source: 'fuzzy' as MatchSource,
+          match_score: top.score,
+        };
+      });
+    }
 
     return NextResponse.json<ScanResponse>({
       format: parsed.format,

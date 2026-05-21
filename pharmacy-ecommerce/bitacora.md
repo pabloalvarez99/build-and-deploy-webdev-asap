@@ -3367,3 +3367,19 @@ Build local OK. Push → Vercel.
 - **Sidebar**: link en seccion Catálogo (icono Barcode).
 - Edit modal /admin/productos ya tiene chips + input para agregar/quitar barcodes (preexistente, sin cambios).
 - Loop completo: scan-fail POS → tabla → admin revisa → asigna o crea producto. Build verde.
+
+## 2026-05-21 — auto-match fuzzy en /scan + UI badges (Mediven sin código)
+
+- **Problema**: Mediven SII no entrega `supplier_product_code` → todas las líneas llegaban a /admin/compras/nueva en estado "sin mapear" (amarillo, búsqueda manual obligatoria). 9 productos/factura típica = 9 buscar-y-click. Global sí tenía mapping persistente vía `supplier_product_mappings` después de la 1ra recepción.
+- **Fix arquitectural**:
+  1. Extraer fuzzy match a `src/lib/invoice-parser/fuzzy-match.ts` (`tokens`, `preTokenize`, `fuzzyMatch`). Antes vivía inline en `/api/admin/purchase-orders/[id]/suggest-matches`. Refactor: ese route ahora importa el util — sin duplicación.
+  2. `/api/admin/purchase-orders/scan` ahora ejecuta 2 fases: (1) mapping exacto vía `supplier_product_mappings` (precision), (2) fuzzy token-match contra productos active=true (recall). Carga products solo si quedan líneas sin mapping (perf — skip cuando todas matched por mapping).
+  3. Nueva interfaz `ScannedLine.match_source: 'mapping' | 'fuzzy' | null` + `match_score?: number` propagada api.ts → UI.
+- **UI nueva**:
+  - Border color por origen: emerald (mapping exacto), cyan (fuzzy auto-match), amber (sin mapear).
+  - Badge inline: `MAPPING` (verde) vs `FUZZY · 87%` (cyan con tooltip explicando "verifica antes de confirmar").
+  - Línea fuzzy expone también nombre original factura para auditoría visual.
+  - Botón "Cambiar" en fuzzy lines → `unmapLine()` resetea match conservando qty/precio/lote, permite re-elegir manualmente.
+  - Counter header /step OCR: "3 código exacto · 5 fuzzy (verifica) · 1 sin mapear" (antes era binario reconocidas vs sin mapear).
+- **Confianza fuzzy**: misma heurística que suggest-matches — `inter >= 2 OR score >= 0.6`. Solo top-1 candidato confident se auto-aplica. No-confident sigue como "sin mapear" (manual).
+- 18/18 tests verdes. Build local OK. Push → Vercel.

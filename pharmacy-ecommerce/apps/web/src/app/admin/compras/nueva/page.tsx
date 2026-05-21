@@ -219,6 +219,13 @@ export default function NuevaCompraPage() {
     setLines((prev) => prev.filter((_, i) => i !== idx))
   }
 
+  function unmapLine(idx: number) {
+    // Resetea el match pero conserva qty/precio/lote — útil para corregir fuzzy match incorrecto.
+    setLines((prev) => prev.map((l, i) =>
+      i !== idx ? l : { ...l, product_id: null, product_name_matched: null, match_source: null, match_score: undefined, _mapped: false }
+    ))
+  }
+
   function updateLine(idx: number, field: 'quantity' | 'unit_cost', value: number) {
     setLines((prev) => prev.map((l, i) => {
       if (i !== idx) return l
@@ -293,6 +300,8 @@ export default function NuevaCompraPage() {
   const totalCost = lines.reduce((s, l) => s + l.subtotal, 0)
   const mappedCount = lines.filter((l) => l._mapped).length
   const unmappedCount = lines.length - mappedCount
+  const mappingCount = lines.filter((l) => l.match_source === 'mapping').length
+  const fuzzyCount = lines.filter((l) => l.match_source === 'fuzzy').length
 
   // ─── Renderizado por step ───────────────────────────────────
 
@@ -487,9 +496,20 @@ export default function NuevaCompraPage() {
               <Scan className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               <div>
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Revisar líneas</h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">{mappedCount} reconocidas</span>
-                  {unmappedCount > 0 && <span className="text-amber-600 dark:text-amber-400 font-medium"> · {unmappedCount} sin mapear</span>}
+                <p className="text-sm text-slate-500 dark:text-slate-400 flex flex-wrap gap-x-2 gap-y-1">
+                  {mappingCount > 0 && (
+                    <span className="text-emerald-600 dark:text-emerald-400 font-medium">{mappingCount} código exacto</span>
+                  )}
+                  {fuzzyCount > 0 && (
+                    <span className="text-cyan-600 dark:text-cyan-400 font-medium">
+                      {mappingCount > 0 ? '· ' : ''}{fuzzyCount} fuzzy (verifica)
+                    </span>
+                  )}
+                  {unmappedCount > 0 && (
+                    <span className="text-amber-600 dark:text-amber-400 font-medium">
+                      {mappedCount > 0 ? '· ' : ''}{unmappedCount} sin mapear
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -571,19 +591,39 @@ export default function NuevaCompraPage() {
                     key={idx}
                     className={`p-4 rounded-xl border-2 ${
                       line._mapped
-                        ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10'
+                        ? line.match_source === 'fuzzy'
+                          ? 'border-cyan-200 dark:border-cyan-800 bg-cyan-50/50 dark:bg-cyan-900/10'
+                          : 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10'
                         : 'border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/10'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex items-center gap-2">
                         {line._mapped
-                          ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                          ? line.match_source === 'fuzzy'
+                            ? <CheckCircle2 className="w-4 h-4 text-cyan-500 shrink-0" />
+                            : <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                           : <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
                         }
                         <div>
-                          <p className="text-sm font-medium text-slate-900 dark:text-white">
-                            {line.product_name_matched ?? line.product_name_invoice}
+                          <p className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
+                            <span>{line.product_name_matched ?? line.product_name_invoice}</span>
+                            {line.match_source === 'fuzzy' && (
+                              <span
+                                title={`Auto-match por nombre (similaridad ${Math.round((line.match_score ?? 0) * 100)}%). Verifica antes de confirmar.`}
+                                className="text-[10px] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-700"
+                              >
+                                fuzzy · {Math.round((line.match_score ?? 0) * 100)}%
+                              </span>
+                            )}
+                            {line.match_source === 'mapping' && (
+                              <span
+                                title="Mapeo persistente desde supplier_product_mappings"
+                                className="text-[10px] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700"
+                              >
+                                mapping
+                              </span>
+                            )}
                           </p>
                           {line.supplier_product_code && (
                             <p className="text-xs text-slate-500 dark:text-slate-400">Código: {line.supplier_product_code}</p>
@@ -591,11 +631,27 @@ export default function NuevaCompraPage() {
                           {!line._mapped && (
                             <p className="text-xs text-slate-400 dark:text-slate-500 italic">{line.product_name_invoice}</p>
                           )}
+                          {line.match_source === 'fuzzy' && (
+                            <p className="text-xs text-cyan-600 dark:text-cyan-400 italic mt-0.5">
+                              Match por nombre — original factura: {line.product_name_invoice}
+                            </p>
+                          )}
                         </div>
                       </div>
-                      <button onClick={() => removeLine(idx)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
-                        <X className="w-3.5 h-3.5 text-slate-400" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        {line.match_source === 'fuzzy' && (
+                          <button
+                            onClick={() => unmapLine(idx)}
+                            title="Cambiar match — el fuzzy puede ser incorrecto"
+                            className="text-[10px] font-medium px-2 py-1 rounded-lg border border-cyan-300 dark:border-cyan-700 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-50 dark:hover:bg-cyan-900/30"
+                          >
+                            Cambiar
+                          </button>
+                        )}
+                        <button onClick={() => removeLine(idx)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+                          <X className="w-3.5 h-3.5 text-slate-400" />
+                        </button>
+                      </div>
                     </div>
 
                     {/* Cantidad / precio */}
