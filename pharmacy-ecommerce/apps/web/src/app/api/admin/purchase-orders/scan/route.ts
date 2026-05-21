@@ -4,6 +4,7 @@ import { getAdminUser, errorResponse } from '@/lib/firebase/api-helpers';
 import { parseInvoice, isCreditNote } from '@/lib/invoice-parser';
 import type { InvoiceLine, InvoiceHeader, InvoiceFormat } from '@/lib/invoice-parser';
 import { preTokenize, fuzzyMatch } from '@/lib/invoice-parser/fuzzy-match';
+import { extractViaLLM } from '@/lib/invoice-parser/llm-extract';
 
 export type MatchSource = 'mapping' | 'fuzzy' | null;
 
@@ -127,7 +128,25 @@ export async function POST(request: NextRequest) {
 
     // Rechazar Nota de Crédito explícitamente (no afecta stock)
     const creditNote = isCreditNote(fullText);
-    const parsed = parseInvoice(fullText);
+    let parsed = parseInvoice(fullText);
+
+    // Fallback LLM (opcional): si regex no detectó nada, intentar Claude haiku.
+    // Solo activa si ANTHROPIC_API_KEY está en env. Cost ~$0.001-0.003 por factura.
+    let llmFallbackUsed = false;
+    if (parsed.lines.length === 0 && !creditNote && process.env.ANTHROPIC_API_KEY) {
+      try {
+        const llmLines = await extractViaLLM(parsed.format, fullText, process.env.ANTHROPIC_API_KEY);
+        if (llmLines.length > 0) {
+          parsed = { ...parsed, lines: llmLines };
+          llmFallbackUsed = true;
+          console.info('[scan] LLM extraction rescued', llmLines.length, 'lines', { format: parsed.format });
+        } else {
+          console.warn('[scan] LLM extraction returned 0 lines too');
+        }
+      } catch (e) {
+        console.error('[scan] LLM extraction error:', e instanceof Error ? e.message : e);
+      }
+    }
 
     // Telemetría server-side cuando el parser no detecta líneas: imprimir muestra
     // del OCR raw para diagnosticar regex faltantes (ver en Vercel Functions logs).
@@ -137,8 +156,11 @@ export async function POST(request: NextRequest) {
         text_source: textSource,
         text_length: fullText.length,
         header_invoice_number: parsed.header.invoice_number,
+        llm_attempted: !!process.env.ANTHROPIC_API_KEY,
         ocr_first_1200: fullText.slice(0, 1200),
       });
+    } else if (llmFallbackUsed) {
+      console.info('[scan] parse summary', { format: parsed.format, lines: parsed.lines.length, source: 'llm' });
     }
 
     const db = await getDb();

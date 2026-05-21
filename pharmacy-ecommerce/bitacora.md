@@ -3407,3 +3407,22 @@ Build local OK. Push → Vercel.
 - **UI**: `/admin/compras/nueva` agrega `<details>` toggle "Ver texto OCR extraído (N chars · fuente: vision/pdf)" cuando `lines.length===0`. Incluye botón "Copiar al portapapeles" + pre block max-h-72 scrollable. User puede pegar al soporte o usar para debug.
 - **Test regresión**: `mediven-vision.test.ts` + fixture `mediven-vision.txt` simulan Vision OCR (cada celda en línea propia). 6 ítems, verifica desc limpia + qty/pvp/lote/vto correctos. Total tests 24/24 verdes (incluye fixture pdf-parse original sin regresión).
 - Build local OK.
+
+## 2026-05-21 — Parser Mediven hardening: state-machine + tighten + LLM fallback opcional
+
+- **Problema reportado**: Mediven nuevo (folio 3666640) seguía detectando mal. Sin OCR raw del usuario en mano (PDF no en disk, búsqueda exhaustiva), rewrite profundo del parser asumiendo el peor caso: Vision OCR layout vertical (cada celda en línea propia) + ruido.
+- **Reescritura `parsers/mediven.ts`**:
+  1. **3 estrategias en cascada** (1ra non-empty gana):
+     - `parseLinesByLine`: pdf-parse nativo, layout horizontal (intacto).
+     - `parseLinesAnchored`: Vision OCR horizontal con line breaks raros — regex global anclado en MM-YYYY, normaliza whitespace.
+     - `parseLinesStateMachine` (nuevo): Vision OCR vertical, busca cada `MM-YYYY` como línea entera, mira 3 líneas previas (qty / pvp / tot) + 1-8 líneas previas para descripción, + 1 posterior para batch. Validación estructural por tipo de línea (`RE_INT_QTY` / `RE_NUMBER_CLP` / `RE_MMYYYY` / `RE_BATCH`).
+  2. **Regex TIGHTENED**: `LINE_RE` y `FLEX_ITEM_RE` ahora exigen CLP estricto (`\d{1,3}(\.\d{3})+|\d{4,7}`), batch 2-15 chars, qty 1-4 dígitos. Rechaza basura random.
+  3. **`isValidDescription`**: ≥5 chars, ≤100, contiene letra, al menos 1 palabra 4+ letras, no SKIP_RE. Anti-garbage hard.
+  4. **`buildLine(strictSubtotal)`**: en fallback paths (anchor + state-machine) REQUIERE subtotal>0 + match qty×pvp±5%. Garantiza items validos solo.
+  5. **`cleanDescription`**: corta header leak (`Lote/Descripción/Cant/Precio/Total/Fecha/Vence/Sucursal/RUT/Mediven/etc`) al último match.
+  6. **Header date regex** ahora `Fecha\s*:?\s*(...)` — `:` opcional, tolera vertical OCR ("Fecha\n19-05-2026").
+- **4ta estrategia opcional**: `lib/invoice-parser/llm-extract.ts` (Claude haiku-4-5 vía fetch directo, sin SDK). Activada solo si `ANTHROPIC_API_KEY` en env. Prompt few-shot Mediven-specific, retorna JSON estructurado. Validación + dedupe + sanity igual que regex. Cost ~$0.001-0.003 por factura. Solo se invoca cuando 3 estrategias regex retornan 0. Para activar: `vercel env add ANTHROPIC_API_KEY`.
+- **Telemetría /scan**: server log diferenciado para `lines=0` (incluye `llm_attempted` flag) y para LLM rescue success (`source: 'llm'`).
+- **Tests**: agregado fixture `mediven-vertical.txt` + 7 tests state-machine. 31/31 verde total (pdf-parse original + vision-horizontal + vision-vertical + global + credit-note).
+- **Verify**: los 3 PDFs reales (FA_7964633 mediven + 0000740850/750277 global) siguen funcionando idénticos.
+- Build local OK. Push → Vercel.

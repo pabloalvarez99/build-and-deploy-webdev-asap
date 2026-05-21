@@ -1,4 +1,5 @@
 // Parser "Factura Electrónica SII" — Mediven SpA (RUT 76.425.071-0).
+//
 // El PDF tiene layout duplicado (original/cedible lado a lado) → dedupe necesario.
 //
 // Columnas tabla: Descripción | Cant. | Precio | Total | Lote
@@ -10,6 +11,15 @@
 //   Fecha: 04-05-2026   Vence: 05-05-2026
 //   OC No. Peds 4160394
 //   Neto / IVA (19%) / Total
+//
+// Mediven puede entregar el PDF como:
+//   A) PDF nativo con texto — pdf-parse extrae 1 línea horizontal por ítem.
+//   B) PDF escaneado → fallback Vision OCR — texto puede salir:
+//      B1) Horizontal pero con concatenación rara (anchor-based fix).
+//      B2) Vertical (cada celda en línea propia: desc / qty / pvp / tot / vto / batch)
+//          → state-machine multi-line es la única que funciona.
+//
+// Por eso corre 3 estrategias en orden, primer non-empty resultado gana.
 
 import type { InvoiceHeader, InvoiceLine, ParsedInvoice } from '../types';
 import { parseCLP, normalizeRut, ddmmyyyyToIso, monthYearToIsoEndOfMonth } from '../util';
@@ -25,13 +35,13 @@ function parseHeader(text: string): InvoiceHeader {
   const folioMatch = text.match(/FACTURA\s+ELECTR[OÓ]NICA\s*N°?\s*(\d+)/i)
     ?? text.match(/N°\s*(\d{6,})/i);
 
-  // R.U.T : 76.425.071-0  → proveedor
   const rutMatch = text.match(/R\.?U\.?T\.?\s*:?\s*(\d[\d\.\-kK]+)/i);
   const supplier_rut = normalizeRut(rutMatch?.[1]) ?? MEDIVEN_RUT;
 
-  const fechaMatch = text.match(/Fecha:\s*(\d{2}[\-\/]\d{2}[\-\/]\d{4})/i);
-  const venceMatch = text.match(/Vence:\s*(\d{2}[\-\/]\d{2}[\-\/]\d{4})/i);
-  const ocMatch = text.match(/OC\s*No\.?\s*Peds?\s*(\d+)/i);
+  // `:` opcional + whitespace flexible (incl newlines) → tolera vertical OCR layout
+  const fechaMatch = text.match(/Fecha\s*:?\s*(\d{2}[\-\/]\d{2}[\-\/]\d{4})/i);
+  const venceMatch = text.match(/Vence\s*:?\s*(\d{2}[\-\/]\d{2}[\-\/]\d{4})/i);
+  const ocMatch = text.match(/OC\s*No\.?\s*Peds?\s*:?\s*(\d+)/i);
 
   const netoMatch = text.match(/\bNeto\b\s*([\d\.]+)/i);
   const ivaMatch = text.match(/IVA\s*\(?\s*19%?\s*\)?\s*([\d\.]+)/i);
@@ -50,30 +60,22 @@ function parseHeader(text: string): InvoiceHeader {
   };
 }
 
-const SKIP_RE = /^(descripci[oó]n|cant\.?|precio|total|lote|raz[oó]n\s+social|direcci[oó]n|giro|sucursal|fecha|d[ií]as\s+cr[eé]dito|sub\s*total|neto|iva|son\s+|oc\s+no|comuna|res\s+80|timbre|generado|cedible|email|tel[eé]fono|r\.u\.t|mediven\s+spa)/i;
+const SKIP_RE = /^(descripci[oó]n|cant\.?|precio|total|lote|raz[oó]n\s+social|direcci[oó]n|giro|sucursal|fecha|d[ií]as\s+cr[eé]dito|sub\s*total|neto|iva|son\s+|oc\s+no|comuna|res\s+80|timbre|generado|cedible|email|tel[eé]fono|r\.u\.t|mediven\s+spa|s\.i\.i|farmacia\s+tu\s+farmacia|jose\s+santiago|aldunate|bayona|colina|santiago\s+norte|ciudad|softel|verifique|generado\s+por)/i;
 
-// Línea Mediven:
-//   <desc>  <qty>  <precio>  <total>  <MM-YYYY>  <batch_code_opcional>
-// Precio/total: sin "$", pueden tener punto miles.
-// El ancla decisiva es el patrón \d{2}-\d{4} (vto MM-YYYY).
-//
-// IMPORTANTE: el PDF tiene layout duplicado (original/cedible) — pdf-parse extrae
-// ambas columnas concatenadas en una sola línea. Usamos lookahead `(?=\s|$)`
-// en vez de `\s*$` para que `.+?` termine en el PRIMER match válido (lado izq.)
-// y el dedupe posterior descarte la 2ª aparición del lado derecho.
+// Header words que no deben aparecer como tail de la descripción (post-clean)
+const TRAILING_GARBAGE_RE = /\b(?:Lote|Descripci[oó]n|Cant\.?|Precio|Total|Fecha|Vence|Sucursal|Comuna|Direcci[oó]n|Giro|Razón\s+social|R\.?U\.?T\.?|Tel[eé]fono|email|Bayona|Aldunate|Mediven|FARMACIA\s+TU\s+FARMACIA|SOCIEDAD)\b/gi;
+
+// LINE_RE: línea horizontal completa (pdf-parse nativo). Lookahead `(?=\s|$)` para
+// que `.+?` lazy termine en PRIMER match válido y el dedupe filtre lado-derecho duplicado.
+// Precio/total: estricto CLP — entero 1-3 dígitos opcional con grupos de 3 (`.999`).
 const LINE_RE =
-  /^(.+?)\s+(\d{1,4})\s+([\d\.]{1,9})\s+([\d\.]{1,12})\s+(\d{2}-\d{4})(?:\s+([A-Z0-9]+))?(?=\s|$)/i;
+  /^(.+?)\s+(\d{1,4})\s+(\d{1,3}(?:\.\d{3})*|\d{4,7})\s+(\d{1,3}(?:\.\d{3})*|\d{4,9})\s+(\d{2}-\d{4})(?:\s+([A-Z0-9]{2,15}))?(?=\s|$)/i;
 
-// FALLBACK regex global anclado en MM-YYYY — usado cuando line-by-line falla
-// (Vision OCR puede romper líneas entre desc y números, o entremezclar columnas).
-// Normaliza todo el texto a single-line, captura ítems consecutivos cuyo ancla
-// decisiva es el patrón vto MM-YYYY.
-//
-// Descripción: empieza con letra mayúscula (productos farma), permite acentos,
-// dígitos, símbolos comunes; mínimo 6 chars para evitar matchear basura.
-// `?` lazy en desc para que no se coma datos del próximo ítem.
+// FLEX_ITEM_RE: regex global anclado en MM-YYYY tras normalizar todo whitespace a single space.
+// Descripción: empieza con LETRA (no número), permite chars típicos farmacia, mín 5 max 100.
+// Precio/total: estrictos CLP. Batch: 2-15 alfanum. Lookahead exige próximo item o fin.
 const FLEX_ITEM_RE =
-  /([A-ZÑÁÉÍÓÚ][A-Z0-9ÑÁÉÍÓÚ\.\-\+\/\(\),% ]{4,120}?)\s+(\d{1,4})\s+([\d\.]{1,9})\s+([\d\.]{1,12})\s+(\d{2}-\d{4})(?:\s+([A-Z0-9]{2,15}))?(?=\s+[A-ZÑÁÉÍÓÚ]|\s*$)/gi;
+  /(?:^|\s)([A-ZÑÁÉÍÓÚ][A-Z0-9ÑÁÉÍÓÚ\.\-\+\/\(\)% ]{4,100}?)\s+(\d{1,4})\s+(\d{1,3}(?:\.\d{3})*|\d{4,7})\s+(\d{1,3}(?:\.\d{3})*|\d{4,9})\s+(\d{2}-\d{4})(?:\s+([A-Z0-9]{2,15}))?(?=\s+[A-ZÑÁÉÍÓÚ]|\s*$)/gi;
 
 interface RawCandidate {
   description: string;
@@ -84,41 +86,59 @@ interface RawCandidate {
   batchRaw?: string;
 }
 
-// Palabras-basura que el fallback anchor-based puede arrastrar al inicio de la
-// descripción cuando Vision OCR concatena header+items. Cortamos al ÚLTIMO match
-// y dejamos solo la descripción real del producto.
-const DESC_TRASH_RE = /\b(?:Lote|Sucursal|FARMACIA\s+TU\s+FARMACIA(?:\s*\(?[A-Z]+\)?)?|JOSE\s+SANTIAGO\s+ALDUNATE(?:\s+\d+)?|Descripci[oó]n|Cant\.?|Precio|Total|Fecha\s*:?|Vence\s*:?|OC\s+No\.?\s+Peds?(?:\s+\d+)?|D[ií]as\s+Cr[eé]dito(?:\s*:?\s*\d+)?|Comuna(?:\s*:\s*\w+)?|Tel[eé]fono\s*:?\s*[\+\d\s\-]+|email\s*:?\s*\S+|R\.?U\.?T\.?\s*:?\s*[\d\.\-kK]+|FACTURA\s+ELECTR[OÓ]NICA|N°\s*\d+|Mediven\s+SpA|SOCIEDAD\s+DE\s+SERVICIOS\s+FARMACEUTICOS\s+Q&A\s+SPA|GIRO\s*:[^A-Z]*|S\.I\.I\.|Razón\s+social[^A-Z]*|Direcci[oó]n\s*:[^A-Z]*|Giro\s*:[^A-Z]*|Bayona\s+\d+[^A-Z]*|Ciudad\s*:[^A-Z]*)\b/gi;
-
 function cleanDescription(raw: string): string {
-  // Cortar al ÚLTIMO match de palabra-basura → todo antes es header leak
+  let desc = raw.trim().replace(/\s{2,}/g, ' ');
+
+  // Truncar al ÚLTIMO match de palabra-basura preámbulo (header leak antes del producto real)
   let lastEnd = 0;
   let m: RegExpExecArray | null;
-  DESC_TRASH_RE.lastIndex = 0;
-  while ((m = DESC_TRASH_RE.exec(raw)) !== null) {
+  TRAILING_GARBAGE_RE.lastIndex = 0;
+  while ((m = TRAILING_GARBAGE_RE.exec(desc)) !== null) {
     lastEnd = m.index + m[0].length;
   }
-  return raw.slice(lastEnd).trim().replace(/\s{2,}/g, ' ');
+  if (lastEnd > 0) desc = desc.slice(lastEnd).trim();
+
+  return desc;
 }
 
-function buildLine(c: RawCandidate, seen: Set<string>): InvoiceLine | null {
+// Validador anti-garbage: rechaza desc demasiado corta, demasiado larga, sin letras,
+// o que sea puramente header words.
+function isValidDescription(desc: string): boolean {
+  if (desc.length < 5 || desc.length > 100) return false;
+  if (!/[A-ZÑÁÉÍÓÚ]/.test(desc)) return false;
+  // Debe tener al menos 1 palabra de 4+ letras consecutivas (no solo abreviaciones)
+  if (!/[A-ZÑÁÉÍÓÚ]{4,}/.test(desc)) return false;
+  if (SKIP_RE.test(desc)) return false;
+  return true;
+}
+
+function buildLine(c: RawCandidate, seen: Set<string>, strictSubtotal: boolean): InvoiceLine | null {
   const description = cleanDescription(c.description);
-  if (description.length < 4) return null;
+  if (!isValidDescription(description)) return null;
 
   const quantity = parseInt(c.qtyStr, 10);
   const unit_cost = parseCLP(c.precioStr);
   const subtotal = parseCLP(c.totalStr);
 
-  if (!quantity || !unit_cost || quantity <= 0 || unit_cost < 50) return null;
+  if (!quantity || quantity <= 0 || quantity > 999) return null;
+  if (!unit_cost || unit_cost < 50 || unit_cost > 10_000_000) return null;
 
-  // Sanity: total ≈ qty × precio (tolerancia 5%, IVA viene desglosado al pie)
+  // En fallback (Vision OCR), subtotal DEBE estar presente y matchear qty*pvp ±5%.
+  // Esto rechaza garbage matches donde números random pasaron el regex.
   const expected = quantity * unit_cost;
-  if (subtotal > 0 && expected > 0 && Math.abs(subtotal - expected) / expected > 0.05) return null;
+  if (strictSubtotal) {
+    if (!subtotal || subtotal <= 0) return null;
+    if (Math.abs(subtotal - expected) / expected > 0.05) return null;
+  } else {
+    // Línea pdf-parse: subtotal puede faltar, tolerancia 5%
+    if (subtotal > 0 && Math.abs(subtotal - expected) / expected > 0.05) return null;
+  }
 
   const expiry_date = monthYearToIsoEndOfMonth(c.vtoStr);
+  if (!expiry_date) return null;
   const batch_code = c.batchRaw?.trim() || null;
 
-  // Dedupe: clave (desc + qty + total + vto + lote)
-  const key = `${description}|${quantity}|${subtotal}|${c.vtoStr}|${batch_code ?? ''}`;
+  const key = `${description}|${quantity}|${subtotal || expected}|${c.vtoStr}|${batch_code ?? ''}`;
   if (seen.has(key)) return null;
   seen.add(key);
 
@@ -133,6 +153,9 @@ function buildLine(c: RawCandidate, seen: Set<string>): InvoiceLine | null {
   };
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// STRATEGY 1: line-by-line — pdf-parse nativo, layout horizontal
+// ════════════════════════════════════════════════════════════════════════════
 function parseLinesByLine(text: string): InvoiceLine[] {
   const rawLines = text.split('\n').map((l) => l.trim()).filter(Boolean);
   const seen = new Set<string>();
@@ -149,15 +172,17 @@ function parseLinesByLine(text: string): InvoiceLine[] {
       totalStr: m[4],
       vtoStr: m[5],
       batchRaw: m[6],
-    }, seen);
+    }, seen, /* strictSubtotal */ false);
     if (built) out.push(built);
   }
   return out;
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// STRATEGY 2: anchor-based — Vision OCR horizontal con line breaks raros
+// Normaliza todo whitespace a single space, regex global anclado en MM-YYYY.
+// ════════════════════════════════════════════════════════════════════════════
 function parseLinesAnchored(text: string): InvoiceLine[] {
-  // Colapsar todo whitespace (incl newlines, tabs) a single space para que regex
-  // global no dependa de line breaks. Mantiene caracteres legibles para descripción.
   const normalized = text.replace(/\s+/g, ' ');
   const seen = new Set<string>();
   const out: InvoiceLine[] = [];
@@ -172,21 +197,100 @@ function parseLinesAnchored(text: string): InvoiceLine[] {
       totalStr: m[4],
       vtoStr: m[5],
       batchRaw: m[6],
-    }, seen);
+    }, seen, /* strictSubtotal */ true);
     if (built) out.push(built);
   }
   return out;
 }
 
-function parseLines(text: string): InvoiceLine[] {
-  // Approach 1 (preferido): line-by-line — preciso, rápido, ya funciona con pdf-parse.
-  const lineBased = parseLinesByLine(text);
-  if (lineBased.length > 0) return lineBased;
+// ════════════════════════════════════════════════════════════════════════════
+// STRATEGY 3: state-machine — Vision OCR vertical, cada celda en línea propia.
+// Busca ancla MM-YYYY, mira 4-6 líneas previas para qty/pvp/tot/desc.
+// Patrón celda-por-línea típico de Google Vision DOCUMENT_TEXT_DETECTION:
+//   BENTLEY CLASICO GEL X 120 GR (DM)
+//   3
+//   2.300
+//   6.900
+//   12-2027
+//   5L332
+// ════════════════════════════════════════════════════════════════════════════
+const RE_INT_QTY = /^\d{1,4}$/;
+const RE_NUMBER_CLP = /^(?:\d{1,3}(?:\.\d{3})+|\d{1,7})$/;
+const RE_MMYYYY = /^(\d{2})-(\d{4})$/;
+const RE_BATCH = /^[A-Z0-9]{2,15}$/;
 
-  // Approach 2 (fallback): anchor-based — robusto cuando Vision OCR rompe layout.
-  // Tipicamente pasa con PDFs Mediven escaneados (no nativos) que disparan el
-  // fallback a Vision OCR; el text resultante tiene line breaks por bounding box.
-  return parseLinesAnchored(text);
+function parseLinesStateMachine(text: string): InvoiceLine[] {
+  const rawLines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+  const seen = new Set<string>();
+  const out: InvoiceLine[] = [];
+
+  // Buscar cada índice donde aparece MM-YYYY como línea ENTERA (no embebido)
+  for (let i = 0; i < rawLines.length; i++) {
+    const ln = rawLines[i];
+    const vtoMatch = ln.match(RE_MMYYYY);
+    if (!vtoMatch) continue;
+
+    // Mirar 3 líneas previas: deben ser qty, pvp, tot (en ese orden).
+    if (i < 3) continue;
+    const qtyLn = rawLines[i - 3];
+    const pvpLn = rawLines[i - 2];
+    const totLn = rawLines[i - 1];
+    if (!RE_INT_QTY.test(qtyLn)) continue;
+    if (!RE_NUMBER_CLP.test(pvpLn)) continue;
+    if (!RE_NUMBER_CLP.test(totLn)) continue;
+
+    // Antes de qty, descripción: buscar hacia atrás líneas no-numéricas hasta otra ancla
+    // o hasta encontrar header word. Máximo 3 líneas atrás (descripción usualmente 1 línea
+    // pero Vision puede dividir nombres largos).
+    let descStart = i - 4;
+    const descParts: string[] = [];
+    while (descStart >= 0 && descStart >= i - 8) {
+      const dl = rawLines[descStart];
+      // Romper si encuentro otra ancla MM-YYYY, batch posterior, número, o header word
+      if (RE_MMYYYY.test(dl)) break;
+      if (RE_INT_QTY.test(dl) || RE_NUMBER_CLP.test(dl)) break;
+      if (SKIP_RE.test(dl)) break;
+      if (RE_BATCH.test(dl) && dl.length <= 12 && /^\d/.test(dl)) break; // batch code numeric
+      // Línea válida de descripción: empieza con letra mayúscula
+      if (!/^[A-ZÑÁÉÍÓÚ]/.test(dl)) break;
+      descParts.unshift(dl);
+      descStart--;
+    }
+    if (descParts.length === 0) continue;
+    const description = descParts.join(' ');
+
+    // Después de vto, opcional batch
+    let batch: string | undefined = undefined;
+    if (i + 1 < rawLines.length) {
+      const next = rawLines[i + 1];
+      if (RE_BATCH.test(next) && !RE_MMYYYY.test(next) && !RE_INT_QTY.test(next)) {
+        batch = next;
+      }
+    }
+
+    const built = buildLine({
+      description,
+      qtyStr: qtyLn,
+      precioStr: pvpLn,
+      totalStr: totLn,
+      vtoStr: ln,
+      batchRaw: batch,
+    }, seen, /* strictSubtotal */ true);
+    if (built) out.push(built);
+  }
+
+  return out;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Orquestador: corre 3 estrategias, retorna primera con ≥1 línea
+// ════════════════════════════════════════════════════════════════════════════
+function parseLines(text: string): InvoiceLine[] {
+  const a = parseLinesByLine(text);
+  if (a.length > 0) return a;
+  const b = parseLinesAnchored(text);
+  if (b.length > 0) return b;
+  return parseLinesStateMachine(text);
 }
 
 export function parseMediven(text: string): ParsedInvoice {
