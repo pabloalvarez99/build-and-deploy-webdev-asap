@@ -3329,3 +3329,11 @@ Build local OK. Push → Vercel.
 - **Phase B** (`scripts/fix-collisions-phase-b.mjs`, transacción): DELETE 85 rows safe (none-active + only-ext-active → restaura ext_id fallback). DELETE 1 supplier_code collision (bc inactivo). DELETE 85 catálogo huérfanos. Trim whitespace 0 (era duplicado).
 - **Phase C decisión**: NO auto-fix de 165 EAN-13 bad checksum (adivinar dígito = enmascarar bug real). Solo 3 activos → CSV `reportes/ean13-checksum-active.csv` para revisión humana (GLUCOMETRO DIABECHECK, PEDIALYTE MANZANA 500, TIOF OFT). 4232 "no-estándar" son SKU proveedor legítimos, no se tocan (matching de compras los necesita).
 - **Verify** (`scripts/post-phase-b-verify.mjs`): activos sin barcode=0, colisiones ext_id restantes=4 (bc-active, OK), totales pb=39230 bc=39228.
+
+## 2026-05-21 — fix parser Mediven: layout duplicado dejaba desc sucia
+
+- **Bug**: `parsers/mediven.ts` LINE_RE usaba `\s*$` como ancla — el PDF "Factura Electrónica" tiene layout original/cedible lado-a-lado, pdf-parse concatena ambas columnas en una sola línea. La regex con `.+?` greedy-hasta-EOL capturaba ambos lados, dejando `product_name_invoice` con número + repetición ("BENTLEY CLASICO GEL X 120 GR (DM) 3 2.300 6.900 12-2027 5L332 BENTLEY CLASICO GEL X 120 GR (DM)"). Stock correcto (dedupe filtraba 2do match) pero UX horrible en /admin/compras.
+- **Fix**: `\s*$` → `(?=\s|$)` lookahead. `.+?` lazy ahora termina en el PRIMER match válido (lado izquierdo). Dedupe descarta lado derecho.
+- **Verify**: `scripts/verify-mediven-parsers.ts` corre los 3 PDFs reales en `/` (FA_7964633 Mediven, 0000740850 + 0000750277 Global Comprobante de Pedido). FA_7964633: 9 líneas descs limpias (`"BENTLEY CLASICO GEL X 120 GR (DM)"`), sum=Neto=$102.060. Global PDFs: 53 + 71 líneas códigos+qty+pvp correctos, sum interno ≠ Sub Total PDF (PDF aplica ajuste oculto, no bug parser).
+- **Test regresión**: `mediven.test.ts` agrega assertion `product_name_invoice === 'BENTLEY CLASICO GEL X 120 GR (DM)'` + loop "no debe contener vto MM-YYYY ni patrón qty+precio embebido". 18/18 verdes (mediven + global + credit-note).
+- Build local verde. Push → Vercel.

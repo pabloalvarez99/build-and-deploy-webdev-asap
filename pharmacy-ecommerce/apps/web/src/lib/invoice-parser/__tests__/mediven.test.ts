@@ -37,6 +37,22 @@ describe('parser: Mediven (Factura Electrónica SII)', () => {
     expect(bentley!.subtotal).toBe(6900);
   });
 
+  // Regresión: layout duplicado (original/cedible) hacía que la regex
+  // consumiera ambas columnas y dejara la desc con números/duplicación basura.
+  it('product_name_invoice limpio — sin duplicación de columnas', () => {
+    const bentley = parsed.lines.find((l) => /BENTLEY/i.test(l.product_name_invoice));
+    expect(bentley!.product_name_invoice).toBe('BENTLEY CLASICO GEL X 120 GR (DM)');
+
+    // Ninguna descripción debe contener dígitos de cantidad/precio trailing
+    // ni una segunda repetición del nombre.
+    for (const l of parsed.lines) {
+      // No debe contener "<num> <num>.<num>" patrón qty+precio
+      expect(l.product_name_invoice).not.toMatch(/\d+\s+\d+\.\d{3}\s+\d+\.\d{3}/);
+      // No debe contener patrón MM-YYYY (vto) embebido
+      expect(l.product_name_invoice).not.toMatch(/\d{2}-\d{4}/);
+    }
+  });
+
   it('every line has batch_code + expiry_date (Mediven siempre los provee)', () => {
     for (const l of parsed.lines) {
       expect(l.batch_code).toBeTruthy();

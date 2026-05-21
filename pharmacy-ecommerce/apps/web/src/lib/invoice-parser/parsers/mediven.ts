@@ -56,8 +56,13 @@ const SKIP_RE = /^(descripci[oó]n|cant\.?|precio|total|lote|raz[oó]n\s+social|
 //   <desc>  <qty>  <precio>  <total>  <MM-YYYY>  <batch_code_opcional>
 // Precio/total: sin "$", pueden tener punto miles.
 // El ancla decisiva es el patrón \d{2}-\d{4} (vto MM-YYYY).
+//
+// IMPORTANTE: el PDF tiene layout duplicado (original/cedible) — pdf-parse extrae
+// ambas columnas concatenadas en una sola línea. Usamos lookahead `(?=\s|$)`
+// en vez de `\s*$` para que `.+?` termine en el PRIMER match válido (lado izq.)
+// y el dedupe posterior descarte la 2ª aparición del lado derecho.
 const LINE_RE =
-  /^(.+?)\s+(\d{1,4})\s+([\d\.]{1,9})\s+([\d\.]{1,12})\s+(\d{2}-\d{4})(?:\s+([A-Z0-9]+))?\s*$/i;
+  /^(.+?)\s+(\d{1,4})\s+([\d\.]{1,9})\s+([\d\.]{1,12})\s+(\d{2}-\d{4})(?:\s+([A-Z0-9]+))?(?=\s|$)/i;
 
 function parseLines(text: string): InvoiceLine[] {
   const rawLines = text.split('\n').map((l) => l.trim()).filter(Boolean);
