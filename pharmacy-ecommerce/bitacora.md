@@ -3337,3 +3337,11 @@ Build local OK. Push → Vercel.
 - **Verify**: `scripts/verify-mediven-parsers.ts` corre los 3 PDFs reales en `/` (FA_7964633 Mediven, 0000740850 + 0000750277 Global Comprobante de Pedido). FA_7964633: 9 líneas descs limpias (`"BENTLEY CLASICO GEL X 120 GR (DM)"`), sum=Neto=$102.060. Global PDFs: 53 + 71 líneas códigos+qty+pvp correctos, sum interno ≠ Sub Total PDF (PDF aplica ajuste oculto, no bug parser).
 - **Test regresión**: `mediven.test.ts` agrega assertion `product_name_invoice === 'BENTLEY CLASICO GEL X 120 GR (DM)'` + loop "no debe contener vto MM-YYYY ni patrón qty+precio embebido". 18/18 verdes (mediven + global + credit-note).
 - Build local verde. Push → Vercel.
+
+## 2026-05-21 — barcode regression check + cleanup final
+
+- **`scripts/barcode-regression-check.mjs`**: chequea solo regresiones críticas (colisiones barcode==ext_id ambos activos, productos activos sin barcode, supplier_code colisiones activos). NO falla por EAN checksum invalido (puede matchear packaging fisico mal-impreso) ni SKU corto. Exit 1 si falla, 0 si pass.
+- **`npm run check:barcodes`** agregado a package.json. Correr post-import productos.
+- **`scripts/cleanup-orphan-catalog.mjs`**: eliminado 1 barcode_catalog huerfano restante (`199002` del supplier collision).
+- **Decision NO-fix 3 EAN-13 bad checksum activos** (GLUCOMETRO DIABECHECK, PEDIALYTE MANZANA 500, TIOF oft): todos off-by-1 en último dígito → parecen typo, pero DB puede matchear packaging físico mal-impreso (común en productos importados). Auto-corregir rompería scan que hoy funciona. Mantener como esta; CSV `reportes/ean13-checksum-active.csv` para revisión cuando llegue reporte de scan-fail real.
+- **Estado final**: regression check PASS verde. Barcode integrity completa.
