@@ -3313,3 +3313,11 @@ Build local OK. Push → Vercel.
 - **ResumenComprasKpis.tsx**: 3 KPI cards (Borradores >7d, Ticket promedio, Top productos count) + tabla top 5 con qty/spend. Inyectado en tab "Resumen" /admin/compras antes de MarginChart+MonthlySummaryChart. Skeleton + error panel.
 - **suggest-matches pre-select via mappings**: route `[id]/suggest-matches` ahora carga `supplier_product_mappings` (bulk, supplier_id + supplier_code IN codes) ANTES de fuzzy. Si existe mapping para item.supplier_product_code → retorna candidato único `from_mapping:true, score:1, confident:true` y skip fuzzy. Solo carga productos para fuzzy si quedan items sin mapping (perf). UI `SuggestMatchesModal` muestra badge azul "MAPPING" cuando aplica.
 - Build local verde. 35/35 tests verdes. Push → Vercel.
+
+## 2026-05-21 — barcode audit + fix Phase A
+
+- **Audit prod**: 1522 activos, 28 sin barcode, 4232 formato no-estándar (SKU proveedor, legítimo), pocos EAN-13 checksum malo. catalog↔product_barcodes 1:1 sin huérfanos.
+- **scripts/audit-barcodes.mjs**: reporta cobertura, duplicados, checksum EAN-13/EAN-8, mismatch catalog vs product_barcodes, huérfanos.
+- **scripts/fix-missing-barcodes.mjs**: asigna EAN-13 interno (prefix `299` GS1 in-store + seq 10 dígitos + checksum) a productos activos sin barcode. Insert en `product_barcodes` + `barcode_catalog` (si external_id). Transacción única.
+- Aplicado: 28 productos → barcodes `2999994793130X` a `2999994793157X`. Verify: still_missing=0.
+- Phase B (EAN-13 checksum inválido) y Phase C (SKU proveedor no-estándar) pendientes.
