@@ -272,6 +272,11 @@ export default function POSPage() {
         setBarcodeFlash({ ok: true, text: product.name })
       } else {
         setBarcodeFlash({ ok: false, text: `Código no encontrado: ${code}` })
+        fetch('/api/barcodes/unknown', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ barcode: code }),
+        }).catch(() => { /* fire-and-forget */ })
       }
     } catch {
       setBarcodeFlash({ ok: false, text: `Error al buscar: ${code}` })

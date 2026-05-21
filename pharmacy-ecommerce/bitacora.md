@@ -3345,3 +3345,15 @@ Build local OK. Push → Vercel.
 - **`scripts/cleanup-orphan-catalog.mjs`**: eliminado 1 barcode_catalog huerfano restante (`199002` del supplier collision).
 - **Decision NO-fix 3 EAN-13 bad checksum activos** (GLUCOMETRO DIABECHECK, PEDIALYTE MANZANA 500, TIOF oft): todos off-by-1 en último dígito → parecen typo, pero DB puede matchear packaging físico mal-impreso (común en productos importados). Auto-corregir rompería scan que hoy funciona. Mantener como esta; CSV `reportes/ean13-checksum-active.csv` para revisión cuando llegue reporte de scan-fail real.
 - **Estado final**: regression check PASS verde. Barcode integrity completa.
+
+## 2026-05-21 — caso real VASELINA + scan-fail logging
+
+- **Caso reportado**: cashier escaneo VASELINA SOLIDA → POS resolvio LIQUIDA. Investigacion: no es bug barcode, es gap catalogo (falta VASELINA SOLIDA REUTTER en DB; cashier al no encontrar, eligio LIQUIDA REUTTER manual por similitud).
+- **Root cause estructural**: POS scan-fail solo muestra flash 2.5s sin persistir. Cada miss-scan se pierde. Patron se repite invisible.
+- **Fix**:
+  - migration `20260521_unknown_barcode_scans.sql`: tabla `unknown_barcode_scans` (barcode UNIQUE, first/last_scanned_at, scan_count, last_user_id, resolved_at, resolved_product_id). Aplicada prod.
+  - migration `20260521b_ubs_user_varchar.sql`: alter last_user_id a VARCHAR(64) (Firebase UID, no UUID).
+  - `POST /api/barcodes/unknown` (auth-only): UPSERT idempotente, increment scan_count on conflict.
+  - `src/app/admin/pos/page.tsx`: en scan-fail, fire-and-forget POST.
+- **Como usar**: query SQL `SELECT barcode, scan_count, last_scanned_at FROM unknown_barcode_scans WHERE resolved_at IS NULL ORDER BY scan_count DESC` o agregar pagina admin futura.
+- Build local verde.
