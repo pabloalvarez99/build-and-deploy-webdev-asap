@@ -4,6 +4,14 @@
 
 ---
 
+## 2026-06-01 — Fix `stock_movements_reason_check` (prod aplicado)
+
+**Problema**: `migration_ventas_historicas.sql` dejó el CHECK solo con 7 reasons en español → fallaban inserts de POS (`sale_pos`), ajustes manuales, devoluciones, reembolsos (`devolucion`), `agotado_excel`.
+
+**Fix**: `migration_fix_stock_movements_reasons.sql` + `apps/web/scripts/fix-stock-reasons.mjs` — unión de 18 reasons auditados. Aplicado en Cloud SQL prod (verificado con `check-constraint.mjs`).
+
+---
+
 ## 2026-05-14 — Info pro: cobertura DB 100% productos farmacológicos
 
 Verificación pidió "todos los productos con info pro" → auditoría detectó 501 productos `active=true` SIN `active_ingredient` en BD (33% del catálogo). Estos productos renderizaban `/producto/[slug]` sin secciones profesionales (sin signos_alarma, sin posología, sin Beers, sin JSON-LD Drug).
