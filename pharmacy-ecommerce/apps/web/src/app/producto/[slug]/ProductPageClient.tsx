@@ -61,6 +61,7 @@ export default function ProductPage({ initialProduct }: { initialProduct: Produc
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [added, setAdded] = useState(false);
+  const [addError, setAddError] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [equivalents, setEquivalents] = useState<Product[]>([]);
   const [zoomOpen, setZoomOpen] = useState(false);
@@ -105,11 +106,13 @@ export default function ProductPage({ initialProduct }: { initialProduct: Produc
     if (!product) return;
 
     setIsAdding(true);
+    setAddError(false);
     try {
       await addToCart(product.id, quantity);
       setAdded(true);
     } catch (error) {
       console.error('Error adding to cart:', error);
+      setAddError(true);
     } finally {
       setIsAdding(false);
     }
@@ -413,6 +416,13 @@ export default function ProductPage({ initialProduct }: { initialProduct: Produc
                     </div>
                   </div>
                 ) : (
+                  <>
+                  {addError && (
+                    <div role="alert" className="rounded-2xl border-2 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4">
+                      <p className="font-bold text-red-700 dark:text-red-300 text-lg">No se pudo agregar al carrito</p>
+                      <p className="text-red-600 dark:text-red-400 text-base mt-0.5">Revise su conexión a internet e intente nuevamente.</p>
+                    </div>
+                  )}
                   <button
                     onClick={handleAddToCart}
                     disabled={isAdding}
@@ -427,6 +437,7 @@ export default function ProductPage({ initialProduct }: { initialProduct: Produc
                       </>
                     )}
                   </button>
+                  </>
                 )}
               </div>
             ) : (

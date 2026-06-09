@@ -64,11 +64,11 @@ const prioritySlugs = [
   'vitaminas-suplementos', 'sistema-digestivo', 'sistema-nervioso',
 ];
 
-function Toast({ message, onClose }: { message: string; onClose: () => void }) {
+function Toast({ message, onClose, actionHref, actionLabel }: { message: string; onClose: () => void; actionHref?: string; actionLabel?: string }) {
   useEffect(() => {
-    const timer = setTimeout(onClose, 2500);
+    const timer = setTimeout(onClose, actionHref ? 4000 : 2500);
     return () => clearTimeout(timer);
-  }, [onClose]);
+  }, [onClose, actionHref]);
 
   return (
     <div className="fixed bottom-24 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-auto z-50" role="status" aria-live="polite" aria-atomic="true">
@@ -76,7 +76,16 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
         <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center flex-shrink-0">
           <Check className="w-3.5 h-3.5" />
         </div>
-        <span className="font-medium text-base">{message}</span>
+        <span className="font-medium text-base flex-1">{message}</span>
+        {actionHref && actionLabel && (
+          <Link
+            href={actionHref}
+            onClick={onClose}
+            className="flex-shrink-0 inline-flex items-center px-3 py-2 rounded-lg bg-white/15 hover:bg-white/25 font-bold text-sm min-h-[40px] transition-colors"
+          >
+            {actionLabel}
+          </Link>
+        )}
       </div>
     </div>
   );
@@ -184,7 +193,7 @@ function HomeContent() {
   const { addToCart, cart } = useCartStore();
   const { user } = useAuthStore();
   const [addingId, setAddingId] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; showCartAction?: boolean } | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [discountedProducts, setDiscountedProducts] = useState<Product[]>([]);
   const [discountedLoaded, setDiscountedLoaded] = useState(false);
@@ -205,6 +214,7 @@ function HomeContent() {
   const [acLoading, setAcLoading] = useState(false);
   const [acError, setAcError] = useState<string | null>(null);
   const [acOpen, setAcOpen] = useState(false);
+  const [acActiveIdx, setAcActiveIdx] = useState(-1);
   const acContainerRef = useRef<HTMLDivElement>(null);
   const topSellersScrollRef = useRef<HTMLDivElement>(null);
   const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
@@ -256,6 +266,7 @@ function HomeContent() {
       setAcSuggestions([]);
       setAcOpen(false);
       setAcError(null);
+      setAcActiveIdx(-1);
       if (searchInput !== searchTerm) {
         setSearchTerm(searchInput);
         setCurrentPage(1);
@@ -278,6 +289,7 @@ function HomeContent() {
         if (!res.ok) throw new Error(`Error ${res.status}`);
         const data = await res.json();
         setAcSuggestions(data.products ?? []);
+        setAcActiveIdx(-1);
         setAcOpen(true);
       } catch (err: unknown) {
         if ((err as { name?: string })?.name === 'AbortError') return;
@@ -386,11 +398,32 @@ function HomeContent() {
     try {
       await addToCart(product.id);
       const shortName = product.name.length > 25 ? product.name.substring(0, 25) + '...' : product.name;
-      setToast(`${shortName} agregado`);
+      setToast({ message: `${shortName} agregado`, showCartAction: true });
     } catch {
-      setToast('Error al agregar. Intenta de nuevo.');
+      setToast({ message: 'Error al agregar. Intenta de nuevo.' });
     } finally {
       setTimeout(() => setAddingId(null), 600);
+    }
+  };
+
+  // Keyboard navigation for autocomplete (ArrowUp/Down + Enter), shared by Hero and filtered-view inputs
+  const handleAcKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') { setAcOpen(false); return; }
+    if (!acOpen || acSuggestions.length === 0) {
+      if (e.key === 'Enter') setAcOpen(false);
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setAcActiveIdx((i) => (i + 1) % acSuggestions.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setAcActiveIdx((i) => (i <= 0 ? acSuggestions.length - 1 : i - 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const sel = acSuggestions[acActiveIdx];
+      setAcOpen(false);
+      if (sel) router.push(`/producto/${sel.slug}`);
     }
   };
 
@@ -415,7 +448,14 @@ function HomeContent() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
+      {toast && (
+        <Toast
+          message={toast.message}
+          actionHref={toast.showCartAction ? '/carrito' : undefined}
+          actionLabel={toast.showCartAction ? 'Ver carrito' : undefined}
+          onClose={() => setToast(null)}
+        />
+      )}
 
       {showScrollTop && (
         <button
@@ -490,10 +530,7 @@ function HomeContent() {
                   setAcSuggestions([]);
                   searchInputRef.current?.focus();
                 }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') setAcOpen(false);
-                  if (e.key === 'Enter') setAcOpen(false);
-                }}
+                onKeyDown={handleAcKeyDown}
                 onFocus={() => {
                   if (searchInput.length >= 2 && (acSuggestions.length > 0 || acError)) setAcOpen(true);
                 }}
@@ -512,7 +549,7 @@ function HomeContent() {
                         Sin resultados para &ldquo;{searchInput}&rdquo;
                       </div>
                     ) : (
-                      acSuggestions.map((p) => {
+                      acSuggestions.map((p, idx) => {
                         const displayPrice = p.discount_percent
                           ? discountedPrice(Number(p.price), p.discount_percent)
                           : Number(p.price);
@@ -521,13 +558,14 @@ function HomeContent() {
                           <button
                             key={p.id}
                             role="option"
-                            aria-selected={false}
+                            aria-selected={idx === acActiveIdx}
+                            onMouseEnter={() => setAcActiveIdx(idx)}
                             onMouseDown={(e) => {
                               e.preventDefault();
                               setAcOpen(false);
                               router.push(`/producto/${p.slug}`);
                             }}
-                            className="w-full flex items-center justify-between px-5 py-4 min-h-[60px] text-left hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-b-0 focus:outline-none focus:bg-cyan-50 dark:focus:bg-cyan-900/20"
+                            className={`w-full flex items-center justify-between px-5 py-4 min-h-[60px] text-left transition-colors border-b border-slate-100 dark:border-slate-800 last:border-b-0 focus:outline-none focus:bg-cyan-50 dark:focus:bg-cyan-900/20 ${idx === acActiveIdx ? 'bg-cyan-50 dark:bg-cyan-900/20' : 'hover:bg-cyan-50 dark:hover:bg-cyan-900/20'}`}
                           >
                             <span className="text-base font-semibold text-slate-800 dark:text-slate-100 truncate pr-4">{displayName}</span>
                             <span className="text-emerald-700 dark:text-emerald-400 font-black text-base flex-shrink-0">{formatPrice(displayPrice)}</span>
@@ -553,10 +591,7 @@ function HomeContent() {
                       placeholder="Buscar medicamentos, principio activo, laboratorio..."
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Escape') { setAcOpen(false); }
-                        if (e.key === 'Enter') { setAcOpen(false); }
-                      }}
+                      onKeyDown={handleAcKeyDown}
                       onFocus={() => {
                         if (searchInput.length >= 2 && (acSuggestions.length > 0 || acError)) setAcOpen(true);
                       }}
@@ -599,7 +634,7 @@ function HomeContent() {
                             Sin resultados para &ldquo;{searchInput}&rdquo;
                           </div>
                         ) : (
-                          acSuggestions.map((p) => {
+                          acSuggestions.map((p, idx) => {
                             const displayPrice = p.discount_percent
                               ? discountedPrice(Number(p.price), p.discount_percent)
                               : Number(p.price);
@@ -608,13 +643,14 @@ function HomeContent() {
                               <button
                                 key={p.id}
                                 role="option"
-                                aria-selected={false}
+                                aria-selected={idx === acActiveIdx}
+                                onMouseEnter={() => setAcActiveIdx(idx)}
                                 onMouseDown={(e) => {
                                   e.preventDefault();
                                   setAcOpen(false);
                                   router.push(`/producto/${p.slug}`);
                                 }}
-                                className="w-full flex items-center justify-between px-4 py-3 min-h-[56px] text-left hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-b-0 focus:outline-none focus:bg-emerald-50 dark:focus:bg-emerald-900/20"
+                                className={`w-full flex items-center justify-between px-4 py-3 min-h-[56px] text-left transition-colors border-b border-slate-100 dark:border-slate-800 last:border-b-0 focus:outline-none focus:bg-emerald-50 dark:focus:bg-emerald-900/20 ${idx === acActiveIdx ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'hover:bg-emerald-50 dark:hover:bg-emerald-900/20'}`}
                               >
                                 <span className="text-base font-semibold text-slate-800 dark:text-slate-100 truncate pr-4">{displayName}</span>
                                 <span className="text-emerald-700 dark:text-emerald-400 font-bold text-base flex-shrink-0">{formatPrice(displayPrice)}</span>

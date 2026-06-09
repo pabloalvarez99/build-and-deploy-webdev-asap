@@ -26,8 +26,12 @@ export default function CheckoutPage() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [nameError, setNameError] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [emailError, setEmailError] = useState('');
+  const nameRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [stockShortages, setStockShortages] = useState<{ product_name: string; requested: number; available: number }[]>([]);
@@ -98,16 +102,6 @@ export default function CheckoutPage() {
     return '';
   };
 
-  const validate = () => {
-    const trimmedName = name.trim();
-    if (!trimmedName || trimmedName.length < 2) return 'Ingresa tu nombre';
-    const pe = validatePhoneStr(phone);
-    if (pe) return pe;
-    const ee = validateEmailStr(email, paymentMethod === 'webpay');
-    if (ee) return ee;
-    return null;
-  };
-
   const buildWhatsAppUrl = () => {
     if (!cart) return '#';
     const itemLines = cart.items.map(i => `- ${i.product_name} x${i.quantity} (${formatPrice(i.subtotal)})`).join('\n');
@@ -119,8 +113,20 @@ export default function CheckoutPage() {
 
   const handleSubmit = () => {
     if (!cart || cart.items.length === 0) return;
-    const validationError = validate();
-    if (validationError) { setError(validationError); return; }
+    // Validate inline: mark each field and focus the first invalid one
+    const nErr = name.trim().length < 2 ? 'Ingresa tu nombre' : '';
+    const pErr = validatePhoneStr(phone);
+    const eErr = validateEmailStr(email, paymentMethod === 'webpay');
+    setNameError(nErr);
+    setPhoneError(pErr);
+    setEmailError(eErr);
+    const firstInvalid = nErr ? nameRef.current : pErr ? phoneRef.current : eErr ? emailRef.current : null;
+    if (firstInvalid) {
+      setError('');
+      firstInvalid.focus();
+      firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     setError('');
     setStockShortages([]);
 
@@ -218,7 +224,7 @@ export default function CheckoutPage() {
     : 0;
   const effectiveTotal = cartTotal - pointsDiscount;
   const pointsToEarn = calcPoints(effectiveTotal);
-  const canSubmit = !!name && !!phone && (paymentMethod === 'webpay' ? !!email : true) && !phoneError && !emailError;
+  const canSubmit = !!name && !!phone && (paymentMethod === 'webpay' ? !!email : true) && !nameError && !phoneError && !emailError;
 
   return (
     <>
@@ -444,14 +450,19 @@ export default function CheckoutPage() {
             <label htmlFor="ck-name" className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300 mb-2">
               <User className="w-5 h-5 text-cyan-600" />Nombre completo
             </label>
-            <input id="ck-name" type="text" value={name} onChange={(e) => setName(e.target.value)}
-              placeholder="Juan Pérez" className="input" autoComplete="name" />
+            <input id="ck-name" ref={nameRef} type="text" value={name}
+              onChange={(e) => { setName(e.target.value); if (nameError) setNameError(''); }}
+              placeholder="Juan Pérez" className="input" autoComplete="name"
+              aria-invalid={!!nameError} aria-describedby={nameError ? 'ck-name-err' : undefined} />
+            {nameError && (
+              <p id="ck-name-err" className="mt-1.5 text-sm font-medium text-red-600 dark:text-red-400">{nameError}</p>
+            )}
           </div>
           <div>
             <label htmlFor="ck-phone" className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300 mb-2">
               <Phone className="w-5 h-5 text-cyan-600" />Teléfono
             </label>
-            <input id="ck-phone" type="tel" value={phone}
+            <input id="ck-phone" ref={phoneRef} type="tel" value={phone}
               onChange={(e) => { setPhone(e.target.value); if (phoneError) setPhoneError(''); }}
               onBlur={(e) => setPhoneError(validatePhoneStr(e.target.value))}
               placeholder="9 1234 5678" className="input" autoComplete="tel"
@@ -469,7 +480,7 @@ export default function CheckoutPage() {
                 <span className="text-slate-400 dark:text-slate-500 font-normal text-sm">(opcional)</span>
               )}
             </label>
-            <input id="ck-email" type="email" value={email}
+            <input id="ck-email" ref={emailRef} type="email" value={email}
               onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(''); }}
               onBlur={(e) => setEmailError(validateEmailStr(e.target.value, paymentMethod === 'webpay'))}
               placeholder={paymentMethod === 'store' && !user ? 'Para recibir confirmación (opcional)' : 'tu@email.com'}

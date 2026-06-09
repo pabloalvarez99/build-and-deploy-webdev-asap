@@ -3434,3 +3434,11 @@ Build local OK. Push → Vercel.
 - **Tests**: agregado fixture `mediven-vertical.txt` + 7 tests state-machine. 31/31 verde total (pdf-parse original + vision-horizontal + vision-vertical + global + credit-note).
 - **Verify**: los 3 PDFs reales (FA_7964633 mediven + 0000740850/750277 global) siguen funcionando idénticos.
 - Build local OK. Push → Vercel.
+
+## 2026-06-09 — UX frontend: autocomplete con teclado + toast con acción + errores visibles
+
+- **Home autocomplete keyboard nav** (`app/page.tsx`): ArrowUp/ArrowDown + Enter para navegar/seleccionar sugerencias (paridad con `NavbarSearch`/`SearchBar` que ya lo tenían). Nuevo state `acActiveIdx` compartido entre la instancia Hero y la de vista filtrada; `aria-selected` real (antes hardcoded `false`), highlight visual del item activo + sync `onMouseEnter`. Reset de índice al cargar sugerencias nuevas.
+- **Toast "agregado" con acción "Ver carrito"** (`app/page.tsx`): `Toast` acepta `actionHref`/`actionLabel`; al agregar con éxito muestra botón "Ver carrito" (timeout 4s en vez de 2.5s para dar tiempo a tocar); toast de error sin acción. Próximo paso claro para adultos mayores.
+- **PDP: error visible al agregar** (`producto/[slug]/ProductPageClient.tsx`): fallo de `addToCart` solo hacía `console.error` → usuario sin feedback (botón volvía a estado normal en silencio). Nuevo state `addError` + alert rojo `role=alert` ("No se pudo agregar al carrito / Revise su conexión...") sobre el botón; se limpia al reintentar.
+- **Checkout: validación inline con focus** (`checkout/page.tsx`): submit con campo inválido mostraba solo box genérico al fondo con botón "Reintentar" que re-corría la misma validación. Ahora cada campo marca su error inline (incluye nombre — nuevo `nameError` + mensaje bajo el input), y se hace `focus()` + `scrollIntoView` al primer campo inválido. `validate()` eliminado (lógica movida a `handleSubmit`); `canSubmit` incluye `!nameError`. El box genérico queda solo para errores de servidor/stock.
+- Build local OK.
