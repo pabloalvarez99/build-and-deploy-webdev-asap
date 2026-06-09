@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { XCircle, RefreshCw } from 'lucide-react';
+import { XCircle, RefreshCw, MessageCircle } from 'lucide-react';
 import { Suspense } from 'react';
 
 const REASON_MESSAGES: Record<string, string> = {
@@ -55,6 +55,15 @@ function ErrorContent() {
         <Link href="/carrito" className="btn btn-secondary block text-center text-lg w-full min-h-[56px]">
           Volver al carrito
         </Link>
+        <a
+          href={`https://wa.me/56993649604?text=${encodeURIComponent(`Hola! Intenté pagar con Webpay en Tu Farmacia y no funcionó (${message}) ¿Me pueden ayudar a completar mi compra?`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full min-h-[56px] rounded-2xl border-2 border-[#25D366] text-[#25D366] hover:bg-[#25D366]/10 font-bold text-lg transition-colors"
+        >
+          <MessageCircle className="w-5 h-5" />
+          ¿Necesita ayuda? Escríbanos
+        </a>
       </div>
     </div>
   );

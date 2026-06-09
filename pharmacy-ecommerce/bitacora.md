@@ -3458,3 +3458,11 @@ Build local OK. Push → Vercel.
 - **`/cotizacion` clamp de stock**: botón "+" incrementaba sin límite (`item.quantity + 1` sin clamp, a diferencia del carrito). Ahora `Math.min(item.stock, ...)` + `disabled` al llegar al máximo.
 - **`/auth/login`**: box de error gana `role="alert"` (screen readers anuncian el fallo de login).
 - Build local OK (exit 0).
+
+## 2026-06-09 — UX frontend (4): cierre de auditoría storefront
+
+- **`/mis-pedidos/[id]` reorder con salida al carrito**: tras "Volver a pedir" exitoso el botón decía "¡Agregado al carrito!" pero no había forma directa de llegar al carrito (la lista `/mis-pedidos` sí navega). Nuevo botón emerald "Ver carrito" persistente tras el primer reorder exitoso (`reorderedOk`).
+- **`/checkout/webpay/error` con ayuda humana**: pago rechazado/cancelado solo ofrecía reintentar o volver al carrito. Nuevo CTA WhatsApp "¿Necesita ayuda? Escríbanos" con el motivo del fallo pre-cargado en el mensaje — el momento exacto donde un adulto mayor abandona si no hay ayuda.
+- **`/mi-cuenta`**: feedback de guardar teléfono gana `role="status"`/`role="alert"` (screen readers).
+- Con esto queda auditado el 100% del storefront: home, navbar/search, PDP, carrito, checkout, reservation, webpay success/error, mis-pedidos lista+detalle, mi-cuenta, rastrear-pedido, cotización, /productos, auth, AccessibilityMenu, MobileBottomNav.
+- Build local OK (exit 0).

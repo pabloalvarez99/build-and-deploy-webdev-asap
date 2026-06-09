@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { orderApi, OrderWithItems } from '@/lib/api';
-import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck, MapPin, Store, Printer, MessageCircle, Check, RefreshCw, Star, AlertTriangle, Phone } from 'lucide-react';
+import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck, MapPin, Store, Printer, MessageCircle, Check, RefreshCw, Star, AlertTriangle, Phone, ShoppingCart } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
 import { useCartStore } from '@/store/cart';
 
@@ -126,6 +126,7 @@ export default function OrderDetailPage() {
   const [loadError, setLoadError] = useState<'network' | 'notfound' | null>(null);
   const [reordering, setReordering] = useState(false);
   const [reorderDone, setReorderDone] = useState(false);
+  const [reorderedOk, setReorderedOk] = useState(false);
   const [reorderToast, setReorderToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
@@ -165,6 +166,7 @@ export default function OrderDetailPage() {
       setReorderToast({ message: `${ok} de ${valid.length} agregados. ${failed} sin stock.`, tone: 'error' });
     }
     setReorderDone(true);
+    setReorderedOk(true);
     setTimeout(() => setReorderDone(false), 3000);
   };
 
@@ -444,6 +446,17 @@ export default function OrderDetailPage() {
                 <><RefreshCw className="w-5 h-5" />Volver a pedir</>
               )}
             </button>
+
+            {/* After a successful reorder, give a direct path to the cart */}
+            {reorderedOk && (
+              <Link
+                href="/carrito"
+                className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl font-bold min-h-[48px] bg-emerald-600 hover:bg-emerald-700 text-white transition-colors mb-3"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                Ver carrito
+              </Link>
+            )}
 
             {/* WhatsApp Support */}
             <a

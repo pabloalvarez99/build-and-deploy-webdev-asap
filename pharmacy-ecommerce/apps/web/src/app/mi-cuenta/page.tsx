@@ -465,13 +465,13 @@ export default function MiCuentaPage() {
 
             {/* Feedback */}
             {saveStatus === 'success' && (
-              <p className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400 mt-2">
+              <p role="status" className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400 mt-2">
                 <CheckCircle className="w-4 h-4" />
                 Teléfono guardado correctamente
               </p>
             )}
             {saveStatus === 'error' && (
-              <p className="flex items-center gap-1.5 text-sm text-red-500 dark:text-red-400 mt-2">
+              <p role="alert" className="flex items-center gap-1.5 text-sm text-red-500 dark:text-red-400 mt-2">
                 <XCircle className="w-4 h-4" />
                 {saveError}
               </p>
