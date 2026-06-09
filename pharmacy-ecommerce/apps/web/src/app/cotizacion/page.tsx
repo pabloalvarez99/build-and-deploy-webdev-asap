@@ -146,10 +146,19 @@ export default function CotizacionPage() {
           </div>
 
           {/* Search dropdown */}
-          {dropdownOpen && (searching || results.length > 0) && (
+          {dropdownOpen && (searching || search.trim().length > 0) && (
             <div className="absolute z-10 mt-2 w-full bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden">
               {searching ? (
                 <div className="px-4 py-3 text-slate-400 text-sm">Buscando...</div>
+              ) : results.length === 0 ? (
+                <div className="px-4 py-4">
+                  <p className="text-base text-slate-500 dark:text-slate-400 mb-1">
+                    Sin resultados para &ldquo;{search.trim()}&rdquo;
+                  </p>
+                  <p className="text-sm text-slate-400 dark:text-slate-500">
+                    Pruebe con otro nombre o el principio activo del medicamento.
+                  </p>
+                </div>
               ) : results.map((p) => {
                 const inQuote = cart?.items.find((i) => i.product_id === p.id);
                 return (

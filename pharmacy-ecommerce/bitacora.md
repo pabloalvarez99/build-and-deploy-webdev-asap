@@ -3442,3 +3442,11 @@ Build local OK. Push → Vercel.
 - **PDP: error visible al agregar** (`producto/[slug]/ProductPageClient.tsx`): fallo de `addToCart` solo hacía `console.error` → usuario sin feedback (botón volvía a estado normal en silencio). Nuevo state `addError` + alert rojo `role=alert` ("No se pudo agregar al carrito / Revise su conexión...") sobre el botón; se limpia al reintentar.
 - **Checkout: validación inline con focus** (`checkout/page.tsx`): submit con campo inválido mostraba solo box genérico al fondo con botón "Reintentar" que re-corría la misma validación. Ahora cada campo marca su error inline (incluye nombre — nuevo `nameError` + mensaje bajo el input), y se hace `focus()` + `scrollIntoView` al primer campo inválido. `validate()` eliminado (lógica movida a `handleSubmit`); `canSubmit` incluye `!nameError`. El box genérico queda solo para errores de servidor/stock.
 - Build local OK.
+
+## 2026-06-09 — UX frontend (2): toast en /productos + empty states con feedback
+
+- **`CartToast` compartido** (`components/CartToast.tsx`): extraído el Toast local de `app/page.tsx` (con acción opcional "Ver carrito") a componente reusable. Home migrado sin cambios visuales.
+- **`/productos` con confirmación + manejo de error**: `handleAdd` hacía `await addToCart()` sin try/catch (unhandled rejection en fallo) y sin confirmación persistente (solo el flash del botón). Ahora: toast "X agregado" con botón "Ver carrito" en éxito, toast de error en fallo — paridad con home.
+- **`/productos` empty state con fallback WhatsApp**: búsqueda sin resultados ahora ofrece "Solicitar presupuesto" vía wa.me (igual que home) además de "Limpiar filtros"; copy diferenciado si hay `searchTerm` vs solo filtros.
+- **`/cotizacion` dropdown "Sin resultados"**: el dropdown de búsqueda solo se mostraba con `searching || results.length > 0` — si la búsqueda no encontraba nada, no aparecía nada (cero feedback). Ahora muestra "Sin resultados para «X»" + sugerencia de buscar por principio activo.
+- Build local OK (exit 0).

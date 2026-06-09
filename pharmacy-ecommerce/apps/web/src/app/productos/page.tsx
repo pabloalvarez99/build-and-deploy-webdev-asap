@@ -3,13 +3,14 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Filter, Search, X, Loader2, Package, AlertTriangle } from 'lucide-react';
+import { Filter, Search, X, Loader2, Package, AlertTriangle, MessageCircle } from 'lucide-react';
 import { productApi, Category, PaginatedProducts, Product } from '@/lib/api';
 import { useCartStore } from '@/store/cart';
 import { Filters, CatalogFilters } from '@/components/catalog/Filters';
 import { SortSelect, SortOption } from '@/components/catalog/SortSelect';
 import { ProductCard } from '@/components/catalog/ProductCard';
 import { topInteractionSeverity } from '@/lib/drug-interactions';
+import CartToast from '@/components/CartToast';
 
 const ITEMS_PER_PAGE = 24;
 
@@ -76,6 +77,7 @@ function CatalogContent() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
   const [addingId, setAddingId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; showCartAction?: boolean } | null>(null);
   const { addToCart, cart, fetchCart } = useCartStore();
   const cartIngredients = useMemo(() => (cart?.items ?? []).map((i) => i.active_ingredient), [cart]);
   const [hideInteractions, setHideInteractions] = useState(false);
@@ -181,8 +183,15 @@ function CatalogContent() {
 
   const handleAdd = async (product: Product) => {
     setAddingId(product.id);
-    await addToCart(product.id);
-    setTimeout(() => setAddingId(null), 600);
+    try {
+      await addToCart(product.id);
+      const shortName = product.name.length > 25 ? product.name.substring(0, 25) + '...' : product.name;
+      setToast({ message: `${shortName} agregado`, showCartAction: true });
+    } catch {
+      setToast({ message: 'Error al agregar. Intenta de nuevo.' });
+    } finally {
+      setTimeout(() => setAddingId(null), 600);
+    }
   };
 
   const activeFilterCount =
@@ -196,6 +205,14 @@ function CatalogContent() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      {toast && (
+        <CartToast
+          message={toast.message}
+          actionHref={toast.showCartAction ? '/carrito' : undefined}
+          actionLabel={toast.showCartAction ? 'Ver carrito' : undefined}
+          onClose={() => setToast(null)}
+        />
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
@@ -296,12 +313,30 @@ function CatalogContent() {
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 py-16 text-center px-6">
                 <Package className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
                 <p className="text-lg text-slate-600 dark:text-slate-300 font-semibold mb-2">No se encontraron productos</p>
-                <p className="text-sm text-slate-400 mb-4">Prueba ajustar los filtros o limpiarlos.</p>
-                {activeFilterCount > 0 && (
-                  <button onClick={clearAll} className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-base min-h-[48px] transition-colors">
-                    Limpiar filtros
-                  </button>
+                {searchTerm ? (
+                  <p className="text-sm text-slate-400 mb-4">
+                    ¿No encontraste <strong className="text-slate-600 dark:text-slate-300">&ldquo;{searchTerm}&rdquo;</strong>? Solicita un presupuesto y lo conseguimos.
+                  </p>
+                ) : (
+                  <p className="text-sm text-slate-400 mb-4">Prueba ajustar los filtros o limpiarlos.</p>
                 )}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  {(activeFilterCount > 0 || searchTerm) && (
+                    <button onClick={clearAll} className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-base min-h-[48px] transition-colors">
+                      Limpiar filtros
+                    </button>
+                  )}
+                  {searchTerm && (
+                    <a
+                      href={`https://wa.me/56993649604?text=${encodeURIComponent(`Hola! Busqué "${searchTerm}" en su tienda y no lo encontré. ¿Pueden conseguirlo?`)}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold text-base min-h-[48px] transition-colors"
+                    >
+                      <MessageCircle className="w-5 h-5" />
+                      Solicitar presupuesto
+                    </a>
+                  )}
+                </div>
               </div>
             ) : (
               <>
