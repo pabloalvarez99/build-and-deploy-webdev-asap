@@ -3450,3 +3450,11 @@ Build local OK. Push → Vercel.
 - **`/productos` empty state con fallback WhatsApp**: búsqueda sin resultados ahora ofrece "Solicitar presupuesto" vía wa.me (igual que home) además de "Limpiar filtros"; copy diferenciado si hay `searchTerm` vs solo filtros.
 - **`/cotizacion` dropdown "Sin resultados"**: el dropdown de búsqueda solo se mostraba con `searching || results.length > 0` — si la búsqueda no encontraba nada, no aparecía nada (cero feedback). Ahora muestra "Sin resultados para «X»" + sugerencia de buscar por principio activo.
 - Build local OK (exit 0).
+
+## 2026-06-09 — UX frontend (3): banner reserva pendiente + fixes reorder/cotización/login
+
+- **Banner reserva pendiente en home** (`components/home/ReservationBanner.tsx`): el código de retiro vivía SOLO en la URL de `/checkout/reservation` — un invitado (email opcional en retiro en tienda) que navegaba fuera lo perdía. Ahora la página de reserva persiste `{code, orderId, expires, total}` en `localStorage` (`tf:last-reservation`) y el home muestra banner emerald "Tiene una reserva pendiente de retiro" con código + total + link "Ver estado" (`/rastrear-pedido?id=`). Se auto-limpia al expirar (24h); descartable con X (solo oculta la sesión vía `sessionStorage`, el código se conserva).
+- **Fix `/mis-pedidos` reorder parcial**: con stock parcial se seteaba toast de error e inmediatamente `router.push('/carrito')` → el toast se desmontaba antes de leerse. Ahora con fallos espera 2.5s antes de navegar.
+- **`/cotizacion` clamp de stock**: botón "+" incrementaba sin límite (`item.quantity + 1` sin clamp, a diferencia del carrito). Ahora `Math.min(item.stock, ...)` + `disabled` al llegar al máximo.
+- **`/auth/login`**: box de error gana `role="alert"` (screen readers anuncian el fallo de login).
+- Build local OK (exit 0).

@@ -28,6 +28,16 @@ function ReservationContent() {
     if (paidWithWebpay) clearCart();
   }, [paidWithWebpay, clearCart]);
 
+  // Persist reservation so the code survives navigation (URL is its only other home);
+  // ReservationBanner on / reads it until expiry.
+  useEffect(() => {
+    if (!code) return;
+    try {
+      localStorage.setItem('tf:last-reservation', JSON.stringify({ code, orderId, expires, total }));
+      sessionStorage.removeItem('tf:resv-dismissed');
+    } catch {}
+  }, [code, orderId, expires, total]);
+
   const pointsToEarn = user && total ? calcPoints(Number(total)) : 0;
 
   const whatsappMessage = encodeURIComponent(

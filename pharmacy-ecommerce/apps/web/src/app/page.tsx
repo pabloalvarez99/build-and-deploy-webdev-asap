@@ -19,6 +19,7 @@ import { ReactNode } from 'react';
 import Hero, { HeroAutocompleteShell, HeroAcLoading } from '@/components/home/Hero';
 import FeaturedCategories from '@/components/home/FeaturedCategories';
 import CartToast from '@/components/CartToast';
+import ReservationBanner from '@/components/home/ReservationBanner';
 
 const categoryIcons: Record<string, ReactNode> = {
   'dolor-fiebre': <Pill className="w-4 h-4" />,
@@ -448,7 +449,10 @@ function HomeContent() {
       <h1 className="sr-only">Tu Farmacia — Catálogo de medicamentos, vitaminas y salud en Coquimbo, Chile</h1>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex gap-6 py-4 sm:py-6">
+        <div className="pt-4 sm:pt-6">
+          <ReservationBanner />
+        </div>
+        <div className="flex gap-6 pb-4 sm:pb-6">
 
           {/* ── Sidebar (desktop only) ─────────────────────────── */}
           <aside className="hidden lg:flex flex-col w-56 flex-shrink-0 gap-4">

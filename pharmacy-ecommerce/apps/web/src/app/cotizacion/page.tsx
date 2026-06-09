@@ -239,9 +239,10 @@ export default function CotizacionPage() {
                           <span className="w-8 text-center font-bold text-slate-900 dark:text-slate-100">{item.quantity}</span>
                           <button
                             type="button"
-                            onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.product_id, Math.min(item.stock, item.quantity + 1))}
+                            disabled={item.quantity >= item.stock}
                             aria-label={`Aumentar cantidad de ${item.product_name}`}
-                            className="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center transition-colors"
+                            className="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center transition-colors disabled:opacity-30"
                           >
                             <Plus className="w-4 h-4" aria-hidden="true" />
                           </button>

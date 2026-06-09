@@ -64,7 +64,10 @@ export default function MyOrdersPage() {
       return;
     }
     if (failed > 0) {
+      // Let the toast be read before navigating away unmounts it
       setToast({ message: `${ok} de ${valid.length} agregados. ${failed} sin stock — revisa carrito.`, tone: 'error' });
+      setTimeout(() => router.push('/carrito'), 2500);
+      return;
     }
     router.push('/carrito');
   };
