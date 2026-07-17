@@ -3466,3 +3466,13 @@ Build local OK. Push → Vercel.
 - **`/mi-cuenta`**: feedback de guardar teléfono gana `role="status"`/`role="alert"` (screen readers).
 - Con esto queda auditado el 100% del storefront: home, navbar/search, PDP, carrito, checkout, reservation, webpay success/error, mis-pedidos lista+detalle, mi-cuenta, rastrear-pedido, cotización, /productos, auth, AccessibilityMenu, MobileBottomNav.
 - Build local OK (exit 0).
+
+## 2026-07-17 — App Android TWA (APK sideload) v1.0.0
+
+- **PWA ya estaba lista** (commit daeb2a4 de otra sesión): `public/manifest.json` estático con icons any+maskable (200 en prod), `sw.js` con offline + push handlers, `PWARegister`, página `/offline`. `src/app/manifest.ts` (dead code) ya eliminado ahí.
+- **Keystore de firma** generado FUERA del repo: `C:\Users\Administrator\keys\tu-farmacia.keystore` (alias `tu-farmacia`, RSA 2048, validez 10.000 días) + backup `.bak`. Password en `C:\Users\Administrator\keys\.keystore-password` — **mover a gestor de contraseñas y hacer backup externo del keystore** (perderlo = no poder actualizar la app jamás).
+- **`assetlinks.json` con SHA-256 real** (`2E:19:38:...:67:4E`) desplegado a prod; Google Digital Asset Links API ya indexa el statement → TWA abre fullscreen sin barra de URL.
+- **Tooling**: Android SDK en `C:\Users\Administrator\Android\Sdk` (platform 34+36, build-tools 34+36, platform-tools), `ANDROID_HOME` persistido con setx, junction `Sdk\bin → cmdline-tools\latest\bin` (Bubblewrap exige `bin/sdkmanager` bajo el root). Temurin JDK 17 instalado vía winget — **Bubblewrap doctor rechaza JDK 21** (exige 17); config en `C:\Users\Administrator\.bubblewrap\config.json`.
+- **Proyecto TWA** en `pharmacy-ecommerce/apps/android/`: `twa-manifest.json` escrito a mano (init es interactivo y crashea sin TTY), `bubblewrap update` generó el proyecto Gradle (AGP 8.9.1, Gradle 8.11.1, compileSdk 36). OJO: `yes | bubblewrap update` contamina prompts — versionName quedó "y" y hubo que corregir a mano en `twa-manifest.json` y `app/build.gradle`.
+- **Build APK**: `gradlew.bat assembleRelease` (con `JAVA_HOME`=JDK17, `ANDROID_HOME`, y `local.properties` con `sdk.dir=C:/Users/...` en forward slashes — `\U` rompe properties: "volume label syntax is incorrect") → `zipalign` + `apksigner sign` manual → `app-release-signed.apk` (no commiteada, en .gitignore). Firma verificada: digest coincide con assetlinks.
+- Pendiente: instalar en dispositivo físico (`adb install -r app-release-signed.apk`) + checklist manual (fullscreen, flujo Webpay, retiro tienda, login, offline). Fases futuras: push notifications, Play Store (cuenta developer ya comprada), biometría.
