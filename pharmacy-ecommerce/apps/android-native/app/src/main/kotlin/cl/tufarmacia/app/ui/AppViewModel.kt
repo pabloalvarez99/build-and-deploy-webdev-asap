@@ -18,6 +18,8 @@ import cl.tufarmacia.app.data.model.StorePickupResponse
 import cl.tufarmacia.app.data.model.TopSeller
 import cl.tufarmacia.app.data.model.TrackingResponse
 import cl.tufarmacia.app.data.model.WebpayCreateResponse
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -89,6 +91,7 @@ data class AppUiState(
 class AppViewModel(private val container: AppContainer) : ViewModel() {
     private val _state = MutableStateFlow(AppUiState())
     val state: StateFlow<AppUiState> = _state.asStateFlow()
+    private var catalogSearchJob: Job? = null
 
     val cartLines: StateFlow<List<CartLine>> = container.cartRepository.lines
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -240,6 +243,11 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
     fun onSearchChange(q: String) {
         _state.update { it.copy(searchQuery = q) }
+        catalogSearchJob?.cancel()
+        catalogSearchJob = viewModelScope.launch {
+            delay(400)
+            loadProducts(page = 1, append = false)
+        }
     }
 
     fun selectCategory(slug: String?) {

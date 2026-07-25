@@ -35,8 +35,10 @@ import androidx.navigation.navArgument
 import cl.tufarmacia.app.data.AppContainer
 import cl.tufarmacia.app.ui.screens.AccountScreen
 import cl.tufarmacia.app.ui.screens.AdminScreen
+import cl.tufarmacia.app.ui.erp.ErpArqueoScreen
 import cl.tufarmacia.app.ui.erp.ErpClientsScreen
 import cl.tufarmacia.app.ui.erp.ErpDashboardScreen
+import cl.tufarmacia.app.ui.erp.ErpFaltasScreen
 import cl.tufarmacia.app.ui.erp.ErpFinanceScreen
 import cl.tufarmacia.app.ui.erp.ErpHubScreen
 import cl.tufarmacia.app.ui.erp.ErpInventoryScreen
@@ -78,6 +80,8 @@ private object Routes {
     const val ErpFinance = "erp_finance"
     const val ErpTasks = "erp_tasks"
     const val ErpShifts = "erp_shifts"
+    const val ErpFaltas = "erp_faltas"
+    const val ErpArqueo = "erp_arqueo"
     const val Cart = "cart"
     const val Checkout = "checkout"
     const val Orders = "orders"
@@ -237,7 +241,8 @@ fun TuFarmaciaRoot(container: AppContainer) {
                 ProductDetailScreen(
                     state = state,
                     onBack = { navController.popBackStack() },
-                    onAddToCart = { p -> vm.addToCart(p) },
+                    onAddToCart = { p, q -> vm.addToCart(p, q) },
+                    onOpenCart = { navController.navigateTab(Routes.Cart) },
                 )
             }
             composable(Routes.Cart) {
@@ -381,6 +386,14 @@ fun TuFarmaciaRoot(container: AppContainer) {
                                 erpVm.loadTurnos()
                                 navController.navigate(Routes.ErpShifts)
                             }
+                            Routes.ErpFaltas -> {
+                                erpVm.loadFaltas()
+                                navController.navigate(Routes.ErpFaltas)
+                            }
+                            Routes.ErpArqueo -> {
+                                erpVm.loadArqueo()
+                                navController.navigate(Routes.ErpArqueo)
+                            }
                         }
                     },
                     onBackToStore = { navController.navigateTab(Routes.Home) },
@@ -455,6 +468,21 @@ fun TuFarmaciaRoot(container: AppContainer) {
             }
             composable(Routes.ErpShifts) {
                 ErpShiftsScreen(state = erp, onBack = { navController.popBackStack() })
+            }
+            composable(Routes.ErpFaltas) {
+                ErpFaltasScreen(
+                    state = erp,
+                    onBack = { navController.popBackStack() },
+                    onNotify = erpVm::markFaltaNotified,
+                    onRefresh = erpVm::loadFaltas,
+                )
+            }
+            composable(Routes.ErpArqueo) {
+                ErpArqueoScreen(
+                    state = erp,
+                    onBack = { navController.popBackStack() },
+                    onRefresh = erpVm::loadArqueo,
+                )
             }
             composable(Routes.Login) {
                 LoginScreen(

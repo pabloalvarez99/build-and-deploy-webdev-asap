@@ -27,6 +27,9 @@ import cl.tufarmacia.app.data.model.PurchaseOrdersResponse
 import cl.tufarmacia.app.data.model.StockAdjustRequest
 import cl.tufarmacia.app.data.model.StockAdjustResponse
 import cl.tufarmacia.app.data.model.SuppliersResponse
+import cl.tufarmacia.app.data.model.ArqueoResponse
+import cl.tufarmacia.app.data.model.FaltaDto
+import cl.tufarmacia.app.data.model.FaltasResponse
 import cl.tufarmacia.app.data.model.TaskActionResponse
 import cl.tufarmacia.app.data.model.TasksResponse
 import cl.tufarmacia.app.data.model.TurnosResponse
@@ -42,6 +45,7 @@ import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
@@ -214,6 +218,28 @@ class TuFarmaciaApi(
             parameter("page", page)
             parameter("limit", limit)
         }
+
+    suspend fun adminFaltas(status: String? = "pending"): FaltasResponse =
+        get("/api/admin/faltas", auth = true) {
+            if (!status.isNullOrBlank()) parameter("status", status)
+        }
+
+    suspend fun adminFaltaStatus(id: String, status: String): FaltaDto =
+        patchJson("/api/admin/faltas/$id", buildJsonObject { put("status", status) })
+
+    suspend fun adminArqueo(): ArqueoResponse =
+        get("/api/admin/arqueo", auth = true)
+
+    private suspend inline fun <reified T> patchJson(path: String, body: Any): T {
+        val token = tokenProvider.currentIdToken()
+            ?: throw ApiException("Not authenticated", statusCode = 401)
+        val response = httpClient.patch(path) {
+            contentType(ContentType.Application.Json)
+            bearerAuth(token)
+            setBody(body)
+        }
+        return parse(response)
+    }
 
     private suspend inline fun <reified T> putJson(path: String, body: Any): T {
         val token = tokenProvider.currentIdToken()

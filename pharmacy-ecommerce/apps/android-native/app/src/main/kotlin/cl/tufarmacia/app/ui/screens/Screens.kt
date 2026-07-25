@@ -386,8 +386,10 @@ private fun ProductThumb(url: String?, name: String) {
 fun ProductDetailScreen(
     state: AppUiState,
     onBack: () -> Unit,
-    onAddToCart: (Product) -> Unit,
+    onAddToCart: (Product, Int) -> Unit,
+    onOpenCart: () -> Unit = {},
 ) {
+    var qty by remember { mutableStateOf(1) }
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             title = { Text("Producto") },
@@ -439,13 +441,29 @@ fun ProductDetailScreen(
                     p.description?.let {
                         Text(it, style = MaterialTheme.typography.bodyMedium, color = Color.DarkGray)
                     }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Cantidad:", fontWeight = FontWeight.Medium)
+                        IconButton(
+                            onClick = { qty = (qty - 1).coerceAtLeast(1) },
+                            enabled = qty > 1,
+                        ) { Icon(Icons.Default.Remove, contentDescription = "-") }
+                        Text("$qty", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                        IconButton(
+                            onClick = { qty = (qty + 1).coerceAtMost(p.stock.coerceAtLeast(1)) },
+                            enabled = qty < p.stock,
+                        ) { Icon(Icons.Default.Add, contentDescription = "+") }
+                    }
+                    Text("Subtotal: ${formatClp(p.unitPrice() * qty)}", fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(8.dp))
                     Button(
-                        onClick = { onAddToCart(p) },
+                        onClick = { onAddToCart(p, qty) },
                         enabled = p.stock > 0,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Text(if (p.stock > 0) "Agregar al carrito" else "Sin stock")
+                        Text(if (p.stock > 0) "Agregar $qty al carrito" else "Sin stock")
+                    }
+                    OutlinedButton(onClick = onOpenCart, modifier = Modifier.fillMaxWidth()) {
+                        Text("Ver carrito")
                     }
                 }
             }

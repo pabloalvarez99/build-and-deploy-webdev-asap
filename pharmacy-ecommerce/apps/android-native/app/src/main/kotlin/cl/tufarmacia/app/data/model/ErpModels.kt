@@ -246,3 +246,52 @@ data class TaskActionResponse(
     val success: Boolean = true,
     val error: String? = null,
 )
+
+@Serializable
+data class FaltaDto(
+    val id: String,
+    @SerialName("product_id") val productId: String? = null,
+    @SerialName("product_name") val productName: String? = null,
+    @SerialName("customer_name") val customerName: String? = null,
+    @SerialName("customer_phone") val customerPhone: String? = null,
+    val quantity: Int = 1,
+    val notes: String? = null,
+    val status: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
+    @SerialName("notified_at") val notifiedAt: String? = null,
+)
+
+@Serializable
+data class FaltasResponse(
+    val faltas: List<FaltaDto> = emptyList(),
+    val pendingCount: Int? = null,
+)
+
+@Serializable
+data class ArqueoVentas(
+    val efectivo: Double = 0.0,
+    val debito: Double = 0.0,
+    val credito: Double = 0.0,
+    val mixto: Double = 0.0,
+    val total: Double = 0.0,
+    @SerialName("num_transacciones") val numTransacciones: Int = 0,
+)
+
+@Serializable
+data class ArqueoOrder(
+    val id: String,
+    val total: Double = 0.0,
+    @SerialName("payment_provider") val paymentProvider: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
+    val customer: String? = null,
+)
+
+@Serializable
+data class ArqueoResponse(
+    @SerialName("turno_inicio") val turnoInicio: String? = null,
+    @SerialName("fondo_inicial") val fondoInicial: Double = 0.0,
+    val ventas: ArqueoVentas = ArqueoVentas(),
+    @SerialName("efectivo_esperado") val efectivoEsperado: Double = 0.0,
+    @SerialName("recent_orders") val recentOrders: List<ArqueoOrder> = emptyList(),
+    @SerialName("pharmacist_name") val pharmacistName: String? = null,
+)

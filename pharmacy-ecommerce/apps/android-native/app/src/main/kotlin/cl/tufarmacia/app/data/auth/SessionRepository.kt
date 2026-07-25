@@ -71,6 +71,35 @@ class SessionRepository(
 
     private suspend fun ensureFreshToken(): SessionTokens? {
         val tokens = cached ?: store.load()?.also { cached = it } ?: return null
+        // Proactively refresh if ID token payload is expired (JWT exp)
+        val exp = decodeJwtExp(tokens.idToken)
+        val now = System.currentTimeMillis() / 1000
+        if (exp != null && exp < now + 60) {
+            return try {
+                val refreshed = authApi.refreshIdToken(tokens.refreshToken)
+                cached = refreshed
+                store.save(refreshed)
+                refreshed
+            } catch (_: Exception) {
+                tokens
+            }
+        }
         return tokens
+    }
+
+    private fun decodeJwtExp(jwt: String): Long? {
+        return try {
+            val parts = jwt.split(".")
+            if (parts.size < 2) return null
+            val payload = parts[1]
+                .replace('-', '+')
+                .replace('_', '/')
+            val padded = payload + "=".repeat((4 - payload.length % 4) % 4)
+            val json = String(android.util.Base64.decode(padded, android.util.Base64.DEFAULT))
+            val expMatch = Regex("\"exp\"\\s*:\\s*(\\d+)").find(json)
+            expMatch?.groupValues?.get(1)?.toLongOrNull()
+        } catch (_: Exception) {
+            null
+        }
     }
 }

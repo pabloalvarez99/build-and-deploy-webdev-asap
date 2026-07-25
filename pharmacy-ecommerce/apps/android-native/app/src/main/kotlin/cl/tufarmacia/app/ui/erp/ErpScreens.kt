@@ -63,6 +63,8 @@ val ERP_MODULES = listOf(
     ErpModule("erp_orders", "Órdenes", "Online · reservas · staff actions"),
     ErpModule("erp_pos", "POS", "Venta en mostrador"),
     ErpModule("erp_inventory", "Inventario", "Stock · ajustes"),
+    ErpModule("erp_arqueo", "Arqueo", "Turno actual · efectivo esperado"),
+    ErpModule("erp_faltas", "Faltas", "Pedidos sin stock · notificar"),
     ErpModule("erp_clients", "Clientes", "Registrados y guests"),
     ErpModule("erp_purchases", "Compras", "Órdenes de compra", ownerOnly = true),
     ErpModule("erp_suppliers", "Proveedores", "Catálogo proveedores", ownerOnly = true),
@@ -559,6 +561,111 @@ fun ErpShiftsScreen(state: ErpUiState, onBack: () -> Unit) {
                 }
             }
             if (state.turnos.isEmpty()) item { Text("Sin cierres") }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ErpFaltasScreen(
+    state: ErpUiState,
+    onBack: () -> Unit,
+    onNotify: (String) -> Unit,
+    onRefresh: () -> Unit,
+) {
+    Column(Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("Faltas (${state.faltasPending})") },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                }
+            },
+            actions = {
+                Text("Actualizar", Modifier.clickable(onClick = onRefresh).padding(16.dp), color = MaterialTheme.colorScheme.primary)
+            },
+        )
+        if (state.loading && state.faltas.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            return
+        }
+        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(state.faltas, key = { it.id }) { f ->
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(f.productName ?: "Producto", fontWeight = FontWeight.Bold)
+                        Text("x${f.quantity} · ${f.status}", style = MaterialTheme.typography.bodySmall)
+                        f.customerName?.let { Text("Cliente: $it") }
+                        f.customerPhone?.let { Text("Tel: $it") }
+                        f.notes?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = Color.Gray) }
+                        if (f.status == "pending") {
+                            Button(onClick = { onNotify(f.id) }, modifier = Modifier.fillMaxWidth()) {
+                                Text("Marcar notificada")
+                            }
+                        }
+                    }
+                }
+            }
+            if (state.faltas.isEmpty()) item { Text("Sin faltas pendientes") }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ErpArqueoScreen(
+    state: ErpUiState,
+    onBack: () -> Unit,
+    onRefresh: () -> Unit,
+) {
+    Column(Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("Arqueo de caja") },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                }
+            },
+            actions = {
+                Text("Actualizar", Modifier.clickable(onClick = onRefresh).padding(16.dp), color = MaterialTheme.colorScheme.primary)
+            },
+        )
+        if (state.loading && state.arqueo == null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            return
+        }
+        val a = state.arqueo
+        if (a == null) {
+            Text("Sin datos", Modifier.padding(16.dp))
+            return
+        }
+        Column(
+            Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            a.pharmacistName?.let { Text("Farmacéutico: $it", fontWeight = FontWeight.Medium) }
+            Text("Turno desde: ${a.turnoInicio ?: "—"}", style = MaterialTheme.typography.bodySmall)
+            KpiCard("Fondo inicial", formatClp(a.fondoInicial), "")
+            KpiCard("Ventas total turno", formatClp(a.ventas.total), "${a.ventas.numTransacciones} transacciones")
+            KpiCard("Efectivo", formatClp(a.ventas.efectivo), "Débito ${formatClp(a.ventas.debito)} · Crédito ${formatClp(a.ventas.credito)}")
+            KpiCard("Efectivo esperado", formatClp(a.efectivoEsperado), "fondo + ventas efectivo")
+            Text("Últimas ventas POS", fontWeight = FontWeight.Bold)
+            a.recentOrders.forEach { o ->
+                Card(Modifier.fillMaxWidth()) {
+                    Row(
+                        Modifier.padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(o.customer ?: "Cliente", fontWeight = FontWeight.Medium)
+                            Text(o.paymentProvider ?: "", style = MaterialTheme.typography.labelSmall)
+                        }
+                        Text(formatClp(o.total), fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
         }
     }
 }

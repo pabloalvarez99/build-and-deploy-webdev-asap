@@ -3519,3 +3519,8 @@ Build local OK. Push → Vercel.
 - ERP hub: Dashboard, Ordenes, POS, Inventario, Clientes, Compras, Proveedores, Finanzas, Tareas, Turnos
 - ErpViewModel + APIs admin reales
 - assembleDebug OK
+
+## 2026-07-25 17:48 — Android v1.1.0 improvements
+- ERP: Faltas + Arqueo modules
+- Debounced catalog/POS search, product qty picker
+- JWT token proactive refresh

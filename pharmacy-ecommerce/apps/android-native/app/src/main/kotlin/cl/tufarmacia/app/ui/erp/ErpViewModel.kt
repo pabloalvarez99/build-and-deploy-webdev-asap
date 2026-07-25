@@ -5,8 +5,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import cl.tufarmacia.app.data.AppContainer
 import cl.tufarmacia.app.data.api.ApiException
+import cl.tufarmacia.app.data.model.ArqueoResponse
 import cl.tufarmacia.app.data.model.ClienteDto
 import cl.tufarmacia.app.data.model.DashboardExtras
+import cl.tufarmacia.app.data.model.FaltaDto
 import cl.tufarmacia.app.data.model.FinanzasDashboard
 import cl.tufarmacia.app.data.model.InventoryItem
 import cl.tufarmacia.app.data.model.OperacionesResponse
@@ -18,6 +20,8 @@ import cl.tufarmacia.app.data.model.StockAdjustRequest
 import cl.tufarmacia.app.data.model.SupplierDto
 import cl.tufarmacia.app.data.model.TaskDto
 import cl.tufarmacia.app.data.model.TurnoCierre
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -59,11 +63,15 @@ data class ErpUiState(
     val finanzas: FinanzasDashboard? = null,
     val tasks: List<TaskDto> = emptyList(),
     val turnos: List<TurnoCierre> = emptyList(),
+    val faltas: List<FaltaDto> = emptyList(),
+    val faltasPending: Int = 0,
+    val arqueo: ArqueoResponse? = null,
 )
 
 class ErpViewModel(private val container: AppContainer) : ViewModel() {
     private val _state = MutableStateFlow(ErpUiState())
     val state: StateFlow<ErpUiState> = _state.asStateFlow()
+    private var posSearchJob: Job? = null
 
     fun consumeSnackbar() {
         _state.update { it.copy(snackbar = null) }
@@ -136,6 +144,15 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
 
     fun setPosSearch(q: String) {
         _state.update { it.copy(posSearch = q) }
+        posSearchJob?.cancel()
+        if (q.length < 2) {
+            _state.update { it.copy(posResults = emptyList()) }
+            return
+        }
+        posSearchJob = viewModelScope.launch {
+            delay(350)
+            searchPosProducts()
+        }
     }
 
     fun searchPosProducts() {
@@ -302,6 +319,48 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                 _state.update { it.copy(turnos = res.list) }
             } catch (e: Exception) {
                 _state.update { it.copy(snackbar = e.message) }
+            }
+        }
+    }
+
+    fun loadFaltas() {
+        viewModelScope.launch {
+            _state.update { it.copy(loading = true) }
+            try {
+                val res = container.api.adminFaltas(status = "pending")
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        faltas = res.faltas,
+                        faltasPending = res.pendingCount ?: res.faltas.size,
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update { it.copy(loading = false, snackbar = e.message) }
+            }
+        }
+    }
+
+    fun markFaltaNotified(id: String) {
+        viewModelScope.launch {
+            try {
+                container.api.adminFaltaStatus(id, "notified")
+                _state.update { it.copy(snackbar = "Falta marcada notificada") }
+                loadFaltas()
+            } catch (e: Exception) {
+                _state.update { it.copy(snackbar = e.message) }
+            }
+        }
+    }
+
+    fun loadArqueo() {
+        viewModelScope.launch {
+            _state.update { it.copy(loading = true) }
+            try {
+                val a = container.api.adminArqueo()
+                _state.update { it.copy(loading = false, arqueo = a) }
+            } catch (e: Exception) {
+                _state.update { it.copy(loading = false, snackbar = e.message) }
             }
         }
     }
