@@ -44,8 +44,20 @@ Custom claim `role` on the token: `user` \| `owner` \| `admin` \| `pharmacist` \
 | GET | `/api/orders/{id}` | yes | order detail |
 | POST | `/api/store-pickup` | yes* | store reservation |
 | GET | `/api/admin/orders` | admin | staff orders |
+| PUT | `/api/admin/orders/{id}` | admin | approve/reject/status |
+| GET | `/api/admin/operaciones` | admin | dashboard KPIs |
+| GET | `/api/admin/dashboard-extras` | admin | OCs / vencimientos |
+| GET | `/api/admin/inventory` | admin | stock list |
+| POST | `/api/admin/stock-movements/adjust` | admin | stock ± |
+| POST | `/api/admin/pos/sale` | admin | POS sale |
+| GET | `/api/admin/clientes` | admin | clients |
+| GET | `/api/admin/suppliers` | owner | suppliers |
+| GET | `/api/admin/purchase-orders` | owner | POs |
+| GET | `/api/admin/finanzas/dashboard` | owner | finance KPIs |
+| GET/PUT | `/api/admin/tareas` | admin | tasks |
+| GET | `/api/admin/turnos` | admin | cash shifts |
 
-\* Bearer optional on server; app requires login.
+\* Bearer optional on store-pickup server; app requires login for checkout.
 
 ### Product query params
 
