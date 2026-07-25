@@ -36,6 +36,7 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -70,7 +71,9 @@ import cl.tufarmacia.app.data.model.CartLine
 import cl.tufarmacia.app.data.model.OrderDto
 import cl.tufarmacia.app.data.model.Product
 import cl.tufarmacia.app.data.model.StorePickupResponse
+import cl.tufarmacia.app.data.model.LoyaltyResponse
 import cl.tufarmacia.app.data.model.TopSeller
+import cl.tufarmacia.app.data.model.TrackingResponse
 import cl.tufarmacia.app.ui.AppUiState
 import cl.tufarmacia.app.util.formatClp
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -108,6 +111,7 @@ fun HomeScreen(
     onOpenCatalog: () -> Unit,
     onOpenCart: () -> Unit,
     onOpenOrders: () -> Unit,
+    onOpenTrack: () -> Unit,
     onOpenLogin: () -> Unit,
     onOpenRegister: () -> Unit,
     onOpenProduct: (String) -> Unit,
@@ -151,6 +155,9 @@ fun HomeScreen(
         }
         OutlinedButton(onClick = onOpenCart, modifier = Modifier.fillMaxWidth()) {
             Text(if (cartCount > 0) "Carrito ($cartCount)" else "Carrito")
+        }
+        OutlinedButton(onClick = onOpenTrack, modifier = Modifier.fillMaxWidth()) {
+            Text("Rastrear pedido")
         }
         if (user != null) {
             OutlinedButton(onClick = onOpenOrders, modifier = Modifier.fillMaxWidth()) {
@@ -531,6 +538,7 @@ fun CheckoutScreen(
     lines: List<CartLine>,
     onBack: () -> Unit,
     onField: (name: String?, surname: String?, phone: String?, email: String?, notes: String?) -> Unit,
+    onUsePoints: (Boolean) -> Unit,
     onSubmit: () -> Unit,
     onDone: () -> Unit,
 ) {
@@ -594,6 +602,15 @@ fun CheckoutScreen(
                 label = { Text("Notas") },
                 modifier = Modifier.fillMaxWidth(),
             )
+            if ((state.loyalty?.points ?: 0) > 0) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = state.checkoutUsePoints,
+                        onCheckedChange = onUsePoints,
+                    )
+                    Text("Usar ${state.loyalty?.points} puntos de fidelidad")
+                }
+            }
             state.checkoutError?.let {
                 Text(it, color = MaterialTheme.colorScheme.error)
             }
@@ -629,6 +646,10 @@ private fun CheckoutSuccess(res: StorePickupResponse, onDone: () -> Unit) {
         Text("Total: ${formatClp(res.total)}")
         Text("Orden: ${res.orderId}", style = MaterialTheme.typography.labelSmall)
         res.expiresAt?.let { Text("Vence: $it", style = MaterialTheme.typography.bodySmall) }
+        res.trackingToken?.let {
+            Text("Token seguimiento:", style = MaterialTheme.typography.labelMedium)
+            Text(it, style = MaterialTheme.typography.bodySmall)
+        }
         Spacer(Modifier.height(16.dp))
         Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text("Listo") }
     }
@@ -911,12 +932,20 @@ fun RegisterScreen(
 @Composable
 fun AccountScreen(
     user: AuthUser,
+    loyalty: LoyaltyResponse?,
     onLogout: () -> Unit,
     onOrders: () -> Unit,
+    onTrack: () -> Unit,
+    onRefreshLoyalty: () -> Unit,
 ) {
     Column(Modifier.fillMaxSize()) {
         TopAppBar(title = { Text("Mi cuenta") })
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(
+            Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             Text(user.name ?: "Usuario", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(user.email ?: "—")
             Text("Rol: ${user.role}")
@@ -924,8 +953,83 @@ fun AccountScreen(
             if (user.isAdmin) {
                 Text("Staff: pestaña Admin disponible", color = MaterialTheme.colorScheme.primary)
             }
+            if (loyalty != null) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Fidelidad", fontWeight = FontWeight.SemiBold)
+                        Text("${loyalty.points} puntos · valor ~${formatClp(loyalty.pointsValue.toDouble())}")
+                        Text(
+                            "Actualizar puntos",
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable(onClick = onRefreshLoyalty),
+                        )
+                    }
+                }
+            }
             Button(onClick = onOrders, modifier = Modifier.fillMaxWidth()) { Text("Mis pedidos") }
+            OutlinedButton(onClick = onTrack, modifier = Modifier.fillMaxWidth()) { Text("Rastrear pedido") }
             OutlinedButton(onClick = onLogout, modifier = Modifier.fillMaxWidth()) { Text("Cerrar sesión") }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TrackScreen(
+    token: String,
+    loading: Boolean,
+    error: String?,
+    result: TrackingResponse?,
+    onTokenChange: (String) -> Unit,
+    onTrack: () -> Unit,
+    onBack: () -> Unit,
+) {
+    Column(Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("Rastrear pedido") },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                }
+            },
+        )
+        Column(
+            Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text("Pega el token de seguimiento del email o SMS.", style = MaterialTheme.typography.bodyMedium)
+            OutlinedTextField(
+                value = token,
+                onValueChange = onTokenChange,
+                label = { Text("Token de tracking") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+            if (error != null) Text(error, color = MaterialTheme.colorScheme.error)
+            Button(onClick = onTrack, enabled = !loading && token.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
+                if (loading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                else Text("Buscar")
+            }
+            result?.let { r ->
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(r.status.uppercase(), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Text("Total: ${formatClp(r.total)}")
+                        r.pickupCode?.let { Text("Código retiro: $it", fontWeight = FontWeight.SemiBold) }
+                        r.customerName?.let { Text("Cliente: $it") }
+                        r.createdAt?.let { Text("Creado: $it", style = MaterialTheme.typography.bodySmall) }
+                        Text("Ítems:", fontWeight = FontWeight.Medium)
+                        r.items.forEach { item ->
+                            Text("• ${item.productName} x${item.quantity} — ${formatClp(item.priceAtPurchase)}")
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -7,12 +7,14 @@ import cl.tufarmacia.app.data.model.OrderDto
 import cl.tufarmacia.app.data.model.PaginatedOrders
 import cl.tufarmacia.app.data.model.PaginatedProducts
 import cl.tufarmacia.app.data.model.Product
+import cl.tufarmacia.app.data.model.LoyaltyResponse
 import cl.tufarmacia.app.data.model.RegisterRequest
 import cl.tufarmacia.app.data.model.RegisterResponse
 import cl.tufarmacia.app.data.model.StorePickupRequest
 import cl.tufarmacia.app.data.model.StorePickupResponse
 import cl.tufarmacia.app.data.model.SuggestResponse
 import cl.tufarmacia.app.data.model.TopSeller
+import cl.tufarmacia.app.data.model.TrackingResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
@@ -83,6 +85,10 @@ class TuFarmaciaApi(
         post("/api/auth/register", body = body, auth = false)
 
     suspend fun me(): MeResponse = get("/api/auth/me", auth = true)
+
+    suspend fun loyalty(): LoyaltyResponse = get("/api/loyalty", auth = true)
+
+    suspend fun track(token: String): TrackingResponse = get("/api/tracking/$token")
 
     suspend fun listOrders(page: Int = 1, limit: Int = 20): PaginatedOrders =
         get("/api/orders", auth = true) {

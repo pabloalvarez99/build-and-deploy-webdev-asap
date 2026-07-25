@@ -3498,3 +3498,8 @@ Build local OK. Push → Vercel.
 - Login/register/session, mis pedidos + detail
 - Admin: orders filter/search + low stock list
 - APK: `./gradlew :app:assembleDebug` OK (v0.2.0)
+
+## 2026-07-25 16:04 — Android loyalty + tracking
+- Account: puntos de fidelidad (GET /api/loyalty)
+- Track order by token (GET /api/tracking/:token)
+- Home shortcut to tracking

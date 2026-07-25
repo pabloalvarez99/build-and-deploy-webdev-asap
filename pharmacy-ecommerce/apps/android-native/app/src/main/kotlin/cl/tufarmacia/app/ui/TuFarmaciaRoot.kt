@@ -43,6 +43,7 @@ import cl.tufarmacia.app.ui.screens.OrdersScreen
 import cl.tufarmacia.app.ui.screens.ProductDetailScreen
 import cl.tufarmacia.app.ui.screens.RegisterScreen
 import cl.tufarmacia.app.ui.screens.SplashScreen
+import cl.tufarmacia.app.ui.screens.TrackScreen
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -57,6 +58,7 @@ private object Routes {
     const val Cart = "cart"
     const val Checkout = "checkout"
     const val Orders = "orders"
+    const val Track = "track"
     const val Product = "product/{slug}"
     const val OrderDetail = "order/{id}"
 
@@ -164,6 +166,7 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onOpenCatalog = { navController.navigateTab(Routes.Catalog) },
                     onOpenCart = { navController.navigateTab(Routes.Cart) },
                     onOpenOrders = { navController.navigate(Routes.Orders) },
+                    onOpenTrack = { navController.navigate(Routes.Track) },
                     onOpenLogin = { navController.navigate(Routes.Login) },
                     onOpenRegister = { navController.navigate(Routes.Register) },
                     onOpenProduct = { slug -> navController.navigate(Routes.product(slug)) },
@@ -218,6 +221,7 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onField = { n, s, p, e, notes ->
                         vm.updateCheckoutField(name = n, surname = s, phone = p, email = e, notes = notes)
                     },
+                    onUsePoints = vm::setCheckoutUsePoints,
                     onSubmit = { vm.submitStorePickup(cart) },
                     onDone = {
                         vm.clearCheckoutSuccess()
@@ -259,10 +263,24 @@ fun TuFarmaciaRoot(container: AppContainer) {
                 } else {
                     AccountScreen(
                         user = state.user!!,
+                        loyalty = state.loyalty,
                         onLogout = vm::logout,
                         onOrders = { navController.navigate(Routes.Orders) },
+                        onTrack = { navController.navigate(Routes.Track) },
+                        onRefreshLoyalty = vm::loadLoyalty,
                     )
                 }
+            }
+            composable(Routes.Track) {
+                TrackScreen(
+                    token = state.trackingTokenInput,
+                    loading = state.trackingLoading,
+                    error = state.trackingError,
+                    result = state.trackingResult,
+                    onTokenChange = vm::onTrackingTokenChange,
+                    onTrack = vm::trackOrder,
+                    onBack = { navController.popBackStack() },
+                )
             }
             composable(Routes.Register) {
                 RegisterScreen(

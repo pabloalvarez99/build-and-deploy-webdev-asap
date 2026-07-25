@@ -218,3 +218,32 @@ data class RegisterResponse(
     @SerialName("user_id") val userId: String? = null,
     val error: String? = null,
 )
+
+@Serializable
+data class LoyaltyResponse(
+    val points: Int = 0,
+    @SerialName("points_value") val pointsValue: Int = 0,
+    val transactions: List<LoyaltyTx> = emptyList(),
+)
+
+@Serializable
+data class LoyaltyTx(
+    val id: String,
+    val points: Int,
+    val reason: String? = null,
+    @SerialName("order_id") val orderId: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
+)
+
+@Serializable
+data class TrackingResponse(
+    val id: String,
+    val status: String,
+    val total: String,
+    @SerialName("payment_provider") val paymentProvider: String? = null,
+    @SerialName("pickup_code") val pickupCode: String? = null,
+    @SerialName("reservation_expires_at") val reservationExpiresAt: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
+    @SerialName("customer_name") val customerName: String? = null,
+    val items: List<OrderItemDto> = emptyList(),
+)

@@ -10,11 +10,13 @@ import cl.tufarmacia.app.data.model.CartLine
 import cl.tufarmacia.app.data.model.Category
 import cl.tufarmacia.app.data.model.OrderDto
 import cl.tufarmacia.app.data.model.Product
+import cl.tufarmacia.app.data.model.LoyaltyResponse
 import cl.tufarmacia.app.data.model.RegisterRequest
 import cl.tufarmacia.app.data.model.StorePickupItem
 import cl.tufarmacia.app.data.model.StorePickupRequest
 import cl.tufarmacia.app.data.model.StorePickupResponse
 import cl.tufarmacia.app.data.model.TopSeller
+import cl.tufarmacia.app.data.model.TrackingResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -54,6 +56,7 @@ data class AppUiState(
     val checkoutPhone: String = "",
     val checkoutEmail: String = "",
     val checkoutNotes: String = "",
+    val checkoutUsePoints: Boolean = false,
     val checkoutLoading: Boolean = false,
     val checkoutError: String? = null,
     val checkoutSuccess: StorePickupResponse? = null,
@@ -71,6 +74,12 @@ data class AppUiState(
     val registerLoading: Boolean = false,
     val registerError: String? = null,
     val registerSuccess: Boolean = false,
+
+    val loyalty: LoyaltyResponse? = null,
+    val trackingTokenInput: String = "",
+    val trackingResult: TrackingResponse? = null,
+    val trackingLoading: Boolean = false,
+    val trackingError: String? = null,
 
     val snackbar: String? = null,
 )
@@ -96,8 +105,45 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             loadProducts()
             loadCategories()
             loadTopSellers()
-            if (user != null) loadOrders()
+            if (user != null) {
+                loadOrders()
+                loadLoyalty()
+            }
             if (user?.isAdmin == true) loadAdminOrders()
+        }
+    }
+
+    fun loadLoyalty() {
+        viewModelScope.launch {
+            if (_state.value.user == null) return@launch
+            runCatching { container.api.loyalty() }
+                .onSuccess { l -> _state.update { it.copy(loyalty = l) } }
+        }
+    }
+
+    fun onTrackingTokenChange(t: String) {
+        _state.update { it.copy(trackingTokenInput = t, trackingError = null) }
+    }
+
+    fun trackOrder() {
+        viewModelScope.launch {
+            val token = _state.value.trackingTokenInput.trim()
+            if (token.length < 16) {
+                _state.update { it.copy(trackingError = "Token inválido") }
+                return@launch
+            }
+            _state.update { it.copy(trackingLoading = true, trackingError = null, trackingResult = null) }
+            try {
+                val res = container.api.track(token)
+                _state.update { it.copy(trackingLoading = false, trackingResult = res) }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        trackingLoading = false,
+                        trackingError = e.message ?: "No encontrado",
+                    )
+                }
+            }
         }
     }
 
@@ -167,6 +213,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     )
                 }
                 loadOrders()
+                loadLoyalty()
                 if (user.isAdmin) loadAdminOrders()
             } catch (e: Exception) {
                 val msg = (e as? ApiException)?.message ?: e.message ?: "Error al iniciar sesión"
@@ -299,6 +346,10 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    fun setCheckoutUsePoints(use: Boolean) {
+        _state.update { it.copy(checkoutUsePoints = use) }
+    }
+
     fun clearCheckoutSuccess() {
         _state.update { it.copy(checkoutSuccess = null, checkoutError = null) }
     }
@@ -329,7 +380,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         phone = s.checkoutPhone.trim(),
                         notes = s.checkoutNotes.ifBlank { null },
                         sessionId = container.guestSessionId,
-                        usePoints = false,
+                        usePoints = s.checkoutUsePoints,
                     )
                 )
                 container.cartRepository.clear()
@@ -337,6 +388,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     it.copy(checkoutLoading = false, checkoutSuccess = res, snackbar = "Reserva creada")
                 }
                 loadOrders()
+                loadLoyalty()
             } catch (e: Exception) {
                 _state.update {
                     it.copy(
