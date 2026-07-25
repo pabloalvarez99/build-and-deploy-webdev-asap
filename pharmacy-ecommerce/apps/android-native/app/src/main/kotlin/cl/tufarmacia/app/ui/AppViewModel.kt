@@ -486,6 +486,42 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    fun adminApproveReservation(orderId: String) {
+        viewModelScope.launch {
+            try {
+                container.api.adminOrderAction(orderId, "approve_reservation")
+                _state.update { it.copy(snackbar = "Reserva aprobada") }
+                loadAdminOrders()
+            } catch (e: Exception) {
+                _state.update { it.copy(snackbar = e.message ?: "Error al aprobar") }
+            }
+        }
+    }
+
+    fun adminRejectReservation(orderId: String) {
+        viewModelScope.launch {
+            try {
+                container.api.adminOrderAction(orderId, "reject_reservation")
+                _state.update { it.copy(snackbar = "Reserva rechazada") }
+                loadAdminOrders()
+            } catch (e: Exception) {
+                _state.update { it.copy(snackbar = e.message ?: "Error al rechazar") }
+            }
+        }
+    }
+
+    fun adminMarkPaid(orderId: String) {
+        viewModelScope.launch {
+            try {
+                container.api.adminSetOrderStatus(orderId, "paid")
+                _state.update { it.copy(snackbar = "Marcada pagada") }
+                loadAdminOrders()
+            } catch (e: Exception) {
+                _state.update { it.copy(snackbar = e.message ?: "Error al actualizar") }
+            }
+        }
+    }
+
     companion object {
         fun factory(container: AppContainer): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {

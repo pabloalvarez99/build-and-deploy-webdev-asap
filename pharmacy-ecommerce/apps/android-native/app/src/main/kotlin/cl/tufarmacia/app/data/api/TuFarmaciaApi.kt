@@ -28,6 +28,7 @@ import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
@@ -36,6 +37,8 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 class TuFarmaciaApi(
     private val baseUrl: String,
@@ -114,6 +117,28 @@ class TuFarmaciaApi(
             if (!status.isNullOrBlank()) parameter("status", status)
             if (!search.isNullOrBlank()) parameter("search", search)
         }
+
+    suspend fun adminOrderAction(orderId: String, action: String): OrderDto {
+        val token = tokenProvider.currentIdToken()
+            ?: throw ApiException("Not authenticated", statusCode = 401)
+        val response = httpClient.put("/api/admin/orders/$orderId") {
+            contentType(ContentType.Application.Json)
+            bearerAuth(token)
+            setBody(buildJsonObject { put("action", action) })
+        }
+        return parse(response)
+    }
+
+    suspend fun adminSetOrderStatus(orderId: String, status: String): OrderDto {
+        val token = tokenProvider.currentIdToken()
+            ?: throw ApiException("Not authenticated", statusCode = 401)
+        val response = httpClient.put("/api/admin/orders/$orderId") {
+            contentType(ContentType.Application.Json)
+            bearerAuth(token)
+            setBody(buildJsonObject { put("status", status) })
+        }
+        return parse(response)
+    }
 
     private suspend inline fun <reified T> get(
         path: String,

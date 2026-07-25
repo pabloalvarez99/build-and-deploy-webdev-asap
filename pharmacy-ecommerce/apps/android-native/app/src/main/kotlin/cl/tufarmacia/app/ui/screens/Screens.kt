@@ -708,7 +708,14 @@ fun OrdersScreen(
 }
 
 @Composable
-private fun OrderCard(order: OrderDto, onClick: () -> Unit) {
+private fun OrderCard(
+    order: OrderDto,
+    onClick: () -> Unit,
+    staffActions: Boolean = false,
+    onApprove: (() -> Unit)? = null,
+    onReject: (() -> Unit)? = null,
+    onMarkPaid: (() -> Unit)? = null,
+) {
     Card(
         Modifier
             .fillMaxWidth()
@@ -722,7 +729,24 @@ private fun OrderCard(order: OrderDto, onClick: () -> Unit) {
             Text("ID: ${order.id.take(8)}…", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
             order.createdAt?.let { Text(it.take(16).replace('T', ' '), style = MaterialTheme.typography.bodySmall) }
             order.pickupCode?.let { Text("Retiro: $it", fontWeight = FontWeight.Medium) }
+            order.guestName?.let { Text("$it ${order.guestSurname.orEmpty()}".trim()) }
+            order.customerPhone?.let { Text("Tel: $it") }
             Text("${order.lineItems.size} ítems", style = MaterialTheme.typography.bodySmall)
+            if (staffActions && order.status.equals("reserved", ignoreCase = true)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { onApprove?.invoke() }, modifier = Modifier.weight(1f)) {
+                        Text("Aprobar")
+                    }
+                    OutlinedButton(onClick = { onReject?.invoke() }, modifier = Modifier.weight(1f)) {
+                        Text("Rechazar")
+                    }
+                }
+            }
+            if (staffActions && order.status.equals("reserved", ignoreCase = true)) {
+                OutlinedButton(onClick = { onMarkPaid?.invoke() }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Marcar pagada")
+                }
+            }
         }
     }
 }
@@ -1043,6 +1067,9 @@ fun AdminScreen(
     onStatusFilter: (String?) -> Unit,
     onSearchChange: (String) -> Unit,
     onSearch: () -> Unit,
+    onApprove: (String) -> Unit,
+    onReject: (String) -> Unit,
+    onMarkPaid: (String) -> Unit,
 ) {
     val statuses = listOf(null to "Todas", "reserved" to "Reservadas", "paid" to "Pagadas", "processing" to "Proceso", "cancelled" to "Anuladas")
     Column(Modifier.fillMaxSize()) {
@@ -1101,7 +1128,14 @@ fun AdminScreen(
                     Text("Órdenes", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                 }
                 items(state.adminOrders, key = { it.id }) { order ->
-                    OrderCard(order, onClick = {})
+                    OrderCard(
+                        order = order,
+                        onClick = {},
+                        staffActions = true,
+                        onApprove = { onApprove(order.id) },
+                        onReject = { onReject(order.id) },
+                        onMarkPaid = { onMarkPaid(order.id) },
+                    )
                 }
                 if (state.adminOrders.isEmpty()) {
                     item { Text("Sin órdenes", Modifier.padding(8.dp)) }

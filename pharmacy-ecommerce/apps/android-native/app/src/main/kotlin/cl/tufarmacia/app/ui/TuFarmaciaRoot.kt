@@ -305,6 +305,9 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onStatusFilter = vm::setAdminStatusFilter,
                     onSearchChange = vm::setAdminSearch,
                     onSearch = vm::loadAdminOrders,
+                    onApprove = vm::adminApproveReservation,
+                    onReject = vm::adminRejectReservation,
+                    onMarkPaid = vm::adminMarkPaid,
                 )
             }
             composable(Routes.Login) {

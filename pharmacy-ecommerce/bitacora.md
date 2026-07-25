@@ -3506,3 +3506,6 @@ Build local OK. Push → Vercel.
 
 ## 2026-07-25 16:07 — Android v0.2.1 use points at checkout
 
+
+## 2026-07-25 16:10 — Android admin approve/reject reservation + mark paid
+
