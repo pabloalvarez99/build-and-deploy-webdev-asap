@@ -1,12 +1,13 @@
-package cl.tufarmacia.shared.api
+package cl.tufarmacia.app.data.api
 
-import cl.tufarmacia.shared.model.ApiError
-import cl.tufarmacia.shared.model.Category
-import cl.tufarmacia.shared.model.MeResponse
-import cl.tufarmacia.shared.model.PaginatedProducts
-import cl.tufarmacia.shared.model.Product
+import cl.tufarmacia.app.data.model.ApiError
+import cl.tufarmacia.app.data.model.Category
+import cl.tufarmacia.app.data.model.MeResponse
+import cl.tufarmacia.app.data.model.PaginatedProducts
+import cl.tufarmacia.app.data.model.Product
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
@@ -22,6 +23,10 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
+/**
+ * Android-only HTTP client for tu-farmacia.cl APIs.
+ * Uses Ktor + OkHttp (standard on Android). iOS will use URLSession / Alamofire separately.
+ */
 class TuFarmaciaApi(
     private val baseUrl: String,
     private val tokenProvider: TokenProvider,
@@ -55,7 +60,6 @@ class TuFarmaciaApi(
         return get("/api/categories")
     }
 
-    /** Authenticated: requires valid Bearer ID token. */
     suspend fun me(): MeResponse {
         return get("/api/auth/me", auth = true)
     }
@@ -86,12 +90,10 @@ class TuFarmaciaApi(
         return response.body()
     }
 
-    fun close() {
-        httpClient.close()
-    }
+    fun close() = httpClient.close()
 
     companion object {
-        fun createHttpClient(baseUrl: String): HttpClient = createPlatformHttpClient {
+        fun createHttpClient(baseUrl: String): HttpClient = HttpClient(OkHttp) {
             expectSuccess = false
             install(ContentNegotiation) {
                 json(

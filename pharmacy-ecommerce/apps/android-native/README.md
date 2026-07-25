@@ -1,35 +1,74 @@
-# Tu Farmacia — Android Native (KMP)
+# Tu Farmacia — Android nativo (Kotlin)
 
-Kotlin Multiplatform **shared** API/auth core + Jetpack Compose **composeApp**.
+**Separate natives learning path:** this is a **pure Android** app.  
+iOS will be a **separate** Swift/SwiftUI project later — no shared KMP module.
 
-- Application ID: `cl.tufarmacia.native`
-- API: `https://tu-farmacia.cl`
-- Existing TWA shell remains in `../android` (`cl.tufarmacia.app`)
+| | |
+|--|--|
+| Application ID | `cl.tufarmacia.native` |
+| Language | **Kotlin only** |
+| UI | Jetpack Compose + Material 3 |
+| Network | Ktor + OkHttp |
+| Auth | Firebase Identity Toolkit REST + Bearer on API |
+| Backend | `https://tu-farmacia.cl` |
+| Old TWA (website shell) | `../android` — leave alone |
 
-## Build
+## Project layout (classic Android)
+
+```
+android-native/
+  app/
+    src/main/
+      AndroidManifest.xml
+      kotlin/cl/tufarmacia/app/
+        MainActivity.kt          # entry
+        TuFarmaciaApp.kt         # Application + DI container
+        data/
+          api/                   # TuFarmaciaApi, errors
+          auth/                  # Firebase login, session
+          model/                 # DTOs
+          AppContainer.kt
+          DataStoreSessionStore.kt
+        ui/
+          theme/
+          screens/               # Compose screens
+          AppViewModel.kt
+          TuFarmaciaRoot.kt      # NavHost
+      res/
+  build.gradle.kts
+  settings.gradle.kts            # only :app
+```
+
+## Build & install
 
 ```bash
 cd pharmacy-ecommerce/apps/android-native
-./gradlew :composeApp:assembleDebug
+./gradlew :app:assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-APK: `composeApp/build/outputs/apk/debug/composeApp-debug.apk`
+## Learning map (separate natives)
 
-Requires Android SDK (`local.properties` → `sdk.dir`).
+### Android (this repo) — study order
+1. `MainActivity` + Compose `setContent`
+2. Navigation (`TuFarmaciaRoot`)
+3. `AppViewModel` + `StateFlow` (UI state)
+4. `TuFarmaciaApi` (HTTP + JSON)
+5. `FirebaseAuthApi` + `SessionRepository` (tokens)
+6. Screens: Catalog, Login, Account
 
-## Phase 1 features
+### iOS (future, different folder)
+- Xcode project, Swift + SwiftUI  
+- Same API contract: `docs/mobile/api-contract.md`  
+- Same Bearer auth + Firebase REST  
+- **No code sharing** with this Android app — you reimplement deliberately to learn
 
-- Home shell + bottom navigation
-- Catalog list/search against production API
-- Firebase email/password login (Identity Toolkit REST)
-- Bearer token on authenticated routes (`/api/auth/me`)
-- Admin tab placeholder for staff roles
+### Shared only by contract (not code)
+- `pharmacy-ecommerce/docs/mobile/api-contract.md`
+- Production REST + Firebase project `tu-farmacia-prod`
 
-## Project layout
-
-```
-shared/          commonMain API + Firebase Auth REST + models
-composeApp/      Android UI (Compose Material 3)
-```
-
-iOS target can be added later to `shared` (Approach C).
+## Why this shape for learning
+- One language per platform (Kotlin here, Swift later)
+- Standard single-module Android studio layout
+- No multiplatform abstractions hiding Android APIs
+- Real production backend, real native UI

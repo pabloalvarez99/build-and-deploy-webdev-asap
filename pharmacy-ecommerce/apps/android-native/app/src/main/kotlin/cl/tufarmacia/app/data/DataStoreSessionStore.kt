@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import cl.tufarmacia.shared.auth.SessionStore
-import cl.tufarmacia.shared.model.SessionTokens
+import cl.tufarmacia.app.data.auth.SessionStore
+import cl.tufarmacia.app.data.model.SessionTokens
 import kotlinx.coroutines.flow.first
 
 private val Context.sessionDataStore by preferencesDataStore(name = "session")

@@ -1,9 +1,9 @@
-package cl.tufarmacia.shared.auth
+package cl.tufarmacia.app.data.auth
 
-import cl.tufarmacia.shared.api.TokenProvider
-import cl.tufarmacia.shared.api.TuFarmaciaApi
-import cl.tufarmacia.shared.model.AuthUser
-import cl.tufarmacia.shared.model.SessionTokens
+import cl.tufarmacia.app.data.api.TokenProvider
+import cl.tufarmacia.app.data.api.TuFarmaciaApi
+import cl.tufarmacia.app.data.model.AuthUser
+import cl.tufarmacia.app.data.model.SessionTokens
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -36,7 +36,6 @@ class SessionRepository(
             cachedUser = me.user
             me.user
         } catch (_: Exception) {
-            // try refresh once
             try {
                 val refreshed = authApi.refreshIdToken(tokens.refreshToken)
                 cached = refreshed

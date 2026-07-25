@@ -2,7 +2,8 @@
 
 Base URL (production): `https://tu-farmacia.cl`
 
-Shared client (KMP): `pharmacy-ecommerce/apps/android-native/shared`
+Android client (pure Kotlin): `pharmacy-ecommerce/apps/android-native/app`  
+iOS client (future, separate Swift project): not created yet
 
 ## Authentication
 
@@ -67,7 +68,10 @@ Full route inventory lives under `apps/web/src/app/api/`.
 
 HTTP 401 unauthenticated · 403 forbidden · 404 not found · 500 server.
 
-## Android package
+## Clients (separate natives)
 
-- Application ID: `cl.tufarmacia.native` (Compose/KMP)
-- Existing TWA: `cl.tufarmacia.app` (unchanged)
+| Platform | Stack | Path |
+|----------|--------|------|
+| Android | Kotlin + Jetpack Compose | `apps/android-native` (`cl.tufarmacia.native`) |
+| iOS | Swift + SwiftUI (later) | TBD — separate project, same API contract |
+| TWA shell | Bubblewrap WebView | `apps/android` (`cl.tufarmacia.app`) — not the learning path |

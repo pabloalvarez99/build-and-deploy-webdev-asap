@@ -1,4 +1,4 @@
-package cl.tufarmacia.shared.api
+package cl.tufarmacia.app.data.api
 
 class ApiException(
     message: String,

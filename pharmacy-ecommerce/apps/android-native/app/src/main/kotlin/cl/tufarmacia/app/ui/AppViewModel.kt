@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import cl.tufarmacia.app.data.AppContainer
-import cl.tufarmacia.shared.api.ApiException
-import cl.tufarmacia.shared.model.AuthUser
-import cl.tufarmacia.shared.model.Product
+import cl.tufarmacia.app.data.api.ApiException
+import cl.tufarmacia.app.data.model.AuthUser
+import cl.tufarmacia.app.data.model.Product
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

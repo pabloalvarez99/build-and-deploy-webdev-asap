@@ -17,7 +17,6 @@ android {
         versionName = "0.1.0"
 
         buildConfigField("String", "API_BASE_URL", "\"https://tu-farmacia.cl\"")
-        // Public web API key (same as NEXT_PUBLIC_FIREBASE_API_KEY) — safe for client apps
         buildConfigField(
             "String",
             "FIREBASE_API_KEY",
@@ -48,8 +47,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":shared"))
-
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
     implementation(libs.compose.ui)
@@ -65,5 +62,13 @@ dependencies {
     implementation(libs.datastore.preferences)
     implementation(libs.coil.compose)
     implementation(libs.serialization.json)
+
+    // Pure Android networking (Kotlin + OkHttp engine)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.json)
+    implementation(libs.ktor.client.logging)
+
     debugImplementation(libs.compose.ui.tooling)
 }

@@ -13,6 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "tu-farmacia-native"
-include(":shared")
-include(":composeApp")
+rootProject.name = "tu-farmacia-android"
+include(":app")

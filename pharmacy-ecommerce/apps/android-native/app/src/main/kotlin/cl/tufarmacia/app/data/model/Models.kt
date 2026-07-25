@@ -1,4 +1,4 @@
-package cl.tufarmacia.shared.model
+package cl.tufarmacia.app.data.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -37,11 +37,6 @@ data class Category(
     val description: String? = null,
     @SerialName("image_url") val imageUrl: String? = null,
     val active: Boolean = true,
-)
-
-@Serializable
-data class CategoriesResponse(
-    val categories: List<Category> = emptyList(),
 )
 
 @Serializable

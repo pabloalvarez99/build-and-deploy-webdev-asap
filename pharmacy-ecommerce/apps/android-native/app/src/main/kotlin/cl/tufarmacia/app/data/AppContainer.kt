@@ -2,9 +2,9 @@ package cl.tufarmacia.app.data
 
 import android.content.Context
 import cl.tufarmacia.app.BuildConfig
-import cl.tufarmacia.shared.api.TuFarmaciaApi
-import cl.tufarmacia.shared.auth.FirebaseAuthApi
-import cl.tufarmacia.shared.auth.SessionRepository
+import cl.tufarmacia.app.data.api.TuFarmaciaApi
+import cl.tufarmacia.app.data.auth.FirebaseAuthApi
+import cl.tufarmacia.app.data.auth.SessionRepository
 
 class AppContainer(context: Context) {
     private val appContext = context.applicationContext

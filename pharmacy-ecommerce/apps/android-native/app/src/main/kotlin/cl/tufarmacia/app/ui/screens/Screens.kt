@@ -33,7 +33,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,9 +48,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import cl.tufarmacia.app.data.model.AuthUser
+import cl.tufarmacia.app.data.model.Product
 import cl.tufarmacia.app.ui.AppUiState
-import cl.tufarmacia.shared.model.AuthUser
-import cl.tufarmacia.shared.model.Product
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -107,10 +106,10 @@ fun HomeScreen(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("App nativa (Phase 1)", fontWeight = FontWeight.SemiBold)
+                Text("Android nativo Kotlin (Phase 1)", fontWeight = FontWeight.SemiBold)
                 Text(
-                    "Scaffold Kotlin Multiplatform + API real de producción. " +
-                        "Catálogo conectado · Auth Firebase · Admin ERP en fases siguientes.",
+                    "App 100% Kotlin + Jetpack Compose (sin KMP, sin WebView). " +
+                        "Catálogo prod · Auth Firebase · iOS será un proyecto Swift separado.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 if (productCount > 0) {
@@ -349,7 +348,7 @@ fun AdminPlaceholderScreen(user: AuthUser?) {
             Text("Próximamente", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Text(
                 "El ERP completo (POS, stock, órdenes, finanzas) se implementará en fases. " +
-                    "La capa compartida KMP y el contrato API ya están listos para ampliar.",
+                    "Esta app es Android puro; iOS se construirá aparte en Swift/SwiftUI.",
             )
             Text("Usuario: ${user?.email ?: "—"} · rol ${user?.role ?: "—"}")
             Text("Módulos planificados: órdenes, inventario, POS, compras, finanzas, clientes.")

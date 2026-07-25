@@ -1,11 +1,11 @@
-package cl.tufarmacia.shared.auth
+package cl.tufarmacia.app.data.auth
 
-import cl.tufarmacia.shared.api.ApiException
-import cl.tufarmacia.shared.api.createPlatformHttpClient
-import cl.tufarmacia.shared.model.FirebaseRefreshResponse
-import cl.tufarmacia.shared.model.FirebaseSignInResponse
-import cl.tufarmacia.shared.model.SessionTokens
+import cl.tufarmacia.app.data.api.ApiException
+import cl.tufarmacia.app.data.model.FirebaseRefreshResponse
+import cl.tufarmacia.app.data.model.FirebaseSignInResponse
+import cl.tufarmacia.app.data.model.SessionTokens
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.post
@@ -21,8 +21,8 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 /**
- * Firebase Auth via Identity Toolkit REST (KMP-friendly, no google-services required).
- * Same project as the web app (tu-farmacia-prod).
+ * Firebase Auth via Identity Toolkit REST (pure Android, no google-services.json required for email login).
+ * iOS will call the same endpoints with Swift URLSession.
  */
 class FirebaseAuthApi(
     private val apiKey: String,
@@ -93,7 +93,7 @@ class FirebaseAuthApi(
     }
 
     companion object {
-        fun defaultClient(): HttpClient = createPlatformHttpClient {
+        fun defaultClient(): HttpClient = HttpClient(OkHttp) {
             install(ContentNegotiation) {
                 json(Json { ignoreUnknownKeys = true; isLenient = true })
             }

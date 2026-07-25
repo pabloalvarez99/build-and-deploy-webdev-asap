@@ -3485,3 +3485,9 @@ Build local OK. Push → Vercel.
 - Contract: `pharmacy-ecommerce/docs/mobile/api-contract.md`
 - Debug APK: `./gradlew :composeApp:assembleDebug` OK
 - Existing TWA `apps/android` (`cl.tufarmacia.app`) unchanged
+
+## 2026-07-25 15:46 — Android pure native (separate natives learning path)
+- Removed KMP `shared` module; single `:app` module only
+- All Kotlin under `apps/android-native/app` (Compose + Ktor/OkHttp + Firebase REST)
+- iOS deferred as separate Swift/SwiftUI project (same API contract, no shared code)
+- `./gradlew :app:assembleDebug` OK
