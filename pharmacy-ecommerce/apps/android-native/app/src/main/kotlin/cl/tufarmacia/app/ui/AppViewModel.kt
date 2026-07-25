@@ -17,6 +17,7 @@ import cl.tufarmacia.app.data.model.StorePickupRequest
 import cl.tufarmacia.app.data.model.StorePickupResponse
 import cl.tufarmacia.app.data.model.TopSeller
 import cl.tufarmacia.app.data.model.TrackingResponse
+import cl.tufarmacia.app.data.model.WebpayCreateResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -60,6 +61,7 @@ data class AppUiState(
     val checkoutLoading: Boolean = false,
     val checkoutError: String? = null,
     val checkoutSuccess: StorePickupResponse? = null,
+    val webpayRedirect: WebpayCreateResponse? = null,
 
     val adminOrders: List<OrderDto> = emptyList(),
     val adminOrdersLoading: Boolean = false,
@@ -351,38 +353,36 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun clearCheckoutSuccess() {
-        _state.update { it.copy(checkoutSuccess = null, checkoutError = null) }
+        _state.update { it.copy(checkoutSuccess = null, checkoutError = null, webpayRedirect = null) }
     }
+
+    fun consumeWebpayRedirect() {
+        _state.update { it.copy(webpayRedirect = null) }
+    }
+
+    private fun buildCheckoutRequest(lines: List<CartLine>, s: AppUiState): StorePickupRequest =
+        StorePickupRequest(
+            items = lines.map { StorePickupItem(it.productId, it.quantity) },
+            name = s.checkoutName.ifBlank { "Cliente" },
+            surname = s.checkoutSurname,
+            email = s.checkoutEmail.ifBlank { s.user?.email },
+            phone = s.checkoutPhone.trim(),
+            notes = s.checkoutNotes.ifBlank { null },
+            sessionId = container.guestSessionId,
+            usePoints = s.checkoutUsePoints,
+        )
 
     fun submitStorePickup(lines: List<CartLine>) {
         viewModelScope.launch {
             val s = _state.value
-            if (s.user == null) {
-                _state.update { it.copy(checkoutError = "Inicia sesión para reservar retiro en tienda") }
-                return@launch
-            }
-            if (lines.isEmpty()) {
-                _state.update { it.copy(checkoutError = "El carrito está vacío") }
-                return@launch
-            }
-            if (s.checkoutPhone.isBlank()) {
-                _state.update { it.copy(checkoutError = "Teléfono es obligatorio") }
+            val err = validateCheckout(s, lines, requireEmail = false)
+            if (err != null) {
+                _state.update { it.copy(checkoutError = err) }
                 return@launch
             }
             _state.update { it.copy(checkoutLoading = true, checkoutError = null, checkoutSuccess = null) }
             try {
-                val res = container.api.storePickup(
-                    StorePickupRequest(
-                        items = lines.map { StorePickupItem(it.productId, it.quantity) },
-                        name = s.checkoutName.ifBlank { "Cliente" },
-                        surname = s.checkoutSurname,
-                        email = s.checkoutEmail.ifBlank { s.user.email },
-                        phone = s.checkoutPhone.trim(),
-                        notes = s.checkoutNotes.ifBlank { null },
-                        sessionId = container.guestSessionId,
-                        usePoints = s.checkoutUsePoints,
-                    )
-                )
+                val res = container.api.storePickup(buildCheckoutRequest(lines, s))
                 container.cartRepository.clear()
                 _state.update {
                     it.copy(checkoutLoading = false, checkoutSuccess = res, snackbar = "Reserva creada")
@@ -398,6 +398,49 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 }
             }
         }
+    }
+
+    fun submitWebpay(lines: List<CartLine>) {
+        viewModelScope.launch {
+            val s = _state.value
+            val err = validateCheckout(s, lines, requireEmail = true)
+            if (err != null) {
+                _state.update { it.copy(checkoutError = err) }
+                return@launch
+            }
+            _state.update {
+                it.copy(checkoutLoading = true, checkoutError = null, webpayRedirect = null)
+            }
+            try {
+                val res = container.api.webpayCreate(buildCheckoutRequest(lines, s))
+                container.cartRepository.clear()
+                _state.update {
+                    it.copy(
+                        checkoutLoading = false,
+                        webpayRedirect = res,
+                        snackbar = "Abriendo Webpay…",
+                    )
+                }
+                loadOrders()
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        checkoutLoading = false,
+                        checkoutError = (e as? ApiException)?.message ?: e.message ?: "Error Webpay",
+                    )
+                }
+            }
+        }
+    }
+
+    private fun validateCheckout(s: AppUiState, lines: List<CartLine>, requireEmail: Boolean): String? {
+        if (s.user == null) return "Inicia sesión para continuar"
+        if (lines.isEmpty()) return "El carrito está vacío"
+        if (s.checkoutPhone.isBlank()) return "Teléfono es obligatorio"
+        if (requireEmail && s.checkoutEmail.isBlank() && s.user.email.isNullOrBlank()) {
+            return "Email es obligatorio para Webpay"
+        }
+        return null
     }
 
     fun loadOrders() {

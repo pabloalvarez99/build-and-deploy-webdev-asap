@@ -3509,3 +3509,8 @@ Build local OK. Push → Vercel.
 
 ## 2026-07-25 16:10 — Android admin approve/reject reservation + mark paid
 
+
+## 2026-07-25 16:14 — Android v0.3.0 Webpay + admin staff actions
+- Webpay Plus via WebView token_ws form
+- Admin approve/reject reservation, mark paid
+

@@ -16,11 +16,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -76,11 +78,25 @@ fun TuFarmaciaRoot(container: AppContainer) {
     val cartCount = cart.sumOf { it.quantity }
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(state.snackbar) {
         val msg = state.snackbar ?: return@LaunchedEffect
         snackbarHostState.showSnackbar(msg)
         vm.consumeSnackbar()
+    }
+
+    LaunchedEffect(state.webpayRedirect) {
+        val wp = state.webpayRedirect ?: return@LaunchedEffect
+        val intent = Intent(context, WebpayActivity::class.java).apply {
+            putExtra(WebpayActivity.EXTRA_URL, wp.url)
+            putExtra(WebpayActivity.EXTRA_TOKEN, wp.token)
+        }
+        context.startActivity(intent)
+        vm.consumeWebpayRedirect()
+        navController.navigate(Routes.Orders) {
+            popUpTo(Routes.Home)
+        }
     }
 
     if (!state.bootstrapped) {
@@ -222,7 +238,8 @@ fun TuFarmaciaRoot(container: AppContainer) {
                         vm.updateCheckoutField(name = n, surname = s, phone = p, email = e, notes = notes)
                     },
                     onUsePoints = vm::setCheckoutUsePoints,
-                    onSubmit = { vm.submitStorePickup(cart) },
+                    onSubmitPickup = { vm.submitStorePickup(cart) },
+                    onSubmitWebpay = { vm.submitWebpay(cart) },
                     onDone = {
                         vm.clearCheckoutSuccess()
                         navController.navigate(Routes.Orders) {

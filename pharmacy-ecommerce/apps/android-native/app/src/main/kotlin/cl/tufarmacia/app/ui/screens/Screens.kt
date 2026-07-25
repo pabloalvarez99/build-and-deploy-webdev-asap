@@ -539,7 +539,8 @@ fun CheckoutScreen(
     onBack: () -> Unit,
     onField: (name: String?, surname: String?, phone: String?, email: String?, notes: String?) -> Unit,
     onUsePoints: (Boolean) -> Unit,
-    onSubmit: () -> Unit,
+    onSubmitPickup: () -> Unit,
+    onSubmitWebpay: () -> Unit,
     onDone: () -> Unit,
 ) {
     Column(Modifier.fillMaxSize()) {
@@ -615,15 +616,22 @@ fun CheckoutScreen(
                 Text(it, color = MaterialTheme.colorScheme.error)
             }
             Button(
-                onClick = onSubmit,
+                onClick = onSubmitPickup,
                 enabled = !state.checkoutLoading && lines.isNotEmpty() && state.user != null,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 if (state.checkoutLoading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
-                else Text("Confirmar reserva")
+                else Text("Retiro en tienda (sin pago online)")
+            }
+            OutlinedButton(
+                onClick = onSubmitWebpay,
+                enabled = !state.checkoutLoading && lines.isNotEmpty() && state.user != null,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Pagar con Webpay")
             }
             Text(
-                "Se crea una reserva de retiro en local (no Webpay en esta versión de la app).",
+                "Webpay abre Transbank en un WebView seguro. Retiro en tienda crea reserva con código.",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray,
             )

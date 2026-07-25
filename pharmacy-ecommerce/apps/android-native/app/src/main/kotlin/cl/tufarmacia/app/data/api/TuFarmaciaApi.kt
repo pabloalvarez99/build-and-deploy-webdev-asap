@@ -15,6 +15,7 @@ import cl.tufarmacia.app.data.model.StorePickupResponse
 import cl.tufarmacia.app.data.model.SuggestResponse
 import cl.tufarmacia.app.data.model.TopSeller
 import cl.tufarmacia.app.data.model.TrackingResponse
+import cl.tufarmacia.app.data.model.WebpayCreateResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
@@ -103,6 +104,9 @@ class TuFarmaciaApi(
 
     suspend fun storePickup(body: StorePickupRequest): StorePickupResponse =
         post("/api/store-pickup", body = body, auth = true)
+
+    suspend fun webpayCreate(body: StorePickupRequest): WebpayCreateResponse =
+        post("/api/webpay/create", body = body, auth = true)
 
     /** Admin orders (staff). */
     suspend fun adminListOrders(

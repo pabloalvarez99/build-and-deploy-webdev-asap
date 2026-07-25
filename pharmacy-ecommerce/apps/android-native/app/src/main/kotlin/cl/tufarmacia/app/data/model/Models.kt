@@ -236,6 +236,13 @@ data class LoyaltyTx(
 )
 
 @Serializable
+data class WebpayCreateResponse(
+    val url: String,
+    val token: String,
+    @SerialName("order_id") val orderId: String? = null,
+)
+
+@Serializable
 data class TrackingResponse(
     val id: String,
     val status: String,
