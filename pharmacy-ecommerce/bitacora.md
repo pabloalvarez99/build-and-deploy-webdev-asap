@@ -3531,3 +3531,8 @@ Build local OK. Push → Vercel.
 - Storefront: Webpay keeps cart until RESULT_OK; senior typography; CL validation
 - Docs: README + api-contract.md
 - assembleDebug green
+
+## 2026-07-25 - Android v1.3.0 Wave B (stock truth)
+- PO detail + receive mapped draft OCs
+- Batches (expired/soon30/soon90) + reorder suggestions
+- Inventory: reason chips, barcode delta, create falta

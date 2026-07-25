@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -61,12 +62,14 @@ data class ErpModule(
 val ERP_MODULES = listOf(
     ErpModule("erp_dashboard", "Dashboard", "KPIs del día · operaciones"),
     ErpModule("erp_orders", "Órdenes", "Online · reservas · staff actions"),
-    ErpModule("erp_pos", "POS", "Venta en mostrador"),
-    ErpModule("erp_inventory", "Inventario", "Stock · ajustes"),
+    ErpModule("erp_pos", "POS", "Venta · barcode · retiro · descuento"),
+    ErpModule("erp_inventory", "Inventario", "Stock · ajustes · barcode"),
+    ErpModule("erp_batches", "Lotes / Vencimientos", "soon30 · vencidos"),
+    ErpModule("erp_reorder", "Reposición", "Sugerencias por proveedor"),
     ErpModule("erp_arqueo", "Arqueo", "Turno actual · efectivo esperado"),
     ErpModule("erp_faltas", "Faltas", "Pedidos sin stock · notificar"),
     ErpModule("erp_clients", "Clientes", "Registrados y guests"),
-    ErpModule("erp_purchases", "Compras", "Órdenes de compra", ownerOnly = true),
+    ErpModule("erp_purchases", "Compras", "OC · recepción stock", ownerOnly = true),
     ErpModule("erp_suppliers", "Proveedores", "Catálogo proveedores", ownerOnly = true),
     ErpModule("erp_finance", "Finanzas", "AP · gastos · ingresos", ownerOnly = true),
     ErpModule("erp_tasks", "Tareas", "Tareas internas abiertas"),
@@ -209,7 +212,12 @@ fun ErpInventoryScreen(
     onFilter: (String?) -> Unit,
     onSearchChange: (String) -> Unit,
     onSearch: () -> Unit,
+    onReason: (String) -> Unit,
+    onBarcodeChange: (String) -> Unit,
+    onCustomDeltaChange: (String) -> Unit,
+    onAdjustBarcode: () -> Unit,
     onAdjust: (productId: String, delta: Int) -> Unit,
+    onCreateFalta: (productId: String?, productName: String) -> Unit,
 ) {
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -237,6 +245,42 @@ fun ErpInventoryScreen(
                 FilterChip(selected = state.inventoryFilter == v, onClick = { onFilter(v) }, label = { Text(l) })
             }
         }
+        Row(
+            Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            listOf(
+                "adjustment" to "Ajuste",
+                "merma" to "Merma",
+                "damage" to "Daño",
+                "count_correction" to "Conteo",
+                "transfer" to "Traslado",
+            ).forEach { (v, l) ->
+                FilterChip(selected = state.inventoryReason == v, onClick = { onReason(v) }, label = { Text(l) })
+            }
+        }
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedTextField(
+                value = state.inventoryBarcode,
+                onValueChange = onBarcodeChange,
+                modifier = Modifier.weight(1f),
+                placeholder = { Text("Barcode") },
+                singleLine = true,
+            )
+            OutlinedTextField(
+                value = state.inventoryCustomDelta,
+                onValueChange = onCustomDeltaChange,
+                modifier = Modifier.width(88.dp),
+                placeholder = { Text("Δ") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            )
+            Button(onClick = onAdjustBarcode) { Text("OK") }
+        }
         if (state.loading && state.inventory.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         } else {
@@ -254,6 +298,11 @@ fun ErpInventoryScreen(
                                 OutlinedButton(onClick = { onAdjust(item.id, -1) }) { Text("-1") }
                                 OutlinedButton(onClick = { onAdjust(item.id, 1) }) { Text("+1") }
                                 OutlinedButton(onClick = { onAdjust(item.id, 5) }) { Text("+5") }
+                                if (item.stock <= 0) {
+                                    OutlinedButton(onClick = { onCreateFalta(item.id, item.name) }) {
+                                        Text("Falta")
+                                    }
+                                }
                             }
                         }
                     }
@@ -560,7 +609,11 @@ fun ErpClientsScreen(state: ErpUiState, onBack: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ErpPurchasesScreen(state: ErpUiState, onBack: () -> Unit) {
+fun ErpPurchasesScreen(
+    state: ErpUiState,
+    onBack: () -> Unit,
+    onOpen: (String) -> Unit,
+) {
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             title = { Text("Compras") },
@@ -572,7 +625,7 @@ fun ErpPurchasesScreen(state: ErpUiState, onBack: () -> Unit) {
         )
         LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(state.purchaseOrders, key = { it.id }) { po ->
-                Card(Modifier.fillMaxWidth()) {
+                Card(Modifier.fillMaxWidth().clickable { onOpen(po.id) }) {
                     Column(Modifier.padding(12.dp)) {
                         Text(po.suppliers?.name ?: "Proveedor", fontWeight = FontWeight.Bold)
                         Text("Factura ${po.invoiceNumber ?: "—"} · ${po.status}")
@@ -581,10 +634,192 @@ fun ErpPurchasesScreen(state: ErpUiState, onBack: () -> Unit) {
                             color = if (po.paid) Color.Gray else MaterialTheme.colorScheme.error,
                         )
                         po.dueDate?.let { Text("Vence $it", style = MaterialTheme.typography.labelSmall) }
+                        Text("Toca para detalle / recibir", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
             if (state.purchaseOrders.isEmpty()) item { Text("Sin OC o sin permiso owner") }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ErpPurchaseDetailScreen(
+    state: ErpUiState,
+    onBack: () -> Unit,
+    onReceive: (String) -> Unit,
+) {
+    val po = state.purchaseOrderDetail
+    Column(Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("OC detalle") },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                }
+            },
+        )
+        if (state.loading && po == null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            return
+        }
+        if (po == null) {
+            Text("Sin datos", Modifier.padding(24.dp))
+            return
+        }
+        val mapped = po.items.count { it.productId != null || it.products?.id != null }
+        val unmapped = po.items.size - mapped
+        Column(
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(po.suppliers?.name ?: "Proveedor", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+            Text("Factura ${po.invoiceNumber ?: "—"} · ${po.status}")
+            Text("Total ${formatClp(po.totalCost ?: "0")}")
+            Text("Mapeados $mapped · sin mapear $unmapped", style = MaterialTheme.typography.bodySmall)
+            if (unmapped > 0) {
+                Text(
+                    "Solo se reciben líneas con producto mapeado.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            po.items.forEach { item ->
+                val name = item.products?.name ?: item.productName ?: item.description ?: "Ítem"
+                val mappedOk = item.productId != null || item.products?.id != null
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text(name, fontWeight = FontWeight.Medium)
+                        Text(
+                            "x${item.quantity} · ${formatClp(item.unitCost ?: "0")} · ${if (mappedOk) "OK" else "SIN MAPEAR"}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (mappedOk) Color.Gray else MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
+            }
+            if (po.status.equals("draft", ignoreCase = true) && mapped > 0) {
+                Button(
+                    onClick = { onReceive(po.id) },
+                    enabled = !state.purchaseOrderBusy,
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                ) {
+                    if (state.purchaseOrderBusy) {
+                        CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
+                    } else {
+                        Text("Confirmar recepción")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ErpBatchesScreen(
+    state: ErpUiState,
+    onBack: () -> Unit,
+    onFilter: (String?) -> Unit,
+    onRefresh: () -> Unit,
+) {
+    Column(Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("Lotes / Vencimientos") },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                }
+            },
+            actions = {
+                Text("Actualizar", Modifier.clickable(onClick = onRefresh).padding(16.dp), color = MaterialTheme.colorScheme.primary)
+            },
+        )
+        Text(
+            "Vencidos ${state.batchesExpired} · ≤30d ${state.batchesSoon30}",
+            Modifier.padding(horizontal = 16.dp),
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Row(
+            Modifier.horizontalScroll(rememberScrollState()).padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            listOf("expired" to "Vencidos", "soon30" to "≤30 días", "soon90" to "≤90 días", null to "Todos").forEach { (v, l) ->
+                FilterChip(selected = state.batchesFilter == v, onClick = { onFilter(v) }, label = { Text(l) })
+            }
+        }
+        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(state.batches, key = { it.id }) { b ->
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text(b.products?.name ?: "Producto", fontWeight = FontWeight.Medium)
+                        Text(
+                            "Lote ${b.batchCode ?: "—"} · cant ${b.quantity} · vence ${b.expiryDate?.take(10) ?: "—"}",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+            }
+            if (state.batches.isEmpty()) item { Text("Sin lotes en este filtro") }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ErpReorderScreen(
+    state: ErpUiState,
+    onBack: () -> Unit,
+    onRefresh: () -> Unit,
+) {
+    Column(Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("Reposición") },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                }
+            },
+            actions = {
+                Text("Actualizar", Modifier.clickable(onClick = onRefresh).padding(16.dp), color = MaterialTheme.colorScheme.primary)
+            },
+        )
+        Text(
+            "Umbral stock ≤ ${state.reorderThreshold}",
+            Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            style = MaterialTheme.typography.bodySmall,
+        )
+        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            state.reorderGroups.forEach { group ->
+                item {
+                    Text(
+                        group.supplier?.name ?: "Proveedor",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    group.supplier?.contactPhone?.let {
+                        Text("Tel $it", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                items(group.items, key = { it.productId }) { item ->
+                    Card(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(12.dp)) {
+                            Text(item.name, fontWeight = FontWeight.Medium)
+                            Text(
+                                "Stock ${item.stock} · ${formatClp(item.price)} · cod ${item.supplierCode ?: "—"}",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+                }
+            }
+            if (state.reorderGroups.isEmpty()) {
+                item { Text("Sin sugerencias de reposición") }
+            }
         }
     }
 }

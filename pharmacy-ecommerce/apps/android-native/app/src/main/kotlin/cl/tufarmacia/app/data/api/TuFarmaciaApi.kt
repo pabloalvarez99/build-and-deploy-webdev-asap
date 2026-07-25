@@ -21,11 +21,16 @@ import cl.tufarmacia.app.data.model.DashboardExtras
 import cl.tufarmacia.app.data.model.FinanzasDashboard
 import cl.tufarmacia.app.data.model.InventoryResponse
 import cl.tufarmacia.app.data.model.OperacionesResponse
+import cl.tufarmacia.app.data.model.BatchesResponse
+import cl.tufarmacia.app.data.model.CreateFaltaRequest
 import cl.tufarmacia.app.data.model.PosCustomerHistory
 import cl.tufarmacia.app.data.model.PosPickupOrder
 import cl.tufarmacia.app.data.model.PosSaleRequest
 import cl.tufarmacia.app.data.model.PosSaleResponse
+import cl.tufarmacia.app.data.model.PurchaseOrderDto
 import cl.tufarmacia.app.data.model.PurchaseOrdersResponse
+import cl.tufarmacia.app.data.model.ReceivePoResponse
+import cl.tufarmacia.app.data.model.ReorderSuggestionsResponse
 import cl.tufarmacia.app.data.model.StockAdjustRequest
 import cl.tufarmacia.app.data.model.StockAdjustResponse
 import cl.tufarmacia.app.data.model.SuppliersResponse
@@ -228,6 +233,30 @@ class TuFarmaciaApi(
             if (!status.isNullOrBlank()) parameter("status", status)
             if (paid != null) parameter("paid", paid)
         }
+
+    suspend fun adminGetPurchaseOrder(id: String): PurchaseOrderDto =
+        get("/api/admin/purchase-orders/$id", auth = true)
+
+    suspend fun adminReceivePurchaseOrder(id: String): ReceivePoResponse {
+        val token = tokenProvider.currentIdToken()
+            ?: throw ApiException("Not authenticated", statusCode = 401)
+        val response = httpClient.post("/api/admin/purchase-orders/$id/receive") {
+            contentType(ContentType.Application.Json)
+            bearerAuth(token)
+        }
+        return parse(response)
+    }
+
+    suspend fun adminBatches(filter: String? = "soon30"): BatchesResponse =
+        get("/api/admin/batches", auth = true) {
+            if (!filter.isNullOrBlank()) parameter("filter", filter)
+        }
+
+    suspend fun adminReorderSuggestions(): ReorderSuggestionsResponse =
+        get("/api/admin/inventory/reorder-suggestions", auth = true)
+
+    suspend fun adminCreateFalta(body: CreateFaltaRequest): FaltaDto =
+        post("/api/admin/faltas", body = body, auth = true)
 
     suspend fun adminFinanzasDashboard(): FinanzasDashboard =
         get("/api/admin/finanzas/dashboard", auth = true)

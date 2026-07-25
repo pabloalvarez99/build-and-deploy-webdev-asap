@@ -41,6 +41,7 @@ import cl.tufarmacia.app.data.AppContainer
 import cl.tufarmacia.app.ui.screens.AccountScreen
 import cl.tufarmacia.app.ui.screens.AdminScreen
 import cl.tufarmacia.app.ui.erp.ErpArqueoScreen
+import cl.tufarmacia.app.ui.erp.ErpBatchesScreen
 import cl.tufarmacia.app.ui.erp.ErpClientsScreen
 import cl.tufarmacia.app.ui.erp.ErpDashboardScreen
 import cl.tufarmacia.app.ui.erp.ErpFaltasScreen
@@ -48,7 +49,9 @@ import cl.tufarmacia.app.ui.erp.ErpFinanceScreen
 import cl.tufarmacia.app.ui.erp.ErpHubScreen
 import cl.tufarmacia.app.ui.erp.ErpInventoryScreen
 import cl.tufarmacia.app.ui.erp.ErpPosScreen
+import cl.tufarmacia.app.ui.erp.ErpPurchaseDetailScreen
 import cl.tufarmacia.app.ui.erp.ErpPurchasesScreen
+import cl.tufarmacia.app.ui.erp.ErpReorderScreen
 import cl.tufarmacia.app.ui.erp.ErpShiftsScreen
 import cl.tufarmacia.app.ui.erp.ErpSuppliersScreen
 import cl.tufarmacia.app.ui.erp.ErpTasksScreen
@@ -87,7 +90,12 @@ private object Routes {
     const val ErpShifts = "erp_shifts"
     const val ErpFaltas = "erp_faltas"
     const val ErpArqueo = "erp_arqueo"
+    const val ErpBatches = "erp_batches"
+    const val ErpReorder = "erp_reorder"
+    const val ErpPurchaseDetail = "erp_purchase/{id}"
     const val Cart = "cart"
+
+    fun purchaseDetail(id: String) = "erp_purchase/$id"
     const val Checkout = "checkout"
     const val Orders = "orders"
     const val Track = "track"
@@ -382,6 +390,14 @@ fun TuFarmaciaRoot(container: AppContainer) {
                                 erpVm.loadPurchaseOrders()
                                 navController.navigate(Routes.ErpPurchases)
                             }
+                            Routes.ErpBatches -> {
+                                erpVm.loadBatches()
+                                navController.navigate(Routes.ErpBatches)
+                            }
+                            Routes.ErpReorder -> {
+                                erpVm.loadReorderSuggestions()
+                                navController.navigate(Routes.ErpReorder)
+                            }
                             Routes.ErpSuppliers -> {
                                 erpVm.loadSuppliers()
                                 navController.navigate(Routes.ErpSuppliers)
@@ -475,14 +491,56 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onFilter = erpVm::setInventoryFilter,
                     onSearchChange = erpVm::setInventorySearch,
                     onSearch = erpVm::loadInventory,
+                    onReason = erpVm::setInventoryReason,
+                    onBarcodeChange = erpVm::setInventoryBarcode,
+                    onCustomDeltaChange = erpVm::setInventoryCustomDelta,
+                    onAdjustBarcode = erpVm::adjustStockByBarcode,
                     onAdjust = { id, d -> erpVm.adjustStock(id, d, null) },
+                    onCreateFalta = { id, name -> erpVm.createFalta(id, name) },
                 )
             }
             composable(Routes.ErpClients) {
                 ErpClientsScreen(state = erp, onBack = { navController.popBackStack() })
             }
             composable(Routes.ErpPurchases) {
-                ErpPurchasesScreen(state = erp, onBack = { navController.popBackStack() })
+                ErpPurchasesScreen(
+                    state = erp,
+                    onBack = { navController.popBackStack() },
+                    onOpen = { id ->
+                        erpVm.loadPurchaseOrderDetail(id)
+                        navController.navigate(Routes.purchaseDetail(id))
+                    },
+                )
+            }
+            composable(
+                route = Routes.ErpPurchaseDetail,
+                arguments = listOf(navArgument("id") { type = NavType.StringType }),
+            ) { entry ->
+                val id = entry.arguments?.getString("id").orEmpty()
+                LaunchedEffect(id) { erpVm.loadPurchaseOrderDetail(id) }
+                ErpPurchaseDetailScreen(
+                    state = erp,
+                    onBack = {
+                        erpVm.clearPurchaseOrderDetail()
+                        navController.popBackStack()
+                    },
+                    onReceive = erpVm::receivePurchaseOrder,
+                )
+            }
+            composable(Routes.ErpBatches) {
+                ErpBatchesScreen(
+                    state = erp,
+                    onBack = { navController.popBackStack() },
+                    onFilter = erpVm::setBatchesFilter,
+                    onRefresh = erpVm::loadBatches,
+                )
+            }
+            composable(Routes.ErpReorder) {
+                ErpReorderScreen(
+                    state = erp,
+                    onBack = { navController.popBackStack() },
+                    onRefresh = erpVm::loadReorderSuggestions,
+                )
             }
             composable(Routes.ErpSuppliers) {
                 ErpSuppliersScreen(state = erp, onBack = { navController.popBackStack() })

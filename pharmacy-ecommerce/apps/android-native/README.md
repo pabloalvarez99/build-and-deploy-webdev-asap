@@ -1,6 +1,6 @@
 # Tu Farmacia — Android nativo Kotlin (Full ERP)
 
-**Application ID:** `cl.tufarmacia.native` · **Version:** 1.2.0  
+**Application ID:** `cl.tufarmacia.native` · **Version:** 1.3.0  
 Pure Kotlin + Jetpack Compose. Separate natives (iOS later = Swift).
 
 ## Storefront
@@ -16,21 +16,22 @@ Pure Kotlin + Jetpack Compose. Separate natives (iOS later = Swift).
 | Dashboard | `/api/admin/operaciones`, `dashboard-extras` | KPIs, margen, reservas |
 | Órdenes | `/api/admin/orders` | filter, approve/reject, mark paid, **refund/cancel**, open detail |
 | POS | `/api/admin/pos/sale` | cash/debit/credit/**mixed** · barcode · discount · customer history · **pickup 6-digit** |
-| Inventario | `/api/admin/inventory` + stock adjust | ±1 / +5 |
+| Inventario | `/api/admin/inventory` + stock adjust | ±1/+5 · reason chips · barcode Δ · crear falta |
+| Lotes | `/api/admin/batches` | expired / soon30 / soon90 |
+| Reposición | `/api/admin/inventory/reorder-suggestions` | por proveedor |
 | Arqueo | `/api/admin/arqueo` | turno actual, efectivo esperado |
-| Faltas | `/api/admin/faltas` | pending · mark notified |
+| Faltas | `/api/admin/faltas` | pending · mark notified · create |
 | Clientes | `/api/admin/clientes` | registered + guests |
-| Compras | `/api/admin/purchase-orders` | owner (list; receive in v1.3) |
+| Compras | `/api/admin/purchase-orders` | owner · **detail + receive** |
 | Proveedores | `/api/admin/suppliers` | owner |
 | Finanzas | `/api/admin/finanzas/dashboard` | owner |
 | Tareas | `/api/admin/tareas` | complete open tasks |
 | Turnos/Caja | `/api/admin/turnos` | cierres |
 
-### POS counter (v1.2)
+### Counter + stock (v1.2–1.3)
 - Barcode field → `GET /api/products?barcode=`
-- Discount $ + mixed cash/card
-- Pickup code → `GET /api/admin/pos/pickup?code=`
-- Customer history → `GET /api/admin/pos/customer-history`
+- Discount $ + mixed cash/card · pickup 6-digit · customer history
+- PO receive → `POST …/purchase-orders/{id}/receive`
 
 ## Build
 ```bash

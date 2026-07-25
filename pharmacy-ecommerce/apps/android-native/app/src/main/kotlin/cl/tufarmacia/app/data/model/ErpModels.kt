@@ -202,6 +202,27 @@ data class PurchaseOrderDto(
     @SerialName("due_date") val dueDate: String? = null,
     @SerialName("created_at") val createdAt: String? = null,
     val suppliers: SupplierName? = null,
+    val items: List<PurchaseOrderItemDto> = emptyList(),
+)
+
+@Serializable
+data class PurchaseOrderItemDto(
+    val id: String? = null,
+    @SerialName("product_id") val productId: String? = null,
+    @SerialName("product_name") val productName: String? = null,
+    val description: String? = null,
+    val quantity: Int = 0,
+    @SerialName("unit_cost") val unitCost: String? = null,
+    val subtotal: String? = null,
+    @SerialName("supplier_product_code") val supplierProductCode: String? = null,
+    val products: MappedProductName? = null,
+)
+
+@Serializable
+data class MappedProductName(
+    val id: String? = null,
+    val name: String? = null,
+    val slug: String? = null,
 )
 
 @Serializable
@@ -216,6 +237,88 @@ data class PurchaseOrdersResponse(
     val total: Int = 0,
     val page: Int = 1,
     @SerialName("total_pages") val totalPages: Int = 1,
+)
+
+@Serializable
+data class ReceivePoResponse(
+    val success: Boolean = false,
+    @SerialName("items_updated") val itemsUpdated: Int = 0,
+    @SerialName("items_skipped") val itemsSkipped: Int = 0,
+    val error: String? = null,
+)
+
+@Serializable
+data class BatchProduct(
+    val id: String? = null,
+    val name: String? = null,
+    val slug: String? = null,
+    val stock: Int = 0,
+)
+
+@Serializable
+data class ProductBatchDto(
+    val id: String,
+    @SerialName("product_id") val productId: String? = null,
+    @SerialName("batch_code") val batchCode: String? = null,
+    @SerialName("expiry_date") val expiryDate: String? = null,
+    val quantity: Int = 0,
+    val notes: String? = null,
+    val products: BatchProduct? = null,
+)
+
+@Serializable
+data class BatchesSummary(
+    val expired: Int = 0,
+    val soon30: Int = 0,
+    val soon90: Int = 0,
+    val total: Int = 0,
+)
+
+@Serializable
+data class BatchesResponse(
+    val batches: List<ProductBatchDto> = emptyList(),
+    val summary: BatchesSummary = BatchesSummary(),
+)
+
+@Serializable
+data class ReorderItem(
+    @SerialName("product_id") val productId: String,
+    val name: String,
+    val stock: Int = 0,
+    val price: Double = 0.0,
+    @SerialName("cost_price") val costPrice: Double? = null,
+    @SerialName("supplier_code") val supplierCode: String? = null,
+)
+
+@Serializable
+data class ReorderSupplier(
+    val id: String? = null,
+    val name: String? = null,
+    @SerialName("contact_name") val contactName: String? = null,
+    @SerialName("contact_phone") val contactPhone: String? = null,
+)
+
+@Serializable
+data class ReorderGroup(
+    val supplier: ReorderSupplier? = null,
+    val items: List<ReorderItem> = emptyList(),
+)
+
+@Serializable
+data class ReorderSuggestionsResponse(
+    val threshold: Int = 10,
+    val groups: List<ReorderGroup> = emptyList(),
+    @SerialName("total_products") val totalProducts: Int = 0,
+)
+
+@Serializable
+data class CreateFaltaRequest(
+    @SerialName("product_id") val productId: String? = null,
+    @SerialName("product_name") val productName: String,
+    @SerialName("customer_name") val customerName: String? = null,
+    @SerialName("customer_phone") val customerPhone: String? = null,
+    val quantity: Int = 1,
+    val notes: String? = null,
 )
 
 @Serializable

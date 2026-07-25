@@ -7,6 +7,7 @@ import cl.tufarmacia.app.data.AppContainer
 import cl.tufarmacia.app.data.api.ApiException
 import cl.tufarmacia.app.data.model.ArqueoResponse
 import cl.tufarmacia.app.data.model.ClienteDto
+import cl.tufarmacia.app.data.model.CreateFaltaRequest
 import cl.tufarmacia.app.data.model.DashboardExtras
 import cl.tufarmacia.app.data.model.FaltaDto
 import cl.tufarmacia.app.data.model.FinanzasDashboard
@@ -17,7 +18,9 @@ import cl.tufarmacia.app.data.model.PosPickupOrder
 import cl.tufarmacia.app.data.model.PosSaleItem
 import cl.tufarmacia.app.data.model.PosSaleRequest
 import cl.tufarmacia.app.data.model.Product
+import cl.tufarmacia.app.data.model.ProductBatchDto
 import cl.tufarmacia.app.data.model.PurchaseOrderDto
+import cl.tufarmacia.app.data.model.ReorderGroup
 import cl.tufarmacia.app.data.model.StockAdjustRequest
 import cl.tufarmacia.app.data.model.SupplierDto
 import cl.tufarmacia.app.data.model.TaskDto
@@ -51,6 +54,9 @@ data class ErpUiState(
     val inventory: List<InventoryItem> = emptyList(),
     val inventoryFilter: String? = "low",
     val inventorySearch: String = "",
+    val inventoryReason: String = "adjustment",
+    val inventoryBarcode: String = "",
+    val inventoryCustomDelta: String = "",
 
     val posSearch: String = "",
     val posBarcode: String = "",
@@ -72,6 +78,14 @@ data class ErpUiState(
     val clients: List<ClienteDto> = emptyList(),
     val suppliers: List<SupplierDto> = emptyList(),
     val purchaseOrders: List<PurchaseOrderDto> = emptyList(),
+    val purchaseOrderDetail: PurchaseOrderDto? = null,
+    val purchaseOrderBusy: Boolean = false,
+    val batches: List<ProductBatchDto> = emptyList(),
+    val batchesFilter: String? = "soon30",
+    val batchesExpired: Int = 0,
+    val batchesSoon30: Int = 0,
+    val reorderGroups: List<ReorderGroup> = emptyList(),
+    val reorderThreshold: Int = 10,
     val finanzas: FinanzasDashboard? = null,
     val tasks: List<TaskDto> = emptyList(),
     val turnos: List<TurnoCierre> = emptyList(),
@@ -84,6 +98,7 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
     private val _state = MutableStateFlow(ErpUiState())
     val state: StateFlow<ErpUiState> = _state.asStateFlow()
     private var posSearchJob: Job? = null
+    private var inventorySearchJob: Job? = null
 
     fun consumeSnackbar() {
         _state.update { it.copy(snackbar = null) }
@@ -118,6 +133,23 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
 
     fun setInventorySearch(q: String) {
         _state.update { it.copy(inventorySearch = q) }
+        inventorySearchJob?.cancel()
+        inventorySearchJob = viewModelScope.launch {
+            delay(350)
+            loadInventory()
+        }
+    }
+
+    fun setInventoryReason(reason: String) {
+        _state.update { it.copy(inventoryReason = reason) }
+    }
+
+    fun setInventoryBarcode(code: String) {
+        _state.update { it.copy(inventoryBarcode = code) }
+    }
+
+    fun setInventoryCustomDelta(delta: String) {
+        _state.update { it.copy(inventoryCustomDelta = delta.filter { ch -> ch == '-' || ch.isDigit() }) }
     }
 
     fun loadInventory() {
@@ -141,8 +173,14 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
     fun adjustStock(productId: String, delta: Int, notes: String?) {
         viewModelScope.launch {
             try {
+                val reason = _state.value.inventoryReason.ifBlank { "adjustment" }
                 val res = container.api.adminStockAdjust(
-                    StockAdjustRequest(productId = productId, delta = delta, notes = notes),
+                    StockAdjustRequest(
+                        productId = productId,
+                        delta = delta,
+                        notes = notes,
+                        reason = reason,
+                    ),
                 )
                 _state.update {
                     it.copy(snackbar = "${res.productName}: stock ${res.newStock}")
@@ -150,6 +188,50 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                 loadInventory()
             } catch (e: Exception) {
                 _state.update { it.copy(snackbar = e.message ?: "Error ajuste") }
+            }
+        }
+    }
+
+    fun adjustStockByBarcode() {
+        viewModelScope.launch {
+            val code = _state.value.inventoryBarcode.trim()
+            val delta = _state.value.inventoryCustomDelta.toIntOrNull()
+            if (code.isBlank()) {
+                _state.update { it.copy(snackbar = "Código de barras vacío") }
+                return@launch
+            }
+            if (delta == null || delta == 0) {
+                _state.update { it.copy(snackbar = "Delta inválido (ej. -1 o 5)") }
+                return@launch
+            }
+            try {
+                val product = container.api.productByBarcode(code)
+                if (product == null) {
+                    _state.update { it.copy(snackbar = "Código no encontrado") }
+                    return@launch
+                }
+                adjustStock(product.id, delta, "barcode $code")
+                _state.update { it.copy(inventoryBarcode = "", inventoryCustomDelta = "") }
+            } catch (e: Exception) {
+                _state.update { it.copy(snackbar = e.message ?: "Error barcode stock") }
+            }
+        }
+    }
+
+    fun createFalta(productId: String?, productName: String) {
+        viewModelScope.launch {
+            try {
+                container.api.adminCreateFalta(
+                    CreateFaltaRequest(
+                        productId = productId,
+                        productName = productName,
+                        quantity = 1,
+                        notes = "Desde app móvil",
+                    ),
+                )
+                _state.update { it.copy(snackbar = "Falta registrada: $productName") }
+            } catch (e: Exception) {
+                _state.update { it.copy(snackbar = e.message ?: "Error falta") }
             }
         }
     }
@@ -463,6 +545,90 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                 _state.update { it.copy(purchaseOrders = res.orders) }
             } catch (e: Exception) {
                 _state.update { it.copy(snackbar = e.message ?: "Solo owner ve compras") }
+            }
+        }
+    }
+
+    fun loadPurchaseOrderDetail(id: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(loading = true, purchaseOrderDetail = null) }
+            try {
+                val po = container.api.adminGetPurchaseOrder(id)
+                _state.update { it.copy(loading = false, purchaseOrderDetail = po) }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(loading = false, snackbar = e.message ?: "Error OC")
+                }
+            }
+        }
+    }
+
+    fun clearPurchaseOrderDetail() {
+        _state.update { it.copy(purchaseOrderDetail = null) }
+    }
+
+    fun receivePurchaseOrder(id: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(purchaseOrderBusy = true) }
+            try {
+                val res = container.api.adminReceivePurchaseOrder(id)
+                _state.update {
+                    it.copy(
+                        purchaseOrderBusy = false,
+                        snackbar = "Recibida: ${res.itemsUpdated} ítems (+${res.itemsSkipped} sin mapear)",
+                    )
+                }
+                loadPurchaseOrderDetail(id)
+                loadPurchaseOrders()
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        purchaseOrderBusy = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message ?: "Error recepción",
+                    )
+                }
+            }
+        }
+    }
+
+    fun setBatchesFilter(filter: String?) {
+        _state.update { it.copy(batchesFilter = filter) }
+        loadBatches()
+    }
+
+    fun loadBatches() {
+        viewModelScope.launch {
+            _state.update { it.copy(loading = true) }
+            try {
+                val res = container.api.adminBatches(filter = _state.value.batchesFilter)
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        batches = res.batches,
+                        batchesExpired = res.summary.expired,
+                        batchesSoon30 = res.summary.soon30,
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update { it.copy(loading = false, snackbar = e.message) }
+            }
+        }
+    }
+
+    fun loadReorderSuggestions() {
+        viewModelScope.launch {
+            _state.update { it.copy(loading = true) }
+            try {
+                val res = container.api.adminReorderSuggestions()
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        reorderGroups = res.groups,
+                        reorderThreshold = res.threshold,
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update { it.copy(loading = false, snackbar = e.message) }
             }
         }
     }
