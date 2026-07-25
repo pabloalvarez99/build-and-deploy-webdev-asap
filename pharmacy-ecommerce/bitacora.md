@@ -3476,3 +3476,12 @@ Build local OK. Push → Vercel.
 - **Proyecto TWA** en `pharmacy-ecommerce/apps/android/`: `twa-manifest.json` escrito a mano (init es interactivo y crashea sin TTY), `bubblewrap update` generó el proyecto Gradle (AGP 8.9.1, Gradle 8.11.1, compileSdk 36). OJO: `yes | bubblewrap update` contamina prompts — versionName quedó "y" y hubo que corregir a mano en `twa-manifest.json` y `app/build.gradle`.
 - **Build APK**: `gradlew.bat assembleRelease` (con `JAVA_HOME`=JDK17, `ANDROID_HOME`, y `local.properties` con `sdk.dir=C:/Users/...` en forward slashes — `\U` rompe properties: "volume label syntax is incorrect") → `zipalign` + `apksigner sign` manual → `app-release-signed.apk` (no commiteada, en .gitignore). Firma verificada: digest coincide con assetlinks.
 - Pendiente: instalar en dispositivo físico (`adb install -r app-release-signed.apk`) + checklist manual (fullscreen, flujo Webpay, retiro tienda, login, offline). Fases futuras: push notifications, Play Store (cuenta developer ya comprada), biometría.
+
+## 2026-07-25 15:35 — Android native KMP scaffold (Phase 1)
+- New app: `pharmacy-ecommerce/apps/android-native` (KMP shared + Compose `cl.tufarmacia.native`)
+- Shared: Ktor API client, Firebase Identity Toolkit login, models, session repo
+- UI: Home, Catalog (prod API), Login/Account, Admin placeholder
+- Backend: `getAuthenticatedUser()` accepts `Authorization: Bearer <Firebase ID token>`; `GET /api/auth/me`
+- Contract: `pharmacy-ecommerce/docs/mobile/api-contract.md`
+- Debug APK: `./gradlew :composeApp:assembleDebug` OK
+- Existing TWA `apps/android` (`cl.tufarmacia.app`) unchanged
