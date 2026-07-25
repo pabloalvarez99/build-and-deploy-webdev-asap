@@ -43,21 +43,32 @@ Custom claim `role` on the token: `user` \| `owner` \| `admin` \| `pharmacist` \
 | GET | `/api/orders` | yes | user orders |
 | GET | `/api/orders/{id}` | yes | order detail |
 | POST | `/api/store-pickup` | yes* | store reservation |
+| POST | `/api/webpay/create` | yes | Webpay Plus token |
+| GET | `/api/loyalty` | yes | points |
+| GET | `/api/tracking/{token}` | no | public track |
 | GET | `/api/admin/orders` | admin | staff orders |
-| PUT | `/api/admin/orders/{id}` | admin | approve/reject/status |
+| GET | `/api/admin/orders/{id}` | admin | order detail |
+| PUT | `/api/admin/orders/{id}` | admin | approve/reject/refund/status |
 | GET | `/api/admin/operaciones` | admin | dashboard KPIs |
 | GET | `/api/admin/dashboard-extras` | admin | OCs / vencimientos |
 | GET | `/api/admin/inventory` | admin | stock list |
 | POST | `/api/admin/stock-movements/adjust` | admin | stock ± |
-| POST | `/api/admin/pos/sale` | admin | POS sale |
+| POST | `/api/admin/pos/sale` | admin | POS sale (discount, mixed) |
+| GET | `/api/admin/pos/pickup` | admin | 6-digit reservation lookup |
+| GET | `/api/admin/pos/customer-history` | admin | phone/RUT history |
 | GET | `/api/admin/clientes` | admin | clients |
 | GET | `/api/admin/suppliers` | owner | suppliers |
 | GET | `/api/admin/purchase-orders` | owner | POs |
 | GET | `/api/admin/finanzas/dashboard` | owner | finance KPIs |
 | GET/PUT | `/api/admin/tareas` | admin | tasks |
 | GET | `/api/admin/turnos` | admin | cash shifts |
+| GET | `/api/admin/faltas` | admin | stockouts |
+| PATCH | `/api/admin/faltas/{id}` | admin | mark notified |
+| GET | `/api/admin/arqueo` | admin | shift cash snapshot |
 
 \* Bearer optional on store-pickup server; app requires login for checkout.
+
+Product query extras used by app: `barcode`, `sort_by`, `has_discount`, `in_stock`.
 
 ### Product query params
 

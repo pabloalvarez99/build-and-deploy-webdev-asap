@@ -21,6 +21,8 @@ import cl.tufarmacia.app.data.model.DashboardExtras
 import cl.tufarmacia.app.data.model.FinanzasDashboard
 import cl.tufarmacia.app.data.model.InventoryResponse
 import cl.tufarmacia.app.data.model.OperacionesResponse
+import cl.tufarmacia.app.data.model.PosCustomerHistory
+import cl.tufarmacia.app.data.model.PosPickupOrder
 import cl.tufarmacia.app.data.model.PosSaleRequest
 import cl.tufarmacia.app.data.model.PosSaleResponse
 import cl.tufarmacia.app.data.model.PurchaseOrdersResponse
@@ -78,6 +80,9 @@ class TuFarmaciaApi(
         activeOnly: Boolean = true,
         inStock: Boolean = false,
         stockFilter: String? = null,
+        barcode: String? = null,
+        sortBy: String? = null,
+        hasDiscount: Boolean = false,
     ): PaginatedProducts {
         return get("/api/products") {
             parameter("page", page)
@@ -87,7 +92,16 @@ class TuFarmaciaApi(
             if (!categorySlug.isNullOrBlank()) parameter("category", categorySlug)
             if (inStock) parameter("in_stock", "true")
             if (!stockFilter.isNullOrBlank()) parameter("stock_filter", stockFilter)
+            if (!barcode.isNullOrBlank()) parameter("barcode", barcode)
+            if (!sortBy.isNullOrBlank()) parameter("sort_by", sortBy)
+            if (hasDiscount) parameter("has_discount", "true")
         }
+    }
+
+    /** Exact barcode lookup; returns first product or null. */
+    suspend fun productByBarcode(code: String): Product? {
+        val page = listProducts(page = 1, limit = 1, barcode = code.trim(), activeOnly = true)
+        return page.products.firstOrNull()
     }
 
     suspend fun getProduct(slug: String): Product = get("/api/products/$slug")
@@ -181,6 +195,20 @@ class TuFarmaciaApi(
 
     suspend fun adminPosSale(body: PosSaleRequest): PosSaleResponse =
         post("/api/admin/pos/sale", body = body, auth = true)
+
+    suspend fun adminPosPickup(code: String): PosPickupOrder =
+        get("/api/admin/pos/pickup", auth = true) {
+            parameter("code", code.trim())
+        }
+
+    suspend fun adminPosCustomerHistory(phone: String? = null, rut: String? = null): PosCustomerHistory =
+        get("/api/admin/pos/customer-history", auth = true) {
+            if (!phone.isNullOrBlank()) parameter("phone", phone)
+            if (!rut.isNullOrBlank()) parameter("rut", rut)
+        }
+
+    suspend fun adminGetOrder(id: String): OrderDto =
+        get("/api/admin/orders/$id", auth = true)
 
     suspend fun adminClientes(): ClientesResponse =
         get("/api/admin/clientes", auth = true)

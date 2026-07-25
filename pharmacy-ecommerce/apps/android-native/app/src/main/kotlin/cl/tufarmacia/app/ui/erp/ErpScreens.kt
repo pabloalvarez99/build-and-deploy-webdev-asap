@@ -270,16 +270,28 @@ fun ErpPosScreen(
     onBack: () -> Unit,
     onSearchChange: (String) -> Unit,
     onSearch: () -> Unit,
+    onBarcodeChange: (String) -> Unit,
+    onScanBarcode: () -> Unit,
     onAdd: (cl.tufarmacia.app.data.model.Product) -> Unit,
     onQty: (String, Int) -> Unit,
     onPayment: (String) -> Unit,
     onCustomer: (String, String) -> Unit,
+    onDiscountChange: (String) -> Unit,
+    onMixedAmounts: (String, String) -> Unit,
+    onLookupCustomer: () -> Unit,
+    onPickupCodeChange: (String) -> Unit,
+    onLookupPickup: () -> Unit,
+    onClearPickup: () -> Unit,
+    onApprovePickup: (String) -> Unit,
+    onMarkPaidPickup: (String) -> Unit,
     onSubmit: () -> Unit,
     onClear: () -> Unit,
 ) {
-    var name by remember { mutableStateOf(state.posCustomer) }
-    var phone by remember { mutableStateOf(state.posPhone) }
-    val total = state.posCart.sumOf { it.lineTotal }
+    var name by remember(state.posCustomer) { mutableStateOf(state.posCustomer) }
+    var phone by remember(state.posPhone) { mutableStateOf(state.posPhone) }
+    val subtotal = state.posCart.sumOf { it.lineTotal }
+    val discount = state.posDiscount.toDoubleOrNull() ?: 0.0
+    val total = (subtotal - discount).coerceAtLeast(0.0)
 
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -295,20 +307,100 @@ fun ErpPosScreen(
                 }
             },
         )
-        OutlinedTextField(
-            value = state.posSearch,
-            onValueChange = onSearchChange,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            placeholder = { Text("Buscar para vender…") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = { onSearch() }),
-        )
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            item {
+                Text("Código de barras", fontWeight = FontWeight.SemiBold)
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OutlinedTextField(
+                        value = state.posBarcode,
+                        onValueChange = onBarcodeChange,
+                        modifier = Modifier.weight(1f),
+                        placeholder = { Text("Escanear o digitar…") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done,
+                        ),
+                        keyboardActions = KeyboardActions(onDone = { onScanBarcode() }),
+                    )
+                    Button(onClick = onScanBarcode, enabled = !state.posBusy) { Text("OK") }
+                }
+            }
+            item {
+                OutlinedTextField(
+                    value = state.posSearch,
+                    onValueChange = onSearchChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Buscar por nombre…") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+                )
+            }
+            item {
+                Text("Retiro online (6 dígitos)", fontWeight = FontWeight.SemiBold)
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OutlinedTextField(
+                        value = state.posPickupCode,
+                        onValueChange = onPickupCodeChange,
+                        modifier = Modifier.weight(1f),
+                        placeholder = { Text("123456") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.NumberPassword,
+                            imeAction = ImeAction.Search,
+                        ),
+                        keyboardActions = KeyboardActions(onSearch = { onLookupPickup() }),
+                    )
+                    Button(onClick = onLookupPickup, enabled = !state.posPickupLoading) {
+                        if (state.posPickupLoading) {
+                            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = Color.White)
+                        } else {
+                            Text("Buscar")
+                        }
+                    }
+                }
+            }
+            state.posPickup?.let { pickup ->
+                item {
+                    Card(
+                        Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    ) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                listOfNotNull(pickup.guestName, pickup.guestSurname).joinToString(" ")
+                                    .ifBlank { "Cliente" },
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text("Estado: ${pickup.status} · ${formatClp(pickup.total)}")
+                            pickup.customerPhone?.let { Text("Tel: $it") }
+                            pickup.items.forEach { line ->
+                                Text("· ${line.productName} x${line.quantity}", style = MaterialTheme.typography.bodySmall)
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                if (pickup.status.equals("reserved", ignoreCase = true)) {
+                                    Button(onClick = { onApprovePickup(pickup.id) }) { Text("Aprobar") }
+                                    Button(onClick = { onMarkPaidPickup(pickup.id) }) { Text("Marcar pagada") }
+                                }
+                                OutlinedButton(onClick = onClearPickup) { Text("Cerrar") }
+                            }
+                        }
+                    }
+                }
+            }
             items(state.posResults, key = { it.id }) { p ->
                 Card(Modifier.fillMaxWidth().clickable { onAdd(p) }) {
                     Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -340,13 +432,62 @@ fun ErpPosScreen(
                     }
                 }
             }
+            state.posCustomerHistory?.takeIf { it.found }?.let { hist ->
+                item {
+                    Card(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text("Historial", fontWeight = FontWeight.Bold)
+                            Text("${hist.name ?: "—"} · ${hist.visitCount} visitas · ${hist.loyaltyPoints ?: 0} pts")
+                            if (hist.topProducts.isNotEmpty()) {
+                                Text(
+                                    "Top: ${hist.topProducts.take(3).joinToString()}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("pos_cash" to "Efectivo", "pos_debit" to "Débito", "pos_credit" to "Crédito").forEach { (v, l) ->
+                listOf(
+                    "pos_cash" to "Efectivo",
+                    "pos_debit" to "Débito",
+                    "pos_credit" to "Crédito",
+                    "pos_mixed" to "Mixta",
+                ).forEach { (v, l) ->
                     FilterChip(selected = state.posPayment == v, onClick = { onPayment(v) }, label = { Text(l) })
                 }
             }
+            if (state.posPayment == "pos_mixed") {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = state.posCashAmount,
+                        onValueChange = { onMixedAmounts(it, state.posCardAmount) },
+                        label = { Text("Efectivo") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    )
+                    OutlinedTextField(
+                        value = state.posCardAmount,
+                        onValueChange = { onMixedAmounts(state.posCashAmount, it) },
+                        label = { Text("Tarjeta") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    )
+                }
+            }
+            OutlinedTextField(
+                value = state.posDiscount,
+                onValueChange = onDiscountChange,
+                label = { Text("Descuento \$") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            )
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it; onCustomer(it, phone) },
@@ -354,19 +495,25 @@ fun ErpPosScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
             )
-            OutlinedTextField(
-                value = phone,
-                onValueChange = { phone = it; onCustomer(name, it) },
-                label = { Text("Teléfono") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = { phone = it; onCustomer(name, it) },
+                    label = { Text("Teléfono") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                )
+                OutlinedButton(onClick = onLookupCustomer) { Text("Historial") }
+            }
+            if (discount > 0) {
+                Text("Subtotal ${formatClp(subtotal)} − desc. ${formatClp(discount)}", style = MaterialTheme.typography.bodySmall)
+            }
             Text("Total: ${formatClp(total)}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Button(
                 onClick = onSubmit,
                 enabled = !state.posBusy && state.posCart.isNotEmpty(),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(52.dp),
             ) {
                 if (state.posBusy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
                 else Text("Cobrar")

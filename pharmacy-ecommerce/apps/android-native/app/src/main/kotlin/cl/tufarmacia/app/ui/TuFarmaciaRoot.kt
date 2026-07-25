@@ -16,13 +16,18 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import android.app.Activity
 import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -106,6 +111,16 @@ fun TuFarmaciaRoot(container: AppContainer) {
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val webpayLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        vm.onWebpayResult(result.resultCode == Activity.RESULT_OK)
+        if (result.resultCode == Activity.RESULT_OK) {
+            navController.navigate(Routes.Orders) {
+                popUpTo(Routes.Home)
+            }
+        }
+    }
 
     LaunchedEffect(state.snackbar) {
         val msg = state.snackbar ?: return@LaunchedEffect
@@ -124,11 +139,8 @@ fun TuFarmaciaRoot(container: AppContainer) {
             putExtra(WebpayActivity.EXTRA_URL, wp.url)
             putExtra(WebpayActivity.EXTRA_TOKEN, wp.token)
         }
-        context.startActivity(intent)
+        webpayLauncher.launch(intent)
         vm.consumeWebpayRedirect()
-        navController.navigate(Routes.Orders) {
-            popUpTo(Routes.Home)
-        }
     }
 
     if (!state.bootstrapped) {
@@ -153,17 +165,17 @@ fun TuFarmaciaRoot(container: AppContainer) {
                 )
             // Only main tabs show bottom bar
             if (route in tabRoutes) {
-                NavigationBar {
+                NavigationBar(modifier = Modifier.height(72.dp)) {
                     NavigationBarItem(
                         selected = route == Routes.Home,
                         onClick = { navController.navigateTab(Routes.Home) },
-                        icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                        icon = { Icon(Icons.Default.Home, contentDescription = "Inicio") },
                         label = { Text("Inicio") },
                     )
                     NavigationBarItem(
                         selected = route == Routes.Catalog,
                         onClick = { navController.navigateTab(Routes.Catalog) },
-                        icon = { Icon(Icons.Default.ShoppingBag, contentDescription = null) },
+                        icon = { Icon(Icons.Default.ShoppingBag, contentDescription = "Catálogo") },
                         label = { Text("Catálogo") },
                     )
                     NavigationBarItem(
@@ -173,7 +185,7 @@ fun TuFarmaciaRoot(container: AppContainer) {
                             BadgedBox(badge = {
                                 if (cartCount > 0) Badge { Text("$cartCount") }
                             }) {
-                                Icon(Icons.Default.ShoppingCart, contentDescription = null)
+                                Icon(Icons.Default.ShoppingCart, contentDescription = "Carrito")
                             }
                         },
                         label = { Text("Carrito") },
@@ -181,14 +193,14 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     NavigationBarItem(
                         selected = route == Routes.Account,
                         onClick = { navController.navigateTab(Routes.Account) },
-                        icon = { Icon(Icons.Default.Person, contentDescription = null) },
+                        icon = { Icon(Icons.Default.Person, contentDescription = "Cuenta") },
                         label = { Text("Cuenta") },
                     )
                     if (state.user?.isAdmin == true) {
                         NavigationBarItem(
                             selected = route == Routes.Admin || route?.startsWith("erp_") == true,
                             onClick = { navController.navigateTab(Routes.Admin) },
-                            icon = { Icon(Icons.Default.AdminPanelSettings, contentDescription = null) },
+                            icon = { Icon(Icons.Default.AdminPanelSettings, contentDescription = "ERP") },
                             label = { Text("ERP") },
                         )
                     }
@@ -420,6 +432,9 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onApprove = vm::adminApproveReservation,
                     onReject = vm::adminRejectReservation,
                     onMarkPaid = vm::adminMarkPaid,
+                    onRefund = vm::adminRefund,
+                    onCancel = vm::adminCancel,
+                    onOpenOrder = { id -> navController.navigate(Routes.order(id)) },
                     onBack = { navController.popBackStack() },
                 )
             }
@@ -429,10 +444,26 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onBack = { navController.popBackStack() },
                     onSearchChange = erpVm::setPosSearch,
                     onSearch = erpVm::searchPosProducts,
+                    onBarcodeChange = erpVm::setPosBarcode,
+                    onScanBarcode = { erpVm.scanBarcode() },
                     onAdd = erpVm::addPosLine,
                     onQty = erpVm::setPosQty,
                     onPayment = erpVm::setPosPayment,
                     onCustomer = erpVm::setPosCustomer,
+                    onDiscountChange = erpVm::setPosDiscount,
+                    onMixedAmounts = erpVm::setPosMixedAmounts,
+                    onLookupCustomer = erpVm::lookupCustomerHistory,
+                    onPickupCodeChange = erpVm::setPosPickupCode,
+                    onLookupPickup = erpVm::lookupPickup,
+                    onClearPickup = erpVm::clearPickup,
+                    onApprovePickup = { id ->
+                        vm.adminApproveReservation(id)
+                        erpVm.lookupPickup()
+                    },
+                    onMarkPaidPickup = { id ->
+                        vm.adminMarkPaid(id)
+                        erpVm.lookupPickup()
+                    },
                     onSubmit = erpVm::submitPos,
                     onClear = erpVm::clearPos,
                 )

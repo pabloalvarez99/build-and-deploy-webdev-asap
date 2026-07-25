@@ -12,6 +12,8 @@ import cl.tufarmacia.app.data.model.FaltaDto
 import cl.tufarmacia.app.data.model.FinanzasDashboard
 import cl.tufarmacia.app.data.model.InventoryItem
 import cl.tufarmacia.app.data.model.OperacionesResponse
+import cl.tufarmacia.app.data.model.PosCustomerHistory
+import cl.tufarmacia.app.data.model.PosPickupOrder
 import cl.tufarmacia.app.data.model.PosSaleItem
 import cl.tufarmacia.app.data.model.PosSaleRequest
 import cl.tufarmacia.app.data.model.Product
@@ -27,6 +29,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 data class PosLine(
     val productId: String,
@@ -50,12 +53,21 @@ data class ErpUiState(
     val inventorySearch: String = "",
 
     val posSearch: String = "",
+    val posBarcode: String = "",
     val posResults: List<Product> = emptyList(),
     val posCart: List<PosLine> = emptyList(),
     val posPayment: String = "pos_cash",
     val posCustomer: String = "",
     val posPhone: String = "",
+    val posDiscount: String = "",
+    val posCashAmount: String = "",
+    val posCardAmount: String = "",
     val posBusy: Boolean = false,
+    val posCustomerUserId: String? = null,
+    val posCustomerHistory: PosCustomerHistory? = null,
+    val posPickupCode: String = "",
+    val posPickup: PosPickupOrder? = null,
+    val posPickupLoading: Boolean = false,
 
     val clients: List<ClienteDto> = emptyList(),
     val suppliers: List<SupplierDto> = emptyList(),
@@ -155,11 +167,58 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    fun setPosBarcode(code: String) {
+        _state.update { it.copy(posBarcode = code) }
+    }
+
+    fun scanBarcode(code: String? = null) {
+        viewModelScope.launch {
+            val raw = (code ?: _state.value.posBarcode).trim()
+            if (raw.isBlank()) {
+                _state.update { it.copy(snackbar = "Ingresa un código de barras") }
+                return@launch
+            }
+            _state.update { it.copy(posBusy = true) }
+            try {
+                val product = container.api.productByBarcode(raw)
+                if (product == null) {
+                    _state.update {
+                        it.copy(posBusy = false, snackbar = "Código no encontrado: $raw", posBarcode = "")
+                    }
+                    return@launch
+                }
+                addPosLine(product)
+                _state.update {
+                    it.copy(
+                        posBusy = false,
+                        posBarcode = "",
+                        snackbar = "+ ${product.name}",
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        posBusy = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message ?: "Error barcode",
+                    )
+                }
+            }
+        }
+    }
+
     fun searchPosProducts() {
         viewModelScope.launch {
             val q = _state.value.posSearch
             if (q.length < 2) return@launch
             try {
+                // Pure digits of length >= 8 → try barcode first
+                if (q.all { it.isDigit() } && q.length >= 8) {
+                    val byBar = container.api.productByBarcode(q)
+                    if (byBar != null) {
+                        _state.update { it.copy(posResults = listOf(byBar)) }
+                        return@launch
+                    }
+                }
                 val page = container.api.listProducts(page = 1, limit = 20, search = q, activeOnly = true)
                 _state.update { it.copy(posResults = page.products) }
             } catch (_: Exception) {
@@ -199,8 +258,95 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
         _state.update { it.copy(posCustomer = name, posPhone = phone) }
     }
 
+    fun setPosDiscount(value: String) {
+        _state.update { it.copy(posDiscount = value.filter { ch -> ch.isDigit() || ch == '.' }) }
+    }
+
+    fun setPosMixedAmounts(cash: String, card: String) {
+        _state.update {
+            it.copy(
+                posCashAmount = cash.filter { ch -> ch.isDigit() || ch == '.' },
+                posCardAmount = card.filter { ch -> ch.isDigit() || ch == '.' },
+            )
+        }
+    }
+
+    fun setPosPickupCode(code: String) {
+        _state.update { it.copy(posPickupCode = code.filter { it.isDigit() }.take(6)) }
+    }
+
+    fun lookupPickup() {
+        viewModelScope.launch {
+            val code = _state.value.posPickupCode.trim()
+            if (code.length != 6) {
+                _state.update { it.copy(snackbar = "Código de retiro: 6 dígitos") }
+                return@launch
+            }
+            _state.update { it.copy(posPickupLoading = true, posPickup = null) }
+            try {
+                val order = container.api.adminPosPickup(code)
+                _state.update { it.copy(posPickupLoading = false, posPickup = order) }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        posPickupLoading = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message ?: "Reserva no encontrada",
+                    )
+                }
+            }
+        }
+    }
+
+    fun clearPickup() {
+        _state.update { it.copy(posPickup = null, posPickupCode = "") }
+    }
+
+    fun lookupCustomerHistory() {
+        viewModelScope.launch {
+            val phone = _state.value.posPhone.trim()
+            if (phone.length < 4) {
+                _state.update { it.copy(snackbar = "Teléfono mínimo 4 dígitos") }
+                return@launch
+            }
+            try {
+                val hist = container.api.adminPosCustomerHistory(phone = phone)
+                if (!hist.found) {
+                    _state.update {
+                        it.copy(posCustomerHistory = null, posCustomerUserId = null, snackbar = "Cliente no encontrado")
+                    }
+                    return@launch
+                }
+                _state.update { s ->
+                    s.copy(
+                        posCustomerHistory = hist,
+                        posCustomerUserId = hist.userId,
+                        posCustomer = hist.name?.takeIf { it.isNotBlank() } ?: s.posCustomer,
+                        posPhone = hist.phone?.takeIf { it.isNotBlank() } ?: s.posPhone,
+                        snackbar = "Cliente: ${hist.name ?: "—"} · ${hist.loyaltyPoints ?: 0} pts",
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(snackbar = (e as? ApiException)?.message ?: e.message ?: "Error historial")
+                }
+            }
+        }
+    }
+
     fun clearPos() {
-        _state.update { it.copy(posCart = emptyList(), posResults = emptyList(), posSearch = "") }
+        _state.update {
+            it.copy(
+                posCart = emptyList(),
+                posResults = emptyList(),
+                posSearch = "",
+                posBarcode = "",
+                posDiscount = "",
+                posCashAmount = "",
+                posCardAmount = "",
+                posCustomerUserId = null,
+                posCustomerHistory = null,
+            )
+        }
     }
 
     fun submitPos() {
@@ -210,25 +356,68 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                 _state.update { it.copy(snackbar = "Carrito POS vacío") }
                 return@launch
             }
+            val subtotal = s.posCart.sumOf { it.lineTotal }
+            val discount = s.posDiscount.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 0.0
+            val total = (subtotal - discount).coerceAtLeast(0.0)
+            val method = s.posPayment
+
+            val cashAmount: Double?
+            val cardAmount: Double?
+            when (method) {
+                "pos_cash" -> {
+                    cashAmount = total
+                    cardAmount = null
+                }
+                "pos_debit", "pos_credit" -> {
+                    cashAmount = null
+                    cardAmount = total
+                }
+                "pos_mixed" -> {
+                    cashAmount = s.posCashAmount.toDoubleOrNull()
+                    cardAmount = s.posCardAmount.toDoubleOrNull()
+                    if (cashAmount == null || cardAmount == null) {
+                        _state.update { it.copy(snackbar = "Completa montos efectivo y tarjeta") }
+                        return@launch
+                    }
+                    val sum = cashAmount + cardAmount
+                    if (kotlin.math.abs(sum - total) > 1.0) {
+                        _state.update {
+                            it.copy(
+                                snackbar = "Mixta debe sumar ${total.roundToInt()} (va ${sum.roundToInt()})",
+                            )
+                        }
+                        return@launch
+                    }
+                }
+                else -> {
+                    cashAmount = total
+                    cardAmount = null
+                }
+            }
+
             _state.update { it.copy(posBusy = true) }
             try {
-                val total = s.posCart.sumOf { it.lineTotal }
                 val res = container.api.adminPosSale(
                     PosSaleRequest(
                         items = s.posCart.map {
                             PosSaleItem(it.productId, it.name, it.quantity, it.unitPrice)
                         },
-                        paymentMethod = s.posPayment,
-                        cashAmount = if (s.posPayment == "pos_cash") total else null,
-                        cardAmount = if (s.posPayment in listOf("pos_debit", "pos_credit")) total else null,
+                        paymentMethod = method,
+                        cashAmount = cashAmount,
+                        cardAmount = cardAmount,
                         customerName = s.posCustomer.ifBlank { null },
                         customerPhone = s.posPhone.ifBlank { null },
+                        discountAmount = if (discount > 0) discount else null,
+                        customerUserId = s.posCustomerUserId,
                     ),
                 )
                 _state.update {
                     it.copy(
                         posBusy = false,
                         posCart = emptyList(),
+                        posDiscount = "",
+                        posCashAmount = "",
+                        posCardAmount = "",
                         snackbar = "Venta OK ${res.id?.take(8) ?: ""} total ${res.total ?: ""}",
                     )
                 }

@@ -105,6 +105,7 @@ data class PosSaleRequest(
     @SerialName("customer_name") val customerName: String? = null,
     @SerialName("customer_phone") val customerPhone: String? = null,
     @SerialName("discount_amount") val discountAmount: Double? = null,
+    @SerialName("customer_user_id") val customerUserId: String? = null,
     val notes: String? = null,
 )
 
@@ -114,6 +115,47 @@ data class PosSaleResponse(
     val total: String? = null,
     val status: String? = null,
     val error: String? = null,
+)
+
+@Serializable
+data class PosPickupItem(
+    @SerialName("product_name") val productName: String,
+    val quantity: Int = 0,
+    @SerialName("price_at_purchase") val priceAtPurchase: String? = null,
+)
+
+@Serializable
+data class PosPickupOrder(
+    val id: String,
+    val status: String,
+    val total: String,
+    @SerialName("pickup_code") val pickupCode: String? = null,
+    @SerialName("reservation_expires_at") val reservationExpiresAt: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
+    @SerialName("guest_name") val guestName: String? = null,
+    @SerialName("guest_surname") val guestSurname: String? = null,
+    @SerialName("guest_email") val guestEmail: String? = null,
+    @SerialName("customer_phone") val customerPhone: String? = null,
+    val items: List<PosPickupItem> = emptyList(),
+)
+
+@Serializable
+data class PosRecentOrder(
+    val date: String? = null,
+    val total: Double = 0.0,
+    val items: String? = null,
+)
+
+@Serializable
+data class PosCustomerHistory(
+    val found: Boolean = false,
+    val name: String? = null,
+    @SerialName("user_id") val userId: String? = null,
+    val phone: String? = null,
+    @SerialName("loyalty_points") val loyaltyPoints: Int? = null,
+    @SerialName("visit_count") val visitCount: Int = 0,
+    @SerialName("top_products") val topProducts: List<String> = emptyList(),
+    @SerialName("recent_orders") val recentOrders: List<PosRecentOrder> = emptyList(),
 )
 
 @Serializable

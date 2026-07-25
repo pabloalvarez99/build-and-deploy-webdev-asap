@@ -3524,3 +3524,10 @@ Build local OK. Push → Vercel.
 - ERP: Faltas + Arqueo modules
 - Debounced catalog/POS search, product qty picker
 - JWT token proactive refresh
+
+## 2026-07-25 - Android v1.2.0 Wave A (ERP counter + storefront safety)
+- POS: barcode lookup, discount, mixed pay, 6-digit pickup, customer history
+- Orders: refund/cancel, Spanish status labels, open admin detail
+- Storefront: Webpay keeps cart until RESULT_OK; senior typography; CL validation
+- Docs: README + api-contract.md
+- assembleDebug green

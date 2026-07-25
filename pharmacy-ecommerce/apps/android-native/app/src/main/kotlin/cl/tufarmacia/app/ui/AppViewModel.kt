@@ -421,7 +421,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
             }
             try {
                 val res = container.api.webpayCreate(buildCheckoutRequest(lines, s))
-                container.cartRepository.clear()
+                // Do NOT clear cart until payment success (WebpayActivity RESULT_OK).
                 _state.update {
                     it.copy(
                         checkoutLoading = false,
@@ -429,7 +429,6 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         snackbar = "Abriendo Webpay…",
                     )
                 }
-                loadOrders()
             } catch (e: Exception) {
                 _state.update {
                     it.copy(
@@ -441,12 +440,37 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    fun onWebpayResult(success: Boolean) {
+        viewModelScope.launch {
+            if (success) {
+                container.cartRepository.clear()
+                _state.update { it.copy(snackbar = "Pago Webpay exitoso") }
+                loadOrders()
+            } else {
+                _state.update {
+                    it.copy(snackbar = "Webpay cancelado o fallido — carrito intacto")
+                }
+            }
+        }
+    }
+
     private fun validateCheckout(s: AppUiState, lines: List<CartLine>, requireEmail: Boolean): String? {
         if (s.user == null) return "Inicia sesión para continuar"
         if (lines.isEmpty()) return "El carrito está vacío"
+        val name = s.checkoutName.ifBlank { "Cliente" }
+        if (!cl.tufarmacia.app.util.ChileValidation.isValidName(name)) {
+            return "Nombre muy corto (mín. 2 letras)"
+        }
         if (s.checkoutPhone.isBlank()) return "Teléfono es obligatorio"
-        if (requireEmail && s.checkoutEmail.isBlank() && s.user.email.isNullOrBlank()) {
-            return "Email es obligatorio para Webpay"
+        if (!cl.tufarmacia.app.util.ChileValidation.isValidPhone(s.checkoutPhone)) {
+            return "Teléfono inválido (usa formato chileno, ej. 912345678)"
+        }
+        val email = s.checkoutEmail.ifBlank { s.user.email.orEmpty() }
+        if (requireEmail) {
+            if (email.isBlank()) return "Email es obligatorio para Webpay"
+            if (!cl.tufarmacia.app.util.ChileValidation.isValidEmail(email)) {
+                return "Email inválido"
+            }
         }
         return null
     }
@@ -473,7 +497,13 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             _state.update { it.copy(orderDetailLoading = true, orderDetail = null) }
             try {
-                val o = container.api.getOrder(id)
+                val isAdmin = _state.value.user?.isAdmin == true
+                val o = if (isAdmin) {
+                    runCatching { container.api.adminGetOrder(id) }
+                        .getOrElse { container.api.getOrder(id) }
+                } else {
+                    container.api.getOrder(id)
+                }
                 _state.update { it.copy(orderDetailLoading = false, orderDetail = o) }
             } catch (e: Exception) {
                 _state.update {
@@ -569,6 +599,30 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 loadAdminOrders()
             } catch (e: Exception) {
                 _state.update { it.copy(snackbar = e.message ?: "Error al actualizar") }
+            }
+        }
+    }
+
+    fun adminRefund(orderId: String) {
+        viewModelScope.launch {
+            try {
+                container.api.adminOrderAction(orderId, "refund")
+                _state.update { it.copy(snackbar = "Reembolso procesado") }
+                loadAdminOrders()
+            } catch (e: Exception) {
+                _state.update { it.copy(snackbar = e.message ?: "Error al reembolsar") }
+            }
+        }
+    }
+
+    fun adminCancel(orderId: String) {
+        viewModelScope.launch {
+            try {
+                container.api.adminSetOrderStatus(orderId, "cancelled")
+                _state.update { it.copy(snackbar = "Orden anulada") }
+                loadAdminOrders()
+            } catch (e: Exception) {
+                _state.update { it.copy(snackbar = e.message ?: "Error al anular") }
             }
         }
     }

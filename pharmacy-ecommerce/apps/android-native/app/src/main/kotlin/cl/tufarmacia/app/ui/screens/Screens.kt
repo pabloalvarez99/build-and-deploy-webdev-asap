@@ -76,6 +76,8 @@ import cl.tufarmacia.app.data.model.TopSeller
 import cl.tufarmacia.app.data.model.TrackingResponse
 import cl.tufarmacia.app.ui.AppUiState
 import cl.tufarmacia.app.util.formatClp
+import cl.tufarmacia.app.util.orderStatusLabel
+import cl.tufarmacia.app.util.orderStatusStyle
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 
@@ -741,7 +743,10 @@ private fun OrderCard(
     onApprove: (() -> Unit)? = null,
     onReject: (() -> Unit)? = null,
     onMarkPaid: (() -> Unit)? = null,
+    onRefund: (() -> Unit)? = null,
+    onCancel: (() -> Unit)? = null,
 ) {
+    val statusStyle = orderStatusStyle(order.status)
     Card(
         Modifier
             .fillMaxWidth()
@@ -749,7 +754,7 @@ private fun OrderCard(
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(order.status.uppercase(), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                Text(statusStyle.label, fontWeight = FontWeight.Bold, color = statusStyle.color)
                 Text(formatClp(order.total), fontWeight = FontWeight.SemiBold)
             }
             Text("ID: ${order.id.take(8)}…", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
@@ -767,10 +772,18 @@ private fun OrderCard(
                         Text("Rechazar")
                     }
                 }
-            }
-            if (staffActions && order.status.equals("reserved", ignoreCase = true)) {
                 OutlinedButton(onClick = { onMarkPaid?.invoke() }, modifier = Modifier.fillMaxWidth()) {
                     Text("Marcar pagada")
+                }
+            }
+            if (staffActions && order.status.equals("paid", ignoreCase = true)) {
+                OutlinedButton(onClick = { onRefund?.invoke() }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Reembolsar")
+                }
+            }
+            if (staffActions && order.status.lowercase() in setOf("pending", "reserved", "processing")) {
+                OutlinedButton(onClick = { onCancel?.invoke() }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Anular")
                 }
             }
         }
@@ -808,7 +821,7 @@ fun OrderDetailScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(o.status.uppercase(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(orderStatusLabel(o.status), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = orderStatusStyle(o.status).color)
             Text("Total: ${formatClp(o.total)}", style = MaterialTheme.typography.titleMedium)
             o.pickupCode?.let { Text("Código retiro: $it", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary) }
             o.customerPhone?.let { Text("Tel: $it") }
@@ -1068,7 +1081,7 @@ fun TrackScreen(
             result?.let { r ->
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(r.status.uppercase(), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Text(orderStatusLabel(r.status), fontWeight = FontWeight.Bold, color = orderStatusStyle(r.status).color)
                         Text("Total: ${formatClp(r.total)}")
                         r.pickupCode?.let { Text("Código retiro: $it", fontWeight = FontWeight.SemiBold) }
                         r.customerName?.let { Text("Cliente: $it") }
@@ -1096,6 +1109,9 @@ fun AdminScreen(
     onApprove: (String) -> Unit,
     onReject: (String) -> Unit,
     onMarkPaid: (String) -> Unit,
+    onRefund: (String) -> Unit = {},
+    onCancel: (String) -> Unit = {},
+    onOpenOrder: (String) -> Unit = {},
     onBack: (() -> Unit)? = null,
 ) {
     val statuses = listOf(null to "Todas", "reserved" to "Reservadas", "paid" to "Pagadas", "processing" to "Proceso", "cancelled" to "Anuladas")
@@ -1164,11 +1180,13 @@ fun AdminScreen(
                 items(state.adminOrders, key = { it.id }) { order ->
                     OrderCard(
                         order = order,
-                        onClick = {},
+                        onClick = { onOpenOrder(order.id) },
                         staffActions = true,
                         onApprove = { onApprove(order.id) },
                         onReject = { onReject(order.id) },
                         onMarkPaid = { onMarkPaid(order.id) },
+                        onRefund = { onRefund(order.id) },
+                        onCancel = { onCancel(order.id) },
                     )
                 }
                 if (state.adminOrders.isEmpty()) {

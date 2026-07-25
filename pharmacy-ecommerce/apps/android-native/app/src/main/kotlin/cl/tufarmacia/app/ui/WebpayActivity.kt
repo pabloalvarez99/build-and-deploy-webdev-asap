@@ -1,7 +1,9 @@
 package cl.tufarmacia.app.ui
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.os.Bundle
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
@@ -22,6 +24,7 @@ import cl.tufarmacia.app.ui.theme.TuFarmaciaTheme
 
 /**
  * Loads Transbank Webpay Plus by auto-submitting token_ws (same as web checkout).
+ * Detects return to /checkout/webpay/success|error and finishes with RESULT_OK/CANCELED.
  */
 class WebpayActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -31,6 +34,7 @@ class WebpayActivity : ComponentActivity() {
         val url = intent.getStringExtra(EXTRA_URL).orEmpty()
         val token = intent.getStringExtra(EXTRA_TOKEN).orEmpty()
         if (url.isBlank() || token.isBlank()) {
+            setResult(Activity.RESULT_CANCELED)
             finish()
             return
         }
@@ -50,7 +54,10 @@ class WebpayActivity : ComponentActivity() {
                         TopAppBar(
                             title = { Text("Pago Webpay") },
                             navigationIcon = {
-                                IconButton(onClick = { finish() }) {
+                                IconButton(onClick = {
+                                    setResult(Activity.RESULT_CANCELED)
+                                    finish()
+                                }) {
                                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Cerrar")
                                 }
                             },
@@ -65,7 +72,25 @@ class WebpayActivity : ComponentActivity() {
                             WebView(ctx).apply {
                                 settings.javaScriptEnabled = true
                                 settings.domStorageEnabled = true
-                                webViewClient = WebViewClient()
+                                webViewClient = object : WebViewClient() {
+                                    override fun shouldOverrideUrlLoading(
+                                        view: WebView?,
+                                        request: WebResourceRequest?,
+                                    ): Boolean {
+                                        val u = request?.url?.toString().orEmpty()
+                                        return handleReturnUrl(u)
+                                    }
+
+                                    @Deprecated("Deprecated in Java")
+                                    override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                                        return handleReturnUrl(url.orEmpty())
+                                    }
+
+                                    override fun onPageFinished(view: WebView?, url: String?) {
+                                        super.onPageFinished(view, url)
+                                        handleReturnUrl(url.orEmpty())
+                                    }
+                                }
                                 loadDataWithBaseURL(url, html, "text/html", "UTF-8", null)
                             }
                         },
@@ -73,6 +98,20 @@ class WebpayActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun handleReturnUrl(u: String): Boolean {
+        if (u.contains("/checkout/webpay/success")) {
+            setResult(Activity.RESULT_OK)
+            finish()
+            return true
+        }
+        if (u.contains("/checkout/webpay/error")) {
+            setResult(Activity.RESULT_CANCELED)
+            finish()
+            return true
+        }
+        return false
     }
 
     private fun escape(s: String): String =
