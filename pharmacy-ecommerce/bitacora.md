@@ -3491,3 +3491,10 @@ Build local OK. Push → Vercel.
 - All Kotlin under `apps/android-native/app` (Compose + Ktor/OkHttp + Firebase REST)
 - iOS deferred as separate Swift/SwiftUI project (same API contract, no shared code)
 - `./gradlew :app:assembleDebug` OK
+
+## 2026-07-25 15:59 — Android native v0.2.0 storefront+admin
+- Product detail, categories, infinite scroll, top sellers
+- Cart (DataStore) + store pickup checkout + pickup code success
+- Login/register/session, mis pedidos + detail
+- Admin: orders filter/search + low stock list
+- APK: `./gradlew :app:assembleDebug` OK (v0.2.0)

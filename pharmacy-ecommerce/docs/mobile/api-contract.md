@@ -29,14 +29,23 @@ Custom claim `role` on the token: `user` \| `owner` \| `admin` \| `pharmacist` \
 - Sign-in: `POST https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=API_KEY`
 - Refresh: `POST https://securetoken.googleapis.com/v1/token?key=API_KEY`
 
-## Phase 1 (wired in Android app)
+## Wired in Android app (`apps/android-native`)
 
 | Method | Path | Auth | Response |
 |--------|------|------|----------|
 | GET | `/api/products` | no | `{ products, total, page, limit, total_pages }` |
 | GET | `/api/products/{slug}` | no | product object |
+| GET | `/api/products/top-sellers` | no | `TopSeller[]` |
 | GET | `/api/categories` | no | `Category[]` |
+| GET | `/api/search/suggest` | no | suggestions |
 | GET | `/api/auth/me` | yes | current user |
+| POST | `/api/auth/register` | no | create account |
+| GET | `/api/orders` | yes | user orders |
+| GET | `/api/orders/{id}` | yes | order detail |
+| POST | `/api/store-pickup` | yes* | store reservation |
+| GET | `/api/admin/orders` | admin | staff orders |
+
+\* Bearer optional on server; app requires login.
 
 ### Product query params
 

@@ -3,8 +3,16 @@ package cl.tufarmacia.app.data.api
 import cl.tufarmacia.app.data.model.ApiError
 import cl.tufarmacia.app.data.model.Category
 import cl.tufarmacia.app.data.model.MeResponse
+import cl.tufarmacia.app.data.model.OrderDto
+import cl.tufarmacia.app.data.model.PaginatedOrders
 import cl.tufarmacia.app.data.model.PaginatedProducts
 import cl.tufarmacia.app.data.model.Product
+import cl.tufarmacia.app.data.model.RegisterRequest
+import cl.tufarmacia.app.data.model.RegisterResponse
+import cl.tufarmacia.app.data.model.StorePickupRequest
+import cl.tufarmacia.app.data.model.StorePickupResponse
+import cl.tufarmacia.app.data.model.SuggestResponse
+import cl.tufarmacia.app.data.model.TopSeller
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
@@ -13,9 +21,13 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
@@ -23,10 +35,6 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-/**
- * Android-only HTTP client for tu-farmacia.cl APIs.
- * Uses Ktor + OkHttp (standard on Android). iOS will use URLSession / Alamofire separately.
- */
 class TuFarmaciaApi(
     private val baseUrl: String,
     private val tokenProvider: TokenProvider,
@@ -42,42 +50,100 @@ class TuFarmaciaApi(
         page: Int = 1,
         limit: Int = 20,
         search: String? = null,
+        categorySlug: String? = null,
         activeOnly: Boolean = true,
+        inStock: Boolean = false,
+        stockFilter: String? = null,
     ): PaginatedProducts {
         return get("/api/products") {
             parameter("page", page)
             parameter("limit", limit)
             parameter("active_only", activeOnly)
             if (!search.isNullOrBlank()) parameter("search", search)
+            if (!categorySlug.isNullOrBlank()) parameter("category", categorySlug)
+            if (inStock) parameter("in_stock", "true")
+            if (!stockFilter.isNullOrBlank()) parameter("stock_filter", stockFilter)
         }
     }
 
-    suspend fun getProduct(slug: String): Product {
-        return get("/api/products/$slug")
+    suspend fun getProduct(slug: String): Product = get("/api/products/$slug")
+
+    suspend fun listCategories(): List<Category> = get("/api/categories")
+
+    suspend fun suggest(q: String): SuggestResponse = get("/api/search/suggest") {
+        parameter("q", q)
     }
 
-    suspend fun listCategories(): List<Category> {
-        return get("/api/categories")
-    }
+    suspend fun topSellers(limit: Int = 8): List<TopSeller> =
+        get("/api/products/top-sellers") {
+            parameter("limit", limit)
+        }
 
-    suspend fun me(): MeResponse {
-        return get("/api/auth/me", auth = true)
-    }
+    suspend fun register(body: RegisterRequest): RegisterResponse =
+        post("/api/auth/register", body = body, auth = false)
+
+    suspend fun me(): MeResponse = get("/api/auth/me", auth = true)
+
+    suspend fun listOrders(page: Int = 1, limit: Int = 20): PaginatedOrders =
+        get("/api/orders", auth = true) {
+            parameter("page", page)
+            parameter("limit", limit)
+        }
+
+    suspend fun getOrder(id: String): OrderDto = get("/api/orders/$id", auth = true)
+
+    suspend fun storePickup(body: StorePickupRequest): StorePickupResponse =
+        post("/api/store-pickup", body = body, auth = true)
+
+    /** Admin orders (staff). */
+    suspend fun adminListOrders(
+        page: Int = 1,
+        limit: Int = 20,
+        status: String? = null,
+        search: String? = null,
+    ): PaginatedOrders =
+        get("/api/admin/orders", auth = true) {
+            parameter("page", page)
+            parameter("limit", limit)
+            if (!status.isNullOrBlank()) parameter("status", status)
+            if (!search.isNullOrBlank()) parameter("search", search)
+        }
 
     private suspend inline fun <reified T> get(
         path: String,
         auth: Boolean = false,
-        crossinline block: io.ktor.client.request.HttpRequestBuilder.() -> Unit = {},
+        crossinline block: HttpRequestBuilder.() -> Unit = {},
     ): T {
+        val token = if (auth) {
+            tokenProvider.currentIdToken()
+                ?: throw ApiException("Not authenticated", statusCode = 401)
+        } else null
         val response = httpClient.get(path) {
             contentType(ContentType.Application.Json)
-            if (auth) {
-                val token = tokenProvider.currentIdToken()
-                    ?: throw ApiException("Not authenticated", statusCode = 401)
-                bearerAuth(token)
-            }
+            if (token != null) bearerAuth(token)
             block()
         }
+        return parse(response)
+    }
+
+    private suspend inline fun <reified T> post(
+        path: String,
+        body: Any,
+        auth: Boolean = false,
+    ): T {
+        val token = if (auth) {
+            tokenProvider.currentIdToken()
+                ?: throw ApiException("Not authenticated", statusCode = 401)
+        } else null
+        val response = httpClient.post(path) {
+            contentType(ContentType.Application.Json)
+            if (token != null) bearerAuth(token)
+            setBody(body)
+        }
+        return parse(response)
+    }
+
+    private suspend inline fun <reified T> parse(response: HttpResponse): T {
         if (!response.status.isSuccess()) {
             val text = response.bodyAsText()
             val err = runCatching { json.decodeFromString<ApiError>(text) }.getOrNull()
