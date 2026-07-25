@@ -35,6 +35,17 @@ import androidx.navigation.navArgument
 import cl.tufarmacia.app.data.AppContainer
 import cl.tufarmacia.app.ui.screens.AccountScreen
 import cl.tufarmacia.app.ui.screens.AdminScreen
+import cl.tufarmacia.app.ui.erp.ErpClientsScreen
+import cl.tufarmacia.app.ui.erp.ErpDashboardScreen
+import cl.tufarmacia.app.ui.erp.ErpFinanceScreen
+import cl.tufarmacia.app.ui.erp.ErpHubScreen
+import cl.tufarmacia.app.ui.erp.ErpInventoryScreen
+import cl.tufarmacia.app.ui.erp.ErpPosScreen
+import cl.tufarmacia.app.ui.erp.ErpPurchasesScreen
+import cl.tufarmacia.app.ui.erp.ErpShiftsScreen
+import cl.tufarmacia.app.ui.erp.ErpSuppliersScreen
+import cl.tufarmacia.app.ui.erp.ErpTasksScreen
+import cl.tufarmacia.app.ui.erp.ErpViewModel
 import cl.tufarmacia.app.ui.screens.CartScreen
 import cl.tufarmacia.app.ui.screens.CatalogScreen
 import cl.tufarmacia.app.ui.screens.CheckoutScreen
@@ -57,6 +68,16 @@ private object Routes {
     const val Catalog = "catalog"
     const val Account = "account"
     const val Admin = "admin"
+    const val ErpDashboard = "erp_dashboard"
+    const val ErpOrders = "erp_orders"
+    const val ErpPos = "erp_pos"
+    const val ErpInventory = "erp_inventory"
+    const val ErpClients = "erp_clients"
+    const val ErpPurchases = "erp_purchases"
+    const val ErpSuppliers = "erp_suppliers"
+    const val ErpFinance = "erp_finance"
+    const val ErpTasks = "erp_tasks"
+    const val ErpShifts = "erp_shifts"
     const val Cart = "cart"
     const val Checkout = "checkout"
     const val Orders = "orders"
@@ -73,7 +94,9 @@ private object Routes {
 @Composable
 fun TuFarmaciaRoot(container: AppContainer) {
     val vm: AppViewModel = viewModel(factory = AppViewModel.factory(container))
+    val erpVm: ErpViewModel = viewModel(factory = ErpViewModel.factory(container))
     val state by vm.state.collectAsStateWithLifecycle()
+    val erp by erpVm.state.collectAsStateWithLifecycle()
     val cart by vm.cartLines.collectAsStateWithLifecycle()
     val cartCount = cart.sumOf { it.quantity }
     val navController = rememberNavController()
@@ -84,6 +107,11 @@ fun TuFarmaciaRoot(container: AppContainer) {
         val msg = state.snackbar ?: return@LaunchedEffect
         snackbarHostState.showSnackbar(msg)
         vm.consumeSnackbar()
+    }
+    LaunchedEffect(erp.snackbar) {
+        val msg = erp.snackbar ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(msg)
+        erpVm.consumeSnackbar()
     }
 
     LaunchedEffect(state.webpayRedirect) {
@@ -154,14 +182,10 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     )
                     if (state.user?.isAdmin == true) {
                         NavigationBarItem(
-                            selected = route == Routes.Admin,
-                            onClick = {
-                                vm.loadAdminOrders()
-                                vm.loadLowStock()
-                                navController.navigateTab(Routes.Admin)
-                            },
+                            selected = route == Routes.Admin || route?.startsWith("erp_") == true,
+                            onClick = { navController.navigateTab(Routes.Admin) },
                             icon = { Icon(Icons.Default.AdminPanelSettings, contentDescription = null) },
-                            label = { Text("Admin") },
+                            label = { Text("ERP") },
                         )
                     }
                 }
@@ -315,17 +339,122 @@ fun TuFarmaciaRoot(container: AppContainer) {
                 }
             }
             composable(Routes.Admin) {
+                ErpHubScreen(
+                    user = state.user,
+                    onOpen = { route ->
+                        when (route) {
+                            Routes.ErpDashboard -> {
+                                erpVm.loadDashboard()
+                                navController.navigate(Routes.ErpDashboard)
+                            }
+                            Routes.ErpOrders -> {
+                                vm.loadAdminOrders()
+                                vm.loadLowStock()
+                                navController.navigate(Routes.ErpOrders)
+                            }
+                            Routes.ErpPos -> navController.navigate(Routes.ErpPos)
+                            Routes.ErpInventory -> {
+                                erpVm.loadInventory()
+                                navController.navigate(Routes.ErpInventory)
+                            }
+                            Routes.ErpClients -> {
+                                erpVm.loadClientes()
+                                navController.navigate(Routes.ErpClients)
+                            }
+                            Routes.ErpPurchases -> {
+                                erpVm.loadPurchaseOrders()
+                                navController.navigate(Routes.ErpPurchases)
+                            }
+                            Routes.ErpSuppliers -> {
+                                erpVm.loadSuppliers()
+                                navController.navigate(Routes.ErpSuppliers)
+                            }
+                            Routes.ErpFinance -> {
+                                erpVm.loadFinanzas()
+                                navController.navigate(Routes.ErpFinance)
+                            }
+                            Routes.ErpTasks -> {
+                                erpVm.loadTasks()
+                                navController.navigate(Routes.ErpTasks)
+                            }
+                            Routes.ErpShifts -> {
+                                erpVm.loadTurnos()
+                                navController.navigate(Routes.ErpShifts)
+                            }
+                        }
+                    },
+                    onBackToStore = { navController.navigateTab(Routes.Home) },
+                )
+            }
+            composable(Routes.ErpDashboard) {
+                ErpDashboardScreen(
+                    state = erp,
+                    onBack = { navController.popBackStack() },
+                    onRefresh = erpVm::loadDashboard,
+                )
+            }
+            composable(Routes.ErpOrders) {
                 AdminScreen(
                     state = state,
                     user = state.user,
-                    onRefresh = vm::loadAdminOrders,
+                    onRefresh = {
+                        vm.loadAdminOrders()
+                        vm.loadLowStock()
+                    },
                     onStatusFilter = vm::setAdminStatusFilter,
                     onSearchChange = vm::setAdminSearch,
                     onSearch = vm::loadAdminOrders,
                     onApprove = vm::adminApproveReservation,
                     onReject = vm::adminRejectReservation,
                     onMarkPaid = vm::adminMarkPaid,
+                    onBack = { navController.popBackStack() },
                 )
+            }
+            composable(Routes.ErpPos) {
+                ErpPosScreen(
+                    state = erp,
+                    onBack = { navController.popBackStack() },
+                    onSearchChange = erpVm::setPosSearch,
+                    onSearch = erpVm::searchPosProducts,
+                    onAdd = erpVm::addPosLine,
+                    onQty = erpVm::setPosQty,
+                    onPayment = erpVm::setPosPayment,
+                    onCustomer = erpVm::setPosCustomer,
+                    onSubmit = erpVm::submitPos,
+                    onClear = erpVm::clearPos,
+                )
+            }
+            composable(Routes.ErpInventory) {
+                ErpInventoryScreen(
+                    state = erp,
+                    onBack = { navController.popBackStack() },
+                    onFilter = erpVm::setInventoryFilter,
+                    onSearchChange = erpVm::setInventorySearch,
+                    onSearch = erpVm::loadInventory,
+                    onAdjust = { id, d -> erpVm.adjustStock(id, d, null) },
+                )
+            }
+            composable(Routes.ErpClients) {
+                ErpClientsScreen(state = erp, onBack = { navController.popBackStack() })
+            }
+            composable(Routes.ErpPurchases) {
+                ErpPurchasesScreen(state = erp, onBack = { navController.popBackStack() })
+            }
+            composable(Routes.ErpSuppliers) {
+                ErpSuppliersScreen(state = erp, onBack = { navController.popBackStack() })
+            }
+            composable(Routes.ErpFinance) {
+                ErpFinanceScreen(state = erp, onBack = { navController.popBackStack() })
+            }
+            composable(Routes.ErpTasks) {
+                ErpTasksScreen(
+                    state = erp,
+                    onBack = { navController.popBackStack() },
+                    onComplete = erpVm::completeTask,
+                )
+            }
+            composable(Routes.ErpShifts) {
+                ErpShiftsScreen(state = erp, onBack = { navController.popBackStack() })
             }
             composable(Routes.Login) {
                 LoginScreen(

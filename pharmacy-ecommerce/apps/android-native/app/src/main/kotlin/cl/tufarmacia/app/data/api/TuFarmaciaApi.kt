@@ -16,6 +16,20 @@ import cl.tufarmacia.app.data.model.SuggestResponse
 import cl.tufarmacia.app.data.model.TopSeller
 import cl.tufarmacia.app.data.model.TrackingResponse
 import cl.tufarmacia.app.data.model.WebpayCreateResponse
+import cl.tufarmacia.app.data.model.ClientesResponse
+import cl.tufarmacia.app.data.model.DashboardExtras
+import cl.tufarmacia.app.data.model.FinanzasDashboard
+import cl.tufarmacia.app.data.model.InventoryResponse
+import cl.tufarmacia.app.data.model.OperacionesResponse
+import cl.tufarmacia.app.data.model.PosSaleRequest
+import cl.tufarmacia.app.data.model.PosSaleResponse
+import cl.tufarmacia.app.data.model.PurchaseOrdersResponse
+import cl.tufarmacia.app.data.model.StockAdjustRequest
+import cl.tufarmacia.app.data.model.StockAdjustResponse
+import cl.tufarmacia.app.data.model.SuppliersResponse
+import cl.tufarmacia.app.data.model.TaskActionResponse
+import cl.tufarmacia.app.data.model.TasksResponse
+import cl.tufarmacia.app.data.model.TurnosResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
@@ -140,6 +154,74 @@ class TuFarmaciaApi(
             contentType(ContentType.Application.Json)
             bearerAuth(token)
             setBody(buildJsonObject { put("status", status) })
+        }
+        return parse(response)
+    }
+
+    // ── ERP modules ─────────────────────────────────────────────
+
+    suspend fun adminOperaciones(): OperacionesResponse =
+        get("/api/admin/operaciones", auth = true)
+
+    suspend fun adminDashboardExtras(): DashboardExtras =
+        get("/api/admin/dashboard-extras", auth = true)
+
+    suspend fun adminInventory(filter: String? = null, search: String? = null): InventoryResponse =
+        get("/api/admin/inventory", auth = true) {
+            if (!filter.isNullOrBlank()) parameter("filter", filter)
+            if (!search.isNullOrBlank()) parameter("search", search)
+        }
+
+    suspend fun adminStockAdjust(body: StockAdjustRequest): StockAdjustResponse =
+        post("/api/admin/stock-movements/adjust", body = body, auth = true)
+
+    suspend fun adminPosSale(body: PosSaleRequest): PosSaleResponse =
+        post("/api/admin/pos/sale", body = body, auth = true)
+
+    suspend fun adminClientes(): ClientesResponse =
+        get("/api/admin/clientes", auth = true)
+
+    suspend fun adminSuppliers(): SuppliersResponse =
+        get("/api/admin/suppliers", auth = true)
+
+    suspend fun adminPurchaseOrders(
+        page: Int = 1,
+        limit: Int = 30,
+        status: String? = null,
+        paid: Boolean? = null,
+    ): PurchaseOrdersResponse =
+        get("/api/admin/purchase-orders", auth = true) {
+            parameter("page", page)
+            parameter("limit", limit)
+            if (!status.isNullOrBlank()) parameter("status", status)
+            if (paid != null) parameter("paid", paid)
+        }
+
+    suspend fun adminFinanzasDashboard(): FinanzasDashboard =
+        get("/api/admin/finanzas/dashboard", auth = true)
+
+    suspend fun adminTareas(scope: String = "mine", status: String? = null): TasksResponse =
+        get("/api/admin/tareas", auth = true) {
+            parameter("scope", scope)
+            if (!status.isNullOrBlank()) parameter("status", status)
+        }
+
+    suspend fun adminTaskDone(taskId: String): TaskActionResponse =
+        putJson("/api/admin/tareas/$taskId", buildJsonObject { put("action", "complete") })
+
+    suspend fun adminTurnos(page: Int = 1, limit: Int = 20): TurnosResponse =
+        get("/api/admin/turnos", auth = true) {
+            parameter("page", page)
+            parameter("limit", limit)
+        }
+
+    private suspend inline fun <reified T> putJson(path: String, body: Any): T {
+        val token = tokenProvider.currentIdToken()
+            ?: throw ApiException("Not authenticated", statusCode = 401)
+        val response = httpClient.put(path) {
+            contentType(ContentType.Application.Json)
+            bearerAuth(token)
+            setBody(body)
         }
         return parse(response)
     }

@@ -1078,11 +1078,19 @@ fun AdminScreen(
     onApprove: (String) -> Unit,
     onReject: (String) -> Unit,
     onMarkPaid: (String) -> Unit,
+    onBack: (() -> Unit)? = null,
 ) {
     val statuses = listOf(null to "Todas", "reserved" to "Reservadas", "paid" to "Pagadas", "processing" to "Proceso", "cancelled" to "Anuladas")
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("Admin · Órdenes") },
+            title = { Text("ERP · Órdenes") },
+            navigationIcon = {
+                if (onBack != null) {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                    }
+                }
+            },
             actions = {
                 Text(
                     "Actualizar",

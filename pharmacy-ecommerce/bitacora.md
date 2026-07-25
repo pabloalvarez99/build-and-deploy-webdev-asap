@@ -3514,3 +3514,8 @@ Build local OK. Push → Vercel.
 - Webpay Plus via WebView token_ws form
 - Admin approve/reject reservation, mark paid
 
+
+## 2026-07-25 17:37 — Android Full ERP v1.0.0-erp
+- ERP hub: Dashboard, Ordenes, POS, Inventario, Clientes, Compras, Proveedores, Finanzas, Tareas, Turnos
+- ErpViewModel + APIs admin reales
+- assembleDebug OK
