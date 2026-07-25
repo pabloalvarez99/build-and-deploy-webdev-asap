@@ -3503,3 +3503,6 @@ Build local OK. Push → Vercel.
 - Account: puntos de fidelidad (GET /api/loyalty)
 - Track order by token (GET /api/tracking/:token)
 - Home shortcut to tracking
+
+## 2026-07-25 16:07 — Android v0.2.1 use points at checkout
+

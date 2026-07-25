@@ -13,8 +13,8 @@ android {
         applicationId = "cl.tufarmacia.native"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 3
+        versionName = "0.2.1"
 
         buildConfigField("String", "API_BASE_URL", "\"https://tu-farmacia.cl\"")
         buildConfigField(

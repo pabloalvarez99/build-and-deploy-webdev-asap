@@ -8,16 +8,17 @@ Pure Android **Kotlin + Jetpack Compose**. Separate natives path (iOS later = Sw
 | API | `https://tu-farmacia.cl` |
 | Auth | Firebase Identity Toolkit + `Authorization: Bearer` |
 
-## Features (current)
+## Features (current) — v0.2.1
 
-- Home + top sellers
+- Home + top sellers + track shortcut
 - Catalog: search, category chips, infinite scroll
 - Product detail + add to cart
-- Cart (DataStore persistence) + qty controls
-- Store pickup checkout (`POST /api/store-pickup`)
+- Cart (DataStore) + qty + store pickup checkout
+- Loyalty points on account + redeem at checkout
 - Login / register / session restore
 - My orders + order detail
-- Admin tab: list staff orders (`GET /api/admin/orders`)
+- Public tracking by token
+- Admin: orders filter/search + low-stock list
 
 ## Build
 
