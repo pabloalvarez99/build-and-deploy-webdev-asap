@@ -136,6 +136,7 @@ fun ErpDashboardScreen(
     state: ErpUiState,
     onBack: () -> Unit,
     onRefresh: () -> Unit,
+    onOpenModule: (String) -> Unit = {},
 ) {
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -164,27 +165,72 @@ fun ErpDashboardScreen(
             if (k != null) {
                 KpiCard("Ventas hoy", formatClp(k.ventasHoy), "${k.ordenesHoy} órdenes")
                 KpiCard("Ventas ayer", formatClp(k.ventasAyer), "${k.ordenesAyer} órdenes")
-                KpiCard("Webpay pendientes", "${k.pedidosPendientesWebpay}", "por confirmar")
+                KpiCard(
+                    "Webpay pendientes",
+                    "${k.pedidosPendientesWebpay}",
+                    "por confirmar · tocar",
+                    onClick = { onOpenModule("erp_orders") },
+                )
             }
             state.operaciones?.pl?.let { pl ->
                 KpiCard("Margen bruto hoy", formatClp(pl.margenBrutoHoy), "${pl.margenPctHoy}% · costo ${formatClp(pl.costoHoy)}")
             }
             state.operaciones?.let { op ->
-                KpiCard("Stock crítico", "${op.stockCriticoCount}", "sin stock: ${op.stockCeroCount}")
-                KpiCard("Faltas pendientes", "${op.faltasPendingTotal}", "")
+                KpiCard(
+                    "Stock crítico",
+                    "${op.stockCriticoCount}",
+                    "sin stock: ${op.stockCeroCount} · tocar",
+                    onClick = { onOpenModule("erp_inventory") },
+                )
+                KpiCard(
+                    "Faltas pendientes",
+                    "${op.faltasPendingTotal}",
+                    "tocar",
+                    onClick = { onOpenModule("erp_faltas") },
+                )
             }
             state.dashboardExtras?.let { ex ->
-                ex.ocsToPay?.let { KpiCard("OCs por pagar", formatClp(it.total), "${it.count} facturas") }
-                ex.ocsOverdue?.let { KpiCard("OCs vencidas", formatClp(it.total), "${it.count}") }
-                ex.expiring?.let { KpiCard("Lotes por vencer", "${it.count}", "${it.products} productos") }
+                ex.ocsToPay?.let {
+                    KpiCard(
+                        "OCs por pagar",
+                        formatClp(it.total),
+                        "${it.count} facturas · tocar",
+                        onClick = { onOpenModule("erp_finance") },
+                    )
+                }
+                ex.ocsOverdue?.let {
+                    KpiCard(
+                        "OCs vencidas",
+                        formatClp(it.total),
+                        "${it.count} · tocar",
+                        onClick = { onOpenModule("erp_purchases") },
+                    )
+                }
+                ex.expiring?.let {
+                    KpiCard(
+                        "Lotes por vencer",
+                        "${it.count}",
+                        "${it.products} productos · tocar",
+                        onClick = { onOpenModule("erp_batches") },
+                    )
+                }
             }
             state.operaciones?.reservasUrgentes?.takeIf { it.isNotEmpty() }?.let { list ->
-                Text("Reservas urgentes (<6h)", fontWeight = FontWeight.Bold)
+                Text(
+                    "Reservas urgentes (<6h)",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable { onOpenModule("erp_pos") },
+                )
                 list.forEach { r ->
-                    Card(Modifier.fillMaxWidth()) {
+                    Card(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { onOpenModule("erp_pos") },
+                    ) {
                         Column(Modifier.padding(12.dp)) {
                             Text(r.nombre ?: "Cliente", fontWeight = FontWeight.Medium)
                             Text("Código ${r.pickupCode} · ${formatClp(r.total)}")
+                            Text("Abrir POS para retiro", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
@@ -194,9 +240,16 @@ fun ErpDashboardScreen(
 }
 
 @Composable
-private fun KpiCard(title: String, value: String, subtitle: String) {
+private fun KpiCard(
+    title: String,
+    value: String,
+    subtitle: String,
+    onClick: (() -> Unit)? = null,
+) {
     Card(
-        Modifier.fillMaxWidth(),
+        Modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
     ) {
         Column(Modifier.padding(14.dp)) {
@@ -1058,6 +1111,10 @@ fun ErpUnknownBarcodesScreen(
     onBack: () -> Unit,
     onRefresh: () -> Unit,
     onDismiss: (String) -> Unit,
+    onStartResolve: (String) -> Unit,
+    onCancelResolve: () -> Unit,
+    onResolveSearch: (String) -> Unit,
+    onResolvePick: (String) -> Unit,
 ) {
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -1072,11 +1129,51 @@ fun ErpUnknownBarcodesScreen(
             },
         )
         LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            state.resolveBarcode?.let { barcode ->
+                item {
+                    Card(
+                        Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    ) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Asignar $barcode a producto", fontWeight = FontWeight.Bold)
+                            OutlinedTextField(
+                                value = state.resolveSearch,
+                                onValueChange = onResolveSearch,
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = { Text("Buscar producto…") },
+                                singleLine = true,
+                            )
+                            state.resolveResults.forEach { p ->
+                                Card(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onResolvePick(p.id) },
+                                ) {
+                                    Column(Modifier.padding(10.dp)) {
+                                        Text(p.name, fontWeight = FontWeight.Medium, maxLines = 2)
+                                        Text("Stock ${p.stock} · ${formatClp(p.unitPrice())}", style = MaterialTheme.typography.bodySmall)
+                                    }
+                                }
+                            }
+                            OutlinedButton(onClick = onCancelResolve, modifier = Modifier.fillMaxWidth()) {
+                                Text("Cancelar")
+                            }
+                        }
+                    }
+                }
+            }
             items(state.unknownBarcodes, key = { it.barcode }) { b ->
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(b.barcode, fontWeight = FontWeight.Bold)
-                        Text("Scans: ${b.scanCount} · última ${b.lastScannedAt?.take(16)?.replace('T', ' ') ?: "—"}", style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            "Scans: ${b.scanCount} · última ${b.lastScannedAt?.take(16)?.replace('T', ' ') ?: "—"}",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        Button(onClick = { onStartResolve(b.barcode) }, modifier = Modifier.fillMaxWidth()) {
+                            Text("Asignar a producto")
+                        }
                         OutlinedButton(onClick = { onDismiss(b.barcode) }, modifier = Modifier.fillMaxWidth()) {
                             Text("Descartar / falso positivo")
                         }

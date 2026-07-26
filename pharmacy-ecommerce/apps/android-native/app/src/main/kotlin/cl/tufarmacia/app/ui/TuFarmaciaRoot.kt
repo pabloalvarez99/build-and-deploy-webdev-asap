@@ -240,6 +240,11 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onOpenLogin = { navController.navigate(Routes.Login) },
                     onOpenRegister = { navController.navigate(Routes.Register) },
                     onOpenProduct = { slug -> navController.navigate(Routes.product(slug)) },
+                    onRefresh = {
+                        vm.loadProducts()
+                        vm.loadTopSellers()
+                        vm.loadCategories()
+                    },
                 )
             }
             composable(Routes.Catalog) {
@@ -460,6 +465,37 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     state = erp,
                     onBack = { navController.popBackStack() },
                     onRefresh = erpVm::loadDashboard,
+                    onOpenModule = { route ->
+                        when (route) {
+                            Routes.ErpOrders -> {
+                                vm.loadAdminOrders()
+                                vm.loadLowStock()
+                                navController.navigate(Routes.ErpOrders)
+                            }
+                            Routes.ErpInventory -> {
+                                erpVm.loadInventory()
+                                navController.navigate(Routes.ErpInventory)
+                            }
+                            Routes.ErpFaltas -> {
+                                erpVm.loadFaltas()
+                                navController.navigate(Routes.ErpFaltas)
+                            }
+                            Routes.ErpFinance -> {
+                                erpVm.loadFinanzas()
+                                navController.navigate(Routes.ErpFinance)
+                            }
+                            Routes.ErpPurchases -> {
+                                erpVm.loadPurchaseOrders()
+                                navController.navigate(Routes.ErpPurchases)
+                            }
+                            Routes.ErpBatches -> {
+                                erpVm.loadBatches()
+                                navController.navigate(Routes.ErpBatches)
+                            }
+                            Routes.ErpPos -> navController.navigate(Routes.ErpPos)
+                            else -> navController.navigate(route)
+                        }
+                    },
                 )
             }
             composable(Routes.ErpOrders) {
@@ -557,6 +593,10 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onBack = { navController.popBackStack() },
                     onRefresh = erpVm::loadUnknownBarcodes,
                     onDismiss = erpVm::dismissUnknownBarcode,
+                    onStartResolve = erpVm::startResolveBarcode,
+                    onCancelResolve = erpVm::clearResolveBarcode,
+                    onResolveSearch = erpVm::setResolveSearch,
+                    onResolvePick = erpVm::resolveUnknownBarcode,
                 )
             }
             composable(Routes.ErpClients) {

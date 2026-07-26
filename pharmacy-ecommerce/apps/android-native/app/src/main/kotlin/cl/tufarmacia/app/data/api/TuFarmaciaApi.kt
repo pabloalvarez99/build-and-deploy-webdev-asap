@@ -306,6 +306,31 @@ class TuFarmaciaApi(
         }
     }
 
+    /** Assign unknown barcode to existing product. */
+    suspend fun adminResolveUnknownBarcode(barcode: String, productId: String) {
+        val token = tokenProvider.currentIdToken()
+            ?: throw ApiException("Not authenticated", statusCode = 401)
+        val response = httpClient.post("/api/admin/barcodes/unknown/resolve") {
+            contentType(ContentType.Application.Json)
+            bearerAuth(token)
+            setBody(
+                buildJsonObject {
+                    put("barcode", barcode)
+                    put("product_id", productId)
+                },
+            )
+        }
+        if (!response.status.isSuccess()) {
+            val text = response.bodyAsText()
+            val err = runCatching { json.decodeFromString<ApiError>(text) }.getOrNull()
+            throw ApiException(
+                message = err?.error ?: err?.detail ?: text.ifBlank { "HTTP ${response.status.value}" },
+                statusCode = response.status.value,
+                code = err?.code,
+            )
+        }
+    }
+
     suspend fun adminApList(paid: Boolean = false, page: Int = 1, limit: Int = 30): ApListResponse =
         get("/api/admin/finanzas/ap", auth = true) {
             parameter("paid", paid)

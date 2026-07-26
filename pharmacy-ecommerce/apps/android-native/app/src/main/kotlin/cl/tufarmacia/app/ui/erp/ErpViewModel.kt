@@ -104,6 +104,9 @@ data class ErpUiState(
     val gastoCategories: List<GastoCategoryDto> = emptyList(),
     val devoluciones: List<DevolucionDto> = emptyList(),
     val unknownBarcodes: List<UnknownBarcodeDto> = emptyList(),
+    val resolveBarcode: String? = null,
+    val resolveSearch: String = "",
+    val resolveResults: List<Product> = emptyList(),
     val editProduct: AdminProductDto? = null,
     val editProductBusy: Boolean = false,
     val tasks: List<TaskDto> = emptyList(),
@@ -329,11 +332,20 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun addPosLine(p: Product) {
+        if (p.stock <= 0) {
+            _state.update {
+                it.copy(snackbar = "Sin stock: ${p.name}. Usa Inventario → Falta si aplica.")
+            }
+            return
+        }
         _state.update { s ->
             val existing = s.posCart.find { it.productId == p.id }
             val cart = if (existing != null) {
                 s.posCart.map {
-                    if (it.productId == p.id) it.copy(quantity = it.quantity + 1) else it
+                    if (it.productId == p.id) {
+                        val next = (it.quantity + 1).coerceAtMost(p.stock.coerceAtLeast(1))
+                        it.copy(quantity = next)
+                    } else it
                 }
             } else {
                 s.posCart + PosLine(p.id, p.name, p.unitPrice(), 1)
@@ -772,6 +784,58 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                 loadUnknownBarcodes()
             } catch (e: Exception) {
                 _state.update { it.copy(snackbar = e.message) }
+            }
+        }
+    }
+
+    fun startResolveBarcode(barcode: String) {
+        _state.update {
+            it.copy(resolveBarcode = barcode, resolveSearch = "", resolveResults = emptyList())
+        }
+    }
+
+    fun clearResolveBarcode() {
+        _state.update {
+            it.copy(resolveBarcode = null, resolveSearch = "", resolveResults = emptyList())
+        }
+    }
+
+    fun setResolveSearch(q: String) {
+        _state.update { it.copy(resolveSearch = q) }
+        if (q.length < 2) {
+            _state.update { it.copy(resolveResults = emptyList()) }
+            return
+        }
+        viewModelScope.launch {
+            delay(300)
+            if (_state.value.resolveSearch != q) return@launch
+            try {
+                val page = container.api.listProducts(page = 1, limit = 12, search = q, activeOnly = true)
+                _state.update { it.copy(resolveResults = page.products) }
+            } catch (_: Exception) {
+                _state.update { it.copy(resolveResults = emptyList()) }
+            }
+        }
+    }
+
+    fun resolveUnknownBarcode(productId: String) {
+        viewModelScope.launch {
+            val barcode = _state.value.resolveBarcode ?: return@launch
+            try {
+                container.api.adminResolveUnknownBarcode(barcode, productId)
+                _state.update {
+                    it.copy(
+                        snackbar = "Barcode $barcode asignado",
+                        resolveBarcode = null,
+                        resolveSearch = "",
+                        resolveResults = emptyList(),
+                    )
+                }
+                loadUnknownBarcodes()
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(snackbar = (e as? ApiException)?.message ?: e.message)
+                }
             }
         }
     }

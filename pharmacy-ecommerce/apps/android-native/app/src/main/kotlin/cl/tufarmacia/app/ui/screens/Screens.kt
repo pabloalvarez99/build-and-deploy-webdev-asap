@@ -117,6 +117,7 @@ fun HomeScreen(
     onOpenLogin: () -> Unit,
     onOpenRegister: () -> Unit,
     onOpenProduct: (String) -> Unit,
+    onRefresh: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -125,12 +126,25 @@ fun HomeScreen(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(
-            "Tu Farmacia",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-        )
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "Tu Farmacia",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                "Actualizar",
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .clickable(onClick = onRefresh)
+                    .padding(8.dp),
+            )
+        }
         Text(
             if (user != null) "Hola, ${user.name ?: user.email ?: "usuario"}"
             else "Farmacia en Coquimbo · adultos mayores",
@@ -1130,7 +1144,7 @@ fun AccountScreen(
             Text("Rol: ${user.role}")
             Text("UID: ${user.uid}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
             if (user.isAdmin) {
-                Text("Staff: pestaña Admin disponible", color = MaterialTheme.colorScheme.primary)
+                Text("Staff: pestaña ERP disponible", color = MaterialTheme.colorScheme.primary)
             }
             if (loyalty != null) {
                 Card(
@@ -1147,10 +1161,29 @@ fun AccountScreen(
                         )
                     }
                 }
+                if (loyalty.transactions.isNotEmpty()) {
+                    Text("Movimientos de puntos", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                    loyalty.transactions.take(15).forEach { tx ->
+                        Card(Modifier.fillMaxWidth()) {
+                            Column(Modifier.padding(12.dp)) {
+                                val sign = if (tx.points >= 0) "+" else ""
+                                Text(
+                                    "$sign${tx.points} pts",
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (tx.points >= 0) Color(0xFF16A34A) else MaterialTheme.colorScheme.error,
+                                )
+                                tx.reason?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                                tx.createdAt?.let {
+                                    Text(it.take(16).replace('T', ' '), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            Button(onClick = onOrders, modifier = Modifier.fillMaxWidth()) { Text("Mis pedidos") }
-            OutlinedButton(onClick = onTrack, modifier = Modifier.fillMaxWidth()) { Text("Rastrear pedido") }
-            OutlinedButton(onClick = onLogout, modifier = Modifier.fillMaxWidth()) { Text("Cerrar sesión") }
+            Button(onClick = onOrders, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text("Mis pedidos") }
+            OutlinedButton(onClick = onTrack, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text("Rastrear pedido") }
+            OutlinedButton(onClick = onLogout, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text("Cerrar sesión") }
         }
     }
 }
