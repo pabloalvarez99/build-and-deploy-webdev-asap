@@ -3570,3 +3570,8 @@ Build local OK. Push → Vercel.
 - Split ErpScreens → ErpModules/Pos/Inventory/Client/Purchase/Finance/Ops/Arqueo
 - scripts/install-debug.ps1|.sh + SIDELOAD.md
 - versionCode 15 / 1.8.0
+
+## 2026-07-26 - Android v1.8.1 UI/UX design polish
+- Theme + UiKit components; Home/PDP/Cart/Checkout/Account/Login redesign
+- Catalog chips/stock (prior); bottom nav; ERP hub cards
+- versionCode 16 / 1.8.1

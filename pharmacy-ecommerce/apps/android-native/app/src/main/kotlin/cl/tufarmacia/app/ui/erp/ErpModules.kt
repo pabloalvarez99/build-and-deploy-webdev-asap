@@ -1,5 +1,6 @@
 package cl.tufarmacia.app.ui.erp
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -39,6 +40,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -93,24 +95,25 @@ fun ErpHubScreen(
 ) {
     val isOwner = user?.role in setOf("owner", "admin")
     val modules = ERP_MODULES.filter { isOwner || !it.ownerOnly }
-    Column(Modifier.fillMaxSize()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         TopAppBar(
-            title = { Text("ERP Farmacia") },
+            title = { Text("ERP Farmacia", fontWeight = FontWeight.SemiBold) },
             actions = {
-                Text(
-                    "Tienda",
-                    modifier = Modifier
-                        .clickable(onClick = onBackToStore)
-                        .padding(16.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                )
+                TextButton(onClick = onBackToStore) {
+                    Text("Tienda")
+                }
             },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
         )
         Text(
             "${user?.email ?: ""} · ${user?.role ?: ""}",
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray,
+            color = Color(0xFF64748B),
         )
         LazyColumn(
             contentPadding = PaddingValues(16.dp),
@@ -158,13 +161,20 @@ fun ErpHubScreen(
                     Modifier
                         .fillMaxWidth()
                         .clickable { onOpen(mod.route) },
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
                 ) {
-                    Column(Modifier.padding(16.dp)) {
-                        Text(mod.title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                        Text(mod.subtitle, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                    Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                        Text(mod.title, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                        Text(mod.subtitle, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF64748B))
                         if (mod.ownerOnly) {
-                            Text("Solo dueño", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                            Text(
+                                "Solo dueño",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Medium,
+                            )
                         }
                     }
                 }
@@ -182,17 +192,22 @@ fun ErpDashboardScreen(
     onOpenModule: (String) -> Unit = {},
     onOpenPosPickup: (String) -> Unit = {},
 ) {
-    Column(Modifier.fillMaxSize()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         TopAppBar(
-            title = { Text("Dashboard") },
+            title = { Text("Dashboard", fontWeight = FontWeight.SemiBold) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                 }
             },
             actions = {
-                Text("Actualizar", Modifier.clickable(onClick = onRefresh).padding(16.dp), color = MaterialTheme.colorScheme.primary)
+                TextButton(onClick = onRefresh) { Text("Actualizar") }
             },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
         )
         if (state.loading && state.operaciones == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
@@ -297,12 +312,21 @@ internal fun KpiCard(
         Modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
     ) {
-        Column(Modifier.padding(14.dp)) {
-            Text(title, style = MaterialTheme.typography.labelMedium)
-            Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.bodySmall)
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(title, style = MaterialTheme.typography.labelMedium, color = Color(0xFF64748B))
+            Text(
+                value,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            if (subtitle.isNotBlank()) {
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Color(0xFF64748B))
+            }
         }
     }
 }

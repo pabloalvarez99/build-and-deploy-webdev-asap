@@ -1,6 +1,6 @@
 # Tu Farmacia — Android nativo Kotlin (Full ERP)
 
-**Application ID:** `cl.tufarmacia.native` · **Version:** 1.8.0  
+**Application ID:** `cl.tufarmacia.native` · **Version:** 1.8.1  
 Pure Kotlin + Jetpack Compose. Separate natives (iOS later = Swift).
 
 ## Storefront
@@ -54,6 +54,11 @@ app/src/main/kotlin/cl/tufarmacia/app/
   util/
 scripts/              # install-debug.ps1|.sh + SIDELOAD.md
 ```
+
+## v1.8.1
+- Design system: Theme tokens + UiKit (cards, buttons, pills, steppers, empty states)
+- Home hero + quick tiles; catalog/PDP/cart/checkout/account polish
+- Bottom nav colors; senior-friendly spacing & contrast
 
 ## v1.8.0
 - POS: recientes del turno + compartir ticket (share sheet / WhatsApp)

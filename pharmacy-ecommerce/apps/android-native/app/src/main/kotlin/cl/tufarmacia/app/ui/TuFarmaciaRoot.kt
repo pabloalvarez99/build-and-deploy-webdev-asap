@@ -17,8 +17,10 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -207,16 +209,18 @@ fun TuFarmaciaRoot(container: AppContainer) {
         topBar = {
             if (!state.isOnline) {
                 Text(
-                    "Sin conexión a internet",
+                    "Sin conexión a internet — algunas funciones no están disponibles",
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color(0xFFB91C1C))
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyMedium,
                 )
             }
         },
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             val route = navController.currentBackStackEntryAsState().value?.destination?.route
             val onTab = route != null && (
@@ -224,43 +228,63 @@ fun TuFarmaciaRoot(container: AppContainer) {
                 )
             // Only main tabs show bottom bar
             if (route in tabRoutes) {
-                NavigationBar(modifier = Modifier.height(72.dp)) {
+                NavigationBar(
+                    modifier = Modifier.height(76.dp),
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 3.dp,
+                ) {
+                    val itemColors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                        unselectedIconColor = Color(0xFF64748B),
+                        unselectedTextColor = Color(0xFF64748B),
+                    )
                     NavigationBarItem(
                         selected = route == Routes.Home,
                         onClick = { navController.navigateTab(Routes.Home) },
                         icon = { Icon(Icons.Default.Home, contentDescription = "Inicio") },
-                        label = { Text("Inicio") },
+                        label = { Text("Inicio", maxLines = 1) },
+                        colors = itemColors,
                     )
                     NavigationBarItem(
                         selected = route == Routes.Catalog,
                         onClick = { navController.navigateTab(Routes.Catalog) },
                         icon = { Icon(Icons.Default.ShoppingBag, contentDescription = "Catálogo") },
-                        label = { Text("Catálogo") },
+                        label = { Text("Catálogo", maxLines = 1) },
+                        colors = itemColors,
                     )
                     NavigationBarItem(
                         selected = route == Routes.Cart,
                         onClick = { navController.navigateTab(Routes.Cart) },
                         icon = {
                             BadgedBox(badge = {
-                                if (cartCount > 0) Badge { Text("$cartCount") }
+                                if (cartCount > 0) {
+                                    Badge(containerColor = MaterialTheme.colorScheme.primary) {
+                                        Text("$cartCount")
+                                    }
+                                }
                             }) {
                                 Icon(Icons.Default.ShoppingCart, contentDescription = "Carrito")
                             }
                         },
-                        label = { Text("Carrito") },
+                        label = { Text("Carrito", maxLines = 1) },
+                        colors = itemColors,
                     )
                     NavigationBarItem(
                         selected = route == Routes.Account,
                         onClick = { navController.navigateTab(Routes.Account) },
                         icon = { Icon(Icons.Default.Person, contentDescription = "Cuenta") },
-                        label = { Text("Cuenta") },
+                        label = { Text("Cuenta", maxLines = 1) },
+                        colors = itemColors,
                     )
                     if (state.user?.isAdmin == true) {
                         NavigationBarItem(
                             selected = route == Routes.Admin || route?.startsWith("erp_") == true,
                             onClick = { navController.navigateTab(Routes.Admin) },
                             icon = { Icon(Icons.Default.AdminPanelSettings, contentDescription = "ERP") },
-                            label = { Text("ERP") },
+                            label = { Text("ERP", maxLines = 1) },
+                            colors = itemColors,
                         )
                     }
                 }

@@ -28,12 +28,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -52,6 +54,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -68,6 +71,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -80,6 +84,27 @@ import cl.tufarmacia.app.data.model.LoyaltyResponse
 import cl.tufarmacia.app.data.model.TopSeller
 import cl.tufarmacia.app.data.model.TrackingResponse
 import cl.tufarmacia.app.ui.AppUiState
+import cl.tufarmacia.app.ui.components.EmptyState
+import cl.tufarmacia.app.ui.components.HeroBanner
+import cl.tufarmacia.app.ui.components.PillKind
+import cl.tufarmacia.app.ui.components.QtyStepper
+import cl.tufarmacia.app.ui.components.QuickActionTile
+import cl.tufarmacia.app.ui.components.SectionTitle
+import cl.tufarmacia.app.ui.components.StatusPill
+import cl.tufarmacia.app.ui.components.TfCard
+import cl.tufarmacia.app.ui.components.TfPrimaryButton
+import cl.tufarmacia.app.ui.components.TfSecondaryButton
+import cl.tufarmacia.app.ui.components.TfTextField
+import cl.tufarmacia.app.ui.theme.BorderSoft
+import cl.tufarmacia.app.ui.theme.BrandCyanSoft
+import cl.tufarmacia.app.ui.theme.Danger
+import cl.tufarmacia.app.ui.theme.DangerBg
+import cl.tufarmacia.app.ui.theme.Ink
+import cl.tufarmacia.app.ui.theme.InkMuted
+import cl.tufarmacia.app.ui.theme.Success
+import cl.tufarmacia.app.ui.theme.SuccessBg
+import cl.tufarmacia.app.ui.theme.Warning
+import cl.tufarmacia.app.ui.theme.WarningBg
 import cl.tufarmacia.app.util.formatClp
 import cl.tufarmacia.app.util.orderStatusLabel
 import cl.tufarmacia.app.util.orderStatusStyle
@@ -91,10 +116,23 @@ fun SplashScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0891B2)),
+            .background(MaterialTheme.colorScheme.primary),
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = Color.White.copy(alpha = 0.15f),
+            ) {
+                Text(
+                    "TF",
+                    modifier = Modifier.padding(horizontal = 22.dp, vertical = 14.dp),
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.headlineMedium,
+                )
+            }
+            Spacer(Modifier.height(20.dp))
             Text(
                 "Tu Farmacia",
                 style = MaterialTheme.typography.headlineLarge,
@@ -102,9 +140,9 @@ fun SplashScreen() {
                 fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(8.dp))
-            Text("Coquimbo · App nativa Android", color = Color.White.copy(alpha = 0.9f))
-            Spacer(Modifier.height(24.dp))
-            CircularProgressIndicator(color = Color.White)
+            Text("Coquimbo · Retiro en tienda", color = Color.White.copy(alpha = 0.9f))
+            Spacer(Modifier.height(28.dp))
+            CircularProgressIndicator(color = Color.White, strokeWidth = 3.dp)
         }
     }
 }
@@ -127,8 +165,9 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
-            .padding(20.dp),
+            .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Row(
@@ -136,85 +175,103 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                "Tu Farmacia",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
+            Column {
+                Text(
+                    "Tu Farmacia",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    if (user != null) "Hola, ${user.name ?: user.email ?: "usuario"}"
+                    else "Coquimbo · adultos mayores",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = InkMuted,
+                )
+            }
+            TextButton(onClick = onRefresh) {
+                Text("Actualizar")
+            }
+        }
+
+        HeroBanner(
+            title = if (productCount > 0) "$productCount productos listos" else "Tu farmacia de confianza",
+            subtitle = "Catálogo en vivo · carrito · retiro en tienda · misma cuenta web",
+        )
+
+        TfPrimaryButton(text = "Ver catálogo", onClick = onOpenCatalog)
+
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            QuickActionTile(
+                title = if (cartCount > 0) "Carrito ($cartCount)" else "Carrito",
+                subtitle = "Revisa y reserva",
+                icon = Icons.Default.ShoppingCart,
+                onClick = onOpenCart,
+                modifier = Modifier.weight(1f),
+                highlight = cartCount > 0,
             )
-            Text(
-                "Actualizar",
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .clickable(onClick = onRefresh)
-                    .padding(8.dp),
+            QuickActionTile(
+                title = "Rastrear",
+                subtitle = "Código de pedido",
+                icon = Icons.Default.Search,
+                onClick = onOpenTrack,
+                modifier = Modifier.weight(1f),
             )
         }
-        Text(
-            if (user != null) "Hola, ${user.name ?: user.email ?: "usuario"}"
-            else "Farmacia en Coquimbo · adultos mayores",
-            style = MaterialTheme.typography.bodyLarge,
-        )
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Kotlin nativo · Jetpack Compose", fontWeight = FontWeight.SemiBold)
-                Text(
-                    "Catálogo en vivo, carrito local, retiro en tienda y mis pedidos. " +
-                        "Misma API de producción que la web.",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                if (productCount > 0) {
-                    Text("$productCount productos en catálogo", fontWeight = FontWeight.Medium)
+
+        if (user != null) {
+            QuickActionTile(
+                title = "Mis pedidos",
+                subtitle = "Historial y estados",
+                icon = Icons.Default.Person,
+                onClick = onOpenOrders,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        } else {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(Modifier.weight(1f)) {
+                    TfSecondaryButton(text = "Iniciar sesión", onClick = onOpenLogin)
+                }
+                Box(Modifier.weight(1f)) {
+                    TfPrimaryButton(text = "Crear cuenta", onClick = onOpenRegister)
                 }
             }
         }
-        Button(onClick = onOpenCatalog, modifier = Modifier.fillMaxWidth()) {
-            Text("Ver catálogo")
-        }
-        OutlinedButton(onClick = onOpenCart, modifier = Modifier.fillMaxWidth()) {
-            Text(if (cartCount > 0) "Carrito ($cartCount)" else "Carrito")
-        }
-        OutlinedButton(onClick = onOpenTrack, modifier = Modifier.fillMaxWidth()) {
-            Text("Rastrear pedido")
-        }
-        if (user != null) {
-            OutlinedButton(onClick = onOpenOrders, modifier = Modifier.fillMaxWidth()) {
-                Text("Mis pedidos")
-            }
-        } else {
-            OutlinedButton(onClick = onOpenLogin, modifier = Modifier.fillMaxWidth()) {
-                Text("Iniciar sesión")
-            }
-            OutlinedButton(onClick = onOpenRegister, modifier = Modifier.fillMaxWidth()) {
-                Text("Crear cuenta")
-            }
-        }
+
         if (topSellers.isNotEmpty()) {
-            Text("Más vendidos", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            SectionTitle("Más vendidos")
             topSellers.forEach { item ->
-                Card(
-                    Modifier
-                        .fillMaxWidth()
-                        .clickable { onOpenProduct(item.slug) },
-                ) {
+                TfCard(onClick = { onOpenProduct(item.slug) }) {
                     Row(
-                        Modifier.padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
                         ProductThumb(item.imageUrl, item.name)
-                        Column(Modifier.weight(1f)) {
-                            Text(item.name, maxLines = 2, fontWeight = FontWeight.Medium)
-                            Text(formatClp(item.price), color = MaterialTheme.colorScheme.primary)
-                            Text("${item.unitsSold} vendidos", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                item.name,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Ink,
+                            )
+                            Text(
+                                formatClp(item.price),
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            StatusPill("${item.unitsSold} vendidos", PillKind.Info)
                         }
                     }
                 }
             }
         }
+        Spacer(Modifier.height(8.dp))
     }
 }
 
@@ -609,99 +666,152 @@ fun ProductDetailScreen(
     onRetry: () -> Unit = {},
 ) {
     var qty by remember { mutableStateOf(1) }
-    Column(Modifier.fillMaxSize()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         TopAppBar(
-            title = { Text("Producto") },
+            title = { Text("Producto", fontWeight = FontWeight.SemiBold) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                 }
             },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
         )
         when {
             state.productDetailLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
-            state.productDetailError != null -> Column(
-                Modifier.fillMaxWidth().padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(state.productDetailError, color = MaterialTheme.colorScheme.error)
-                Spacer(Modifier.height(12.dp))
-                Button(onClick = onRetry) { Text("Reintentar") }
-            }
+            state.productDetailError != null -> EmptyState(
+                title = "No se pudo cargar",
+                subtitle = state.productDetailError,
+                actionLabel = "Reintentar",
+                onAction = onRetry,
+            )
             state.productDetail != null -> {
                 val p = state.productDetail
-                Column(
-                    Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    if (p.imageUrl != null) {
-                        AsyncImage(
-                            model = p.imageUrl,
-                            contentDescription = p.name,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(280.dp)
-                                .clip(RoundedCornerShape(12.dp)),
-                            contentScale = ContentScale.Crop,
-                        )
-                    }
-                    Text(p.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                    Text(formatClp(p.unitPrice()), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-                    p.activeIngredient?.let { Text("Principio activo: $it") }
-                    p.laboratory?.let { Text("Laboratorio: $it") }
-                    p.presentation?.let { Text("Presentación: $it") }
-                    p.therapeuticAction?.let { Text("Acción: $it") }
-                    p.prescriptionType?.let { Text("Receta: $it") }
-                    p.categoryName?.let { Text("Categoría: $it") }
-                    val stockLabel = when {
-                        p.stock <= 0 -> "Agotado"
-                        p.stock <= 5 -> "Stock bajo (${p.stock})"
-                        else -> "Disponible (${p.stock})"
-                    }
-                    Text(
-                        stockLabel,
-                        fontWeight = FontWeight.SemiBold,
-                        color = when {
-                            p.stock <= 0 -> MaterialTheme.colorScheme.error
-                            p.stock <= 5 -> Color(0xFFD97706)
-                            else -> Color(0xFF16A34A)
-                        },
-                    )
-                    p.description?.let {
-                        Text(it, style = MaterialTheme.typography.bodyMedium, color = Color.DarkGray)
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Cantidad:", fontWeight = FontWeight.Medium)
-                        IconButton(
-                            onClick = { qty = (qty - 1).coerceAtLeast(1) },
-                            enabled = qty > 1,
-                        ) { Icon(Icons.Default.Remove, contentDescription = "-") }
-                        Text("$qty", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                        IconButton(
-                            onClick = { qty = (qty + 1).coerceAtMost(p.stock.coerceAtLeast(1)) },
-                            enabled = qty < p.stock,
-                        ) { Icon(Icons.Default.Add, contentDescription = "+") }
-                    }
-                    Text("Subtotal: ${formatClp(p.unitPrice() * qty)}", fontWeight = FontWeight.SemiBold)
-                    Spacer(Modifier.height(8.dp))
-                    Button(
-                        onClick = { onAddToCart(p, qty) },
-                        enabled = p.stock > 0,
-                        modifier = Modifier.fillMaxWidth(),
+                val disc = p.discountPercent ?: 0
+                Column(Modifier.fillMaxSize()) {
+                    Column(
+                        Modifier
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState())
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
-                        Text(if (p.stock > 0) "Agregar $qty al carrito" else "Sin stock")
+                        if (p.imageUrl != null) {
+                            AsyncImage(
+                                model = p.imageUrl,
+                                contentDescription = p.name,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(260.dp)
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(Color(0xFFF1F5F9)),
+                                contentScale = ContentScale.Crop,
+                            )
+                        } else {
+                            Box(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(180.dp)
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(BrandCyanSoft),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text("Rx", style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                        Text(p.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Ink)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text(
+                                formatClp(p.unitPrice()),
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            if (disc > 0) StatusPill("-$disc%", PillKind.Danger)
+                        }
+                        StatusPill(
+                            text = when {
+                                p.stock <= 0 -> "Agotado"
+                                p.stock <= 5 -> "Pocas unidades (${p.stock})"
+                                else -> "Disponible (${p.stock})"
+                            },
+                            kind = when {
+                                p.stock <= 0 -> PillKind.Danger
+                                p.stock <= 5 -> PillKind.Warning
+                                else -> PillKind.Success
+                            },
+                        )
+                        TfCard {
+                            p.activeIngredient?.let { MetaLine("Principio activo", it) }
+                            p.laboratory?.let { MetaLine("Laboratorio", it) }
+                            p.presentation?.let { MetaLine("Presentación", it) }
+                            p.therapeuticAction?.let { MetaLine("Acción", it) }
+                            p.prescriptionType?.let { MetaLine("Receta", it) }
+                            p.categoryName?.let { MetaLine("Categoría", it) }
+                        }
+                        p.description?.takeIf { it.isNotBlank() }?.let {
+                            SectionTitle("Descripción")
+                            Text(it, style = MaterialTheme.typography.bodyLarge, color = InkMuted)
+                        }
+                        Spacer(Modifier.height(8.dp))
                     }
-                    OutlinedButton(onClick = onOpenCart, modifier = Modifier.fillMaxWidth()) {
-                        Text("Ver carrito")
+                    Surface(
+                        tonalElevation = 3.dp,
+                        shadowElevation = 8.dp,
+                        color = MaterialTheme.colorScheme.surface,
+                    ) {
+                        Column(
+                            Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                QtyStepper(
+                                    qty = qty,
+                                    onMinus = { qty = (qty - 1).coerceAtLeast(1) },
+                                    onPlus = { qty = (qty + 1).coerceAtMost(p.stock.coerceAtLeast(1)) },
+                                    minusEnabled = qty > 1,
+                                    plusEnabled = qty < p.stock,
+                                )
+                                Text(
+                                    formatClp(p.unitPrice() * qty),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Ink,
+                                )
+                            }
+                            TfPrimaryButton(
+                                text = if (p.stock > 0) "Agregar $qty al carrito" else "Sin stock",
+                                onClick = { onAddToCart(p, qty) },
+                                enabled = p.stock > 0,
+                            )
+                            TfSecondaryButton(text = "Ver carrito", onClick = onOpenCart)
+                        }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun MetaLine(label: String, value: String) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = InkMuted)
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = Ink)
     }
 }
 
@@ -720,9 +830,13 @@ fun CartScreen(
     onRefresh: () -> Unit = {},
 ) {
     val total = lines.sumOf { it.lineTotal }
-    Column(Modifier.fillMaxSize()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         TopAppBar(
-            title = { Text("Carrito") },
+            title = { Text("Carrito", fontWeight = FontWeight.SemiBold) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -730,75 +844,82 @@ fun CartScreen(
             },
             actions = {
                 if (lines.isNotEmpty()) {
-                    Text(
-                        if (revalidating) "…" else "Actualizar",
-                        Modifier.clickable(onClick = onRefresh).padding(16.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+                    TextButton(onClick = onRefresh) {
+                        Text(if (revalidating) "…" else "Actualizar")
+                    }
                     IconButton(onClick = onClear) {
-                        Icon(Icons.Default.Delete, contentDescription = "Vaciar")
+                        Icon(Icons.Default.Delete, contentDescription = "Vaciar", tint = Danger)
                     }
                 }
             },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
         )
         if (lines.isEmpty()) {
-            Column(
-                Modifier.fillMaxSize().padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Text("Tu carrito está vacío", fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.height(12.dp))
-                Button(onClick = onBrowse) { Text("Ir al catálogo") }
-            }
+            EmptyState(
+                title = "Tu carrito está vacío",
+                subtitle = "Agrega medicamentos desde el catálogo para reservar retiro en tienda.",
+                actionLabel = "Ir al catálogo",
+                onAction = onBrowse,
+            )
         } else {
             if (warnings.isNotEmpty()) {
-                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                    warnings.forEach { w ->
-                        Text(w, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                Surface(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = DangerBg,
+                ) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        warnings.forEach { w ->
+                            Text(w, color = Danger, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             }
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(lines, key = { it.productId }) { line ->
-                    Card(Modifier.fillMaxWidth()) {
-                        Row(
-                            Modifier.padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
+                    TfCard {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             ProductThumb(line.imageUrl, line.productName)
                             Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(line.productName, maxLines = 2, fontWeight = FontWeight.Medium)
-                                Text(formatClp(line.unitPrice), color = MaterialTheme.colorScheme.primary)
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    IconButton(onClick = { onQty(line.productId, line.quantity - 1) }) {
-                                        Icon(Icons.Default.Remove, contentDescription = "-")
-                                    }
-                                    Text("${line.quantity}", fontWeight = FontWeight.Bold)
-                                    IconButton(onClick = { onQty(line.productId, line.quantity + 1) }) {
-                                        Icon(Icons.Default.Add, contentDescription = "+")
-                                    }
-                                }
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(
+                                    line.productName,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    fontWeight = FontWeight.SemiBold,
+                                    style = MaterialTheme.typography.titleSmall,
+                                )
+                                Text(formatClp(line.unitPrice), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                                QtyStepper(
+                                    qty = line.quantity,
+                                    onMinus = { onQty(line.productId, line.quantity - 1) },
+                                    onPlus = { onQty(line.productId, line.quantity + 1) },
+                                    minusEnabled = true,
+                                )
                             }
                             Column(horizontalAlignment = Alignment.End) {
-                                Text(formatClp(line.lineTotal), fontWeight = FontWeight.SemiBold)
+                                Text(formatClp(line.lineTotal), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
                                 IconButton(onClick = { onRemove(line.productId) }) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Quitar")
+                                    Icon(Icons.Default.Delete, contentDescription = "Quitar", tint = InkMuted)
                                 }
                             }
                         }
                     }
                 }
             }
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Total: ${formatClp(total)}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Button(onClick = onCheckout, modifier = Modifier.fillMaxWidth()) {
-                    Text("Retiro en tienda")
+            Surface(shadowElevation = 10.dp, color = MaterialTheme.colorScheme.surface) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Total", style = MaterialTheme.typography.titleMedium, color = InkMuted)
+                        Text(formatClp(total), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Ink)
+                    }
+                    TfPrimaryButton(text = "Continuar · retiro en tienda", onClick = onCheckout)
                 }
             }
         }
@@ -817,14 +938,19 @@ fun CheckoutScreen(
     onSubmitWebpay: () -> Unit,
     onDone: () -> Unit,
 ) {
-    Column(Modifier.fillMaxSize()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         TopAppBar(
-            title = { Text("Retiro en tienda") },
+            title = { Text("Retiro en tienda", fontWeight = FontWeight.SemiBold) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                 }
             },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
         )
         if (state.checkoutSuccess != null) {
             CheckoutSuccess(state.checkoutSuccess, onDone)
@@ -837,10 +963,27 @@ fun CheckoutScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Text("${lines.size} productos · ${formatClp(lines.sumOf { it.lineTotal })}", fontWeight = FontWeight.Medium)
-            if (state.user == null) {
-                Text("Debes iniciar sesión para reservar.", color = MaterialTheme.colorScheme.error)
+            TfCard {
+                Text("Resumen", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleSmall)
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "${lines.size} productos · ${formatClp(lines.sumOf { it.lineTotal })}",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                )
             }
+            if (state.user == null) {
+                Surface(shape = RoundedCornerShape(12.dp), color = DangerBg, modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        "Debes iniciar sesión para reservar.",
+                        Modifier.padding(12.dp),
+                        color = Danger,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+            }
+            SectionTitle("Tus datos")
             OutlinedTextField(
                 value = state.checkoutName,
                 onValueChange = { onField(it, null, null, null, null) },
@@ -889,25 +1032,21 @@ fun CheckoutScreen(
             state.checkoutError?.let {
                 Text(it, color = MaterialTheme.colorScheme.error)
             }
-            Button(
+            TfPrimaryButton(
+                text = "Reservar retiro (sin pago online)",
                 onClick = onSubmitPickup,
                 enabled = !state.checkoutLoading && lines.isNotEmpty() && state.user != null,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                if (state.checkoutLoading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
-                else Text("Retiro en tienda (sin pago online)")
-            }
-            OutlinedButton(
+                loading = state.checkoutLoading,
+            )
+            TfSecondaryButton(
+                text = "Pagar con Webpay",
                 onClick = onSubmitWebpay,
                 enabled = !state.checkoutLoading && lines.isNotEmpty() && state.user != null,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Pagar con Webpay")
-            }
+            )
             Text(
-                "Webpay abre Transbank en un WebView seguro. Retiro en tienda crea reserva con código.",
+                "Webpay abre Transbank de forma segura. El retiro genera un código de 6 dígitos.",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray,
+                color = InkMuted,
             )
         }
     }
@@ -919,21 +1058,31 @@ private fun CheckoutSuccess(res: StorePickupResponse, onDone: () -> Unit) {
         Modifier
             .fillMaxSize()
             .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("¡Reserva lista!", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Código de retiro", color = Color.Gray)
-        Text(res.pickupCode, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        Text("Total: ${formatClp(res.total)}")
-        Text("Orden: ${res.orderId}", style = MaterialTheme.typography.labelSmall)
-        res.expiresAt?.let { Text("Vence: $it", style = MaterialTheme.typography.bodySmall) }
-        res.trackingToken?.let {
-            Text("Token seguimiento:", style = MaterialTheme.typography.labelMedium)
-            Text(it, style = MaterialTheme.typography.bodySmall)
+        Surface(shape = CircleShape, color = SuccessBg, modifier = Modifier.size(72.dp)) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("✓", style = MaterialTheme.typography.headlineLarge, color = Success, fontWeight = FontWeight.Bold)
+            }
         }
-        Spacer(Modifier.height(16.dp))
-        Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text("Listo") }
+        Text("¡Reserva lista!", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("Código de retiro", color = InkMuted)
+        Surface(shape = RoundedCornerShape(16.dp), color = BrandCyanSoft, modifier = Modifier.fillMaxWidth()) {
+            Text(
+                res.pickupCode,
+                modifier = Modifier.padding(vertical = 20.dp).fillMaxWidth(),
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+            )
+        }
+        Text("Total: ${formatClp(res.total)}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        Text("Orden: ${res.orderId.take(8)}…", style = MaterialTheme.typography.labelMedium, color = InkMuted)
+        res.expiresAt?.let { Text("Vence: $it", style = MaterialTheme.typography.bodySmall, color = InkMuted) }
+        Spacer(Modifier.height(8.dp))
+        TfPrimaryButton(text = "Listo", onClick = onDone)
     }
 }
 
@@ -945,23 +1094,22 @@ fun OrdersScreen(
     onOpen: (String) -> Unit,
     onRefresh: () -> Unit,
 ) {
-    Column(Modifier.fillMaxSize()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         TopAppBar(
-            title = { Text("Mis pedidos") },
+            title = { Text("Mis pedidos", fontWeight = FontWeight.SemiBold) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                 }
             },
             actions = {
-                Text(
-                    "Actualizar",
-                    modifier = Modifier
-                        .clickable(onClick = onRefresh)
-                        .padding(16.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                )
+                TextButton(onClick = onRefresh) { Text("Actualizar") }
             },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
         )
         when {
             state.ordersLoading && state.orders.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -974,9 +1122,10 @@ fun OrdersScreen(
                 Text(state.ordersError, color = MaterialTheme.colorScheme.error)
                 Button(onClick = onRefresh) { Text("Reintentar") }
             }
-            state.orders.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Aún no tienes pedidos")
-            }
+            state.orders.isEmpty() -> EmptyState(
+                title = "Aún no tienes pedidos",
+                subtitle = "Cuando reserves o pagues, aparecerán aquí con su estado.",
+            )
             else -> LazyColumn(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -1005,13 +1154,33 @@ private fun OrderCard(
         Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(statusStyle.label, fontWeight = FontWeight.Bold, color = statusStyle.color)
-                Text(formatClp(order.total), fontWeight = FontWeight.SemiBold)
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Surface(shape = RoundedCornerShape(8.dp), color = statusStyle.color.copy(alpha = 0.12f)) {
+                    Text(
+                        statusStyle.label,
+                        Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        fontWeight = FontWeight.Bold,
+                        color = statusStyle.color,
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                }
+                Text(
+                    formatClp(order.total),
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Ink,
+                )
             }
-            Text("ID: ${order.id.take(8)}…", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+            Text("ID: ${order.id.take(8)}…", style = MaterialTheme.typography.labelSmall, color = InkMuted)
             order.createdAt?.let { Text(it.take(16).replace('T', ' '), style = MaterialTheme.typography.bodySmall) }
             order.pickupCode?.let { Text("Retiro: $it", fontWeight = FontWeight.Medium) }
             order.guestName?.let { Text("$it ${order.guestSurname.orEmpty()}".trim()) }
@@ -1056,14 +1225,19 @@ fun OrderDetailScreen(
     onRefund: (() -> Unit)? = null,
     onCancel: (() -> Unit)? = null,
 ) {
-    Column(Modifier.fillMaxSize()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         TopAppBar(
-            title = { Text("Detalle pedido") },
+            title = { Text("Detalle pedido", fontWeight = FontWeight.SemiBold) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                 }
             },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
         )
         if (state.orderDetailLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
@@ -1117,21 +1291,21 @@ fun OrderDetailScreen(
                 }
             }
             Spacer(Modifier.height(8.dp))
-            Text("Ítems", fontWeight = FontWeight.Bold)
+            SectionTitle("Ítems")
             o.lineItems.forEach { item ->
-                Card(Modifier.fillMaxWidth()) {
+                TfCard {
                     Row(
-                        Modifier.padding(12.dp),
+                        Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(Modifier.weight(1f)) {
-                            Text(item.productName, fontWeight = FontWeight.Medium)
-                            Text("x${item.quantity}")
+                            Text(item.productName, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            Text("×${item.quantity}", color = InkMuted, style = MaterialTheme.typography.bodySmall)
                         }
-                        Text(formatClp(item.priceAtPurchase))
+                        Text(formatClp(item.priceAtPurchase), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                     }
                 }
-                Spacer(Modifier.height(6.dp))
             }
         }
     }
@@ -1151,10 +1325,14 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    Column(Modifier.fillMaxSize()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         if (!embedded) {
             TopAppBar(
-                title = { Text("Iniciar sesión") },
+                title = { Text("Iniciar sesión", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     if (onBack != null) {
                         IconButton(onClick = onBack) {
@@ -1162,46 +1340,60 @@ fun LoginScreen(
                         }
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         } else {
-            TopAppBar(title = { Text("Cuenta") })
+            TopAppBar(
+                title = { Text("Cuenta", fontWeight = FontWeight.SemiBold) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+            )
         }
         Column(
             Modifier
                 .fillMaxWidth()
                 .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text("Misma cuenta de tu-farmacia.cl", style = MaterialTheme.typography.bodyMedium)
-            OutlinedTextField(
+            if (!embedded) {
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Tu Farmacia", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+                        Text("Coquimbo · misma cuenta web", color = Color.White.copy(alpha = 0.9f), style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+            Text(
+                "Misma cuenta de tu-farmacia.cl",
+                style = MaterialTheme.typography.bodyLarge,
+                color = InkMuted,
+            )
+            TfTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Correo") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                label = "Correo",
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next, keyboardType = KeyboardType.Email),
             )
-            OutlinedTextField(
+            TfTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Contraseña") },
-                singleLine = true,
+                label = "Contraseña",
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(
                     onDone = { if (email.isNotBlank() && password.isNotBlank()) onLogin(email, password) },
                 ),
             )
-            if (error != null) Text(error, color = MaterialTheme.colorScheme.error)
-            Button(
+            if (error != null) Text(error, color = Danger, fontWeight = FontWeight.Medium)
+            TfPrimaryButton(
+                text = "Entrar",
                 onClick = { onLogin(email, password) },
                 enabled = !loading && email.isNotBlank() && password.isNotBlank(),
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-            ) {
-                if (loading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                else Text("Entrar")
-            }
+                loading = loading,
+            )
             if (onForgotPassword != null) {
                 Text(
                     "¿Olvidaste tu contraseña?",
@@ -1212,9 +1404,7 @@ fun LoginScreen(
                 )
             }
             if (onRegister != null) {
-                OutlinedButton(onClick = onRegister, modifier = Modifier.fillMaxWidth().height(52.dp)) {
-                    Text("Crear cuenta")
-                }
+                TfSecondaryButton(text = "Crear cuenta", onClick = onRegister)
             }
         }
     }
@@ -1230,47 +1420,47 @@ fun ForgotPasswordScreen(
     onBack: () -> Unit,
 ) {
     var email by remember { mutableStateOf("") }
-    Column(Modifier.fillMaxSize()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         TopAppBar(
-            title = { Text("Recuperar contraseña") },
+            title = { Text("Recuperar contraseña", fontWeight = FontWeight.SemiBold) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                 }
             },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
         )
         Column(
             Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(
-                "Te enviaremos un enlace a tu correo para restablecer la contraseña (Firebase).",
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Correo") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            )
-            if (error != null) Text(error, color = MaterialTheme.colorScheme.error)
-            if (success) {
+            TfCard {
                 Text(
-                    "Correo enviado. Revisa tu bandeja (y spam).",
-                    color = Color(0xFF16A34A),
-                    fontWeight = FontWeight.Medium,
+                    "Te enviaremos un enlace a tu correo para restablecer la contraseña.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = InkMuted,
                 )
             }
-            Button(
+            TfTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = "Correo",
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            )
+            if (error != null) Text(error, color = Danger, fontWeight = FontWeight.Medium)
+            if (success) {
+                StatusPill("Correo enviado. Revisa bandeja y spam.", PillKind.Success)
+            }
+            TfPrimaryButton(
+                text = "Enviar enlace",
                 onClick = { onSend(email.trim()) },
                 enabled = !loading && email.contains("@"),
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-            ) {
-                if (loading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
-                else Text("Enviar enlace")
-            }
+                loading = loading,
+            )
         }
     }
 }
@@ -1289,14 +1479,19 @@ fun RegisterScreen(
     var surname by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
 
-    Column(Modifier.fillMaxSize()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         TopAppBar(
-            title = { Text("Crear cuenta") },
+            title = { Text("Crear cuenta", fontWeight = FontWeight.SemiBold) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                 }
             },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
         )
         Column(
             Modifier
@@ -1305,41 +1500,39 @@ fun RegisterScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre *") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = surname, onValueChange = { surname = it }, label = { Text("Apellido") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(
+            Text("Datos personales", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium, color = Ink)
+            TfTextField(value = name, onValueChange = { name = it }, label = "Nombre *")
+            TfTextField(value = surname, onValueChange = { surname = it }, label = "Apellido")
+            TfTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Correo *") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                label = "Correo *",
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             )
-            OutlinedTextField(
+            TfTextField(
                 value = phone,
                 onValueChange = { phone = it },
-                label = { Text("Teléfono") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                label = "Teléfono",
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             )
-            OutlinedTextField(
+            TfTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Contraseña * (mín. 6)") },
-                singleLine = true,
+                label = "Contraseña * (mín. 6)",
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
             )
-            if (error != null) Text(error, color = MaterialTheme.colorScheme.error)
-            Button(
+            if (error != null) Text(error, color = Danger, fontWeight = FontWeight.Medium)
+            TfPrimaryButton(
+                text = "Registrarme",
                 onClick = { onRegister(email, password, name, surname, phone) },
                 enabled = !loading && email.isNotBlank() && password.length >= 6 && name.isNotBlank(),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                if (loading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                else Text("Registrarme")
-            }
+                loading = loading,
+            )
+            Text(
+                "Al crear la cuenta usas el mismo acceso que en tu-farmacia.cl",
+                style = MaterialTheme.typography.bodySmall,
+                color = InkMuted,
+            )
         }
     }
 }
@@ -1364,46 +1557,48 @@ fun AccountScreen(
 ) {
     var name by remember(user.name) { mutableStateOf(user.name.orEmpty()) }
     var phone by remember(profilePhone) { mutableStateOf(profilePhone) }
-    Column(Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Mi cuenta") })
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
+        TopAppBar(
+            title = { Text("Mi cuenta", fontWeight = FontWeight.SemiBold) },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+        )
         Column(
             Modifier
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(user.name ?: "Usuario", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Text(user.email ?: "—")
-            Text("Rol: ${user.role}")
-            if (user.isAdmin) {
-                Text("Staff: pestaña ERP disponible", color = MaterialTheme.colorScheme.primary)
+            TfCard {
+                Text(user.name ?: "Usuario", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Ink)
+                Spacer(Modifier.height(4.dp))
+                Text(user.email ?: "—", color = InkMuted)
+                Spacer(Modifier.height(8.dp))
+                StatusPill("Rol: ${user.role}", if (user.isAdmin) PillKind.Info else PillKind.Neutral)
+                if (user.isAdmin) {
+                    Spacer(Modifier.height(6.dp))
+                    Text("Staff: pestaña ERP disponible", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
+                }
             }
-            Text("Editar perfil", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Nombre") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-            )
-            OutlinedTextField(
+            SectionTitle("Editar perfil")
+            TfTextField(value = name, onValueChange = { name = it }, label = "Nombre")
+            TfTextField(
                 value = phone,
                 onValueChange = { phone = it },
-                label = { Text("Teléfono") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
+                label = "Teléfono",
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             )
-            if (profileError != null) Text(profileError, color = MaterialTheme.colorScheme.error)
-            Button(
+            if (profileError != null) Text(profileError, color = Danger, fontWeight = FontWeight.Medium)
+            TfPrimaryButton(
+                text = "Guardar perfil",
                 onClick = { onSaveProfile(name, phone) },
                 enabled = !profileSaving,
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-            ) {
-                if (profileSaving) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
-                else Text("Guardar perfil")
-            }
-            Text("Accesibilidad", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                loading = profileSaving,
+            )
+            SectionTitle("Accesibilidad")
             Row(
                 Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1429,17 +1624,31 @@ fun AccountScreen(
                 )
             }
             if (loyalty != null) {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("Fidelidad", fontWeight = FontWeight.SemiBold)
-                        Text("${loyalty.points} puntos · valor ~${formatClp(loyalty.pointsValue.toDouble())}")
+                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Fidelidad", fontWeight = FontWeight.SemiBold, color = Color.White.copy(alpha = 0.9f))
+                        Text(
+                            "${loyalty.points} puntos",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                        )
+                        Text(
+                            "Valor aprox. ${formatClp(loyalty.pointsValue.toDouble())}",
+                            color = Color.White.copy(alpha = 0.9f),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
                         Text(
                             "Actualizar puntos",
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.clickable(onClick = onRefreshLoyalty),
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier
+                                .clickable(onClick = onRefreshLoyalty)
+                                .padding(top = 4.dp),
                         )
                     }
                 }
@@ -1463,9 +1672,15 @@ fun AccountScreen(
                     }
                 }
             }
-            Button(onClick = onOrders, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text("Mis pedidos") }
-            OutlinedButton(onClick = onTrack, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text("Rastrear pedido") }
-            OutlinedButton(onClick = onLogout, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text("Cerrar sesión") }
+            SectionTitle("Acciones")
+            TfPrimaryButton(text = "Mis pedidos", onClick = onOrders)
+            TfSecondaryButton(text = "Rastrear pedido", onClick = onTrack)
+            OutlinedButton(
+                onClick = onLogout,
+                modifier = Modifier.fillMaxWidth().height(54.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Danger),
+            ) { Text("Cerrar sesión", fontWeight = FontWeight.SemiBold) }
         }
     }
 }
@@ -1481,45 +1696,70 @@ fun TrackScreen(
     onTrack: () -> Unit,
     onBack: () -> Unit,
 ) {
-    Column(Modifier.fillMaxSize()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         TopAppBar(
-            title = { Text("Rastrear pedido") },
+            title = { Text("Rastrear pedido", fontWeight = FontWeight.SemiBold) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                 }
             },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
         )
         Column(
             Modifier
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text("Pega el token de seguimiento del email o SMS.", style = MaterialTheme.typography.bodyMedium)
-            OutlinedTextField(
+            TfCard {
+                Text(
+                    "Pega el token de seguimiento del email o SMS.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = InkMuted,
+                )
+            }
+            TfTextField(
                 value = token,
                 onValueChange = onTokenChange,
-                label = { Text("Token de tracking") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
+                label = "Token de tracking",
             )
-            if (error != null) Text(error, color = MaterialTheme.colorScheme.error)
-            Button(onClick = onTrack, enabled = !loading && token.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
-                if (loading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                else Text("Buscar")
-            }
+            if (error != null) Text(error, color = Danger, fontWeight = FontWeight.Medium)
+            TfPrimaryButton(
+                text = "Buscar",
+                onClick = onTrack,
+                enabled = !loading && token.isNotBlank(),
+                loading = loading,
+            )
             result?.let { r ->
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(orderStatusLabel(r.status), fontWeight = FontWeight.Bold, color = orderStatusStyle(r.status).color)
-                        Text("Total: ${formatClp(r.total)}")
-                        r.pickupCode?.let { Text("Código retiro: $it", fontWeight = FontWeight.SemiBold) }
-                        r.customerName?.let { Text("Cliente: $it") }
-                        r.createdAt?.let { Text("Creado: $it", style = MaterialTheme.typography.bodySmall) }
-                        Text("Ítems:", fontWeight = FontWeight.Medium)
-                        r.items.forEach { item ->
-                            Text("• ${item.productName} x${item.quantity} — ${formatClp(item.priceAtPurchase)}")
+                val st = orderStatusStyle(r.status)
+                TfCard {
+                    Surface(shape = RoundedCornerShape(8.dp), color = st.color.copy(alpha = 0.12f)) {
+                        Text(
+                            orderStatusLabel(r.status),
+                            Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            fontWeight = FontWeight.Bold,
+                            color = st.color,
+                        )
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Text("Total: ${formatClp(r.total)}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Ink)
+                    r.pickupCode?.let {
+                        Spacer(Modifier.height(6.dp))
+                        Text("Código retiro: $it", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleMedium)
+                    }
+                    r.customerName?.let { Text("Cliente: $it", color = InkMuted) }
+                    r.createdAt?.let { Text("Creado: $it", style = MaterialTheme.typography.bodySmall, color = InkMuted) }
+                    Spacer(Modifier.height(8.dp))
+                    SectionTitle("Ítems")
+                    r.items.forEach { item ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("${item.productName} ×${item.quantity}", Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            Text(formatClp(item.priceAtPurchase), fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -1546,9 +1786,13 @@ fun AdminScreen(
     onBack: (() -> Unit)? = null,
 ) {
     val statuses = listOf(null to "Todas", "reserved" to "Reservadas", "paid" to "Pagadas", "processing" to "Proceso", "cancelled" to "Anuladas")
-    Column(Modifier.fillMaxSize()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         TopAppBar(
-            title = { Text("ERP · Órdenes") },
+            title = { Text("ERP · Órdenes", fontWeight = FontWeight.SemiBold) },
             navigationIcon = {
                 if (onBack != null) {
                     IconButton(onClick = onBack) {
@@ -1557,23 +1801,23 @@ fun AdminScreen(
                 }
             },
             actions = {
-                Text(
-                    "Actualizar",
-                    modifier = Modifier
-                        .clickable(onClick = onRefresh)
-                        .padding(16.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                )
+                TextButton(onClick = onRefresh) { Text("Actualizar") }
             },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
         )
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Usuario: ${user?.email ?: "—"} · ${user?.role ?: "—"}", style = MaterialTheme.typography.bodySmall)
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("Usuario: ${user?.email ?: "—"} · ${user?.role ?: "—"}", style = MaterialTheme.typography.bodySmall, color = InkMuted)
             OutlinedTextField(
                 value = state.adminSearch,
                 onValueChange = onSearchChange,
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Buscar nombre, teléfono, id…") },
                 singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { onSearch() }),
             )
