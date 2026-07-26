@@ -644,6 +644,7 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     },
                     onSubmit = erpVm::submitPos,
                     onClear = erpVm::clearPos,
+                    onDismissLastSale = erpVm::clearLastPosSale,
                 )
             }
             composable(Routes.ErpInventory) {
@@ -704,6 +705,7 @@ fun TuFarmaciaRoot(container: AppContainer) {
                 ErpClientsScreen(
                     state = erp,
                     onBack = { navController.popBackStack() },
+                    onQueryChange = erpVm::setClientsQuery,
                     onOpen = { c ->
                         val isGuest = c.type.equals("guest", ignoreCase = true) || c.id.isNullOrBlank()
                         val pathId = if (isGuest) "guest" else c.id.orEmpty()

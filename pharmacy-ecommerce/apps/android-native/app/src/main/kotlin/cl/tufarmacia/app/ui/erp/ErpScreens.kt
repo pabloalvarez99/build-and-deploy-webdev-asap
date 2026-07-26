@@ -444,6 +444,7 @@ fun ErpPosScreen(
     onMarkPaidPickup: (String) -> Unit,
     onSubmit: () -> Unit,
     onClear: () -> Unit,
+    onDismissLastSale: () -> Unit = {},
 ) {
     var name by remember(state.posCustomer) { mutableStateOf(state.posCustomer) }
     var phone by remember(state.posPhone) { mutableStateOf(state.posPhone) }
@@ -478,6 +479,32 @@ fun ErpPosScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            state.lastPosSale?.let { sale ->
+                item {
+                    Card(
+                        Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+                    ) {
+                        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("Última venta OK", fontWeight = FontWeight.Bold)
+                            Text(
+                                formatClp(sale.total),
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                "${sale.itemCount} ítems · ${sale.paymentLabel}" +
+                                    (sale.customer?.let { " · $it" } ?: ""),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                            sale.orderId?.let {
+                                Text("ID ${it.take(8)}…", style = MaterialTheme.typography.labelSmall)
+                            }
+                            TextButton(onClick = onDismissLastSale) { Text("Cerrar ticket") }
+                        }
+                    }
+                }
+            }
             item {
                 Text("Código de barras", fontWeight = FontWeight.SemiBold)
                 Row(
@@ -728,7 +755,19 @@ fun ErpClientsScreen(
     state: ErpUiState,
     onBack: () -> Unit,
     onOpen: (ClienteDto) -> Unit = {},
+    onQueryChange: (String) -> Unit = {},
 ) {
+    val q = state.clientsQuery.trim().lowercase()
+    val filtered = if (q.isEmpty()) {
+        state.clients
+    } else {
+        state.clients.filter { c ->
+            listOfNotNull(c.name, c.surname, c.email, c.phone)
+                .joinToString(" ")
+                .lowercase()
+                .contains(q)
+        }
+    }
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             title = { Text("Clientes") },
@@ -738,11 +777,20 @@ fun ErpClientsScreen(
                 }
             },
         )
+        OutlinedTextField(
+            value = state.clientsQuery,
+            onValueChange = onQueryChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            placeholder = { Text("Buscar nombre, email, tel…") },
+            singleLine = true,
+        )
         if (state.loading && state.clients.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         } else {
             LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(state.clients, key = { it.id ?: it.email ?: it.hashCode().toString() }) { c ->
+                items(filtered, key = { it.id ?: it.email ?: it.hashCode().toString() }) { c ->
                     Card(
                         Modifier
                             .fillMaxWidth()
@@ -760,6 +808,15 @@ fun ErpClientsScreen(
                             )
                             Text("Toca para detalle", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                         }
+                    }
+                }
+                if (filtered.isEmpty()) {
+                    item {
+                        Text(
+                            if (q.isEmpty()) "Sin clientes" else "Sin coincidencias para «${state.clientsQuery}»",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray,
+                        )
                     }
                 }
             }

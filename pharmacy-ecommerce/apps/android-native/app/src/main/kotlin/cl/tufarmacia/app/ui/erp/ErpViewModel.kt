@@ -62,6 +62,14 @@ data class PosLine(
     val lineTotal: Double get() = unitPrice * quantity
 }
 
+data class LastPosSale(
+    val orderId: String?,
+    val total: Double,
+    val paymentLabel: String,
+    val itemCount: Int,
+    val customer: String?,
+)
+
 data class ErpUiState(
     val loading: Boolean = false,
     val error: String? = null,
@@ -94,8 +102,10 @@ data class ErpUiState(
     val posPickupCode: String = "",
     val posPickup: PosPickupOrder? = null,
     val posPickupLoading: Boolean = false,
+    val lastPosSale: LastPosSale? = null,
 
     val clients: List<ClienteDto> = emptyList(),
+    val clientsQuery: String = "",
     val suppliers: List<SupplierDto> = emptyList(),
     val purchaseOrders: List<PurchaseOrderDto> = emptyList(),
     val purchaseOrderDetail: PurchaseOrderDto? = null,
@@ -491,6 +501,14 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    fun clearLastPosSale() {
+        _state.update { it.copy(lastPosSale = null) }
+    }
+
+    fun setClientsQuery(q: String) {
+        _state.update { it.copy(clientsQuery = q) }
+    }
+
     fun submitPos() {
         viewModelScope.launch {
             val s = _state.value
@@ -502,6 +520,15 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
             val discount = s.posDiscount.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 0.0
             val total = (subtotal - discount).coerceAtLeast(0.0)
             val method = s.posPayment
+            val itemCount = s.posCart.sumOf { it.quantity }
+            val customerSnap = s.posCustomer.ifBlank { null }
+            val paymentLabel = when (method) {
+                "pos_cash" -> "Efectivo"
+                "pos_debit" -> "Débito"
+                "pos_credit" -> "Crédito"
+                "pos_mixed" -> "Mixta"
+                else -> method
+            }
 
             val cashAmount: Double?
             val cardAmount: Double?
@@ -554,6 +581,7 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                         notes = s.posNotes.ifBlank { null },
                     ),
                 )
+                val saleTotal = res.total?.toDoubleOrNull() ?: total
                 _state.update {
                     it.copy(
                         posBusy = false,
@@ -562,7 +590,14 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                         posCashAmount = "",
                         posCardAmount = "",
                         posNotes = "",
-                        snackbar = "Venta OK ${res.id?.take(8) ?: ""} total ${res.total ?: ""}",
+                        lastPosSale = LastPosSale(
+                            orderId = res.id,
+                            total = saleTotal,
+                            paymentLabel = paymentLabel,
+                            itemCount = itemCount,
+                            customer = customerSnap,
+                        ),
+                        snackbar = "Venta OK ${res.id?.take(8) ?: ""} · ${formatClpLocal(saleTotal)}",
                     )
                 }
             } catch (e: Exception) {
@@ -575,6 +610,9 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
             }
         }
     }
+
+    private fun formatClpLocal(amount: Double): String =
+        cl.tufarmacia.app.util.formatClp(amount)
 
     fun loadAvisos() {
         viewModelScope.launch {

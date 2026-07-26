@@ -1,6 +1,6 @@
 # Tu Farmacia — Android nativo Kotlin (Full ERP)
 
-**Application ID:** `cl.tufarmacia.native` · **Version:** 1.7.0  
+**Application ID:** `cl.tufarmacia.native` · **Version:** 1.7.1  
 Pure Kotlin + Jetpack Compose. Separate natives (iOS later = Swift).
 
 ## Storefront
@@ -48,6 +48,10 @@ app/src/main/kotlin/cl/tufarmacia/app/
   ui/WebpayActivity.kt
   util/               # OrderStatusLabels, ChileValidation, Money
 ```
+
+## v1.7.1
+- Clientes: búsqueda local nombre/email/tel
+- POS: tarjeta última venta (total · medio · ítems)
 
 ## v1.7.0
 - Arqueo write: fondo inicial, cerrar turno, turno farmacéutico

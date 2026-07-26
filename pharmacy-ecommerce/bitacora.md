@@ -3559,3 +3559,7 @@ Build local OK. Push → Vercel.
 - Order detail staff actions; POS confirm dialog + notas + pickup prefill from dashboard
 - Tareas create; reposicion email express
 - versionCode 13 / 1.7.0; assembleDebug green
+
+## 2026-07-26 - Android v1.7.1 polish
+- Clientes search filter; POS last-sale ticket card
+- versionCode 14 / 1.7.1
