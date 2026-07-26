@@ -16,6 +16,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val container = (application as TuFarmaciaApp).container
         setContent {
+            // Outer theme for splash; TuFarmaciaRoot re-applies with user prefs
             TuFarmaciaTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     TuFarmaciaRoot(container = container)

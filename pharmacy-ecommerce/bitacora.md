@@ -3548,3 +3548,7 @@ Build local OK. Push → Vercel.
 ## 2026-07-26 - Android v1.5.1 UX polish
 - Dashboard KPI deep-links; barcode assign-to-product; loyalty txs
 - Home refresh; POS block zero-stock add
+
+## 2026-07-26 - Android v1.6.0
+- Camera barcode ML Kit; forgot password; profile edit
+- Offline banner; a11y font scale + high contrast

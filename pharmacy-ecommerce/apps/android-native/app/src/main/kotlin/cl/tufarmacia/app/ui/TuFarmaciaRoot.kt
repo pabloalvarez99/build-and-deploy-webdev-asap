@@ -1,5 +1,12 @@
 package cl.tufarmacia.app.ui
 
+import android.app.Activity
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AdminPanelSettings
@@ -16,17 +23,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import android.app.Activity
-import android.content.Intent
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -38,8 +42,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import cl.tufarmacia.app.data.AppContainer
-import cl.tufarmacia.app.ui.screens.AccountScreen
-import cl.tufarmacia.app.ui.screens.AdminScreen
+import cl.tufarmacia.app.data.FontScalePref
 import cl.tufarmacia.app.ui.erp.ErpArqueoScreen
 import cl.tufarmacia.app.ui.erp.ErpBatchesScreen
 import cl.tufarmacia.app.ui.erp.ErpClientsScreen
@@ -59,9 +62,12 @@ import cl.tufarmacia.app.ui.erp.ErpSuppliersScreen
 import cl.tufarmacia.app.ui.erp.ErpTasksScreen
 import cl.tufarmacia.app.ui.erp.ErpUnknownBarcodesScreen
 import cl.tufarmacia.app.ui.erp.ErpViewModel
+import cl.tufarmacia.app.ui.screens.AccountScreen
+import cl.tufarmacia.app.ui.screens.AdminScreen
 import cl.tufarmacia.app.ui.screens.CartScreen
 import cl.tufarmacia.app.ui.screens.CatalogScreen
 import cl.tufarmacia.app.ui.screens.CheckoutScreen
+import cl.tufarmacia.app.ui.screens.ForgotPasswordScreen
 import cl.tufarmacia.app.ui.screens.HomeScreen
 import cl.tufarmacia.app.ui.screens.LoginScreen
 import cl.tufarmacia.app.ui.screens.OrderDetailScreen
@@ -70,6 +76,7 @@ import cl.tufarmacia.app.ui.screens.ProductDetailScreen
 import cl.tufarmacia.app.ui.screens.RegisterScreen
 import cl.tufarmacia.app.ui.screens.SplashScreen
 import cl.tufarmacia.app.ui.screens.TrackScreen
+import cl.tufarmacia.app.ui.theme.TuFarmaciaTheme
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -107,6 +114,7 @@ private object Routes {
     const val Track = "track"
     const val Product = "product/{slug}"
     const val OrderDetail = "order/{id}"
+    const val ForgotPassword = "forgot_password"
 
     fun product(slug: String) =
         "product/${URLEncoder.encode(slug, StandardCharsets.UTF_8.toString())}"
@@ -135,6 +143,24 @@ fun TuFarmaciaRoot(container: AppContainer) {
             }
         }
     }
+    val posScanLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val code = result.data?.getStringExtra(BarcodeScannerActivity.EXTRA_BARCODE)
+            if (!code.isNullOrBlank()) erpVm.scanBarcode(code)
+        }
+    }
+    val inventoryScanLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val code = result.data?.getStringExtra(BarcodeScannerActivity.EXTRA_BARCODE)
+            if (!code.isNullOrBlank()) {
+                erpVm.setInventoryBarcode(code)
+            }
+        }
+    }
 
     LaunchedEffect(state.snackbar) {
         val msg = state.snackbar ?: return@LaunchedEffect
@@ -157,11 +183,6 @@ fun TuFarmaciaRoot(container: AppContainer) {
         vm.consumeWebpayRedirect()
     }
 
-    if (!state.bootstrapped) {
-        SplashScreen()
-        return
-    }
-
     val tabRoutes = buildSet {
         add(Routes.Home)
         add(Routes.Catalog)
@@ -170,8 +191,30 @@ fun TuFarmaciaRoot(container: AppContainer) {
         if (state.user?.isAdmin == true) add(Routes.Admin)
     }
 
+    TuFarmaciaTheme(
+        fontScale = state.userPrefs.fontScale,
+        highContrast = state.userPrefs.highContrast,
+    ) {
+    if (!state.bootstrapped) {
+        SplashScreen()
+        return@TuFarmaciaTheme
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
+            if (!state.isOnline) {
+                Text(
+                    "Sin conexión a internet",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFB91C1C))
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+        },
         bottomBar = {
             val route = navController.currentBackStackEntryAsState().value?.destination?.route
             val onTab = route != null && (
@@ -350,17 +393,38 @@ fun TuFarmaciaRoot(container: AppContainer) {
                         onLogin = vm::login,
                         embedded = true,
                         onRegister = { navController.navigate(Routes.Register) },
+                        onForgotPassword = {
+                            vm.clearForgotState()
+                            navController.navigate(Routes.ForgotPassword)
+                        },
                     )
                 } else {
                     AccountScreen(
                         user = state.user!!,
                         loyalty = state.loyalty,
+                        profilePhone = state.profilePhone,
+                        profileSaving = state.profileSaving,
+                        profileError = state.profileError,
+                        fontScaleKey = state.userPrefs.fontScale.key,
+                        highContrast = state.userPrefs.highContrast,
                         onLogout = vm::logout,
                         onOrders = { navController.navigate(Routes.Orders) },
                         onTrack = { navController.navigate(Routes.Track) },
                         onRefreshLoyalty = vm::loadLoyalty,
+                        onSaveProfile = vm::updateProfile,
+                        onFontScale = { key -> vm.setFontScale(FontScalePref.fromKey(key)) },
+                        onHighContrast = vm::setHighContrast,
                     )
                 }
+            }
+            composable(Routes.ForgotPassword) {
+                ForgotPasswordScreen(
+                    loading = state.forgotLoading,
+                    error = state.forgotError,
+                    success = state.forgotSuccess,
+                    onSend = vm::sendPasswordReset,
+                    onBack = { navController.popBackStack() },
+                )
             }
             composable(Routes.Track) {
                 TrackScreen(
@@ -526,6 +590,9 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onSearch = erpVm::searchPosProducts,
                     onBarcodeChange = erpVm::setPosBarcode,
                     onScanBarcode = { erpVm.scanBarcode() },
+                    onOpenCamera = {
+                        posScanLauncher.launch(Intent(context, BarcodeScannerActivity::class.java))
+                    },
                     onAdd = erpVm::addPosLine,
                     onQty = erpVm::setPosQty,
                     onPayment = erpVm::setPosPayment,
@@ -559,6 +626,9 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onBarcodeChange = erpVm::setInventoryBarcode,
                     onCustomDeltaChange = erpVm::setInventoryCustomDelta,
                     onAdjustBarcode = erpVm::adjustStockByBarcode,
+                    onOpenCamera = {
+                        inventoryScanLauncher.launch(Intent(context, BarcodeScannerActivity::class.java))
+                    },
                     onAdjust = { id, d -> erpVm.adjustStock(id, d, null) },
                     onCreateFalta = { id, name -> erpVm.createFalta(id, name) },
                     onEditProduct = { id ->
@@ -687,9 +757,14 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     embedded = false,
                     onBack = { navController.popBackStack() },
                     onRegister = { navController.navigate(Routes.Register) },
+                    onForgotPassword = {
+                        vm.clearForgotState()
+                        navController.navigate(Routes.ForgotPassword)
+                    },
                 )
             }
         }
+    }
     }
 }
 

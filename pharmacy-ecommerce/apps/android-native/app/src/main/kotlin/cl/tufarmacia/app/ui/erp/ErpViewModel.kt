@@ -167,7 +167,12 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun setInventoryBarcode(code: String) {
-        _state.update { it.copy(inventoryBarcode = code) }
+        _state.update {
+            it.copy(
+                inventoryBarcode = code,
+                snackbar = if (code.isNotBlank()) "Código listo — ingresa Δ y OK" else null,
+            )
+        }
     }
 
     fun setInventoryCustomDelta(delta: String) {

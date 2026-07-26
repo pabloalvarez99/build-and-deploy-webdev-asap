@@ -1,6 +1,6 @@
 # Tu Farmacia — Android nativo Kotlin (Full ERP)
 
-**Application ID:** `cl.tufarmacia.native` · **Version:** 1.5.1  
+**Application ID:** `cl.tufarmacia.native` · **Version:** 1.6.0  
 Pure Kotlin + Jetpack Compose. Separate natives (iOS later = Swift).
 
 ## Storefront
@@ -47,3 +47,9 @@ app/src/main/kotlin/cl/tufarmacia/app/
   ui/WebpayActivity.kt
   util/               # OrderStatusLabels, ChileValidation, Money
 ```
+
+## v1.6.0
+- Camera barcode (ML Kit) on POS + inventory
+- Forgot password (Firebase) + edit profile (name/phone)
+- Offline banner when no network
+- Accessibility: font Normal/Grande/Extra + high contrast (DataStore)

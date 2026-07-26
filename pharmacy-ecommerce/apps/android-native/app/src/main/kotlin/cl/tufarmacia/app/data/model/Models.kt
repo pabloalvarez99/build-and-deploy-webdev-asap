@@ -64,6 +64,18 @@ data class MeResponse(
 )
 
 @Serializable
+data class ProfileDto(
+    val id: String? = null,
+    val phone: String? = null,
+    @SerialName("loyalty_points") val loyaltyPoints: Int = 0,
+)
+
+@Serializable
+data class ProfileResponse(
+    val profile: ProfileDto? = null,
+)
+
+@Serializable
 data class ApiError(
     val error: String? = null,
     val code: String? = null,

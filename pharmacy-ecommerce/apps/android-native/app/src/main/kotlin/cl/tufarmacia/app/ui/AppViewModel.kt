@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import cl.tufarmacia.app.data.AppContainer
+import cl.tufarmacia.app.data.FontScalePref
+import cl.tufarmacia.app.data.UserPrefs
 import cl.tufarmacia.app.data.api.ApiException
 import cl.tufarmacia.app.data.model.AuthUser
 import cl.tufarmacia.app.data.model.CartLine
@@ -33,6 +35,14 @@ data class AppUiState(
     val user: AuthUser? = null,
     val loginLoading: Boolean = false,
     val loginError: String? = null,
+    val forgotLoading: Boolean = false,
+    val forgotError: String? = null,
+    val forgotSuccess: Boolean = false,
+    val profilePhone: String = "",
+    val profileSaving: Boolean = false,
+    val profileError: String? = null,
+    val userPrefs: UserPrefs = UserPrefs(),
+    val isOnline: Boolean = true,
 
     val products: List<Product> = emptyList(),
     val productsLoading: Boolean = false,
@@ -104,6 +114,16 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
 
     init {
         viewModelScope.launch {
+            container.userPreferences.prefs.collect { prefs ->
+                _state.update { it.copy(userPrefs = prefs) }
+            }
+        }
+        viewModelScope.launch {
+            container.networkMonitor.isOnline.collect { online ->
+                _state.update { it.copy(isOnline = online) }
+            }
+        }
+        viewModelScope.launch {
             val user = runCatching { container.sessionRepository.restore() }.getOrNull()
             _state.update {
                 it.copy(
@@ -111,6 +131,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     user = user,
                     checkoutEmail = user?.email.orEmpty(),
                     checkoutName = user?.name.orEmpty(),
+                    profilePhone = "",
                 )
             }
             loadProducts()
@@ -121,6 +142,70 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 loadLoyalty()
             }
             if (user?.isAdmin == true) loadAdminOrders()
+        }
+    }
+
+    fun setFontScale(scale: FontScalePref) {
+        viewModelScope.launch { container.userPreferences.setFontScale(scale) }
+    }
+
+    fun setHighContrast(enabled: Boolean) {
+        viewModelScope.launch { container.userPreferences.setHighContrast(enabled) }
+    }
+
+    fun sendPasswordReset(email: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(forgotLoading = true, forgotError = null, forgotSuccess = false) }
+            try {
+                container.authApi.sendPasswordResetEmail(email)
+                _state.update {
+                    it.copy(forgotLoading = false, forgotSuccess = true, snackbar = "Revisa tu correo")
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        forgotLoading = false,
+                        forgotError = (e as? ApiException)?.message ?: e.message ?: "Error al enviar",
+                    )
+                }
+            }
+        }
+    }
+
+    fun clearForgotState() {
+        _state.update { it.copy(forgotError = null, forgotSuccess = false) }
+    }
+
+    fun updateProfile(name: String, phone: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(profileSaving = true, profileError = null) }
+            try {
+                if (phone.isNotBlank()) {
+                    container.api.updateProfilePhone(phone.trim())
+                }
+                if (name.isNotBlank()) {
+                    val token = container.sessionRepository.tokenProvider.currentIdToken()
+                    if (token != null) {
+                        container.authApi.updateDisplayName(token, name.trim())
+                    }
+                }
+                val me = container.api.me()
+                _state.update {
+                    it.copy(
+                        profileSaving = false,
+                        user = me.user,
+                        profilePhone = phone.trim(),
+                        snackbar = "Perfil actualizado",
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        profileSaving = false,
+                        profileError = (e as? ApiException)?.message ?: e.message ?: "Error perfil",
+                    )
+                }
+            }
         }
     }
 

@@ -13,8 +13,8 @@ android {
         applicationId = "cl.tufarmacia.native"
         minSdk = 26
         targetSdk = 35
-        versionCode = 11
-        versionName = "1.5.1"
+        versionCode = 12
+        versionName = "1.6.0"
 
         buildConfigField("String", "API_BASE_URL", "\"https://tu-farmacia.cl\"")
         buildConfigField(
@@ -62,6 +62,13 @@ dependencies {
     implementation(libs.datastore.preferences)
     implementation(libs.coil.compose)
     implementation(libs.serialization.json)
+
+    // Camera barcode (POS / inventory)
+    implementation(libs.camerax.core)
+    implementation(libs.camerax.camera2)
+    implementation(libs.camerax.lifecycle)
+    implementation(libs.camerax.view)
+    implementation(libs.mlkit.barcode)
 
     // Pure Android networking (Kotlin + OkHttp engine)
     implementation(libs.ktor.client.core)

@@ -8,6 +8,7 @@ import cl.tufarmacia.app.data.model.PaginatedOrders
 import cl.tufarmacia.app.data.model.PaginatedProducts
 import cl.tufarmacia.app.data.model.Product
 import cl.tufarmacia.app.data.model.LoyaltyResponse
+import cl.tufarmacia.app.data.model.ProfileResponse
 import cl.tufarmacia.app.data.model.RegisterRequest
 import cl.tufarmacia.app.data.model.RegisterResponse
 import cl.tufarmacia.app.data.model.StorePickupRequest
@@ -139,6 +140,17 @@ class TuFarmaciaApi(
         post("/api/auth/register", body = body, auth = false)
 
     suspend fun me(): MeResponse = get("/api/auth/me", auth = true)
+
+    suspend fun updateProfilePhone(phone: String): ProfileResponse {
+        val token = tokenProvider.currentIdToken()
+            ?: throw ApiException("Not authenticated", statusCode = 401)
+        val response = httpClient.patch("/api/profile") {
+            contentType(ContentType.Application.Json)
+            bearerAuth(token)
+            setBody(buildJsonObject { put("phone", phone) })
+        }
+        return parse(response)
+    }
 
     suspend fun loyalty(): LoyaltyResponse = get("/api/loyalty", auth = true)
 

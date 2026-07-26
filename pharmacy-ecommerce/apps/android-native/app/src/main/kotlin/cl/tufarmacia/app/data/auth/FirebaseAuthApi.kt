@@ -57,6 +57,51 @@ class FirebaseAuthApi(
         )
     }
 
+    /** Sends password-reset email via Firebase Identity Toolkit. */
+    suspend fun sendPasswordResetEmail(email: String) {
+        val response = httpClient.post(
+            "https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=$apiKey",
+        ) {
+            contentType(ContentType.Application.Json)
+            setBody(
+                buildJsonObject {
+                    put("requestType", "PASSWORD_RESET")
+                    put("email", email.trim())
+                },
+            )
+        }
+        val bodyText = response.bodyAsText()
+        if (!response.status.isSuccess()) {
+            val body = runCatching { json.decodeFromString<FirebaseSignInResponse>(bodyText) }.getOrNull()
+            val msg = body?.error?.message ?: bodyText
+            throw ApiException(friendlyAuthMessage(msg), statusCode = response.status.value)
+        }
+    }
+
+    /** Updates Firebase displayName; requires valid idToken. */
+    suspend fun updateDisplayName(idToken: String, displayName: String) {
+        val response = httpClient.post(
+            "https://identitytoolkit.googleapis.com/v1/accounts:update?key=$apiKey",
+        ) {
+            contentType(ContentType.Application.Json)
+            setBody(
+                buildJsonObject {
+                    put("idToken", idToken)
+                    put("displayName", displayName.trim())
+                    put("returnSecureToken", false)
+                },
+            )
+        }
+        if (!response.status.isSuccess()) {
+            val bodyText = response.bodyAsText()
+            val body = runCatching { json.decodeFromString<FirebaseSignInResponse>(bodyText) }.getOrNull()
+            throw ApiException(
+                body?.error?.message ?: "No se pudo actualizar el nombre",
+                statusCode = response.status.value,
+            )
+        }
+    }
+
     suspend fun refreshIdToken(refreshToken: String): SessionTokens {
         val response = httpClient.submitForm(
             url = "https://securetoken.googleapis.com/v1/token?key=$apiKey",
@@ -89,6 +134,10 @@ class FirebaseAuthApi(
             "Cuenta deshabilitada"
         code.contains("TOO_MANY_ATTEMPTS", ignoreCase = true) ->
             "Demasiados intentos. Espera un momento."
+        code.contains("EMAIL_NOT_FOUND", ignoreCase = true) ->
+            "No hay cuenta con ese correo"
+        code.contains("INVALID_EMAIL", ignoreCase = true) ->
+            "Correo inválido"
         else -> code
     }
 

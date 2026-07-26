@@ -272,6 +272,7 @@ fun ErpInventoryScreen(
     onBarcodeChange: (String) -> Unit,
     onCustomDeltaChange: (String) -> Unit,
     onAdjustBarcode: () -> Unit,
+    onOpenCamera: () -> Unit = {},
     onAdjust: (productId: String, delta: Int) -> Unit,
     onCreateFalta: (productId: String?, productName: String) -> Unit,
     onEditProduct: (String) -> Unit = {},
@@ -337,6 +338,7 @@ fun ErpInventoryScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             )
             Button(onClick = onAdjustBarcode) { Text("OK") }
+            OutlinedButton(onClick = onOpenCamera) { Text("📷") }
         }
         if (state.loading && state.inventory.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
@@ -379,6 +381,7 @@ fun ErpPosScreen(
     onSearch: () -> Unit,
     onBarcodeChange: (String) -> Unit,
     onScanBarcode: () -> Unit,
+    onOpenCamera: () -> Unit = {},
     onAdd: (cl.tufarmacia.app.data.model.Product) -> Unit,
     onQty: (String, Int) -> Unit,
     onPayment: (String) -> Unit,
@@ -439,6 +442,7 @@ fun ErpPosScreen(
                         keyboardActions = KeyboardActions(onDone = { onScanBarcode() }),
                     )
                     Button(onClick = onScanBarcode, enabled = !state.posBusy) { Text("OK") }
+                    OutlinedButton(onClick = onOpenCamera) { Text("📷") }
                 }
             }
             item {

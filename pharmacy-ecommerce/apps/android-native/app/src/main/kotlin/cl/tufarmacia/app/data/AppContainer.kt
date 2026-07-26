@@ -12,9 +12,11 @@ class AppContainer(context: Context) {
     private val appContext = context.applicationContext
 
     private val sessionStore = DataStoreSessionStore(appContext)
-    private val authApi = FirebaseAuthApi(apiKey = BuildConfig.FIREBASE_API_KEY)
+    val authApi = FirebaseAuthApi(apiKey = BuildConfig.FIREBASE_API_KEY)
 
     val cartRepository = CartRepository(appContext)
+    val userPreferences = UserPreferencesRepository(appContext)
+    val networkMonitor = NetworkMonitor(appContext)
 
     /** Stable guest session id for pickup API (persisted lightly in memory per process). */
     val guestSessionId: String = UUID.randomUUID().toString()

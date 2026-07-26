@@ -988,6 +988,7 @@ fun LoginScreen(
     embedded: Boolean,
     onBack: (() -> Unit)? = null,
     onRegister: (() -> Unit)? = null,
+    onForgotPassword: (() -> Unit)? = null,
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -1038,15 +1039,79 @@ fun LoginScreen(
             Button(
                 onClick = { onLogin(email, password) },
                 enabled = !loading && email.isNotBlank() && password.isNotBlank(),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(52.dp),
             ) {
                 if (loading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                 else Text("Entrar")
             }
+            if (onForgotPassword != null) {
+                Text(
+                    "¿Olvidaste tu contraseña?",
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .clickable(onClick = onForgotPassword)
+                        .padding(vertical = 8.dp),
+                )
+            }
             if (onRegister != null) {
-                OutlinedButton(onClick = onRegister, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(onClick = onRegister, modifier = Modifier.fillMaxWidth().height(52.dp)) {
                     Text("Crear cuenta")
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ForgotPasswordScreen(
+    loading: Boolean,
+    error: String?,
+    success: Boolean,
+    onSend: (String) -> Unit,
+    onBack: () -> Unit,
+) {
+    var email by remember { mutableStateOf("") }
+    Column(Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("Recuperar contraseña") },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                }
+            },
+        )
+        Column(
+            Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                "Te enviaremos un enlace a tu correo para restablecer la contraseña (Firebase).",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Correo") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            )
+            if (error != null) Text(error, color = MaterialTheme.colorScheme.error)
+            if (success) {
+                Text(
+                    "Correo enviado. Revisa tu bandeja (y spam).",
+                    color = Color(0xFF16A34A),
+                    fontWeight = FontWeight.Medium,
+                )
+            }
+            Button(
+                onClick = { onSend(email.trim()) },
+                enabled = !loading && email.contains("@"),
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+            ) {
+                if (loading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
+                else Text("Enviar enlace")
             }
         }
     }
@@ -1126,11 +1191,21 @@ fun RegisterScreen(
 fun AccountScreen(
     user: AuthUser,
     loyalty: LoyaltyResponse?,
+    profilePhone: String,
+    profileSaving: Boolean,
+    profileError: String?,
+    fontScaleKey: String,
+    highContrast: Boolean,
     onLogout: () -> Unit,
     onOrders: () -> Unit,
     onTrack: () -> Unit,
     onRefreshLoyalty: () -> Unit,
+    onSaveProfile: (name: String, phone: String) -> Unit,
+    onFontScale: (String) -> Unit,
+    onHighContrast: (Boolean) -> Unit,
 ) {
+    var name by remember(user.name) { mutableStateOf(user.name.orEmpty()) }
+    var phone by remember(profilePhone) { mutableStateOf(profilePhone) }
     Column(Modifier.fillMaxSize()) {
         TopAppBar(title = { Text("Mi cuenta") })
         Column(
@@ -1142,9 +1217,58 @@ fun AccountScreen(
             Text(user.name ?: "Usuario", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(user.email ?: "—")
             Text("Rol: ${user.role}")
-            Text("UID: ${user.uid}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
             if (user.isAdmin) {
                 Text("Staff: pestaña ERP disponible", color = MaterialTheme.colorScheme.primary)
+            }
+            Text("Editar perfil", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Nombre") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+            OutlinedTextField(
+                value = phone,
+                onValueChange = { phone = it },
+                label = { Text("Teléfono") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            )
+            if (profileError != null) Text(profileError, color = MaterialTheme.colorScheme.error)
+            Button(
+                onClick = { onSaveProfile(name, phone) },
+                enabled = !profileSaving,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+            ) {
+                if (profileSaving) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
+                else Text("Guardar perfil")
+            }
+            Text("Accesibilidad", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+            Row(
+                Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                listOf("normal" to "Normal", "large" to "Grande", "extra" to "Extra").forEach { (key, label) ->
+                    FilterChip(
+                        selected = fontScaleKey == key,
+                        onClick = { onFontScale(key) },
+                        label = { Text(label) },
+                    )
+                }
+            }
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Alto contraste")
+                FilterChip(
+                    selected = highContrast,
+                    onClick = { onHighContrast(!highContrast) },
+                    label = { Text(if (highContrast) "Activado" else "Apagado") },
+                )
             }
             if (loyalty != null) {
                 Card(
