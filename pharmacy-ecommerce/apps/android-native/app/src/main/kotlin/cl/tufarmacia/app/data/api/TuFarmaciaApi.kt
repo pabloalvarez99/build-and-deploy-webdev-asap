@@ -31,6 +31,7 @@ import cl.tufarmacia.app.data.model.BatchesResponse
 import cl.tufarmacia.app.data.model.CreateDevolucionRequest
 import cl.tufarmacia.app.data.model.CreateFaltaRequest
 import cl.tufarmacia.app.data.model.CreateGastoRequest
+import cl.tufarmacia.app.data.model.CreatePurchaseOrderRequest
 import cl.tufarmacia.app.data.model.DevolucionDto
 import cl.tufarmacia.app.data.model.DevolucionesResponse
 import cl.tufarmacia.app.data.model.GastoDto
@@ -278,6 +279,9 @@ class TuFarmaciaApi(
         }
         return parse(response)
     }
+
+    suspend fun adminCreatePurchaseOrder(body: CreatePurchaseOrderRequest): PurchaseOrderDto =
+        post("/api/admin/purchase-orders", body = body, auth = true)
 
     suspend fun adminBatches(filter: String? = "soon30"): BatchesResponse =
         get("/api/admin/batches", auth = true) {

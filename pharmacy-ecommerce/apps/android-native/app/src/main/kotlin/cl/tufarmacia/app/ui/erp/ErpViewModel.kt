@@ -17,6 +17,8 @@ import cl.tufarmacia.app.data.model.CreateDevolucionItem
 import cl.tufarmacia.app.data.model.CreateDevolucionRequest
 import cl.tufarmacia.app.data.model.CreateFaltaRequest
 import cl.tufarmacia.app.data.model.CreateGastoRequest
+import cl.tufarmacia.app.data.model.CreatePurchaseOrderItem
+import cl.tufarmacia.app.data.model.CreatePurchaseOrderRequest
 import cl.tufarmacia.app.data.model.CreateTaskRequest
 import cl.tufarmacia.app.data.model.DashboardExtras
 import cl.tufarmacia.app.data.model.DevolucionDto
@@ -68,6 +70,17 @@ data class LastPosSale(
     val paymentLabel: String,
     val itemCount: Int,
     val customer: String?,
+    val lines: List<PosLine> = emptyList(),
+    val notes: String? = null,
+    val discount: Double = 0.0,
+)
+
+/** Quick-add product chip from this POS session / turno. */
+data class PosRecentProduct(
+    val productId: String,
+    val name: String,
+    val unitPrice: Double,
+    val hits: Int = 1,
 )
 
 data class ErpUiState(
@@ -103,6 +116,7 @@ data class ErpUiState(
     val posPickup: PosPickupOrder? = null,
     val posPickupLoading: Boolean = false,
     val lastPosSale: LastPosSale? = null,
+    val posRecent: List<PosRecentProduct> = emptyList(),
 
     val clients: List<ClienteDto> = emptyList(),
     val clientsQuery: String = "",
@@ -377,8 +391,48 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
             } else {
                 s.posCart + PosLine(p.id, p.name, p.unitPrice(), 1)
             }
-            s.copy(posCart = cart)
+            s.copy(
+                posCart = cart,
+                posRecent = bumpPosRecent(s.posRecent, p.id, p.name, p.unitPrice()),
+            )
         }
+    }
+
+    fun addPosRecentToCart(productId: String) {
+        val recent = _state.value.posRecent.find { it.productId == productId } ?: return
+        _state.update { s ->
+            val existing = s.posCart.find { it.productId == productId }
+            val cart = if (existing != null) {
+                s.posCart.map {
+                    if (it.productId == productId) it.copy(quantity = it.quantity + 1) else it
+                }
+            } else {
+                s.posCart + PosLine(recent.productId, recent.name, recent.unitPrice, 1)
+            }
+            s.copy(
+                posCart = cart,
+                posRecent = bumpPosRecent(s.posRecent, recent.productId, recent.name, recent.unitPrice),
+            )
+        }
+    }
+
+    private fun bumpPosRecent(
+        current: List<PosRecentProduct>,
+        productId: String,
+        name: String,
+        unitPrice: Double,
+        hits: Int = 1,
+    ): List<PosRecentProduct> {
+        val existing = current.find { it.productId == productId }
+        val next = if (existing != null) {
+            current.map {
+                if (it.productId == productId) it.copy(hits = it.hits + hits, name = name, unitPrice = unitPrice)
+                else it
+            }
+        } else {
+            listOf(PosRecentProduct(productId, name, unitPrice, hits)) + current
+        }
+        return next.sortedByDescending { it.hits }.take(12)
     }
 
     fun setPosQty(productId: String, qty: Int) {
@@ -564,11 +618,13 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                 }
             }
 
+            val cartSnap = s.posCart
+            val notesSnap = s.posNotes.ifBlank { null }
             _state.update { it.copy(posBusy = true) }
             try {
                 val res = container.api.adminPosSale(
                     PosSaleRequest(
-                        items = s.posCart.map {
+                        items = cartSnap.map {
                             PosSaleItem(it.productId, it.name, it.quantity, it.unitPrice)
                         },
                         paymentMethod = method,
@@ -578,10 +634,14 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                         customerPhone = s.posPhone.ifBlank { null },
                         discountAmount = if (discount > 0) discount else null,
                         customerUserId = s.posCustomerUserId,
-                        notes = s.posNotes.ifBlank { null },
+                        notes = notesSnap,
                     ),
                 )
                 val saleTotal = res.total?.toDoubleOrNull() ?: total
+                var recent = _state.value.posRecent
+                cartSnap.forEach { line ->
+                    recent = bumpPosRecent(recent, line.productId, line.name, line.unitPrice, line.quantity)
+                }
                 _state.update {
                     it.copy(
                         posBusy = false,
@@ -590,12 +650,16 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                         posCashAmount = "",
                         posCardAmount = "",
                         posNotes = "",
+                        posRecent = recent,
                         lastPosSale = LastPosSale(
                             orderId = res.id,
                             total = saleTotal,
                             paymentLabel = paymentLabel,
                             itemCount = itemCount,
                             customer = customerSnap,
+                            lines = cartSnap,
+                            notes = notesSnap,
+                            discount = discount,
                         ),
                         snackbar = "Venta OK ${res.id?.take(8) ?: ""} · ${formatClpLocal(saleTotal)}",
                     )
@@ -609,6 +673,25 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                 }
             }
         }
+    }
+
+    fun lastPosSaleShareText(): String? {
+        val sale = _state.value.lastPosSale ?: return null
+        return buildString {
+            appendLine("Tu Farmacia — ticket")
+            sale.orderId?.let { appendLine("Orden: ${it.take(8)}") }
+            sale.customer?.let { appendLine("Cliente: $it") }
+            appendLine("Pago: ${sale.paymentLabel}")
+            appendLine("—")
+            sale.lines.forEach { line ->
+                appendLine("· ${line.name} x${line.quantity}  ${formatClpLocal(line.lineTotal)}")
+            }
+            if (sale.discount > 0) appendLine("Descuento: -${formatClpLocal(sale.discount)}")
+            sale.notes?.let { appendLine("Notas: $it") }
+            appendLine("—")
+            appendLine("TOTAL: ${formatClpLocal(sale.total)}")
+            appendLine("Gracias por su compra")
+        }.trim()
     }
 
     private fun formatClpLocal(amount: Double): String =
@@ -689,6 +772,47 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                 _state.update { it.copy(snackbar = "Email enviado a $supplierName") }
             } catch (e: Exception) {
                 _state.update { it.copy(snackbar = (e as? ApiException)?.message ?: e.message) }
+            }
+        }
+    }
+
+    fun createOcFromReorder(supplierId: String, supplierName: String) {
+        viewModelScope.launch {
+            val group = _state.value.reorderGroups.find { it.supplier?.id == supplierId }
+            if (group == null || group.items.isEmpty()) {
+                _state.update { it.copy(snackbar = "Sin ítems para $supplierName") }
+                return@launch
+            }
+            try {
+                val items = group.items.map { item ->
+                    val qty = maxOf(5, 10 - item.stock)
+                    val unit = (item.costPrice ?: 0.0).coerceAtLeast(0.0)
+                    CreatePurchaseOrderItem(
+                        productId = item.productId,
+                        productNameInvoice = item.name,
+                        supplierProductCode = item.supplierCode,
+                        quantity = qty,
+                        unitCost = unit,
+                        subtotal = unit * qty,
+                    )
+                }
+                val po = container.api.adminCreatePurchaseOrder(
+                    CreatePurchaseOrderRequest(
+                        supplierId = supplierId,
+                        invoiceNumber = null,
+                        notes = "OC creada desde reposición app móvil · $supplierName",
+                        poReference = "MOBILE-REORDER",
+                        items = items,
+                    ),
+                )
+                _state.update {
+                    it.copy(snackbar = "OC draft ${po.id.take(8)}… · ${items.size} ítems · $supplierName")
+                }
+                loadPurchaseOrders()
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(snackbar = (e as? ApiException)?.message ?: e.message ?: "Error al crear OC")
+                }
             }
         }
     }

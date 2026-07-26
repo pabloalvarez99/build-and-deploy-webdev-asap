@@ -3563,3 +3563,10 @@ Build local OK. Push → Vercel.
 ## 2026-07-26 - Android v1.7.1 polish
 - Clientes search filter; POS last-sale ticket card
 - versionCode 14 / 1.7.1
+
+## 2026-07-26 - Android v1.8.0 (5-wave)
+- POS: recientes del turno + share ticket (Intent chooser)
+- Reposicion: crear OC draft + email express
+- Split ErpScreens → ErpModules/Pos/Inventory/Client/Purchase/Finance/Ops/Arqueo
+- scripts/install-debug.ps1|.sh + SIDELOAD.md
+- versionCode 15 / 1.8.0

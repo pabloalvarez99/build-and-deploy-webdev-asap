@@ -690,3 +690,22 @@ data class ExpressReorderResponse(
     val success: Boolean = false,
     val error: String? = null,
 )
+
+@Serializable
+data class CreatePurchaseOrderItem(
+    @SerialName("product_id") val productId: String? = null,
+    @SerialName("product_name_invoice") val productNameInvoice: String? = null,
+    @SerialName("supplier_product_code") val supplierProductCode: String? = null,
+    val quantity: Int,
+    @SerialName("unit_cost") val unitCost: Double,
+    val subtotal: Double,
+)
+
+@Serializable
+data class CreatePurchaseOrderRequest(
+    @SerialName("supplier_id") val supplierId: String,
+    @SerialName("invoice_number") val invoiceNumber: String? = null,
+    val notes: String? = null,
+    @SerialName("po_reference") val poReference: String? = null,
+    val items: List<CreatePurchaseOrderItem>,
+)

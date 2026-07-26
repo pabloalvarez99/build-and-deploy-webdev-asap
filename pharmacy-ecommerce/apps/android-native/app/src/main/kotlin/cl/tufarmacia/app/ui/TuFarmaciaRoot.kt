@@ -645,6 +645,16 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onSubmit = erpVm::submitPos,
                     onClear = erpVm::clearPos,
                     onDismissLastSale = erpVm::clearLastPosSale,
+                    onShareLastSale = {
+                        val text = erpVm.lastPosSaleShareText() ?: return@ErpPosScreen
+                        val send = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, text)
+                            putExtra(Intent.EXTRA_SUBJECT, "Ticket Tu Farmacia")
+                        }
+                        context.startActivity(Intent.createChooser(send, "Compartir ticket"))
+                    },
+                    onAddRecent = erpVm::addPosRecentToCart,
                 )
             }
             composable(Routes.ErpInventory) {
@@ -762,6 +772,7 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onBack = { navController.popBackStack() },
                     onRefresh = erpVm::loadReorderSuggestions,
                     onExpress = erpVm::sendReposicionExpress,
+                    onCreateOc = erpVm::createOcFromReorder,
                 )
             }
             composable(Routes.ErpSuppliers) {

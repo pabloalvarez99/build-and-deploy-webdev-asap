@@ -1,6 +1,6 @@
 # Tu Farmacia — Android nativo Kotlin (Full ERP)
 
-**Application ID:** `cl.tufarmacia.native` · **Version:** 1.7.1  
+**Application ID:** `cl.tufarmacia.native` · **Version:** 1.8.0  
 Pure Kotlin + Jetpack Compose. Separate natives (iOS later = Swift).
 
 ## Storefront
@@ -17,10 +17,10 @@ Pure Kotlin + Jetpack Compose. Separate natives (iOS later = Swift).
 | Hub | `/api/admin/avisos` | avisos internos pinned |
 | Dashboard | `/api/admin/operaciones`, `dashboard-extras` | KPIs · reservas → POS prefill |
 | Órdenes | `/api/admin/orders` | filter · staff actions · **detail actions** |
-| POS | `/api/admin/pos/sale` | confirm · notes · mixed · barcode · pickup |
+| POS | `/api/admin/pos/sale` | confirm · notes · **recientes** · **share ticket** |
 | Inventario | inventory + stock adjust + products | adjust · reason · **edit price/stock** |
 | Lotes | `/api/admin/batches` | expired / soon30 / soon90 |
-| Reposición | reorder-suggestions + express | email express por proveedor |
+| Reposición | reorder-suggestions + express + **OC draft** | crear OC · email express |
 | Devoluciones | `/api/admin/devoluciones` | list + create |
 | Barcodes | `/api/admin/barcodes/unknown` | triage / dismiss |
 | Arqueo | `/api/admin/arqueo` | **set_fondo · cerrar · farmacéutico** |
@@ -32,22 +32,34 @@ Pure Kotlin + Jetpack Compose. Separate natives (iOS later = Swift).
 | Tareas | `/api/admin/tareas` | **create** · complete |
 | Turnos/Caja | `/api/admin/turnos` | cierres |
 
-## Build
-```bash
+## Build / install
+```powershell
+# recommended (build + adb install + launch)
+.\pharmacy-ecommerce\apps\android-native\scripts\install-debug.ps1
+
+# or manual
 cd pharmacy-ecommerce/apps/android-native
-./gradlew :app:assembleDebug
+.\gradlew.bat :app:assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
+See `scripts/SIDELOAD.md` for USB/wireless debugging checklist.
 
 ## Layout
 ```
 app/src/main/kotlin/cl/tufarmacia/app/
   data/api|auth|cart|model
   ui/screens          # storefront
-  ui/erp              # ErpViewModel + ErpScreens (Full ERP)
+  ui/erp              # ErpViewModel + split screens (Hub/POS/…)
   ui/WebpayActivity.kt
-  util/               # OrderStatusLabels, ChileValidation, Money
+  util/
+scripts/              # install-debug.ps1|.sh + SIDELOAD.md
 ```
+
+## v1.8.0
+- POS: recientes del turno + compartir ticket (share sheet / WhatsApp)
+- Reposición: crear OC draft (POST purchase-orders) + email express
+- Split UI ERP en módulos (ErpPosScreen, ErpModules, …)
+- install-debug.ps1 / .sh + SIDELOAD checklist
 
 ## v1.7.1
 - Clientes: búsqueda local nombre/email/tel
