@@ -9,7 +9,7 @@ Pure Kotlin + Jetpack Compose. Separate natives (iOS later = Swift).
 - Login/register, loyalty, orders, public tracking
 - Auto refresh Firebase ID token before expiry
 - Search suggest, en stock / descuento / sort, cart stock revalidate
-- Spanish order statuses, senior typography, Webpay cart-safe, CL validation
+- Spanish order statuses, Webpay cart-safe, CL validation
 
 ## ERP (staff tab)
 | Module | API | Notes |
@@ -55,10 +55,14 @@ app/src/main/kotlin/cl/tufarmacia/app/
 scripts/              # install-debug.ps1|.sh + SIDELOAD.md
 ```
 
+## v1.8.2
+- **Staff-first**: home = mostrador (POS/pedidos/stock/arqueo), no UX de 3ª edad
+- Nav staff: Ops · POS · Pedidos · ERP · Cuenta (denso, 64dp)
+- Default tipografía Normal/Compacto; copy operativo
+
 ## v1.8.1
-- Design system: Theme tokens + UiKit (cards, buttons, pills, steppers, empty states)
-- Home hero + quick tiles; catalog/PDP/cart/checkout/account polish
-- Bottom nav colors; senior-friendly spacing & contrast
+- Design system: Theme tokens + UiKit
+- Catalog/PDP/cart/checkout/account polish
 
 ## v1.8.0
 - POS: recientes del turno + compartir ticket (share sheet / WhatsApp)

@@ -85,10 +85,9 @@ import cl.tufarmacia.app.data.model.TopSeller
 import cl.tufarmacia.app.data.model.TrackingResponse
 import cl.tufarmacia.app.ui.AppUiState
 import cl.tufarmacia.app.ui.components.EmptyState
-import cl.tufarmacia.app.ui.components.HeroBanner
+import cl.tufarmacia.app.ui.components.OpsAction
 import cl.tufarmacia.app.ui.components.PillKind
 import cl.tufarmacia.app.ui.components.QtyStepper
-import cl.tufarmacia.app.ui.components.QuickActionTile
 import cl.tufarmacia.app.ui.components.SectionTitle
 import cl.tufarmacia.app.ui.components.StatusPill
 import cl.tufarmacia.app.ui.components.TfCard
@@ -116,37 +115,28 @@ fun SplashScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary),
+            .background(MaterialTheme.colorScheme.secondary),
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Surface(
-                shape = RoundedCornerShape(24.dp),
-                color = Color.White.copy(alpha = 0.15f),
-            ) {
-                Text(
-                    "TF",
-                    modifier = Modifier.padding(horizontal = 22.dp, vertical = 14.dp),
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.headlineMedium,
-                )
-            }
-            Spacer(Modifier.height(20.dp))
             Text(
                 "Tu Farmacia",
-                style = MaterialTheme.typography.headlineLarge,
+                style = MaterialTheme.typography.headlineMedium,
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
             )
-            Spacer(Modifier.height(8.dp))
-            Text("Coquimbo · Retiro en tienda", color = Color.White.copy(alpha = 0.9f))
-            Spacer(Modifier.height(28.dp))
-            CircularProgressIndicator(color = Color.White, strokeWidth = 3.dp)
+            Spacer(Modifier.height(6.dp))
+            Text("App de mostrador · Coquimbo", color = Color.White.copy(alpha = 0.85f), style = MaterialTheme.typography.bodyMedium)
+            Spacer(Modifier.height(20.dp))
+            CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(28.dp))
         }
     }
 }
 
+/**
+ * Home for **workers** (caja / stock / pedidos), not consumer storefront.
+ * Staff get ops shortcuts; guests still get login + catalog lookup.
+ */
 @Composable
 fun HomeScreen(
     user: AuthUser?,
@@ -161,117 +151,137 @@ fun HomeScreen(
     onOpenRegister: () -> Unit,
     onOpenProduct: (String) -> Unit,
     onRefresh: () -> Unit = {},
+    onOpenPos: () -> Unit = {},
+    onOpenErp: () -> Unit = {},
+    onOpenInventory: () -> Unit = {},
+    onOpenArqueo: () -> Unit = {},
+    onOpenAdminOrders: () -> Unit = {},
 ) {
+    val isStaff = user?.isAdmin == true
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column {
+            Column(Modifier.weight(1f)) {
                 Text(
-                    "Tu Farmacia",
-                    style = MaterialTheme.typography.headlineMedium,
+                    if (isStaff) "Mostrador" else "Tu Farmacia",
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = Ink,
                 )
                 Text(
-                    if (user != null) "Hola, ${user.name ?: user.email ?: "usuario"}"
-                    else "Coquimbo · adultos mayores",
-                    style = MaterialTheme.typography.bodyMedium,
+                    when {
+                        isStaff -> "${user?.name ?: user?.email ?: "Staff"} · ${user?.role ?: ""}"
+                        user != null -> user.name ?: user.email ?: "Sesión activa"
+                        else -> "Inicia sesión para caja y ERP"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = InkMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            TextButton(onClick = onRefresh) { Text("Sync") }
+        }
+
+        if (isStaff) {
+            OpsAction(
+                title = "POS · Cobrar",
+                subtitle = "Barcode · retiro · ticket",
+                onClick = onOpenPos,
+                primary = true,
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.weight(1f)) {
+                    OpsAction(title = "Pedidos web", subtitle = "Reservas · Webpay", onClick = onOpenAdminOrders)
+                }
+                Box(Modifier.weight(1f)) {
+                    OpsAction(title = "Inventario", subtitle = "Stock · ajustes", onClick = onOpenInventory)
+                }
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.weight(1f)) {
+                    OpsAction(title = "Arqueo", subtitle = "Fondo · cierre", onClick = onOpenArqueo)
+                }
+                Box(Modifier.weight(1f)) {
+                    OpsAction(title = "ERP", subtitle = "Módulos", onClick = onOpenErp)
+                }
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.weight(1f)) {
+                    OpsAction(
+                        title = "Catálogo",
+                        subtitle = if (productCount > 0) "$productCount SKUs" else "Consulta precio",
+                        onClick = onOpenCatalog,
+                    )
+                }
+                Box(Modifier.weight(1f)) {
+                    OpsAction(
+                        title = if (cartCount > 0) "Carrito ($cartCount)" else "Carrito",
+                        subtitle = "Pedido cliente",
+                        onClick = onOpenCart,
+                    )
+                }
+            }
+        } else {
+            // Guest / non-staff: compact auth + lookup (not a shopping-mall home)
+            TfCard {
+                Text("Acceso personal", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Esta app es para el equipo de la farmacia. Clientes usan tu-farmacia.cl",
+                    style = MaterialTheme.typography.bodySmall,
                     color = InkMuted,
                 )
-            }
-            TextButton(onClick = onRefresh) {
-                Text("Actualizar")
-            }
-        }
-
-        HeroBanner(
-            title = if (productCount > 0) "$productCount productos listos" else "Tu farmacia de confianza",
-            subtitle = "Catálogo en vivo · carrito · retiro en tienda · misma cuenta web",
-        )
-
-        TfPrimaryButton(text = "Ver catálogo", onClick = onOpenCatalog)
-
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            QuickActionTile(
-                title = if (cartCount > 0) "Carrito ($cartCount)" else "Carrito",
-                subtitle = "Revisa y reserva",
-                icon = Icons.Default.ShoppingCart,
-                onClick = onOpenCart,
-                modifier = Modifier.weight(1f),
-                highlight = cartCount > 0,
-            )
-            QuickActionTile(
-                title = "Rastrear",
-                subtitle = "Código de pedido",
-                icon = Icons.Default.Search,
-                onClick = onOpenTrack,
-                modifier = Modifier.weight(1f),
-            )
-        }
-
-        if (user != null) {
-            QuickActionTile(
-                title = "Mis pedidos",
-                subtitle = "Historial y estados",
-                icon = Icons.Default.Person,
-                onClick = onOpenOrders,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        } else {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Box(Modifier.weight(1f)) {
-                    TfSecondaryButton(text = "Iniciar sesión", onClick = onOpenLogin)
-                }
-                Box(Modifier.weight(1f)) {
-                    TfPrimaryButton(text = "Crear cuenta", onClick = onOpenRegister)
+                Spacer(Modifier.height(10.dp))
+                if (user == null) {
+                    TfPrimaryButton(text = "Iniciar sesión staff", onClick = onOpenLogin)
+                    Spacer(Modifier.height(8.dp))
+                    TfSecondaryButton(text = "Crear cuenta", onClick = onOpenRegister)
+                } else {
+                    Text("Sin rol staff en esta cuenta.", color = Warning, fontWeight = FontWeight.Medium)
+                    Spacer(Modifier.height(8.dp))
+                    TfSecondaryButton(text = "Ver catálogo (consulta)", onClick = onOpenCatalog)
                 }
             }
+            TfSecondaryButton(text = "Rastrear pedido cliente", onClick = onOpenTrack)
         }
 
-        if (topSellers.isNotEmpty()) {
-            SectionTitle("Más vendidos")
-            topSellers.forEach { item ->
-                TfCard(onClick = { onOpenProduct(item.slug) }) {
+        if (topSellers.isNotEmpty() && isStaff) {
+            SectionTitle("Top venta (ref.)")
+            topSellers.take(5).forEach { item ->
+                Surface(
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable { onOpenProduct(item.slug) },
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = 1.dp,
+                ) {
                     Row(
+                        Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         ProductThumb(item.imageUrl, item.name)
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(
-                                item.name,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Ink,
-                            )
-                            Text(
-                                formatClp(item.price),
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                            StatusPill("${item.unitsSold} vendidos", PillKind.Info)
+                        Column(Modifier.weight(1f)) {
+                            Text(item.name, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyMedium)
+                            Text("${formatClp(item.price)} · ${item.unitsSold} u.", style = MaterialTheme.typography.labelMedium, color = InkMuted)
                         }
                     }
                 }
             }
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(4.dp))
     }
 }
 
@@ -1361,14 +1371,14 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("Tu Farmacia", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
-                        Text("Coquimbo · misma cuenta web", color = Color.White.copy(alpha = 0.9f), style = MaterialTheme.typography.bodyMedium)
+                        Text("Acceso staff", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+                        Text("Caja · inventario · ERP", color = Color.White.copy(alpha = 0.9f), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }
             Text(
-                "Misma cuenta de tu-farmacia.cl",
-                style = MaterialTheme.typography.bodyLarge,
+                "Cuenta Firebase del personal (mismo login web admin)",
+                style = MaterialTheme.typography.bodyMedium,
                 color = InkMuted,
             )
             TfTextField(
@@ -1603,7 +1613,7 @@ fun AccountScreen(
                 Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                listOf("normal" to "Normal", "large" to "Grande", "extra" to "Extra").forEach { (key, label) ->
+                listOf("compact" to "Compacto", "normal" to "Normal", "large" to "Grande").forEach { (key, label) ->
                     FilterChip(
                         selected = fontScaleKey == key,
                         onClick = { onFontScale(key) },

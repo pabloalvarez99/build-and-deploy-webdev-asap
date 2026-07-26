@@ -3575,3 +3575,8 @@ Build local OK. Push → Vercel.
 - Theme + UiKit components; Home/PDP/Cart/Checkout/Account/Login redesign
 - Catalog chips/stock (prior); bottom nav; ERP hub cards
 - versionCode 16 / 1.8.1
+
+## 2026-07-26 - Android v1.8.2 staff-first (workers not seniors)
+- Home mostrador: POS / pedidos / inventario / arqueo / ERP
+- Nav staff: Ops POS Pedidos ERP Cuenta; tipografia densa Normal default
+- Copy operativo; app no es UX 3a edad

@@ -187,12 +187,18 @@ fun TuFarmaciaRoot(container: AppContainer) {
         vm.consumeWebpayRedirect()
     }
 
+    val isStaff = state.user?.isAdmin == true
     val tabRoutes = buildSet {
         add(Routes.Home)
-        add(Routes.Catalog)
-        add(Routes.Cart)
+        if (isStaff) {
+            add(Routes.ErpPos)
+            add(Routes.ErpOrders)
+            add(Routes.Admin)
+        } else {
+            add(Routes.Catalog)
+            add(Routes.Cart)
+        }
         add(Routes.Account)
-        if (state.user?.isAdmin == true) add(Routes.Admin)
     }
 
     TuFarmaciaTheme(
@@ -227,50 +233,78 @@ fun TuFarmaciaRoot(container: AppContainer) {
                 route in tabRoutes || route?.startsWith("product/") == true
                 )
             // Only main tabs show bottom bar
-            if (route in tabRoutes) {
+            if (route in tabRoutes || (isStaff && route?.startsWith("erp_") == true)) {
                 NavigationBar(
-                    modifier = Modifier.height(76.dp),
+                    modifier = Modifier.height(64.dp),
                     containerColor = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 3.dp,
+                    tonalElevation = 2.dp,
                 ) {
                     val itemColors = NavigationBarItemDefaults.colors(
                         selectedIconColor = MaterialTheme.colorScheme.primary,
                         selectedTextColor = MaterialTheme.colorScheme.primary,
                         indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                        unselectedIconColor = Color(0xFF64748B),
-                        unselectedTextColor = Color(0xFF64748B),
+                        unselectedIconColor = Color(0xFF6B7280),
+                        unselectedTextColor = Color(0xFF6B7280),
                     )
                     NavigationBarItem(
                         selected = route == Routes.Home,
                         onClick = { navController.navigateTab(Routes.Home) },
                         icon = { Icon(Icons.Default.Home, contentDescription = "Inicio") },
-                        label = { Text("Inicio", maxLines = 1) },
+                        label = { Text(if (isStaff) "Ops" else "Inicio", maxLines = 1) },
                         colors = itemColors,
                     )
-                    NavigationBarItem(
-                        selected = route == Routes.Catalog,
-                        onClick = { navController.navigateTab(Routes.Catalog) },
-                        icon = { Icon(Icons.Default.ShoppingBag, contentDescription = "Catálogo") },
-                        label = { Text("Catálogo", maxLines = 1) },
-                        colors = itemColors,
-                    )
-                    NavigationBarItem(
-                        selected = route == Routes.Cart,
-                        onClick = { navController.navigateTab(Routes.Cart) },
-                        icon = {
-                            BadgedBox(badge = {
-                                if (cartCount > 0) {
-                                    Badge(containerColor = MaterialTheme.colorScheme.primary) {
-                                        Text("$cartCount")
+                    if (isStaff) {
+                        NavigationBarItem(
+                            selected = route == Routes.ErpPos,
+                            onClick = { navController.navigateTab(Routes.ErpPos) },
+                            icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "POS") },
+                            label = { Text("POS", maxLines = 1) },
+                            colors = itemColors,
+                        )
+                        NavigationBarItem(
+                            selected = route == Routes.ErpOrders,
+                            onClick = {
+                                vm.loadAdminOrders()
+                                vm.loadLowStock()
+                                navController.navigateTab(Routes.ErpOrders)
+                            },
+                            icon = { Icon(Icons.Default.ShoppingBag, contentDescription = "Pedidos") },
+                            label = { Text("Pedidos", maxLines = 1) },
+                            colors = itemColors,
+                        )
+                        NavigationBarItem(
+                            selected = route == Routes.Admin || (route?.startsWith("erp_") == true && route != Routes.ErpPos && route != Routes.ErpOrders),
+                            onClick = { navController.navigateTab(Routes.Admin) },
+                            icon = { Icon(Icons.Default.AdminPanelSettings, contentDescription = "ERP") },
+                            label = { Text("ERP", maxLines = 1) },
+                            colors = itemColors,
+                        )
+                    } else {
+                        NavigationBarItem(
+                            selected = route == Routes.Catalog,
+                            onClick = { navController.navigateTab(Routes.Catalog) },
+                            icon = { Icon(Icons.Default.ShoppingBag, contentDescription = "Catálogo") },
+                            label = { Text("Catálogo", maxLines = 1) },
+                            colors = itemColors,
+                        )
+                        NavigationBarItem(
+                            selected = route == Routes.Cart,
+                            onClick = { navController.navigateTab(Routes.Cart) },
+                            icon = {
+                                BadgedBox(badge = {
+                                    if (cartCount > 0) {
+                                        Badge(containerColor = MaterialTheme.colorScheme.primary) {
+                                            Text("$cartCount")
+                                        }
                                     }
+                                }) {
+                                    Icon(Icons.Default.ShoppingCart, contentDescription = "Carrito")
                                 }
-                            }) {
-                                Icon(Icons.Default.ShoppingCart, contentDescription = "Carrito")
-                            }
-                        },
-                        label = { Text("Carrito", maxLines = 1) },
-                        colors = itemColors,
-                    )
+                            },
+                            label = { Text("Carrito", maxLines = 1) },
+                            colors = itemColors,
+                        )
+                    }
                     NavigationBarItem(
                         selected = route == Routes.Account,
                         onClick = { navController.navigateTab(Routes.Account) },
@@ -278,15 +312,6 @@ fun TuFarmaciaRoot(container: AppContainer) {
                         label = { Text("Cuenta", maxLines = 1) },
                         colors = itemColors,
                     )
-                    if (state.user?.isAdmin == true) {
-                        NavigationBarItem(
-                            selected = route == Routes.Admin || route?.startsWith("erp_") == true,
-                            onClick = { navController.navigateTab(Routes.Admin) },
-                            icon = { Icon(Icons.Default.AdminPanelSettings, contentDescription = "ERP") },
-                            label = { Text("ERP", maxLines = 1) },
-                            colors = itemColors,
-                        )
-                    }
                 }
             }
         },
@@ -302,8 +327,8 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     productCount = state.productsTotal,
                     cartCount = cartCount,
                     topSellers = state.topSellers,
-                    onOpenCatalog = { navController.navigateTab(Routes.Catalog) },
-                    onOpenCart = { navController.navigateTab(Routes.Cart) },
+                    onOpenCatalog = { navController.navigate(Routes.Catalog) },
+                    onOpenCart = { navController.navigate(Routes.Cart) },
                     onOpenOrders = { navController.navigate(Routes.Orders) },
                     onOpenTrack = { navController.navigate(Routes.Track) },
                     onOpenLogin = { navController.navigate(Routes.Login) },
@@ -313,6 +338,24 @@ fun TuFarmaciaRoot(container: AppContainer) {
                         vm.loadProducts()
                         vm.loadTopSellers()
                         vm.loadCategories()
+                        if (state.user?.isAdmin == true) {
+                            erpVm.loadDashboard()
+                        }
+                    },
+                    onOpenPos = { navController.navigateTab(Routes.ErpPos) },
+                    onOpenErp = { navController.navigateTab(Routes.Admin) },
+                    onOpenInventory = {
+                        erpVm.loadInventory()
+                        navController.navigate(Routes.ErpInventory)
+                    },
+                    onOpenArqueo = {
+                        erpVm.loadArqueo()
+                        navController.navigate(Routes.ErpArqueo)
+                    },
+                    onOpenAdminOrders = {
+                        vm.loadAdminOrders()
+                        vm.loadLowStock()
+                        navController.navigateTab(Routes.ErpOrders)
                     },
                 )
             }

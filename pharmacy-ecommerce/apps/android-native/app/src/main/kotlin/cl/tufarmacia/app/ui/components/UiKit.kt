@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+// clip used by OpsAction
 import cl.tufarmacia.app.ui.theme.BorderSoft
 import cl.tufarmacia.app.ui.theme.BrandCyanSoft
 import cl.tufarmacia.app.ui.theme.Danger
@@ -64,10 +65,10 @@ fun TfCard(
         modifier = modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
-        content = { Column(Modifier.padding(16.dp), content = content) },
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        content = { Column(Modifier.padding(12.dp), content = content) },
     )
 }
 
@@ -84,13 +85,13 @@ fun TfPrimaryButton(
         enabled = enabled && !loading,
         modifier = modifier
             .fillMaxWidth()
-            .height(54.dp),
-        shape = RoundedCornerShape(14.dp),
+            .height(48.dp),
+        shape = RoundedCornerShape(10.dp),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
     ) {
         if (loading) {
-            CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp, color = Color.White)
+            CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
         } else {
             Text(text, style = MaterialTheme.typography.labelLarge)
         }
@@ -109,11 +110,45 @@ fun TfSecondaryButton(
         enabled = enabled,
         modifier = modifier
             .fillMaxWidth()
-            .height(54.dp),
-        shape = RoundedCornerShape(14.dp),
-        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)),
+            .height(48.dp),
+        shape = RoundedCornerShape(10.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
     ) {
         Text(text, style = MaterialTheme.typography.labelLarge)
+    }
+}
+
+/** Full-width ops shortcut for staff home (POS, stock, caja…). */
+@Composable
+fun OpsAction(
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    primary: Boolean = false,
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        color = if (primary) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+        shadowElevation = if (primary) 0.dp else 1.dp,
+    ) {
+        Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
+            Text(
+                title,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleMedium,
+                color = if (primary) Color.White else Ink,
+            )
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (primary) Color.White.copy(alpha = 0.88f) else InkMuted,
+            )
+        }
     }
 }
 

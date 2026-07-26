@@ -11,19 +11,19 @@ import kotlinx.coroutines.flow.map
 private val Context.userPrefsDataStore by preferencesDataStore(name = "user_prefs")
 
 enum class FontScalePref(val key: String, val multiplier: Float, val label: String) {
+    Compact("compact", 0.92f, "Compacto"),
     Normal("normal", 1.0f, "Normal"),
-    Large("large", 1.15f, "Grande"),
-    Extra("extra", 1.35f, "Extra grande"),
+    Large("large", 1.12f, "Grande"),
     ;
 
     companion object {
         fun fromKey(key: String?): FontScalePref =
-            entries.find { it.key == key } ?: Large
+            entries.find { it.key == key } ?: Normal
     }
 }
 
 data class UserPrefs(
-    val fontScale: FontScalePref = FontScalePref.Large,
+    val fontScale: FontScalePref = FontScalePref.Normal,
     val highContrast: Boolean = false,
 )
 
