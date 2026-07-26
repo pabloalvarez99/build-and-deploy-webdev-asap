@@ -50,6 +50,7 @@ import cl.tufarmacia.app.data.model.SuppliersResponse
 import cl.tufarmacia.app.data.model.ArqueoActionResponse
 import cl.tufarmacia.app.data.model.ArqueoResponse
 import cl.tufarmacia.app.data.model.AvisosResponse
+import cl.tufarmacia.app.data.model.CashFlowResponse
 import cl.tufarmacia.app.data.model.CierreDiaEmailResponse
 import cl.tufarmacia.app.data.model.CierreDiaResponse
 import cl.tufarmacia.app.data.model.ClienteDetailResponse
@@ -65,6 +66,8 @@ import cl.tufarmacia.app.data.model.FaltaDto
 import cl.tufarmacia.app.data.model.FaltasResponse
 import cl.tufarmacia.app.data.model.PrescriptionRecordDto
 import cl.tufarmacia.app.data.model.PrescriptionsResponse
+import cl.tufarmacia.app.data.model.PylResponse
+import cl.tufarmacia.app.data.model.ReportesResponse
 import cl.tufarmacia.app.data.model.StockMovementsResponse
 import cl.tufarmacia.app.data.model.TaskActionResponse
 import cl.tufarmacia.app.data.model.TaskDto
@@ -488,6 +491,23 @@ class TuFarmaciaApi(
      */
     suspend fun adminDescuentosAction(body: kotlinx.serialization.json.JsonObject): DescuentosActionResponse =
         post("/api/admin/descuentos", body = body, auth = true)
+
+    /** Owner reportes: KPIs, canal, top productos, clientes. */
+    suspend fun adminReportes(from: String? = null, to: String? = null): ReportesResponse =
+        get("/api/admin/reportes", auth = true) {
+            if (!from.isNullOrBlank()) parameter("from", from)
+            if (!to.isNullOrBlank()) parameter("to", to)
+        }
+
+    /** Owner cash-flow 30d real + 30d proyección. */
+    suspend fun adminCashFlow(): CashFlowResponse =
+        get("/api/admin/finanzas/cash-flow", auth = true)
+
+    /** Owner PyL mensual por año. */
+    suspend fun adminPyl(year: Int? = null): PylResponse =
+        get("/api/admin/finanzas/pyl", auth = true) {
+            if (year != null) parameter("year", year)
+        }
 
     private suspend inline fun <reified T> patchJson(path: String, body: Any): T {
         val token = tokenProvider.currentIdToken()

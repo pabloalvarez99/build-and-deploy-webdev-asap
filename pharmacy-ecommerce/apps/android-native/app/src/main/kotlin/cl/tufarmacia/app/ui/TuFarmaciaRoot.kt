@@ -63,6 +63,7 @@ import cl.tufarmacia.app.ui.erp.ErpProductEditScreen
 import cl.tufarmacia.app.ui.erp.ErpPurchaseDetailScreen
 import cl.tufarmacia.app.ui.erp.ErpPurchasesScreen
 import cl.tufarmacia.app.ui.erp.ErpReorderScreen
+import cl.tufarmacia.app.ui.erp.ErpReportesScreen
 import cl.tufarmacia.app.ui.erp.ErpShiftsScreen
 import cl.tufarmacia.app.ui.erp.ErpStockMovementsScreen
 import cl.tufarmacia.app.ui.erp.ErpSuppliersScreen
@@ -103,6 +104,7 @@ private object Routes {
     const val ErpPos = "erp_pos"
     const val ErpPrescriptions = "erp_prescriptions"
     const val ErpDescuentos = "erp_descuentos"
+    const val ErpReportes = "erp_reportes"
     const val ErpInventory = "erp_inventory"
     const val ErpMovements = "erp_movements"
     const val ErpClients = "erp_clients"
@@ -582,6 +584,10 @@ fun TuFarmaciaRoot(container: AppContainer) {
                                 erpVm.loadDescuentos()
                                 navController.navigate(Routes.ErpDescuentos)
                             }
+                            Routes.ErpReportes -> {
+                                erpVm.loadReportesModule()
+                                navController.navigate(Routes.ErpReportes)
+                            }
                             Routes.ErpInventory -> {
                                 erpVm.loadInventory()
                                 navController.navigate(Routes.ErpInventory)
@@ -763,6 +769,16 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onSaveLoyalty = { ppc, cpp, enabled ->
                         erpVm.updateLoyaltySettings(ppc, cpp, enabled)
                     },
+                )
+            }
+            composable(Routes.ErpReportes) {
+                ErpReportesScreen(
+                    state = erp,
+                    onBack = { navController.popBackStack() },
+                    onRefresh = erpVm::loadReportesModule,
+                    onTab = erpVm::setReportesTab,
+                    onRangeDays = erpVm::setReportesRangeDays,
+                    onPylYear = erpVm::setPylYear,
                 )
             }
             composable(Routes.ErpOrders) {

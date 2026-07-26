@@ -3609,3 +3609,14 @@ Build local OK. Push → Vercel.
 - Contract: docs/mobile/api-contract.md
 - Build: :app:assembleDebug OK
 
+
+## 2026-07-26 - Android v1.12.0 Reportes ventas + cash-flow + PyL (staff/owner)
+
+- **App** cl.tufarmacia.native versionCode 21 / versionName 1.12.0
+- **Modulo ERP Reportes** (ownerOnly): tabs Ventas | Flujo caja | PyL
+- **Ventas**: GET /api/admin/reportes (rango 7/30/90d) — KPIs vs periodo prev, canales online/POS, clientes, categorias, top productos, ventas/dia, horas pico
+- **Flujo caja**: GET /api/admin/finanzas/cash-flow — 30d real + 30d proyeccion OC/recurrentes, balance acum.
+- **PyL**: GET /api/admin/finanzas/pyl — YTD + mensual con YoY, selector ano
+- UI: ErpReportesScreens.kt · hub card erp_reportes · ViewModel loadReportes/CashFlow/Pyl
+- Build: :app:assembleDebug OK
+

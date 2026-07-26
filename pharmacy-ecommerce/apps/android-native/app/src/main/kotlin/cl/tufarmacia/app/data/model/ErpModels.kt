@@ -1016,3 +1016,152 @@ data class DescuentosPushResult(
     val failed: Int = 0,
     val total: Int = 0,
 )
+
+// ── Reportes: ventas / cash-flow / PyL ──────────────────────────
+
+@Serializable
+data class ReportesKpis(
+    val totalRevenue: Double = 0.0,
+    val totalOrders: Int = 0,
+    val avgTicket: Double = 0.0,
+    val totalCost: Double = 0.0,
+    val grossMargin: Double = 0.0,
+    val marginPct: Double = 0.0,
+)
+
+@Serializable
+data class ReportesPrevKpis(
+    val totalRevenue: Double = 0.0,
+    val totalOrders: Int = 0,
+    val avgTicket: Double = 0.0,
+)
+
+@Serializable
+data class ReportesChannelOnline(
+    val orders: Int = 0,
+    val revenue: Double = 0.0,
+)
+
+@Serializable
+data class ReportesChannelPos(
+    val orders: Int = 0,
+    val revenue: Double = 0.0,
+    val cash: Int = 0,
+    val debit: Int = 0,
+    val credit: Int = 0,
+)
+
+@Serializable
+data class ReportesChannelBreakdown(
+    val online: ReportesChannelOnline = ReportesChannelOnline(),
+    val pos: ReportesChannelPos = ReportesChannelPos(),
+)
+
+@Serializable
+data class ReportesSalesByDay(
+    val date: String? = null,
+    val ventas: Double = 0.0,
+    val ordenes: Int = 0,
+    @SerialName("ventas_pos") val ventasPos: Double = 0.0,
+    @SerialName("ordenes_pos") val ordenesPos: Int = 0,
+)
+
+@Serializable
+data class ReportesSalesByHour(
+    val hour: Int = 0,
+    val ordenes: Int = 0,
+    val ventas: Double = 0.0,
+)
+
+@Serializable
+data class ReportesTopProduct(
+    val name: String? = null,
+    val units: Int = 0,
+    val revenue: Double = 0.0,
+    val cost: Double = 0.0,
+    @SerialName("has_cost") val hasCost: Boolean = false,
+    val category: String? = null,
+    val margin: Double? = null,
+    @SerialName("margin_pct") val marginPct: Double? = null,
+)
+
+@Serializable
+data class ReportesCategory(
+    val name: String? = null,
+    val revenue: Double = 0.0,
+    val units: Int = 0,
+    val cost: Double = 0.0,
+    val margin: Double = 0.0,
+)
+
+@Serializable
+data class ReportesTopCustomer(
+    val name: String? = null,
+    val spend: Double = 0.0,
+    val orders: Int = 0,
+)
+
+@Serializable
+data class ReportesCustomerMetrics(
+    val totalUniqueCustomers: Int = 0,
+    val uniqueRegistered: Int = 0,
+    val uniqueGuests: Int = 0,
+    val registeredOrderCount: Int = 0,
+    val guestOrderCount: Int = 0,
+    val avgOrdersPerCustomer: Double = 0.0,
+    val avgRevenuePerCustomer: Double = 0.0,
+    val topCustomers: List<ReportesTopCustomer> = emptyList(),
+)
+
+@Serializable
+data class ReportesResponse(
+    val kpis: ReportesKpis = ReportesKpis(),
+    val prevKpis: ReportesPrevKpis = ReportesPrevKpis(),
+    val channelBreakdown: ReportesChannelBreakdown = ReportesChannelBreakdown(),
+    val salesByDay: List<ReportesSalesByDay> = emptyList(),
+    val salesByHour: List<ReportesSalesByHour> = emptyList(),
+    val topProducts: List<ReportesTopProduct> = emptyList(),
+    val topByMargin: List<ReportesTopProduct> = emptyList(),
+    val byCategory: List<ReportesCategory> = emptyList(),
+    val customerMetrics: ReportesCustomerMetrics = ReportesCustomerMetrics(),
+)
+
+@Serializable
+data class CashFlowDay(
+    val date: String? = null,
+    val inflow: Double = 0.0,
+    val outflow: Double = 0.0,
+    @SerialName("projected_outflow") val projectedOutflow: Double = 0.0,
+    val balance: Double = 0.0,
+    @SerialName("is_past") val isPast: Boolean = true,
+)
+
+@Serializable
+data class CashFlowResponse(
+    val days: List<CashFlowDay> = emptyList(),
+)
+
+@Serializable
+data class PylMonth(
+    val month: Int = 0,
+    val ingresos: Double = 0.0,
+    val gastos: Double = 0.0,
+    val margen: Double = 0.0,
+    @SerialName("ingresos_prev") val ingresosPrev: Double = 0.0,
+    @SerialName("gastos_prev") val gastosPrev: Double = 0.0,
+    @SerialName("margen_prev") val margenPrev: Double = 0.0,
+)
+
+@Serializable
+data class PylYtd(
+    val ingresos: Double = 0.0,
+    val gastos: Double = 0.0,
+    val margen: Double = 0.0,
+)
+
+@Serializable
+data class PylResponse(
+    val year: Int = 0,
+    val months: List<PylMonth> = emptyList(),
+    val ytd: PylYtd = PylYtd(),
+)

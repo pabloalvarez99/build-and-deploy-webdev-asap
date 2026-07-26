@@ -11,6 +11,7 @@ import cl.tufarmacia.app.data.model.ApOrderDto
 import cl.tufarmacia.app.data.model.ApPayRequest
 import cl.tufarmacia.app.data.model.ArqueoResponse
 import cl.tufarmacia.app.data.model.AvisoDto
+import cl.tufarmacia.app.data.model.CashFlowResponse
 import cl.tufarmacia.app.data.model.CierreDiaResponse
 import cl.tufarmacia.app.data.model.ClienteDetailResponse
 import cl.tufarmacia.app.data.model.ClienteDto
@@ -43,7 +44,9 @@ import cl.tufarmacia.app.data.model.PrescriptionRecordDto
 import cl.tufarmacia.app.data.model.Product
 import cl.tufarmacia.app.data.model.ProductBatchDto
 import cl.tufarmacia.app.data.model.PurchaseOrderDto
+import cl.tufarmacia.app.data.model.PylResponse
 import cl.tufarmacia.app.data.model.ReorderGroup
+import cl.tufarmacia.app.data.model.ReportesResponse
 import cl.tufarmacia.app.data.model.StockAdjustRequest
 import cl.tufarmacia.app.data.model.StockMovementDto
 import cl.tufarmacia.app.data.model.SupplierDto
@@ -180,6 +183,20 @@ data class ErpUiState(
     val descuentosBusy: Boolean = false,
     /** "list" | "apply" | "remove" | "loyalty" */
     val descuentosTab: String = "list",
+
+    /** "ventas" | "flujo" | "pyl" */
+    val reportesTab: String = "ventas",
+    val reportes: ReportesResponse? = null,
+    val reportesFrom: String? = null,
+    val reportesTo: String? = null,
+    /** preset days: 7 | 30 | 90 */
+    val reportesRangeDays: Int = 30,
+    val reportesLoading: Boolean = false,
+    val cashFlow: CashFlowResponse? = null,
+    val cashFlowLoading: Boolean = false,
+    val pyl: PylResponse? = null,
+    val pylYear: Int = LocalDate.now().year,
+    val pylLoading: Boolean = false,
 )
 
 class ErpViewModel(private val container: AppContainer) : ViewModel() {
@@ -1073,6 +1090,106 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                     )
                 }
             }
+        }
+    }
+
+    fun setReportesTab(tab: String) {
+        _state.update { it.copy(reportesTab = tab) }
+        when (tab) {
+            "flujo" -> if (_state.value.cashFlow == null) loadCashFlow()
+            "pyl" -> if (_state.value.pyl == null) loadPyl()
+            else -> if (_state.value.reportes == null) loadReportes()
+        }
+    }
+
+    fun setReportesRangeDays(days: Int) {
+        val to = LocalDate.now()
+        val from = to.minusDays(days.toLong().coerceAtLeast(1))
+        _state.update {
+            it.copy(
+                reportesRangeDays = days,
+                reportesFrom = from.toString(),
+                reportesTo = to.toString(),
+            )
+        }
+        loadReportes()
+    }
+
+    fun loadReportes() {
+        viewModelScope.launch {
+            val s = _state.value
+            val to = s.reportesTo ?: LocalDate.now().toString()
+            val from = s.reportesFrom
+                ?: LocalDate.now().minusDays(s.reportesRangeDays.toLong().coerceAtLeast(1)).toString()
+            _state.update {
+                it.copy(
+                    reportesLoading = true,
+                    reportesFrom = from,
+                    reportesTo = to,
+                )
+            }
+            try {
+                val res = container.api.adminReportes(from = from, to = to)
+                _state.update {
+                    it.copy(reportesLoading = false, reportes = res)
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        reportesLoading = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message ?: "Error reportes",
+                    )
+                }
+            }
+        }
+    }
+
+    fun loadCashFlow() {
+        viewModelScope.launch {
+            _state.update { it.copy(cashFlowLoading = true) }
+            try {
+                val res = container.api.adminCashFlow()
+                _state.update { it.copy(cashFlowLoading = false, cashFlow = res) }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        cashFlowLoading = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message ?: "Error cash-flow",
+                    )
+                }
+            }
+        }
+    }
+
+    fun setPylYear(year: Int) {
+        _state.update { it.copy(pylYear = year) }
+        loadPyl()
+    }
+
+    fun loadPyl() {
+        viewModelScope.launch {
+            val year = _state.value.pylYear
+            _state.update { it.copy(pylLoading = true) }
+            try {
+                val res = container.api.adminPyl(year = year)
+                _state.update { it.copy(pylLoading = false, pyl = res) }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        pylLoading = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message ?: "Error PyL",
+                    )
+                }
+            }
+        }
+    }
+
+    /** Load active reportes tab (hub entry). */
+    fun loadReportesModule() {
+        when (_state.value.reportesTab) {
+            "flujo" -> loadCashFlow()
+            "pyl" -> loadPyl()
+            else -> loadReportes()
         }
     }
 
