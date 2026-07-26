@@ -68,9 +68,11 @@ data class ErpModule(
 
 val ERP_MODULES = listOf(
     ErpModule("erp_dashboard", "Dashboard", "KPIs del día · operaciones"),
+    ErpModule("erp_cierre", "Cierre de día", "Ventas · caja · top · email"),
     ErpModule("erp_orders", "Órdenes", "Online · reservas · staff actions"),
     ErpModule("erp_pos", "POS", "Venta · barcode · retiro · descuento"),
     ErpModule("erp_inventory", "Inventario", "Stock · ajustes · editar"),
+    ErpModule("erp_movements", "Mov. stock", "Historial de ajustes"),
     ErpModule("erp_batches", "Lotes / Vencimientos", "soon30 · vencidos"),
     ErpModule("erp_reorder", "Reposición", "Sugerencias · OC · email"),
     ErpModule("erp_devoluciones", "Devoluciones", "Registrar · listar"),
@@ -92,9 +94,77 @@ fun ErpHubScreen(
     avisos: List<AvisoDto> = emptyList(),
     onOpen: (String) -> Unit,
     onBackToStore: () -> Unit,
+    onCreateAviso: ((title: String, body: String, severity: String, pinned: Boolean) -> Unit)? = null,
 ) {
     val isOwner = user?.role in setOf("owner", "admin")
     val modules = ERP_MODULES.filter { isOwner || !it.ownerOnly }
+    var showCreateAviso by remember { mutableStateOf(false) }
+    var avisoTitle by remember { mutableStateOf("") }
+    var avisoBody by remember { mutableStateOf("") }
+    var avisoSeverity by remember { mutableStateOf("info") }
+    var avisoPinned by remember { mutableStateOf(false) }
+
+    if (showCreateAviso && onCreateAviso != null) {
+        AlertDialog(
+            onDismissRequest = { showCreateAviso = false },
+            title = { Text("Nuevo aviso") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = avisoTitle,
+                        onValueChange = { avisoTitle = it },
+                        label = { Text("Título") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = avisoBody,
+                        onValueChange = { avisoBody = it },
+                        label = { Text("Mensaje") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf("info", "warning", "critical").forEach { sev ->
+                            FilterChip(
+                                selected = avisoSeverity == sev,
+                                onClick = { avisoSeverity = sev },
+                                label = { Text(sev) },
+                            )
+                        }
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { avisoPinned = !avisoPinned },
+                    ) {
+                        FilterChip(
+                            selected = avisoPinned,
+                            onClick = { avisoPinned = !avisoPinned },
+                            label = { Text(if (avisoPinned) "Fijado 📌" else "Fijar") },
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (avisoTitle.isNotBlank() && avisoBody.isNotBlank()) {
+                            onCreateAviso(avisoTitle, avisoBody, avisoSeverity, avisoPinned)
+                            showCreateAviso = false
+                            avisoTitle = ""
+                            avisoBody = ""
+                            avisoSeverity = "info"
+                            avisoPinned = false
+                        }
+                    },
+                ) { Text("Publicar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCreateAviso = false }) { Text("Cancelar") }
+            },
+        )
+    }
+
     Column(
         Modifier
             .fillMaxSize()
@@ -103,6 +173,11 @@ fun ErpHubScreen(
         TopAppBar(
             title = { Text("ERP Farmacia", fontWeight = FontWeight.SemiBold) },
             actions = {
+                if (isOwner && onCreateAviso != null) {
+                    TextButton(onClick = { showCreateAviso = true }) {
+                        Text("Aviso+")
+                    }
+                }
                 TextButton(onClick = onBackToStore) {
                     Text("Tienda")
                 }
@@ -119,20 +194,32 @@ fun ErpHubScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            if (avisos.isNotEmpty()) {
+            if (avisos.isNotEmpty() || (isOwner && onCreateAviso != null)) {
                 item {
-                    Text("Avisos internos", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("Avisos internos", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                        if (isOwner && onCreateAviso != null && avisos.isEmpty()) {
+                            TextButton(onClick = { showCreateAviso = true }) { Text("Crear") }
+                        }
+                    }
                 }
                 items(avisos, key = { it.id }) { a ->
+                    val bg = when (a.severity) {
+                        "critical" -> MaterialTheme.colorScheme.errorContainer
+                        "warning" -> MaterialTheme.colorScheme.tertiaryContainer
+                        else -> if (a.pinned) {
+                            MaterialTheme.colorScheme.tertiaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.secondaryContainer
+                        }
+                    }
                     Card(
                         Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (a.pinned) {
-                                MaterialTheme.colorScheme.tertiaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.secondaryContainer
-                            },
-                        ),
+                        colors = CardDefaults.cardColors(containerColor = bg),
                     ) {
                         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -141,8 +228,13 @@ fun ErpHubScreen(
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.titleSmall,
                                 )
-                                if (a.pinned) {
-                                    Text("📌", style = MaterialTheme.typography.labelSmall)
+                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    a.severity?.takeIf { it != "info" }?.let {
+                                        Text(it, style = MaterialTheme.typography.labelSmall)
+                                    }
+                                    if (a.pinned) {
+                                        Text("📌", style = MaterialTheme.typography.labelSmall)
+                                    }
                                 }
                             }
                             a.body?.takeIf { it.isNotBlank() }?.let {

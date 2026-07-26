@@ -604,15 +604,193 @@ data class AvisoDto(
     val id: String,
     val title: String? = null,
     val body: String? = null,
+    val severity: String? = null,
     val pinned: Boolean = false,
     @SerialName("visible_to") val visibleTo: String? = null,
     @SerialName("expires_at") val expiresAt: String? = null,
     @SerialName("created_at") val createdAt: String? = null,
+    @SerialName("created_by_name") val createdByName: String? = null,
 )
 
 @Serializable
 data class AvisosResponse(
     val announcements: List<AvisoDto> = emptyList(),
+)
+
+@Serializable
+data class CreateAvisoRequest(
+    val title: String,
+    val body: String,
+    val severity: String = "info",
+    @SerialName("visible_to") val visibleTo: String = "all",
+    val pinned: Boolean = false,
+    @SerialName("expires_at") val expiresAt: String? = null,
+)
+
+@Serializable
+data class CreateAvisoResponse(
+    val announcement: AvisoDto? = null,
+)
+
+@Serializable
+data class CierreDiaPos(
+    val revenue: Double = 0.0,
+    val count: Int = 0,
+    val efectivo: Double = 0.0,
+    val debito: Double = 0.0,
+    val credito: Double = 0.0,
+    @SerialName("mixto_count") val mixtoCount: Int = 0,
+)
+
+@Serializable
+data class CierreDiaOnline(
+    val revenue: Double = 0.0,
+    val count: Int = 0,
+)
+
+@Serializable
+data class CierreDiaVentas(
+    val total: Double = 0.0,
+    val count: Int = 0,
+    @SerialName("delta_pct") val deltaPct: Double? = null,
+    @SerialName("prev_total") val prevTotal: Double = 0.0,
+    @SerialName("avg_ticket") val avgTicket: Double = 0.0,
+    val pos: CierreDiaPos = CierreDiaPos(),
+    val online: CierreDiaOnline = CierreDiaOnline(),
+)
+
+@Serializable
+data class CierreDiaFinanzas(
+    val cogs: Double = 0.0,
+    @SerialName("margen_bruto") val margenBruto: Double? = null,
+    @SerialName("margen_pct") val margenPct: Double? = null,
+    val gastos: Double = 0.0,
+    @SerialName("gastos_count") val gastosCount: Int = 0,
+)
+
+@Serializable
+data class CierreDiaCaja(
+    val id: String? = null,
+    @SerialName("turno_inicio") val turnoInicio: String? = null,
+    @SerialName("turno_fin") val turnoFin: String? = null,
+    @SerialName("fondo_inicial") val fondoInicial: Double = 0.0,
+    @SerialName("ventas_total") val ventasTotal: Double = 0.0,
+    @SerialName("efectivo_esperado") val efectivoEsperado: Double = 0.0,
+    @SerialName("efectivo_contado") val efectivoContado: Double = 0.0,
+    val diferencia: Double = 0.0,
+    @SerialName("cerrado_por") val cerradoPor: String? = null,
+    val notas: String? = null,
+)
+
+@Serializable
+data class CierreDiaFarmaciaTurno(
+    @SerialName("pharmacist_name") val pharmacistName: String? = null,
+    @SerialName("shift_start") val shiftStart: String? = null,
+    @SerialName("shift_end") val shiftEnd: String? = null,
+)
+
+@Serializable
+data class CierreDiaFarmacia(
+    @SerialName("recetas_total") val recetasTotal: Int = 0,
+    @SerialName("recetas_controladas") val recetasControladas: Int = 0,
+    val turno: CierreDiaFarmaciaTurno? = null,
+)
+
+@Serializable
+data class CierreDiaTareas(
+    @SerialName("completadas_hoy") val completadasHoy: Int = 0,
+    val abiertas: Int = 0,
+    val atrasadas: Int = 0,
+)
+
+@Serializable
+data class CierreDiaVendedor(
+    val uid: String? = null,
+    val name: String? = null,
+    val revenue: Double = 0.0,
+    val count: Int = 0,
+)
+
+@Serializable
+data class CierreDiaTopProducto(
+    val name: String? = null,
+    val units: Int = 0,
+    val revenue: Double = 0.0,
+    val cogs: Double = 0.0,
+)
+
+@Serializable
+data class CierreDiaRetiroManana(
+    val id: String,
+    @SerialName("pickup_code") val pickupCode: String? = null,
+    val total: Double = 0.0,
+    val customer: String? = null,
+    val phone: String? = null,
+    @SerialName("expires_at") val expiresAt: String? = null,
+)
+
+@Serializable
+data class CierreDiaAlertas(
+    @SerialName("stock_cero") val stockCero: Int = 0,
+    @SerialName("lotes_7d") val lotes7d: Int = 0,
+    @SerialName("faltas_con_stock") val faltasConStock: Int = 0,
+)
+
+@Serializable
+data class CierreDiaManana(
+    val retiros: List<CierreDiaRetiroManana> = emptyList(),
+    val alertas: CierreDiaAlertas = CierreDiaAlertas(),
+)
+
+@Serializable
+data class CierreDiaResponse(
+    val date: String? = null,
+    @SerialName("date_label") val dateLabel: String? = null,
+    val ventas: CierreDiaVentas = CierreDiaVentas(),
+    val finanzas: CierreDiaFinanzas = CierreDiaFinanzas(),
+    val caja: CierreDiaCaja? = null,
+    val farmacia: CierreDiaFarmacia = CierreDiaFarmacia(),
+    val tareas: CierreDiaTareas = CierreDiaTareas(),
+    @SerialName("avisos_activos") val avisosActivos: Int = 0,
+    @SerialName("por_vendedor") val porVendedor: List<CierreDiaVendedor> = emptyList(),
+    @SerialName("top_productos") val topProductos: List<CierreDiaTopProducto> = emptyList(),
+    val manana: CierreDiaManana = CierreDiaManana(),
+)
+
+@Serializable
+data class CierreDiaEmailResponse(
+    val sent: Boolean = false,
+    val to: String? = null,
+    val error: String? = null,
+)
+
+@Serializable
+data class StockMovementProduct(
+    val id: String? = null,
+    val name: String? = null,
+    val slug: String? = null,
+)
+
+@Serializable
+data class StockMovementDto(
+    val id: String,
+    @SerialName("product_id") val productId: String? = null,
+    val delta: Int = 0,
+    val reason: String? = null,
+    val notes: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
+    @SerialName("created_by") val createdBy: String? = null,
+    @SerialName("created_by_name") val createdByName: String? = null,
+    val products: StockMovementProduct? = null,
+)
+
+@Serializable
+data class StockMovementsResponse(
+    val movements: List<StockMovementDto> = emptyList(),
+    val total: Int = 0,
+    val page: Int = 1,
+    val limit: Int = 50,
+    @SerialName("total_pages") val totalPages: Int = 0,
 )
 
 @Serializable

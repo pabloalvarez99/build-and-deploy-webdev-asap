@@ -50,12 +50,17 @@ import cl.tufarmacia.app.data.model.SuppliersResponse
 import cl.tufarmacia.app.data.model.ArqueoActionResponse
 import cl.tufarmacia.app.data.model.ArqueoResponse
 import cl.tufarmacia.app.data.model.AvisosResponse
+import cl.tufarmacia.app.data.model.CierreDiaEmailResponse
+import cl.tufarmacia.app.data.model.CierreDiaResponse
 import cl.tufarmacia.app.data.model.ClienteDetailResponse
+import cl.tufarmacia.app.data.model.CreateAvisoRequest
+import cl.tufarmacia.app.data.model.CreateAvisoResponse
 import cl.tufarmacia.app.data.model.CreateTaskRequest
 import cl.tufarmacia.app.data.model.ExpressReorderRequest
 import cl.tufarmacia.app.data.model.ExpressReorderResponse
 import cl.tufarmacia.app.data.model.FaltaDto
 import cl.tufarmacia.app.data.model.FaltasResponse
+import cl.tufarmacia.app.data.model.StockMovementsResponse
 import cl.tufarmacia.app.data.model.TaskActionResponse
 import cl.tufarmacia.app.data.model.TaskDto
 import cl.tufarmacia.app.data.model.TasksResponse
@@ -412,6 +417,35 @@ class TuFarmaciaApi(
 
     suspend fun adminAvisos(): AvisosResponse =
         get("/api/admin/avisos", auth = true)
+
+    suspend fun adminCreateAviso(body: CreateAvisoRequest): CreateAvisoResponse =
+        post("/api/admin/avisos", body = body, auth = true)
+
+    suspend fun adminCierreDia(date: String? = null): CierreDiaResponse =
+        get("/api/admin/cierre-dia", auth = true) {
+            if (!date.isNullOrBlank()) parameter("date", date)
+        }
+
+    suspend fun adminCierreDiaEmail(date: String? = null, to: String? = null): CierreDiaEmailResponse {
+        val body = buildJsonObject {
+            if (!date.isNullOrBlank()) put("date", date)
+            if (!to.isNullOrBlank()) put("to", to)
+        }
+        return post("/api/admin/cierre-dia/email", body = body, auth = true)
+    }
+
+    suspend fun adminStockMovements(
+        page: Int = 1,
+        limit: Int = 50,
+        productId: String? = null,
+        reason: String? = null,
+    ): StockMovementsResponse =
+        get("/api/admin/stock-movements", auth = true) {
+            parameter("page", page)
+            parameter("limit", limit)
+            if (!productId.isNullOrBlank()) parameter("product_id", productId)
+            if (!reason.isNullOrBlank()) parameter("reason", reason)
+        }
 
     suspend fun adminClienteDetail(id: String, guestEmail: String? = null): ClienteDetailResponse =
         get("/api/admin/clientes/$id", auth = true) {

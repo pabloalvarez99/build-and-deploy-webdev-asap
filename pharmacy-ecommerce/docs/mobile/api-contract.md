@@ -66,6 +66,10 @@ Custom claim `role` on the token: `user` \| `owner` \| `admin` \| `pharmacist` \
 | PATCH | `/api/admin/faltas/{id}` | admin | mark notified |
 | POST | `/api/admin/faltas` | admin | create falta |
 | GET | `/api/admin/arqueo` | admin | shift cash snapshot |
+| GET | `/api/admin/cierre-dia` | admin | day close report |
+| POST | `/api/admin/cierre-dia/email` | owner | email day summary |
+| GET | `/api/admin/stock-movements` | admin | stock movement history |
+| POST | `/api/admin/avisos` | owner | create announcement |
 | GET/POST | `/api/admin/devoluciones` | admin | returns |
 | GET/PUT | `/api/admin/products/{id}` | admin | product quick edit |
 | GET | `/api/admin/barcodes/unknown` | admin | unknown scans |

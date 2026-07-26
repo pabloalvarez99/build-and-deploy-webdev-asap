@@ -47,6 +47,7 @@ import cl.tufarmacia.app.data.AppContainer
 import cl.tufarmacia.app.data.FontScalePref
 import cl.tufarmacia.app.ui.erp.ErpArqueoScreen
 import cl.tufarmacia.app.ui.erp.ErpBatchesScreen
+import cl.tufarmacia.app.ui.erp.ErpCierreDiaScreen
 import cl.tufarmacia.app.ui.erp.ErpClienteDetailScreen
 import cl.tufarmacia.app.ui.erp.ErpClientsScreen
 import cl.tufarmacia.app.ui.erp.ErpDashboardScreen
@@ -61,10 +62,13 @@ import cl.tufarmacia.app.ui.erp.ErpPurchaseDetailScreen
 import cl.tufarmacia.app.ui.erp.ErpPurchasesScreen
 import cl.tufarmacia.app.ui.erp.ErpReorderScreen
 import cl.tufarmacia.app.ui.erp.ErpShiftsScreen
+import cl.tufarmacia.app.ui.erp.ErpStockMovementsScreen
 import cl.tufarmacia.app.ui.erp.ErpSuppliersScreen
 import cl.tufarmacia.app.ui.erp.ErpTasksScreen
 import cl.tufarmacia.app.ui.erp.ErpUnknownBarcodesScreen
 import cl.tufarmacia.app.ui.erp.ErpViewModel
+import cl.tufarmacia.app.ui.erp.shiftIsoDate
+import cl.tufarmacia.app.ui.erp.todayIsoDate
 import cl.tufarmacia.app.ui.screens.AccountScreen
 import cl.tufarmacia.app.ui.screens.AdminScreen
 import cl.tufarmacia.app.ui.screens.CartScreen
@@ -92,9 +96,11 @@ private object Routes {
     const val Account = "account"
     const val Admin = "admin"
     const val ErpDashboard = "erp_dashboard"
+    const val ErpCierre = "erp_cierre"
     const val ErpOrders = "erp_orders"
     const val ErpPos = "erp_pos"
     const val ErpInventory = "erp_inventory"
+    const val ErpMovements = "erp_movements"
     const val ErpClients = "erp_clients"
     const val ErpPurchases = "erp_purchases"
     const val ErpSuppliers = "erp_suppliers"
@@ -554,6 +560,10 @@ fun TuFarmaciaRoot(container: AppContainer) {
                                 erpVm.loadDashboard()
                                 navController.navigate(Routes.ErpDashboard)
                             }
+                            Routes.ErpCierre -> {
+                                erpVm.loadCierreDia()
+                                navController.navigate(Routes.ErpCierre)
+                            }
                             Routes.ErpOrders -> {
                                 vm.loadAdminOrders()
                                 vm.loadLowStock()
@@ -563,6 +573,10 @@ fun TuFarmaciaRoot(container: AppContainer) {
                             Routes.ErpInventory -> {
                                 erpVm.loadInventory()
                                 navController.navigate(Routes.ErpInventory)
+                            }
+                            Routes.ErpMovements -> {
+                                erpVm.loadStockMovements()
+                                navController.navigate(Routes.ErpMovements)
                             }
                             Routes.ErpClients -> {
                                 erpVm.loadClientes()
@@ -615,6 +629,13 @@ fun TuFarmaciaRoot(container: AppContainer) {
                         }
                     },
                     onBackToStore = { navController.navigateTab(Routes.Home) },
+                    onCreateAviso = if (state.user?.role in setOf("owner", "admin")) {
+                        { title, body, severity, pinned ->
+                            erpVm.createAviso(title, body, severity, pinned = pinned)
+                        }
+                    } else {
+                        null
+                    },
                 )
             }
             composable(Routes.ErpDashboard) {
@@ -649,6 +670,14 @@ fun TuFarmaciaRoot(container: AppContainer) {
                                 erpVm.loadBatches()
                                 navController.navigate(Routes.ErpBatches)
                             }
+                            Routes.ErpCierre -> {
+                                erpVm.loadCierreDia()
+                                navController.navigate(Routes.ErpCierre)
+                            }
+                            Routes.ErpMovements -> {
+                                erpVm.loadStockMovements()
+                                navController.navigate(Routes.ErpMovements)
+                            }
                             Routes.ErpPos -> navController.navigate(Routes.ErpPos)
                             else -> navController.navigate(route)
                         }
@@ -657,6 +686,32 @@ fun TuFarmaciaRoot(container: AppContainer) {
                         erpVm.prefillPickupCode(code)
                         navController.navigate(Routes.ErpPos)
                     },
+                )
+            }
+            composable(Routes.ErpCierre) {
+                ErpCierreDiaScreen(
+                    state = erp,
+                    isOwner = state.user?.role in setOf("owner", "admin"),
+                    onBack = { navController.popBackStack() },
+                    onRefresh = { erpVm.loadCierreDia() },
+                    onPrevDay = {
+                        val d = shiftIsoDate(erp.cierreDiaDate ?: erp.cierreDia?.date, -1)
+                        erpVm.setCierreDiaDate(d)
+                    },
+                    onNextDay = {
+                        val d = shiftIsoDate(erp.cierreDiaDate ?: erp.cierreDia?.date, 1)
+                        erpVm.setCierreDiaDate(d)
+                    },
+                    onToday = { erpVm.setCierreDiaDate(todayIsoDate()) },
+                    onEmail = erpVm::emailCierreDia,
+                )
+            }
+            composable(Routes.ErpMovements) {
+                ErpStockMovementsScreen(
+                    state = erp,
+                    onBack = { navController.popBackStack() },
+                    onRefresh = { erpVm.loadStockMovements() },
+                    onReason = erpVm::setStockMovementsReason,
                 )
             }
             composable(Routes.ErpOrders) {

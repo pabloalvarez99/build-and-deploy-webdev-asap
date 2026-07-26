@@ -1,6 +1,6 @@
 # Tu Farmacia — Android nativo Kotlin (Full ERP)
 
-**Application ID:** `cl.tufarmacia.native` · **Version:** 1.8.1  
+**Application ID:** `cl.tufarmacia.native` · **Version:** 1.9.0  
 Pure Kotlin + Jetpack Compose. Separate natives (iOS later = Swift).
 
 ## Storefront
@@ -14,11 +14,13 @@ Pure Kotlin + Jetpack Compose. Separate natives (iOS later = Swift).
 ## ERP (staff tab)
 | Module | API | Notes |
 |--------|-----|--------|
-| Hub | `/api/admin/avisos` | avisos internos pinned |
+| Hub | `/api/admin/avisos` | avisos + **crear** (owner) |
 | Dashboard | `/api/admin/operaciones`, `dashboard-extras` | KPIs · reservas → POS prefill |
+| **Cierre de dia** | `/api/admin/cierre-dia` + email | ventas · caja · top · vendedores |
 | Órdenes | `/api/admin/orders` | filter · staff actions · **detail actions** |
 | POS | `/api/admin/pos/sale` | confirm · notes · **recientes** · **share ticket** |
 | Inventario | inventory + stock adjust + products | adjust · reason · **edit price/stock** |
+| **Mov. stock** | `/api/admin/stock-movements` | historial + filtro motivo |
 | Lotes | `/api/admin/batches` | expired / soon30 / soon90 |
 | Reposición | reorder-suggestions + express + **OC draft** | crear OC · email express |
 | Devoluciones | `/api/admin/devoluciones` | list + create |
@@ -54,6 +56,12 @@ app/src/main/kotlin/cl/tufarmacia/app/
   util/
 scripts/              # install-debug.ps1|.sh + SIDELOAD.md
 ```
+
+## v1.9.0
+| **Cierre de dia** | `/api/admin/cierre-dia` + email | ventas · caja · top · vendedores |
+- **Email resumen** (owner) via `/api/admin/cierre-dia/email`
+- **Movimientos de stock**: historial + chips por motivo
+- **Crear avisos** desde hub (owner: title/body/severity/pin)
 
 ## v1.8.2
 - **Staff-first**: home = mostrador (POS/pedidos/stock/arqueo), no UX de 3ª edad

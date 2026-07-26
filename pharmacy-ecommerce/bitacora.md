@@ -3580,3 +3580,10 @@ Build local OK. Push → Vercel.
 - Home mostrador: POS / pedidos / inventario / arqueo / ERP
 - Nav staff: Ops POS Pedidos ERP Cuenta; tipografia densa Normal default
 - Copy operativo; app no es UX 3a edad
+
+## 2026-07-26 - Android v1.9.0 cierre dia + mov stock + avisos write
+- Cierre de dia: GET /api/admin/cierre-dia (ventas POS/online, caja, top, vendedores, manana)
+- Email resumen owner: POST /api/admin/cierre-dia/email
+- Movimientos stock: GET /api/admin/stock-movements + filtros motivo
+- Hub: crear avisos (owner) title/body/severity/pin
+- versionCode 18 / 1.9.0; assembleDebug green

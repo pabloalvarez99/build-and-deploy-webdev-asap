@@ -11,8 +11,10 @@ import cl.tufarmacia.app.data.model.ApOrderDto
 import cl.tufarmacia.app.data.model.ApPayRequest
 import cl.tufarmacia.app.data.model.ArqueoResponse
 import cl.tufarmacia.app.data.model.AvisoDto
+import cl.tufarmacia.app.data.model.CierreDiaResponse
 import cl.tufarmacia.app.data.model.ClienteDetailResponse
 import cl.tufarmacia.app.data.model.ClienteDto
+import cl.tufarmacia.app.data.model.CreateAvisoRequest
 import cl.tufarmacia.app.data.model.CreateDevolucionItem
 import cl.tufarmacia.app.data.model.CreateDevolucionRequest
 import cl.tufarmacia.app.data.model.CreateFaltaRequest
@@ -39,6 +41,7 @@ import cl.tufarmacia.app.data.model.ProductBatchDto
 import cl.tufarmacia.app.data.model.PurchaseOrderDto
 import cl.tufarmacia.app.data.model.ReorderGroup
 import cl.tufarmacia.app.data.model.StockAdjustRequest
+import cl.tufarmacia.app.data.model.StockMovementDto
 import cl.tufarmacia.app.data.model.SupplierDto
 import cl.tufarmacia.app.data.model.TaskDto
 import cl.tufarmacia.app.data.model.TurnoCierre
@@ -150,6 +153,15 @@ data class ErpUiState(
     val avisos: List<AvisoDto> = emptyList(),
     val clienteDetail: ClienteDetailResponse? = null,
     val clienteDetailLoading: Boolean = false,
+
+    val cierreDia: CierreDiaResponse? = null,
+    val cierreDiaDate: String? = null,
+    val cierreDiaBusy: Boolean = false,
+
+    val stockMovements: List<StockMovementDto> = emptyList(),
+    val stockMovementsTotal: Int = 0,
+    val stockMovementsReason: String? = null,
+    val stockMovementsLoading: Boolean = false,
 )
 
 class ErpViewModel(private val container: AppContainer) : ViewModel() {
@@ -706,6 +718,116 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                 // non-critical
             }
         }
+    }
+
+    fun createAviso(
+        title: String,
+        body: String,
+        severity: String = "info",
+        visibleTo: String = "all",
+        pinned: Boolean = false,
+    ) {
+        viewModelScope.launch {
+            try {
+                container.api.adminCreateAviso(
+                    CreateAvisoRequest(
+                        title = title.trim(),
+                        body = body.trim(),
+                        severity = severity,
+                        visibleTo = visibleTo,
+                        pinned = pinned,
+                    ),
+                )
+                _state.update { it.copy(snackbar = "Aviso publicado") }
+                loadAvisos()
+            } catch (e: Exception) {
+                _state.update { it.copy(snackbar = (e as? ApiException)?.message ?: e.message) }
+            }
+        }
+    }
+
+    fun loadCierreDia(date: String? = null) {
+        viewModelScope.launch {
+            _state.update { it.copy(loading = true, error = null) }
+            try {
+                val d = date ?: _state.value.cierreDiaDate
+                val res = container.api.adminCierreDia(d)
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        cierreDia = res,
+                        cierreDiaDate = res.date ?: d,
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message ?: "Error cierre día",
+                    )
+                }
+            }
+        }
+    }
+
+    fun setCierreDiaDate(date: String) {
+        _state.update { it.copy(cierreDiaDate = date) }
+        loadCierreDia(date)
+    }
+
+    fun emailCierreDia() {
+        viewModelScope.launch {
+            _state.update { it.copy(cierreDiaBusy = true) }
+            try {
+                val res = container.api.adminCierreDiaEmail(date = _state.value.cierreDiaDate)
+                _state.update {
+                    it.copy(
+                        cierreDiaBusy = false,
+                        snackbar = if (res.sent) {
+                            "Resumen enviado a ${res.to ?: "email configurado"}"
+                        } else {
+                            res.error ?: "No se pudo enviar"
+                        },
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        cierreDiaBusy = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message,
+                    )
+                }
+            }
+        }
+    }
+
+    fun loadStockMovements(reason: String? = null) {
+        viewModelScope.launch {
+            val r = reason ?: _state.value.stockMovementsReason
+            _state.update { it.copy(stockMovementsLoading = true, stockMovementsReason = r) }
+            try {
+                val res = container.api.adminStockMovements(page = 1, limit = 60, reason = r)
+                _state.update {
+                    it.copy(
+                        stockMovementsLoading = false,
+                        stockMovements = res.movements,
+                        stockMovementsTotal = res.total,
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        stockMovementsLoading = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message,
+                    )
+                }
+            }
+        }
+    }
+
+    fun setStockMovementsReason(reason: String?) {
+        _state.update { it.copy(stockMovementsReason = reason) }
+        loadStockMovements(reason)
     }
 
     fun loadClienteDetail(id: String, guestEmail: String? = null) {
