@@ -1,8 +1,10 @@
 package cl.tufarmacia.app.ui.erp
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -39,6 +41,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -100,9 +104,13 @@ fun ErpPosScreen(
         else -> state.posPayment
     }
 
-    Column(Modifier.fillMaxSize()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         TopAppBar(
-            title = { Text("POS") },
+            title = { Text("POS", fontWeight = FontWeight.SemiBold) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
@@ -110,27 +118,33 @@ fun ErpPosScreen(
             },
             actions = {
                 if (state.posCart.isNotEmpty()) {
-                    Text("Vaciar", Modifier.clickable(onClick = onClear).padding(16.dp), color = MaterialTheme.colorScheme.error)
+                    TextButton(onClick = onClear) {
+                        Text("Vaciar", color = MaterialTheme.colorScheme.error)
+                    }
                 }
             },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
         )
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             state.lastPosSale?.let { sale ->
                 item {
                     Card(
                         Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFDCFCE7)),
+                        elevation = CardDefaults.cardElevation(0.dp),
                     ) {
-                        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text("Última venta OK", fontWeight = FontWeight.Bold)
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("Última venta OK", fontWeight = FontWeight.Bold, color = Color(0xFF15803D))
                             Text(
                                 formatClp(sale.total),
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0F172A),
                             )
                             Text(
                                 "${sale.itemCount} ítems · ${sale.paymentLabel}" +
@@ -314,6 +328,7 @@ fun ErpPosScreen(
                 }
             }
         }
+        Surface(shadowElevation = 10.dp, color = MaterialTheme.colorScheme.surface) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(
@@ -381,15 +396,17 @@ fun ErpPosScreen(
             if (discount > 0) {
                 Text("Subtotal ${formatClp(subtotal)} − desc. ${formatClp(discount)}", style = MaterialTheme.typography.bodySmall)
             }
-            Text("Total: ${formatClp(total)}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text("Total: ${formatClp(total)}", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Button(
                 onClick = { showConfirm = true },
                 enabled = !state.posBusy && state.posCart.isNotEmpty(),
-                modifier = Modifier.fillMaxWidth().height(52.dp),
+                modifier = Modifier.fillMaxWidth().height(54.dp),
+                shape = RoundedCornerShape(14.dp),
             ) {
                 if (state.posBusy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
-                else Text("Cobrar")
+                else Text("Cobrar", fontWeight = FontWeight.SemiBold)
             }
+        }
         }
         if (showConfirm) {
             AlertDialog(
