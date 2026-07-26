@@ -46,10 +46,17 @@ import cl.tufarmacia.app.data.model.ReorderSuggestionsResponse
 import cl.tufarmacia.app.data.model.StockAdjustRequest
 import cl.tufarmacia.app.data.model.StockAdjustResponse
 import cl.tufarmacia.app.data.model.SuppliersResponse
+import cl.tufarmacia.app.data.model.ArqueoActionResponse
 import cl.tufarmacia.app.data.model.ArqueoResponse
+import cl.tufarmacia.app.data.model.AvisosResponse
+import cl.tufarmacia.app.data.model.ClienteDetailResponse
+import cl.tufarmacia.app.data.model.CreateTaskRequest
+import cl.tufarmacia.app.data.model.ExpressReorderRequest
+import cl.tufarmacia.app.data.model.ExpressReorderResponse
 import cl.tufarmacia.app.data.model.FaltaDto
 import cl.tufarmacia.app.data.model.FaltasResponse
 import cl.tufarmacia.app.data.model.TaskActionResponse
+import cl.tufarmacia.app.data.model.TaskDto
 import cl.tufarmacia.app.data.model.TasksResponse
 import cl.tufarmacia.app.data.model.TurnosResponse
 import cl.tufarmacia.app.data.model.UnknownBarcodesResponse
@@ -395,6 +402,23 @@ class TuFarmaciaApi(
 
     suspend fun adminArqueo(): ArqueoResponse =
         get("/api/admin/arqueo", auth = true)
+
+    suspend fun adminArqueoAction(body: kotlinx.serialization.json.JsonObject): ArqueoActionResponse =
+        post("/api/admin/arqueo", body = body, auth = true)
+
+    suspend fun adminAvisos(): AvisosResponse =
+        get("/api/admin/avisos", auth = true)
+
+    suspend fun adminClienteDetail(id: String, guestEmail: String? = null): ClienteDetailResponse =
+        get("/api/admin/clientes/$id", auth = true) {
+            if (!guestEmail.isNullOrBlank()) parameter("email", guestEmail)
+        }
+
+    suspend fun adminCreateTask(body: CreateTaskRequest): TaskDto =
+        post("/api/admin/tareas", body = body, auth = true)
+
+    suspend fun adminReposicionExpress(body: ExpressReorderRequest): ExpressReorderResponse =
+        post("/api/admin/reposicion/express", body = body, auth = true)
 
     private suspend inline fun <reified T> patchJson(path: String, body: Any): T {
         val token = tokenProvider.currentIdToken()

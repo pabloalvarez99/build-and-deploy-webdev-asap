@@ -3552,3 +3552,10 @@ Build local OK. Push → Vercel.
 ## 2026-07-26 - Android v1.6.0
 - Camera barcode ML Kit; forgot password; profile edit
 - Offline banner; a11y font scale + high contrast
+
+## 2026-07-26 - Android v1.7.0 Wave F (caja completa + counter speed)
+- Arqueo write: set_fondo, cerrar turno, farmaceutico shift
+- ERP hub avisos internos; cliente detail KPIs/historial
+- Order detail staff actions; POS confirm dialog + notas + pickup prefill from dashboard
+- Tareas create; reposicion email express
+- versionCode 13 / 1.7.0; assembleDebug green

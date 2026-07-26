@@ -1,6 +1,6 @@
 # Tu Farmacia — Android nativo Kotlin (Full ERP)
 
-**Application ID:** `cl.tufarmacia.native` · **Version:** 1.6.0  
+**Application ID:** `cl.tufarmacia.native` · **Version:** 1.7.0  
 Pure Kotlin + Jetpack Compose. Separate natives (iOS later = Swift).
 
 ## Storefront
@@ -14,21 +14,22 @@ Pure Kotlin + Jetpack Compose. Separate natives (iOS later = Swift).
 ## ERP (staff tab)
 | Module | API | Notes |
 |--------|-----|--------|
-| Dashboard | `/api/admin/operaciones`, `dashboard-extras` | KPIs, margen, reservas |
-| Órdenes | `/api/admin/orders` | filter, approve/reject, mark paid, refund/cancel |
-| POS | `/api/admin/pos/sale` | mixed · barcode · discount · pickup · history |
+| Hub | `/api/admin/avisos` | avisos internos pinned |
+| Dashboard | `/api/admin/operaciones`, `dashboard-extras` | KPIs · reservas → POS prefill |
+| Órdenes | `/api/admin/orders` | filter · staff actions · **detail actions** |
+| POS | `/api/admin/pos/sale` | confirm · notes · mixed · barcode · pickup |
 | Inventario | inventory + stock adjust + products | adjust · reason · **edit price/stock** |
 | Lotes | `/api/admin/batches` | expired / soon30 / soon90 |
-| Reposición | reorder-suggestions | por proveedor |
+| Reposición | reorder-suggestions + express | email express por proveedor |
 | Devoluciones | `/api/admin/devoluciones` | list + create |
 | Barcodes | `/api/admin/barcodes/unknown` | triage / dismiss |
-| Arqueo | `/api/admin/arqueo` | turno actual |
+| Arqueo | `/api/admin/arqueo` | **set_fondo · cerrar · farmacéutico** |
 | Faltas | `/api/admin/faltas` | pending · notify · create |
-| Clientes | `/api/admin/clientes` | registered + guests |
+| Clientes | `/api/admin/clientes` + detail | KPIs · historial |
 | Compras | purchase-orders | detail + **receive** |
 | Proveedores | `/api/admin/suppliers` | owner |
 | Finanzas | dashboard + AP + gastos | **pay AP** · quick gasto |
-| Tareas | `/api/admin/tareas` | complete |
+| Tareas | `/api/admin/tareas` | **create** · complete |
 | Turnos/Caja | `/api/admin/turnos` | cierres |
 
 ## Build
@@ -47,6 +48,12 @@ app/src/main/kotlin/cl/tufarmacia/app/
   ui/WebpayActivity.kt
   util/               # OrderStatusLabels, ChileValidation, Money
 ```
+
+## v1.7.0
+- Arqueo write: fondo inicial, cerrar turno, turno farmacéutico
+- Hub avisos; cliente detail (KPIs + pedidos)
+- Order detail staff actions; POS confirm + notas + pickup prefill
+- Crear tareas; reposición email express
 
 ## v1.6.0
 - Camera barcode (ML Kit) on POS + inventory

@@ -10,13 +10,18 @@ import cl.tufarmacia.app.data.model.AdminProductUpdate
 import cl.tufarmacia.app.data.model.ApOrderDto
 import cl.tufarmacia.app.data.model.ApPayRequest
 import cl.tufarmacia.app.data.model.ArqueoResponse
+import cl.tufarmacia.app.data.model.AvisoDto
+import cl.tufarmacia.app.data.model.ClienteDetailResponse
 import cl.tufarmacia.app.data.model.ClienteDto
 import cl.tufarmacia.app.data.model.CreateDevolucionItem
 import cl.tufarmacia.app.data.model.CreateDevolucionRequest
 import cl.tufarmacia.app.data.model.CreateFaltaRequest
 import cl.tufarmacia.app.data.model.CreateGastoRequest
+import cl.tufarmacia.app.data.model.CreateTaskRequest
 import cl.tufarmacia.app.data.model.DashboardExtras
 import cl.tufarmacia.app.data.model.DevolucionDto
+import cl.tufarmacia.app.data.model.ExpressReorderItem
+import cl.tufarmacia.app.data.model.ExpressReorderRequest
 import cl.tufarmacia.app.data.model.FaltaDto
 import cl.tufarmacia.app.data.model.FinanzasDashboard
 import cl.tufarmacia.app.data.model.GastoCategoryDto
@@ -44,6 +49,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kotlin.math.roundToInt
 
 data class PosLine(
@@ -80,6 +87,7 @@ data class ErpUiState(
     val posDiscount: String = "",
     val posCashAmount: String = "",
     val posCardAmount: String = "",
+    val posNotes: String = "",
     val posBusy: Boolean = false,
     val posCustomerUserId: String? = null,
     val posCustomerHistory: PosCustomerHistory? = null,
@@ -114,6 +122,10 @@ data class ErpUiState(
     val faltas: List<FaltaDto> = emptyList(),
     val faltasPending: Int = 0,
     val arqueo: ArqueoResponse? = null,
+    val arqueoBusy: Boolean = false,
+    val avisos: List<AvisoDto> = emptyList(),
+    val clienteDetail: ClienteDetailResponse? = null,
+    val clienteDetailLoading: Boolean = false,
 )
 
 class ErpViewModel(private val container: AppContainer) : ViewModel() {
@@ -380,6 +392,17 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
         _state.update { it.copy(posDiscount = value.filter { ch -> ch.isDigit() || ch == '.' }) }
     }
 
+    fun setPosNotes(notes: String) {
+        _state.update { it.copy(posNotes = notes) }
+    }
+
+    fun prefillPickupCode(code: String) {
+        _state.update {
+            it.copy(posPickupCode = code.filter { ch -> ch.isDigit() }.take(6))
+        }
+        if (code.filter { it.isDigit() }.length == 6) lookupPickup()
+    }
+
     fun setPosMixedAmounts(cash: String, card: String) {
         _state.update {
             it.copy(
@@ -461,6 +484,7 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                 posDiscount = "",
                 posCashAmount = "",
                 posCardAmount = "",
+                posNotes = "",
                 posCustomerUserId = null,
                 posCustomerHistory = null,
             )
@@ -527,6 +551,7 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                         customerPhone = s.posPhone.ifBlank { null },
                         discountAmount = if (discount > 0) discount else null,
                         customerUserId = s.posCustomerUserId,
+                        notes = s.posNotes.ifBlank { null },
                     ),
                 )
                 _state.update {
@@ -536,6 +561,7 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                         posDiscount = "",
                         posCashAmount = "",
                         posCardAmount = "",
+                        posNotes = "",
                         snackbar = "Venta OK ${res.id?.take(8) ?: ""} total ${res.total ?: ""}",
                     )
                 }
@@ -546,6 +572,85 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                         snackbar = (e as? ApiException)?.message ?: e.message ?: "Error POS",
                     )
                 }
+            }
+        }
+    }
+
+    fun loadAvisos() {
+        viewModelScope.launch {
+            try {
+                val res = container.api.adminAvisos()
+                _state.update { it.copy(avisos = res.announcements) }
+            } catch (_: Exception) {
+                // non-critical
+            }
+        }
+    }
+
+    fun loadClienteDetail(id: String, guestEmail: String? = null) {
+        viewModelScope.launch {
+            _state.update { it.copy(clienteDetailLoading = true, clienteDetail = null) }
+            try {
+                val pathId = if (id == "guest" || id.isBlank()) "guest" else id
+                val email = if (pathId == "guest") guestEmail else null
+                val detail = container.api.adminClienteDetail(pathId, email)
+                _state.update { it.copy(clienteDetailLoading = false, clienteDetail = detail) }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        clienteDetailLoading = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message ?: "Cliente no encontrado",
+                    )
+                }
+            }
+        }
+    }
+
+    fun clearClienteDetail() {
+        _state.update { it.copy(clienteDetail = null) }
+    }
+
+    fun createTask(title: String, description: String?, priority: String) {
+        viewModelScope.launch {
+            try {
+                container.api.adminCreateTask(
+                    CreateTaskRequest(
+                        title = title.trim(),
+                        description = description?.trim()?.ifBlank { null },
+                        priority = priority,
+                    ),
+                )
+                _state.update { it.copy(snackbar = "Tarea creada") }
+                loadTasks()
+            } catch (e: Exception) {
+                _state.update { it.copy(snackbar = (e as? ApiException)?.message ?: e.message) }
+            }
+        }
+    }
+
+    fun sendReposicionExpress(supplierId: String, supplierName: String) {
+        viewModelScope.launch {
+            val group = _state.value.reorderGroups.find { it.supplier?.id == supplierId }
+            if (group == null || group.items.isEmpty()) {
+                _state.update { it.copy(snackbar = "Sin ítems para $supplierName") }
+                return@launch
+            }
+            try {
+                container.api.adminReposicionExpress(
+                    ExpressReorderRequest(
+                        supplierId = supplierId,
+                        items = group.items.map {
+                            ExpressReorderItem(
+                                name = it.name,
+                                qty = maxOf(5, 10 - it.stock),
+                            )
+                        },
+                        notes = "Pedido express desde app móvil",
+                    ),
+                )
+                _state.update { it.copy(snackbar = "Email enviado a $supplierName") }
+            } catch (e: Exception) {
+                _state.update { it.copy(snackbar = (e as? ApiException)?.message ?: e.message) }
             }
         }
     }
@@ -967,6 +1072,80 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                 _state.update { it.copy(loading = false, arqueo = a) }
             } catch (e: Exception) {
                 _state.update { it.copy(loading = false, snackbar = e.message) }
+            }
+        }
+    }
+
+    fun setFondo(fondo: Double) {
+        viewModelScope.launch {
+            _state.update { it.copy(arqueoBusy = true) }
+            try {
+                container.api.adminArqueoAction(
+                    buildJsonObject {
+                        put("action", "set_fondo")
+                        put("fondo", fondo)
+                    },
+                )
+                _state.update { it.copy(arqueoBusy = false, snackbar = "Fondo actualizado") }
+                loadArqueo()
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(arqueoBusy = false, snackbar = (e as? ApiException)?.message ?: e.message)
+                }
+            }
+        }
+    }
+
+    fun cerrarTurno(efectivoContado: Double, notas: String?) {
+        viewModelScope.launch {
+            _state.update { it.copy(arqueoBusy = true) }
+            try {
+                container.api.adminArqueoAction(
+                    buildJsonObject {
+                        put("action", "cerrar")
+                        put("efectivo_contado", efectivoContado)
+                        if (!notas.isNullOrBlank()) put("notas", notas)
+                    },
+                )
+                _state.update { it.copy(arqueoBusy = false, snackbar = "Turno cerrado") }
+                loadArqueo()
+                loadTurnos()
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(arqueoBusy = false, snackbar = (e as? ApiException)?.message ?: e.message)
+                }
+            }
+        }
+    }
+
+    fun setPharmacistShift(name: String, rut: String) {
+        viewModelScope.launch {
+            try {
+                container.api.adminArqueoAction(
+                    buildJsonObject {
+                        put("action", "set_pharmacist_shift")
+                        put("pharmacist_name", name.trim())
+                        put("pharmacist_rut", rut.trim())
+                    },
+                )
+                _state.update { it.copy(snackbar = "Turno farmacéutico iniciado") }
+                loadArqueo()
+            } catch (e: Exception) {
+                _state.update { it.copy(snackbar = (e as? ApiException)?.message ?: e.message) }
+            }
+        }
+    }
+
+    fun closePharmacistShift() {
+        viewModelScope.launch {
+            try {
+                container.api.adminArqueoAction(
+                    buildJsonObject { put("action", "close_pharmacist_shift") },
+                )
+                _state.update { it.copy(snackbar = "Turno farmacéutico cerrado") }
+                loadArqueo()
+            } catch (e: Exception) {
+                _state.update { it.copy(snackbar = (e as? ApiException)?.message ?: e.message) }
             }
         }
     }

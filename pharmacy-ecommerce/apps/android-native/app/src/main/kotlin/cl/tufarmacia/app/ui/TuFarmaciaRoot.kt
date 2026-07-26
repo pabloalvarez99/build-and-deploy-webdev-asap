@@ -45,6 +45,7 @@ import cl.tufarmacia.app.data.AppContainer
 import cl.tufarmacia.app.data.FontScalePref
 import cl.tufarmacia.app.ui.erp.ErpArqueoScreen
 import cl.tufarmacia.app.ui.erp.ErpBatchesScreen
+import cl.tufarmacia.app.ui.erp.ErpClienteDetailScreen
 import cl.tufarmacia.app.ui.erp.ErpClientsScreen
 import cl.tufarmacia.app.ui.erp.ErpDashboardScreen
 import cl.tufarmacia.app.ui.erp.ErpDevolucionesScreen
@@ -105,6 +106,7 @@ private object Routes {
     const val ErpDevoluciones = "erp_devoluciones"
     const val ErpBarcodes = "erp_barcodes"
     const val ErpProductEdit = "erp_product_edit"
+    const val ErpClienteDetail = "erp_cliente_detail"
     const val ErpPurchaseDetail = "erp_purchase/{id}"
     const val Cart = "cart"
 
@@ -380,9 +382,31 @@ fun TuFarmaciaRoot(container: AppContainer) {
             ) { entry ->
                 val id = entry.arguments?.getString("id").orEmpty()
                 LaunchedEffect(id) { vm.loadOrderDetail(id) }
+                val isStaff = state.user?.isAdmin == true
                 OrderDetailScreen(
                     state = state,
                     onBack = { navController.popBackStack() },
+                    isStaff = isStaff,
+                    onApprove = {
+                        vm.adminApproveReservation(id)
+                        vm.loadOrderDetail(id)
+                    },
+                    onReject = {
+                        vm.adminRejectReservation(id)
+                        vm.loadOrderDetail(id)
+                    },
+                    onMarkPaid = {
+                        vm.adminMarkPaid(id)
+                        vm.loadOrderDetail(id)
+                    },
+                    onRefund = {
+                        vm.adminRefund(id)
+                        vm.loadOrderDetail(id)
+                    },
+                    onCancel = {
+                        vm.adminCancel(id)
+                        vm.loadOrderDetail(id)
+                    },
                 )
             }
             composable(Routes.Account) {
@@ -453,8 +477,10 @@ fun TuFarmaciaRoot(container: AppContainer) {
                 }
             }
             composable(Routes.Admin) {
+                LaunchedEffect(Unit) { erpVm.loadAvisos() }
                 ErpHubScreen(
                     user = state.user,
+                    avisos = erp.avisos,
                     onOpen = { route ->
                         when (route) {
                             Routes.ErpDashboard -> {
@@ -560,6 +586,10 @@ fun TuFarmaciaRoot(container: AppContainer) {
                             else -> navController.navigate(route)
                         }
                     },
+                    onOpenPosPickup = { code ->
+                        erpVm.prefillPickupCode(code)
+                        navController.navigate(Routes.ErpPos)
+                    },
                 )
             }
             composable(Routes.ErpOrders) {
@@ -598,6 +628,7 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onPayment = erpVm::setPosPayment,
                     onCustomer = erpVm::setPosCustomer,
                     onDiscountChange = erpVm::setPosDiscount,
+                    onNotesChange = erpVm::setPosNotes,
                     onMixedAmounts = erpVm::setPosMixedAmounts,
                     onLookupCustomer = erpVm::lookupCustomerHistory,
                     onPickupCodeChange = erpVm::setPosPickupCode,
@@ -670,7 +701,25 @@ fun TuFarmaciaRoot(container: AppContainer) {
                 )
             }
             composable(Routes.ErpClients) {
-                ErpClientsScreen(state = erp, onBack = { navController.popBackStack() })
+                ErpClientsScreen(
+                    state = erp,
+                    onBack = { navController.popBackStack() },
+                    onOpen = { c ->
+                        val isGuest = c.type.equals("guest", ignoreCase = true) || c.id.isNullOrBlank()
+                        val pathId = if (isGuest) "guest" else c.id.orEmpty()
+                        erpVm.loadClienteDetail(pathId, if (isGuest) c.email else null)
+                        navController.navigate(Routes.ErpClienteDetail)
+                    },
+                )
+            }
+            composable(Routes.ErpClienteDetail) {
+                ErpClienteDetailScreen(
+                    state = erp,
+                    onBack = {
+                        erpVm.clearClienteDetail()
+                        navController.popBackStack()
+                    },
+                )
             }
             composable(Routes.ErpPurchases) {
                 ErpPurchasesScreen(
@@ -710,6 +759,7 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     state = erp,
                     onBack = { navController.popBackStack() },
                     onRefresh = erpVm::loadReorderSuggestions,
+                    onExpress = erpVm::sendReposicionExpress,
                 )
             }
             composable(Routes.ErpSuppliers) {
@@ -729,6 +779,7 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     state = erp,
                     onBack = { navController.popBackStack() },
                     onComplete = erpVm::completeTask,
+                    onCreate = erpVm::createTask,
                 )
             }
             composable(Routes.ErpShifts) {
@@ -747,6 +798,10 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     state = erp,
                     onBack = { navController.popBackStack() },
                     onRefresh = erpVm::loadArqueo,
+                    onSetFondo = erpVm::setFondo,
+                    onCerrarTurno = erpVm::cerrarTurno,
+                    onSetPharmacist = erpVm::setPharmacistShift,
+                    onClosePharmacist = erpVm::closePharmacistShift,
                 )
             }
             composable(Routes.Login) {

@@ -109,6 +109,8 @@ data class PosSaleRequest(
     val notes: String? = null,
 )
 
+// notes already on PosSaleRequest
+
 @Serializable
 data class PosSaleResponse(
     val id: String? = null,
@@ -479,11 +481,12 @@ data class FinanzasDashboard(
 
 @Serializable
 data class TaskDto(
-    val id: String,
+    val id: String = "",
     val title: String? = null,
     val description: String? = null,
     val status: String? = null,
-    val priority: Int = 0,
+    /** API may return string priority (low/normal/high). */
+    val priority: String? = null,
     @SerialName("due_date") val dueDate: String? = null,
     @SerialName("assigned_to_uid") val assignedToUid: String? = null,
     @SerialName("assigned_role") val assignedRole: String? = null,
@@ -586,4 +589,104 @@ data class ArqueoResponse(
     @SerialName("efectivo_esperado") val efectivoEsperado: Double = 0.0,
     @SerialName("recent_orders") val recentOrders: List<ArqueoOrder> = emptyList(),
     @SerialName("pharmacist_name") val pharmacistName: String? = null,
+)
+
+@Serializable
+data class ArqueoActionResponse(
+    val success: Boolean = false,
+    val ok: Boolean = false,
+    val error: String? = null,
+    @SerialName("shift_id") val shiftId: String? = null,
+)
+
+@Serializable
+data class AvisoDto(
+    val id: String,
+    val title: String? = null,
+    val body: String? = null,
+    val pinned: Boolean = false,
+    @SerialName("visible_to") val visibleTo: String? = null,
+    @SerialName("expires_at") val expiresAt: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
+)
+
+@Serializable
+data class AvisosResponse(
+    val announcements: List<AvisoDto> = emptyList(),
+)
+
+@Serializable
+data class ClienteKpis(
+    @SerialName("lifetime_spend") val lifetimeSpend: Double = 0.0,
+    @SerialName("order_count") val orderCount: Int = 0,
+    @SerialName("avg_ticket") val avgTicket: Double = 0.0,
+    @SerialName("first_order") val firstOrder: String? = null,
+    @SerialName("last_order") val lastOrder: String? = null,
+    @SerialName("frequency_days") val frequencyDays: Int? = null,
+    @SerialName("top_recurrent") val topRecurrent: List<TopRecurrentProduct> = emptyList(),
+)
+
+@Serializable
+data class TopRecurrentProduct(
+    @SerialName("product_id") val productId: String? = null,
+    @SerialName("product_name") val productName: String? = null,
+    val orders: Int = 0,
+    @SerialName("total_qty") val totalQty: Int = 0,
+)
+
+@Serializable
+data class ClienteDetailCustomer(
+    val id: String? = null,
+    val email: String? = null,
+    val name: String? = null,
+    val surname: String? = null,
+    val phone: String? = null,
+    val rut: String? = null,
+    val type: String? = null,
+    @SerialName("loyalty_points") val loyaltyPoints: Int = 0,
+)
+
+@Serializable
+data class ClienteDetailOrder(
+    val id: String,
+    val status: String? = null,
+    val total: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
+    @SerialName("payment_provider") val paymentProvider: String? = null,
+    @SerialName("pickup_code") val pickupCode: String? = null,
+)
+
+@Serializable
+data class ClienteDetailResponse(
+    val customer: ClienteDetailCustomer? = null,
+    val kpis: ClienteKpis = ClienteKpis(),
+    val orders: List<ClienteDetailOrder> = emptyList(),
+)
+
+@Serializable
+data class CreateTaskRequest(
+    val title: String,
+    val description: String? = null,
+    val priority: String = "normal",
+    @SerialName("assigned_role") val assignedRole: String? = null,
+)
+
+@Serializable
+data class ExpressReorderItem(
+    val name: String,
+    val qty: Int,
+    @SerialName("unit_cost") val unitCost: Double? = null,
+)
+
+@Serializable
+data class ExpressReorderRequest(
+    @SerialName("supplier_id") val supplierId: String,
+    val items: List<ExpressReorderItem>,
+    val notes: String? = null,
+)
+
+@Serializable
+data class ExpressReorderResponse(
+    val success: Boolean = false,
+    val error: String? = null,
 )

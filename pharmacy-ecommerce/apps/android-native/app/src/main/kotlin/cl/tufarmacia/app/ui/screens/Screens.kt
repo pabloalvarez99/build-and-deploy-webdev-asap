@@ -925,6 +925,12 @@ private fun OrderCard(
 fun OrderDetailScreen(
     state: AppUiState,
     onBack: () -> Unit,
+    isStaff: Boolean = false,
+    onApprove: (() -> Unit)? = null,
+    onReject: (() -> Unit)? = null,
+    onMarkPaid: (() -> Unit)? = null,
+    onRefund: (() -> Unit)? = null,
+    onCancel: (() -> Unit)? = null,
 ) {
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -944,6 +950,7 @@ fun OrderDetailScreen(
             Text("Sin datos", Modifier.padding(24.dp))
             return
         }
+        val statusLower = o.status.lowercase()
         Column(
             Modifier
                 .fillMaxSize()
@@ -958,6 +965,33 @@ fun OrderDetailScreen(
             o.createdAt?.let { Text("Creado: $it") }
             o.reservationExpiresAt?.let { Text("Reserva vence: $it") }
             o.notes?.let { Text("Notas: $it") }
+            if (isStaff) {
+                Spacer(Modifier.height(4.dp))
+                Text("Acciones staff", fontWeight = FontWeight.Bold)
+                if (statusLower == "reserved") {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = { onApprove?.invoke() }, modifier = Modifier.weight(1f)) {
+                            Text("Aprobar")
+                        }
+                        OutlinedButton(onClick = { onReject?.invoke() }, modifier = Modifier.weight(1f)) {
+                            Text("Rechazar")
+                        }
+                    }
+                    OutlinedButton(onClick = { onMarkPaid?.invoke() }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Marcar pagada")
+                    }
+                }
+                if (statusLower == "paid") {
+                    OutlinedButton(onClick = { onRefund?.invoke() }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Reembolsar")
+                    }
+                }
+                if (statusLower in setOf("pending", "reserved", "processing")) {
+                    OutlinedButton(onClick = { onCancel?.invoke() }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Anular")
+                    }
+                }
+            }
             Spacer(Modifier.height(8.dp))
             Text("Ítems", fontWeight = FontWeight.Bold)
             o.lineItems.forEach { item ->

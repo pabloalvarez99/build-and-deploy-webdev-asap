@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -36,6 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,6 +53,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cl.tufarmacia.app.data.model.AuthUser
+import cl.tufarmacia.app.data.model.AvisoDto
+import cl.tufarmacia.app.data.model.ClienteDto
 import cl.tufarmacia.app.util.formatClp
 
 data class ErpModule(
@@ -66,16 +70,16 @@ val ERP_MODULES = listOf(
     ErpModule("erp_pos", "POS", "Venta · barcode · retiro · descuento"),
     ErpModule("erp_inventory", "Inventario", "Stock · ajustes · editar"),
     ErpModule("erp_batches", "Lotes / Vencimientos", "soon30 · vencidos"),
-    ErpModule("erp_reorder", "Reposición", "Sugerencias por proveedor"),
+    ErpModule("erp_reorder", "Reposición", "Sugerencias · email express"),
     ErpModule("erp_devoluciones", "Devoluciones", "Registrar · listar"),
     ErpModule("erp_barcodes", "Barcodes desconocidos", "Triage de scans"),
-    ErpModule("erp_arqueo", "Arqueo", "Turno actual · efectivo esperado"),
+    ErpModule("erp_arqueo", "Arqueo", "Fondo · cerrar turno · farmacéutico"),
     ErpModule("erp_faltas", "Faltas", "Pedidos sin stock · notificar"),
-    ErpModule("erp_clients", "Clientes", "Registrados y guests"),
+    ErpModule("erp_clients", "Clientes", "Detalle · KPIs · historial"),
     ErpModule("erp_purchases", "Compras", "OC · recepción stock", ownerOnly = true),
     ErpModule("erp_suppliers", "Proveedores", "Catálogo proveedores", ownerOnly = true),
     ErpModule("erp_finance", "Finanzas", "AP · pagar · gastos", ownerOnly = true),
-    ErpModule("erp_tasks", "Tareas", "Tareas internas abiertas"),
+    ErpModule("erp_tasks", "Tareas", "Crear · completar"),
     ErpModule("erp_shifts", "Turnos / Caja", "Cierres de turno"),
 )
 
@@ -83,10 +87,12 @@ val ERP_MODULES = listOf(
 @Composable
 fun ErpHubScreen(
     user: AuthUser?,
+    avisos: List<AvisoDto> = emptyList(),
     onOpen: (String) -> Unit,
     onBackToStore: () -> Unit,
 ) {
     val isOwner = user?.role in setOf("owner", "admin")
+    val modules = ERP_MODULES.filter { isOwner || !it.ownerOnly }
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             title = { Text("ERP Farmacia") },
@@ -110,7 +116,44 @@ fun ErpHubScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            items(ERP_MODULES.filter { isOwner || !it.ownerOnly }) { mod ->
+            if (avisos.isNotEmpty()) {
+                item {
+                    Text("Avisos internos", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                }
+                items(avisos, key = { it.id }) { a ->
+                    Card(
+                        Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (a.pinned) {
+                                MaterialTheme.colorScheme.tertiaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.secondaryContainer
+                            },
+                        ),
+                    ) {
+                        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(
+                                    a.title?.ifBlank { "Aviso" } ?: "Aviso",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleSmall,
+                                )
+                                if (a.pinned) {
+                                    Text("📌", style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                            a.body?.takeIf { it.isNotBlank() }?.let {
+                                Text(it, style = MaterialTheme.typography.bodyMedium)
+                            }
+                            a.expiresAt?.let {
+                                Text("Vence ${it.take(10)}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                            }
+                        }
+                    }
+                }
+                item { Spacer(Modifier.height(4.dp)) }
+            }
+            items(modules) { mod ->
                 Card(
                     Modifier
                         .fillMaxWidth()
@@ -137,6 +180,7 @@ fun ErpDashboardScreen(
     onBack: () -> Unit,
     onRefresh: () -> Unit,
     onOpenModule: (String) -> Unit = {},
+    onOpenPosPickup: (String) -> Unit = {},
 ) {
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -225,12 +269,15 @@ fun ErpDashboardScreen(
                     Card(
                         Modifier
                             .fillMaxWidth()
-                            .clickable { onOpenModule("erp_pos") },
+                            .clickable {
+                                val code = r.pickupCode.orEmpty()
+                                if (code.isNotBlank()) onOpenPosPickup(code) else onOpenModule("erp_pos")
+                            },
                     ) {
                         Column(Modifier.padding(12.dp)) {
                             Text(r.nombre ?: "Cliente", fontWeight = FontWeight.Medium)
                             Text("Código ${r.pickupCode} · ${formatClp(r.total)}")
-                            Text("Abrir POS para retiro", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                            Text("Abrir POS con código", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
@@ -387,6 +434,7 @@ fun ErpPosScreen(
     onPayment: (String) -> Unit,
     onCustomer: (String, String) -> Unit,
     onDiscountChange: (String) -> Unit,
+    onNotesChange: (String) -> Unit = {},
     onMixedAmounts: (String, String) -> Unit,
     onLookupCustomer: () -> Unit,
     onPickupCodeChange: (String) -> Unit,
@@ -399,9 +447,17 @@ fun ErpPosScreen(
 ) {
     var name by remember(state.posCustomer) { mutableStateOf(state.posCustomer) }
     var phone by remember(state.posPhone) { mutableStateOf(state.posPhone) }
+    var showConfirm by remember { mutableStateOf(false) }
     val subtotal = state.posCart.sumOf { it.lineTotal }
     val discount = state.posDiscount.toDoubleOrNull() ?: 0.0
     val total = (subtotal - discount).coerceAtLeast(0.0)
+    val paymentLabel = when (state.posPayment) {
+        "pos_cash" -> "Efectivo"
+        "pos_debit" -> "Débito"
+        "pos_credit" -> "Crédito"
+        "pos_mixed" -> "Mixta"
+        else -> state.posPayment
+    }
 
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -617,12 +673,19 @@ fun ErpPosScreen(
                 )
                 OutlinedButton(onClick = onLookupCustomer) { Text("Historial") }
             }
+            OutlinedTextField(
+                value = state.posNotes,
+                onValueChange = onNotesChange,
+                label = { Text("Notas (opc.)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
             if (discount > 0) {
                 Text("Subtotal ${formatClp(subtotal)} − desc. ${formatClp(discount)}", style = MaterialTheme.typography.bodySmall)
             }
             Text("Total: ${formatClp(total)}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Button(
-                onClick = onSubmit,
+                onClick = { showConfirm = true },
                 enabled = !state.posBusy && state.posCart.isNotEmpty(),
                 modifier = Modifier.fillMaxWidth().height(52.dp),
             ) {
@@ -630,12 +693,42 @@ fun ErpPosScreen(
                 else Text("Cobrar")
             }
         }
+        if (showConfirm) {
+            AlertDialog(
+                onDismissRequest = { showConfirm = false },
+                title = { Text("Confirmar venta") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("${state.posCart.sumOf { it.quantity }} ítems · $paymentLabel")
+                        Text("Total ${formatClp(total)}", fontWeight = FontWeight.Bold)
+                        if (name.isNotBlank()) Text("Cliente: $name")
+                        if (state.posNotes.isNotBlank()) Text("Notas: ${state.posNotes}")
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showConfirm = false
+                            onSubmit()
+                        },
+                        enabled = !state.posBusy,
+                    ) { Text("Confirmar cobro") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showConfirm = false }) { Text("Cancelar") }
+                },
+            )
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ErpClientsScreen(state: ErpUiState, onBack: () -> Unit) {
+fun ErpClientsScreen(
+    state: ErpUiState,
+    onBack: () -> Unit,
+    onOpen: (ClienteDto) -> Unit = {},
+) {
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             title = { Text("Clientes") },
@@ -650,7 +743,11 @@ fun ErpClientsScreen(state: ErpUiState, onBack: () -> Unit) {
         } else {
             LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(state.clients, key = { it.id ?: it.email ?: it.hashCode().toString() }) { c ->
-                    Card(Modifier.fillMaxWidth()) {
+                    Card(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { onOpen(c) },
+                    ) {
                         Column(Modifier.padding(12.dp)) {
                             Text(
                                 listOfNotNull(c.name, c.surname).joinToString(" ").ifBlank { c.email ?: "Cliente" },
@@ -661,6 +758,92 @@ fun ErpClientsScreen(state: ErpUiState, onBack: () -> Unit) {
                                 "${c.type} · ${c.orderCount} pedidos · ${formatClp(c.totalSpend)}",
                                 style = MaterialTheme.typography.bodySmall,
                             )
+                            Text("Toca para detalle", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ErpClienteDetailScreen(
+    state: ErpUiState,
+    onBack: () -> Unit,
+) {
+    Column(Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("Cliente") },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                }
+            },
+        )
+        if (state.clienteDetailLoading && state.clienteDetail == null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            return
+        }
+        val detail = state.clienteDetail
+        if (detail == null) {
+            Text("Sin datos", Modifier.padding(24.dp))
+            return
+        }
+        val c = detail.customer
+        val k = detail.kpis
+        Column(
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(
+                listOfNotNull(c?.name, c?.surname).joinToString(" ").ifBlank { c?.email ?: "Cliente" },
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleLarge,
+            )
+            c?.email?.let { Text(it) }
+            c?.phone?.let { Text("Tel: $it") }
+            c?.rut?.let { Text("RUT: $it") }
+            Text(
+                "${c?.type ?: "—"} · ${c?.loyaltyPoints ?: 0} pts lealtad",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray,
+            )
+            KpiCard("Gasto lifetime", formatClp(k.lifetimeSpend), "${k.orderCount} pedidos")
+            KpiCard("Ticket promedio", formatClp(k.avgTicket), k.frequencyDays?.let { "cada $it días" } ?: "")
+            if (k.firstOrder != null || k.lastOrder != null) {
+                Text(
+                    "Primera ${k.firstOrder?.take(10) ?: "—"} · Última ${k.lastOrder?.take(10) ?: "—"}",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            if (k.topRecurrent.isNotEmpty()) {
+                Text("Productos frecuentes", fontWeight = FontWeight.Bold)
+                k.topRecurrent.take(5).forEach { p ->
+                    Text(
+                        "· ${p.productName ?: "Producto"} · ${p.orders} pedidos · x${p.totalQty}",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+            Text("Pedidos recientes", fontWeight = FontWeight.Bold)
+            if (detail.orders.isEmpty()) {
+                Text("Sin pedidos", style = MaterialTheme.typography.bodySmall)
+            } else {
+                detail.orders.forEach { o ->
+                    Card(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(12.dp)) {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(o.status ?: "—", fontWeight = FontWeight.Medium)
+                                Text(formatClp(o.total ?: "0"), fontWeight = FontWeight.SemiBold)
+                            }
+                            Text(o.id.take(8) + "…", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                            o.createdAt?.let { Text(it.take(16).replace('T', ' '), style = MaterialTheme.typography.bodySmall) }
+                            o.pickupCode?.let { Text("Retiro: $it", style = MaterialTheme.typography.bodySmall) }
                         }
                     }
                 }
@@ -837,6 +1020,7 @@ fun ErpReorderScreen(
     state: ErpUiState,
     onBack: () -> Unit,
     onRefresh: () -> Unit,
+    onExpress: (supplierId: String, supplierName: String) -> Unit = { _, _ -> },
 ) {
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -857,14 +1041,26 @@ fun ErpReorderScreen(
         )
         LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             state.reorderGroups.forEach { group ->
+                val supplierId = group.supplier?.id
+                val supplierName = group.supplier?.name ?: "Proveedor"
                 item {
-                    Text(
-                        group.supplier?.name ?: "Proveedor",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    group.supplier?.contactPhone?.let {
-                        Text("Tel $it", style = MaterialTheme.typography.bodySmall)
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            supplierName,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        group.supplier?.contactPhone?.let {
+                            Text("Tel $it", style = MaterialTheme.typography.bodySmall)
+                        }
+                        if (supplierId != null && group.items.isNotEmpty()) {
+                            Button(
+                                onClick = { onExpress(supplierId, supplierName) },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text("Email express (${group.items.size} ítems)")
+                            }
+                        }
                     }
                 }
                 items(group.items, key = { it.productId }) { item ->
@@ -1276,7 +1472,11 @@ fun ErpTasksScreen(
     state: ErpUiState,
     onBack: () -> Unit,
     onComplete: (String) -> Unit,
+    onCreate: (title: String, description: String?, priority: String) -> Unit = { _, _, _ -> },
 ) {
+    var newTitle by remember { mutableStateOf("") }
+    var newDesc by remember { mutableStateOf("") }
+    var newPriority by remember { mutableStateOf("normal") }
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             title = { Text("Tareas") },
@@ -1287,6 +1487,40 @@ fun ErpTasksScreen(
             },
         )
         LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            item {
+                Text("Nueva tarea", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                OutlinedTextField(
+                    value = newTitle,
+                    onValueChange = { newTitle = it },
+                    label = { Text("Título") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                )
+                OutlinedTextField(
+                    value = newDesc,
+                    onValueChange = { newDesc = it },
+                    label = { Text("Descripción (opc.)") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("low" to "Baja", "normal" to "Normal", "high" to "Alta", "urgent" to "Urgente").forEach { (v, l) ->
+                        FilterChip(selected = newPriority == v, onClick = { newPriority = v }, label = { Text(l) })
+                    }
+                }
+                Button(
+                    onClick = {
+                        if (newTitle.isBlank()) return@Button
+                        onCreate(newTitle.trim(), newDesc.trim().ifBlank { null }, newPriority)
+                        newTitle = ""
+                        newDesc = ""
+                        newPriority = "normal"
+                    },
+                    enabled = newTitle.isNotBlank(),
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                ) { Text("Crear tarea") }
+                Spacer(Modifier.height(8.dp))
+                Text("Abiertas", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+            }
             items(state.tasks, key = { it.id }) { t ->
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1387,7 +1621,20 @@ fun ErpArqueoScreen(
     state: ErpUiState,
     onBack: () -> Unit,
     onRefresh: () -> Unit,
+    onSetFondo: (Double) -> Unit = {},
+    onCerrarTurno: (efectivoContado: Double, notas: String?) -> Unit = { _, _ -> },
+    onSetPharmacist: (name: String, rut: String) -> Unit = { _, _ -> },
+    onClosePharmacist: () -> Unit = {},
 ) {
+    var showFondo by remember { mutableStateOf(false) }
+    var showCerrar by remember { mutableStateOf(false) }
+    var showPharmacist by remember { mutableStateOf(false) }
+    var fondoInput by remember { mutableStateOf("") }
+    var contadoInput by remember { mutableStateOf("") }
+    var notasInput by remember { mutableStateOf("") }
+    var pharmName by remember { mutableStateOf("") }
+    var pharmRut by remember { mutableStateOf("") }
+
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             title = { Text("Arqueo de caja") },
@@ -1415,12 +1662,56 @@ fun ErpArqueoScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            a.pharmacistName?.let { Text("Farmacéutico: $it", fontWeight = FontWeight.Medium) }
+            if (a.pharmacistName.isNullOrBlank()) {
+                Text("Sin farmacéutico de turno", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            } else {
+                Text("Farmacéutico: ${a.pharmacistName}", fontWeight = FontWeight.Medium)
+            }
             Text("Turno desde: ${a.turnoInicio ?: "—"}", style = MaterialTheme.typography.bodySmall)
             KpiCard("Fondo inicial", formatClp(a.fondoInicial), "")
             KpiCard("Ventas total turno", formatClp(a.ventas.total), "${a.ventas.numTransacciones} transacciones")
             KpiCard("Efectivo", formatClp(a.ventas.efectivo), "Débito ${formatClp(a.ventas.debito)} · Crédito ${formatClp(a.ventas.credito)}")
             KpiCard("Efectivo esperado", formatClp(a.efectivoEsperado), "fondo + ventas efectivo")
+
+            Text("Acciones de caja", fontWeight = FontWeight.Bold)
+            Button(
+                onClick = {
+                    fondoInput = if (a.fondoInicial > 0) a.fondoInicial.toInt().toString() else ""
+                    showFondo = true
+                },
+                enabled = !state.arqueoBusy,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Definir fondo inicial") }
+            Button(
+                onClick = {
+                    contadoInput = a.efectivoEsperado.roundToIntSafe()
+                    notasInput = ""
+                    showCerrar = true
+                },
+                enabled = !state.arqueoBusy,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Cerrar turno") }
+            if (a.pharmacistName.isNullOrBlank()) {
+                OutlinedButton(
+                    onClick = {
+                        pharmName = ""
+                        pharmRut = ""
+                        showPharmacist = true
+                    },
+                    enabled = !state.arqueoBusy,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("Iniciar turno farmacéutico") }
+            } else {
+                OutlinedButton(
+                    onClick = onClosePharmacist,
+                    enabled = !state.arqueoBusy,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("Cerrar turno farmacéutico") }
+            }
+            if (state.arqueoBusy) {
+                CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
+            }
+
             Text("Últimas ventas POS", fontWeight = FontWeight.Bold)
             a.recentOrders.forEach { o ->
                 Card(Modifier.fillMaxWidth()) {
@@ -1438,4 +1729,106 @@ fun ErpArqueoScreen(
             }
         }
     }
+
+    if (showFondo) {
+        AlertDialog(
+            onDismissRequest = { showFondo = false },
+            title = { Text("Fondo inicial") },
+            text = {
+                OutlinedTextField(
+                    value = fondoInput,
+                    onValueChange = { fondoInput = it.filter { ch -> ch.isDigit() || ch == '.' } },
+                    label = { Text("Monto \$") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val v = fondoInput.toDoubleOrNull()
+                        if (v == null || v < 0) return@Button
+                        showFondo = false
+                        onSetFondo(v)
+                    },
+                ) { Text("Guardar") }
+            },
+            dismissButton = { TextButton(onClick = { showFondo = false }) { Text("Cancelar") } },
+        )
+    }
+    if (showCerrar) {
+        val esperado = state.arqueo?.efectivoEsperado ?: 0.0
+        AlertDialog(
+            onDismissRequest = { showCerrar = false },
+            title = { Text("Cerrar turno") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Efectivo esperado: ${formatClp(esperado)}")
+                    OutlinedTextField(
+                        value = contadoInput,
+                        onValueChange = { contadoInput = it.filter { ch -> ch.isDigit() || ch == '.' } },
+                        label = { Text("Efectivo contado \$") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = notasInput,
+                        onValueChange = { notasInput = it },
+                        label = { Text("Notas (opc.)") },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val v = contadoInput.toDoubleOrNull()
+                        if (v == null || v < 0) return@Button
+                        showCerrar = false
+                        onCerrarTurno(v, notasInput.trim().ifBlank { null })
+                    },
+                ) { Text("Cerrar") }
+            },
+            dismissButton = { TextButton(onClick = { showCerrar = false }) { Text("Cancelar") } },
+        )
+    }
+    if (showPharmacist) {
+        AlertDialog(
+            onDismissRequest = { showPharmacist = false },
+            title = { Text("Farmacéutico de turno") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = pharmName,
+                        onValueChange = { pharmName = it },
+                        label = { Text("Nombre") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = pharmRut,
+                        onValueChange = { pharmRut = it },
+                        label = { Text("RUT") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (pharmName.isBlank() || pharmRut.isBlank()) return@Button
+                        showPharmacist = false
+                        onSetPharmacist(pharmName.trim(), pharmRut.trim())
+                    },
+                ) { Text("Iniciar") }
+            },
+            dismissButton = { TextButton(onClick = { showPharmacist = false }) { Text("Cancelar") } },
+        )
+    }
 }
+
+private fun Double.roundToIntSafe(): String =
+    if (this == toLong().toDouble()) toLong().toString() else toString()
