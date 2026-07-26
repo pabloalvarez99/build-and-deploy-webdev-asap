@@ -73,6 +73,9 @@ Custom claim `role` on the token: `user` \| `owner` \| `admin` \| `pharmacist` \
 | POST | `/api/admin/prescriptions` | admin | registrar receta manual |
 | GET | `/api/admin/descuentos` | admin | descuentos activos + loyalty summary |
 | POST | `/api/admin/descuentos` | admin | `apply_bulk` / `remove_bulk` / `update_loyalty` |
+| GET | `/api/admin/farmacia` | admin | panel farmacia KPIs (recetas, sin registro, lotes, turno) |
+| GET | `/api/admin/farmacia/liquidacion` | admin | liquidación por vencimiento ≤60d |
+| POST | `/api/admin/farmacia/liquidacion` | admin | apply descuentos liquidación `{ items: [{product_id, discount_percent}] }` |
 | POST | `/api/admin/avisos` | owner | create announcement |
 | GET/POST | `/api/admin/devoluciones` | admin | returns |
 | GET/PUT | `/api/admin/products/{id}` | admin | product quick edit |

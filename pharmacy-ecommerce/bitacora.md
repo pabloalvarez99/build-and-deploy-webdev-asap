@@ -3620,3 +3620,13 @@ Build local OK. Push → Vercel.
 - UI: ErpReportesScreens.kt · hub card erp_reportes · ViewModel loadReportes/CashFlow/Pyl
 - Build: :app:assembleDebug OK
 
+
+## 2026-07-26 - Android v1.13.0 Panel farmacia KPIs + liquidacion (staff)
+
+- **App** cl.tufarmacia.native versionCode 22 / versionName 1.13.0
+- **Modulo ERP Panel farmacia** (admin): tabs Panel | Liquidacion
+- **Panel**: GET /api/admin/farmacia — recetas hoy/mes, controladas hoy, sin_registro_receta (POS Rx sin libro), controlados sin stock, turno farmaceutico activo, lotes 30d, ultimas recetas
+- **Liquidacion**: GET /api/admin/farmacia/liquidacion — productos con lotes <=60d, tiers, perdida potencial; POST apply descuentos seleccionados
+- UI: ErpFarmaciaScreens.kt · hub erp_farmacia · ViewModel loadFarmaciaPanel/loadLiquidacion/applyLiquidacion
+- Commit: 53a90f9 · Build: :app:assembleDebug OK
+
