@@ -207,6 +207,11 @@ fun CatalogScreen(
     onSearch: () -> Unit,
     onRetry: () -> Unit,
     onSelectCategory: (String?) -> Unit,
+    onToggleInStock: (Boolean) -> Unit,
+    onToggleDiscount: (Boolean) -> Unit,
+    onSort: (String?) -> Unit,
+    onClearFilters: () -> Unit,
+    onSuggestion: (Product) -> Unit,
     onOpenProduct: (String) -> Unit,
     onLoadMore: () -> Unit,
     onOpenCart: () -> Unit,
@@ -249,11 +254,60 @@ fun CatalogScreen(
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { onSearch() }),
         )
+        if (state.suggestions.isNotEmpty()) {
+            Column(Modifier.padding(horizontal = 16.dp)) {
+                state.suggestions.forEach { s ->
+                    Text(
+                        s.name,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSuggestion(s) }
+                            .padding(vertical = 8.dp),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+        }
         Row(
             Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
                 .padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            FilterChip(
+                selected = state.inStockOnly,
+                onClick = { onToggleInStock(!state.inStockOnly) },
+                label = { Text("En stock") },
+            )
+            FilterChip(
+                selected = state.hasDiscountOnly,
+                onClick = { onToggleDiscount(!state.hasDiscountOnly) },
+                label = { Text("Descuento") },
+            )
+            FilterChip(
+                selected = state.sortBy == "price_asc",
+                onClick = { onSort(if (state.sortBy == "price_asc") null else "price_asc") },
+                label = { Text("Precio ↑") },
+            )
+            FilterChip(
+                selected = state.sortBy == "price_desc",
+                onClick = { onSort(if (state.sortBy == "price_desc") null else "price_desc") },
+                label = { Text("Precio ↓") },
+            )
+            FilterChip(
+                selected = state.sortBy == "name",
+                onClick = { onSort(if (state.sortBy == "name") null else "name") },
+                label = { Text("Nombre") },
+            )
+        }
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 12.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             FilterChip(
@@ -306,7 +360,21 @@ fun CatalogScreen(
                         }
                     }
                     if (state.products.isEmpty()) {
-                        item { Text("Sin resultados", modifier = Modifier.padding(24.dp)) }
+                        item {
+                            Column(
+                                Modifier.fillMaxWidth().padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text("Sin resultados", fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    "Prueba otra búsqueda o limpia filtros.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray,
+                                )
+                                Spacer(Modifier.height(12.dp))
+                                OutlinedButton(onClick = onClearFilters) { Text("Limpiar filtros") }
+                            }
+                        }
                     }
                 }
             }
@@ -353,7 +421,17 @@ fun ProductRow(product: Product, onClick: () -> Unit) {
                         )
                     }
                 }
-                Text("Stock: ${product.stock}", style = MaterialTheme.typography.labelSmall)
+                val stockLabel = when {
+                    product.stock <= 0 -> "Agotado"
+                    product.stock <= 5 -> "Bajo stock (${product.stock})"
+                    else -> "Disponible"
+                }
+                val stockColor = when {
+                    product.stock <= 0 -> MaterialTheme.colorScheme.error
+                    product.stock <= 5 -> Color(0xFFD97706)
+                    else -> Color(0xFF16A34A)
+                }
+                Text(stockLabel, style = MaterialTheme.typography.labelSmall, color = stockColor)
             }
         }
     }
@@ -390,6 +468,7 @@ fun ProductDetailScreen(
     onBack: () -> Unit,
     onAddToCart: (Product, Int) -> Unit,
     onOpenCart: () -> Unit = {},
+    onRetry: () -> Unit = {},
 ) {
     var qty by remember { mutableStateOf(1) }
     Column(Modifier.fillMaxSize()) {
@@ -406,10 +485,12 @@ fun ProductDetailScreen(
                 CircularProgressIndicator()
             }
             state.productDetailError != null -> Column(
-                Modifier.padding(24.dp),
+                Modifier.fillMaxWidth().padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(state.productDetailError, color = MaterialTheme.colorScheme.error)
+                Spacer(Modifier.height(12.dp))
+                Button(onClick = onRetry) { Text("Reintentar") }
             }
             state.productDetail != null -> {
                 val p = state.productDetail
@@ -426,7 +507,7 @@ fun ProductDetailScreen(
                             contentDescription = p.name,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(220.dp)
+                                .height(280.dp)
                                 .clip(RoundedCornerShape(12.dp)),
                             contentScale = ContentScale.Crop,
                         )
@@ -439,7 +520,20 @@ fun ProductDetailScreen(
                     p.therapeuticAction?.let { Text("Acción: $it") }
                     p.prescriptionType?.let { Text("Receta: $it") }
                     p.categoryName?.let { Text("Categoría: $it") }
-                    Text("Stock: ${p.stock}")
+                    val stockLabel = when {
+                        p.stock <= 0 -> "Agotado"
+                        p.stock <= 5 -> "Stock bajo (${p.stock})"
+                        else -> "Disponible (${p.stock})"
+                    }
+                    Text(
+                        stockLabel,
+                        fontWeight = FontWeight.SemiBold,
+                        color = when {
+                            p.stock <= 0 -> MaterialTheme.colorScheme.error
+                            p.stock <= 5 -> Color(0xFFD97706)
+                            else -> Color(0xFF16A34A)
+                        },
+                    )
                     p.description?.let {
                         Text(it, style = MaterialTheme.typography.bodyMedium, color = Color.DarkGray)
                     }
@@ -477,11 +571,15 @@ fun ProductDetailScreen(
 @Composable
 fun CartScreen(
     lines: List<CartLine>,
+    warnings: List<String> = emptyList(),
+    revalidating: Boolean = false,
     onBack: () -> Unit,
     onQty: (String, Int) -> Unit,
     onRemove: (String) -> Unit,
     onCheckout: () -> Unit,
     onClear: () -> Unit,
+    onBrowse: () -> Unit = {},
+    onRefresh: () -> Unit = {},
 ) {
     val total = lines.sumOf { it.lineTotal }
     Column(Modifier.fillMaxSize()) {
@@ -494,6 +592,11 @@ fun CartScreen(
             },
             actions = {
                 if (lines.isNotEmpty()) {
+                    Text(
+                        if (revalidating) "…" else "Actualizar",
+                        Modifier.clickable(onClick = onRefresh).padding(16.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                    )
                     IconButton(onClick = onClear) {
                         Icon(Icons.Default.Delete, contentDescription = "Vaciar")
                     }
@@ -501,10 +604,23 @@ fun CartScreen(
             },
         )
         if (lines.isEmpty()) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Tu carrito está vacío")
+            Column(
+                Modifier.fillMaxSize().padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text("Tu carrito está vacío", fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(12.dp))
+                Button(onClick = onBrowse) { Text("Ir al catálogo") }
             }
         } else {
+            if (warnings.isNotEmpty()) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    warnings.forEach { w ->
+                        Text(w, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(16.dp),

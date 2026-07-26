@@ -43,6 +43,12 @@ data class AppUiState(
     val searchQuery: String = "",
     val selectedCategorySlug: String? = null,
     val categories: List<Category> = emptyList(),
+    val inStockOnly: Boolean = false,
+    val hasDiscountOnly: Boolean = false,
+    val sortBy: String? = null,
+    val suggestions: List<Product> = emptyList(),
+    val cartWarnings: List<String> = emptyList(),
+    val cartRevalidating: Boolean = false,
 
     val productDetail: Product? = null,
     val productDetailLoading: Boolean = false,
@@ -246,12 +252,59 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         catalogSearchJob?.cancel()
         catalogSearchJob = viewModelScope.launch {
             delay(400)
+            if (q.length >= 2) {
+                runCatching { container.api.suggest(q) }
+                    .onSuccess { res -> _state.update { it.copy(suggestions = res.products.take(6)) } }
+                    .onFailure { _state.update { it.copy(suggestions = emptyList()) } }
+            } else {
+                _state.update { it.copy(suggestions = emptyList()) }
+            }
             loadProducts(page = 1, append = false)
         }
     }
 
+    fun applySuggestion(product: Product) {
+        _state.update {
+            it.copy(searchQuery = product.name, suggestions = emptyList())
+        }
+        loadProducts(page = 1, append = false)
+    }
+
+    fun clearSuggestions() {
+        _state.update { it.copy(suggestions = emptyList()) }
+    }
+
     fun selectCategory(slug: String?) {
         _state.update { it.copy(selectedCategorySlug = slug) }
+        loadProducts()
+    }
+
+    fun setInStockOnly(value: Boolean) {
+        _state.update { it.copy(inStockOnly = value) }
+        loadProducts()
+    }
+
+    fun setHasDiscountOnly(value: Boolean) {
+        _state.update { it.copy(hasDiscountOnly = value) }
+        loadProducts()
+    }
+
+    fun setSortBy(sort: String?) {
+        _state.update { it.copy(sortBy = sort) }
+        loadProducts()
+    }
+
+    fun clearCatalogFilters() {
+        _state.update {
+            it.copy(
+                searchQuery = "",
+                selectedCategorySlug = null,
+                inStockOnly = false,
+                hasDiscountOnly = false,
+                sortBy = null,
+                suggestions = emptyList(),
+            )
+        }
         loadProducts()
     }
 
@@ -272,6 +325,9 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                     limit = 24,
                     search = s.searchQuery.ifBlank { null },
                     categorySlug = s.selectedCategorySlug,
+                    inStock = s.inStockOnly,
+                    hasDiscount = s.hasDiscountOnly,
+                    sortBy = s.sortBy,
                 )
                 _state.update {
                     it.copy(
@@ -289,6 +345,55 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                         productsError = e.message ?: "No se pudo cargar el catálogo",
                     )
                 }
+            }
+        }
+    }
+
+    fun revalidateCart() {
+        viewModelScope.launch {
+            val lines = cartLines.value
+            if (lines.isEmpty()) {
+                _state.update { it.copy(cartWarnings = emptyList()) }
+                return@launch
+            }
+            _state.update { it.copy(cartRevalidating = true) }
+            val warnings = mutableListOf<String>()
+            val updated = mutableListOf<CartLine>()
+            for (line in lines) {
+                val live = runCatching { container.api.getProduct(line.productSlug) }.getOrNull()
+                if (live == null) {
+                    warnings.add("${line.productName}: no disponible")
+                    continue
+                }
+                if (live.stock <= 0) {
+                    warnings.add("${live.name}: sin stock (quitado)")
+                    continue
+                }
+                var qty = line.quantity
+                if (qty > live.stock) {
+                    warnings.add("${live.name}: cantidad ajustada a ${live.stock}")
+                    qty = live.stock
+                }
+                val price = live.unitPrice()
+                if (kotlin.math.abs(price - line.unitPrice) > 0.5) {
+                    warnings.add("${live.name}: precio actualizado")
+                }
+                updated.add(
+                    line.copy(
+                        productName = live.name,
+                        imageUrl = live.imageUrl,
+                        unitPrice = price,
+                        quantity = qty,
+                    ),
+                )
+            }
+            container.cartRepository.replaceAll(updated)
+            _state.update {
+                it.copy(
+                    cartRevalidating = false,
+                    cartWarnings = warnings,
+                    snackbar = if (warnings.isEmpty()) null else "Carrito actualizado",
+                )
             }
         }
     }

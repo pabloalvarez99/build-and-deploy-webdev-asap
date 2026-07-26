@@ -243,6 +243,14 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onSearch = { vm.loadProducts() },
                     onRetry = { vm.loadProducts() },
                     onSelectCategory = vm::selectCategory,
+                    onToggleInStock = vm::setInStockOnly,
+                    onToggleDiscount = vm::setHasDiscountOnly,
+                    onSort = vm::setSortBy,
+                    onClearFilters = vm::clearCatalogFilters,
+                    onSuggestion = { p ->
+                        vm.applySuggestion(p)
+                        navController.navigate(Routes.product(p.slug))
+                    },
                     onOpenProduct = { slug -> navController.navigate(Routes.product(slug)) },
                     onLoadMore = vm::loadMoreProducts,
                     onOpenCart = { navController.navigateTab(Routes.Cart) },
@@ -263,11 +271,15 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onBack = { navController.popBackStack() },
                     onAddToCart = { p, q -> vm.addToCart(p, q) },
                     onOpenCart = { navController.navigateTab(Routes.Cart) },
+                    onRetry = { vm.loadProductDetail(slug) },
                 )
             }
             composable(Routes.Cart) {
+                LaunchedEffect(Unit) { vm.revalidateCart() }
                 CartScreen(
                     lines = cart,
+                    warnings = state.cartWarnings,
+                    revalidating = state.cartRevalidating,
                     onBack = { navController.navigateTab(Routes.Home) },
                     onQty = vm::setCartQty,
                     onRemove = vm::removeFromCart,
@@ -276,6 +288,8 @@ fun TuFarmaciaRoot(container: AppContainer) {
                         navController.navigate(Routes.Checkout)
                     },
                     onClear = vm::clearCart,
+                    onBrowse = { navController.navigateTab(Routes.Catalog) },
+                    onRefresh = vm::revalidateCart,
                 )
             }
             composable(Routes.Checkout) {

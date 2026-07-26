@@ -3536,3 +3536,7 @@ Build local OK. Push → Vercel.
 - PO detail + receive mapped draft OCs
 - Batches (expired/soon30/soon90) + reorder suggestions
 - Inventory: reason chips, barcode delta, create falta
+
+## 2026-07-25 - Android v1.4.0 Wave C (storefront polish)
+- Search suggest, en stock / descuento / sort filters
+- Cart revalidate stock+price; empty CTA; PDP retry + stock badge

@@ -59,6 +59,14 @@ class CartRepository(private val context: Context) {
         context.cartDataStore.edit { it.remove(key) }
     }
 
+    /** Replace lines after live stock/price revalidation. */
+    suspend fun replaceAll(lines: List<CartLine>) {
+        context.cartDataStore.edit { prefs ->
+            if (lines.isEmpty()) prefs.remove(key)
+            else prefs[key] = json.encodeToString(lines)
+        }
+    }
+
     private suspend fun mutate(transform: (List<CartLine>) -> List<CartLine>) {
         context.cartDataStore.edit { prefs ->
             val current = prefs[key]?.let {
