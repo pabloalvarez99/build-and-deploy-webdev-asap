@@ -64,6 +64,10 @@ import cl.tufarmacia.app.data.model.ExpressReorderRequest
 import cl.tufarmacia.app.data.model.ExpressReorderResponse
 import cl.tufarmacia.app.data.model.FaltaDto
 import cl.tufarmacia.app.data.model.FaltasResponse
+import cl.tufarmacia.app.data.model.FarmaciaPanelResponse
+import cl.tufarmacia.app.data.model.LiquidacionApplyRequest
+import cl.tufarmacia.app.data.model.LiquidacionApplyResponse
+import cl.tufarmacia.app.data.model.LiquidacionResponse
 import cl.tufarmacia.app.data.model.PrescriptionRecordDto
 import cl.tufarmacia.app.data.model.PrescriptionsResponse
 import cl.tufarmacia.app.data.model.PylResponse
@@ -508,6 +512,18 @@ class TuFarmaciaApi(
         get("/api/admin/finanzas/pyl", auth = true) {
             if (year != null) parameter("year", year)
         }
+
+    /** Panel farmacéutico: recetas, sin registro, lotes, turno. */
+    suspend fun adminFarmaciaPanel(): FarmaciaPanelResponse =
+        get("/api/admin/farmacia", auth = true)
+
+    /** Liquidación por vencimiento (≤60d). */
+    suspend fun adminLiquidacion(): LiquidacionResponse =
+        get("/api/admin/farmacia/liquidacion", auth = true)
+
+    /** Aplicar descuentos de liquidación a productos seleccionados. */
+    suspend fun adminApplyLiquidacion(body: LiquidacionApplyRequest): LiquidacionApplyResponse =
+        post("/api/admin/farmacia/liquidacion", body = body, auth = true)
 
     private suspend inline fun <reified T> patchJson(path: String, body: Any): T {
         val token = tokenProvider.currentIdToken()

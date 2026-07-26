@@ -1165,3 +1165,108 @@ data class PylResponse(
     val months: List<PylMonth> = emptyList(),
     val ytd: PylYtd = PylYtd(),
 )
+
+// ── Panel Farmacia (ops KPIs + liquidación vencimientos) ─────────
+
+@Serializable
+data class FarmaciaKpis(
+    @SerialName("recetas_hoy") val recetasHoy: Int = 0,
+    @SerialName("recetas_mes") val recetasMes: Int = 0,
+    @SerialName("controladas_hoy") val controladasHoy: Int = 0,
+    @SerialName("sin_registro_receta") val sinRegistroReceta: Int = 0,
+    @SerialName("controlados_sin_stock") val controladosSinStock: Int = 0,
+)
+
+@Serializable
+data class FarmaciaLoteVencer(
+    val id: String? = null,
+    val producto: String? = null,
+    val slug: String? = null,
+    @SerialName("batch_code") val batchCode: String? = null,
+    @SerialName("expiry_date") val expiryDate: String? = null,
+    val quantity: Int = 0,
+    @SerialName("dias_restantes") val diasRestantes: Int = 0,
+)
+
+@Serializable
+data class FarmaciaTurnoActivo(
+    val id: String? = null,
+    @SerialName("pharmacist_name") val pharmacistName: String? = null,
+    @SerialName("shift_start") val shiftStart: String? = null,
+)
+
+@Serializable
+data class FarmaciaPanelResponse(
+    val kpis: FarmaciaKpis = FarmaciaKpis(),
+    @SerialName("lotes_por_vencer") val lotesPorVencer: List<FarmaciaLoteVencer> = emptyList(),
+    @SerialName("ultimas_recetas") val ultimasRecetas: List<PrescriptionRecordDto> = emptyList(),
+    @SerialName("turno_activo") val turnoActivo: FarmaciaTurnoActivo? = null,
+    @SerialName("generado_en") val generadoEn: String? = null,
+)
+
+@Serializable
+data class LiquidacionBatchDto(
+    val id: String? = null,
+    @SerialName("batch_code") val batchCode: String? = null,
+    @SerialName("expiry_date") val expiryDate: String? = null,
+    val quantity: Int = 0,
+)
+
+@Serializable
+data class LiquidacionItemDto(
+    @SerialName("product_id") val productId: String,
+    @SerialName("product_name") val productName: String? = null,
+    @SerialName("product_slug") val productSlug: String? = null,
+    val price: Double = 0.0,
+    val stock: Int = 0,
+    @SerialName("current_discount") val currentDiscount: Int = 0,
+    @SerialName("image_url") val imageUrl: String? = null,
+    val category: String? = null,
+    @SerialName("total_at_risk") val totalAtRisk: Int = 0,
+    @SerialName("min_expiry") val minExpiry: String? = null,
+    @SerialName("days_to_expiry") val daysToExpiry: Int = 0,
+    @SerialName("suggested_discount") val suggestedDiscount: Int = 0,
+    val tier: String? = null,
+    val batches: List<LiquidacionBatchDto> = emptyList(),
+)
+
+@Serializable
+data class LiquidacionSummary(
+    @SerialName("total_products") val totalProducts: Int = 0,
+    @SerialName("total_units") val totalUnits: Int = 0,
+    @SerialName("potential_loss") val potentialLoss: Double = 0.0,
+    val expired: Int = 0,
+    val critical: Int = 0,
+    val urgent: Int = 0,
+    val warning: Int = 0,
+)
+
+@Serializable
+data class LiquidacionResponse(
+    val items: List<LiquidacionItemDto> = emptyList(),
+    val summary: LiquidacionSummary = LiquidacionSummary(),
+)
+
+@Serializable
+data class LiquidacionApplyItem(
+    @SerialName("product_id") val productId: String,
+    @SerialName("discount_percent") val discountPercent: Int,
+)
+
+@Serializable
+data class LiquidacionApplyRequest(
+    val items: List<LiquidacionApplyItem>,
+)
+
+@Serializable
+data class LiquidacionUpdatedDto(
+    val id: String? = null,
+    val name: String? = null,
+    @SerialName("discount_percent") val discountPercent: Int = 0,
+)
+
+@Serializable
+data class LiquidacionApplyResponse(
+    val success: Boolean = false,
+    val updated: List<LiquidacionUpdatedDto> = emptyList(),
+)

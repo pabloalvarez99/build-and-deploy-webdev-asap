@@ -30,10 +30,14 @@ import cl.tufarmacia.app.data.model.DevolucionDto
 import cl.tufarmacia.app.data.model.ExpressReorderItem
 import cl.tufarmacia.app.data.model.ExpressReorderRequest
 import cl.tufarmacia.app.data.model.FaltaDto
+import cl.tufarmacia.app.data.model.FarmaciaPanelResponse
 import cl.tufarmacia.app.data.model.FinanzasDashboard
 import cl.tufarmacia.app.data.model.GastoCategoryDto
 import cl.tufarmacia.app.data.model.GastoDto
 import cl.tufarmacia.app.data.model.InventoryItem
+import cl.tufarmacia.app.data.model.LiquidacionApplyItem
+import cl.tufarmacia.app.data.model.LiquidacionApplyRequest
+import cl.tufarmacia.app.data.model.LiquidacionResponse
 import cl.tufarmacia.app.data.model.OperacionesResponse
 import cl.tufarmacia.app.data.model.PosCustomerHistory
 import cl.tufarmacia.app.data.model.PosPickupOrder
@@ -197,6 +201,16 @@ data class ErpUiState(
     val pyl: PylResponse? = null,
     val pylYear: Int = LocalDate.now().year,
     val pylLoading: Boolean = false,
+
+    /** "panel" | "liquidacion" */
+    val farmaciaTab: String = "panel",
+    val farmaciaPanel: FarmaciaPanelResponse? = null,
+    val farmaciaLoading: Boolean = false,
+    val liquidacion: LiquidacionResponse? = null,
+    val liquidacionLoading: Boolean = false,
+    val liquidacionBusy: Boolean = false,
+    /** productId → selected discount % for apply */
+    val liquidacionSelected: Map<String, Int> = emptyMap(),
 )
 
 class ErpViewModel(private val container: AppContainer) : ViewModel() {
@@ -1190,6 +1204,130 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
             "flujo" -> loadCashFlow()
             "pyl" -> loadPyl()
             else -> loadReportes()
+        }
+    }
+
+    fun setFarmaciaTab(tab: String) {
+        _state.update { it.copy(farmaciaTab = tab) }
+        when (tab) {
+            "liquidacion" -> if (_state.value.liquidacion == null) loadLiquidacion()
+            else -> if (_state.value.farmaciaPanel == null) loadFarmaciaPanel()
+        }
+    }
+
+    fun loadFarmaciaModule() {
+        when (_state.value.farmaciaTab) {
+            "liquidacion" -> loadLiquidacion()
+            else -> loadFarmaciaPanel()
+        }
+    }
+
+    fun loadFarmaciaPanel() {
+        viewModelScope.launch {
+            _state.update { it.copy(farmaciaLoading = true) }
+            try {
+                val res = container.api.adminFarmaciaPanel()
+                _state.update { it.copy(farmaciaLoading = false, farmaciaPanel = res) }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        farmaciaLoading = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message ?: "Error panel farmacia",
+                    )
+                }
+            }
+        }
+    }
+
+    fun loadLiquidacion() {
+        viewModelScope.launch {
+            _state.update { it.copy(liquidacionLoading = true) }
+            try {
+                val res = container.api.adminLiquidacion()
+                // Pre-select products that need a higher discount than current
+                val defaults = res.items
+                    .filter { it.suggestedDiscount > it.currentDiscount && it.suggestedDiscount > 0 }
+                    .associate { it.productId to it.suggestedDiscount }
+                _state.update {
+                    it.copy(
+                        liquidacionLoading = false,
+                        liquidacion = res,
+                        liquidacionSelected = defaults,
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        liquidacionLoading = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message ?: "Error liquidación",
+                    )
+                }
+            }
+        }
+    }
+
+    fun toggleLiquidacionItem(productId: String, suggested: Int) {
+        _state.update { s ->
+            val map = s.liquidacionSelected.toMutableMap()
+            if (map.containsKey(productId)) map.remove(productId)
+            else map[productId] = suggested.coerceIn(0, 99)
+            s.copy(liquidacionSelected = map)
+        }
+    }
+
+    fun setLiquidacionDiscount(productId: String, percent: Int) {
+        _state.update { s ->
+            val map = s.liquidacionSelected.toMutableMap()
+            if (map.containsKey(productId)) {
+                map[productId] = percent.coerceIn(0, 99)
+            }
+            s.copy(liquidacionSelected = map)
+        }
+    }
+
+    fun selectAllLiquidacionSuggested() {
+        val items = _state.value.liquidacion?.items.orEmpty()
+        val map = items
+            .filter { it.suggestedDiscount > 0 }
+            .associate { it.productId to it.suggestedDiscount }
+        _state.update { it.copy(liquidacionSelected = map) }
+    }
+
+    fun clearLiquidacionSelection() {
+        _state.update { it.copy(liquidacionSelected = emptyMap()) }
+    }
+
+    fun applyLiquidacion() {
+        viewModelScope.launch {
+            val selected = _state.value.liquidacionSelected
+            if (selected.isEmpty()) {
+                _state.update { it.copy(snackbar = "Selecciona al menos un producto") }
+                return@launch
+            }
+            _state.update { it.copy(liquidacionBusy = true) }
+            try {
+                val body = LiquidacionApplyRequest(
+                    items = selected.map { (id, pct) ->
+                        LiquidacionApplyItem(productId = id, discountPercent = pct)
+                    },
+                )
+                val res = container.api.adminApplyLiquidacion(body)
+                _state.update {
+                    it.copy(
+                        liquidacionBusy = false,
+                        snackbar = "Liquidación: ${res.updated.size} producto(s) actualizado(s)",
+                        liquidacionSelected = emptyMap(),
+                    )
+                }
+                loadLiquidacion()
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        liquidacionBusy = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message ?: "Error al aplicar",
+                    )
+                }
+            }
         }
     }
 

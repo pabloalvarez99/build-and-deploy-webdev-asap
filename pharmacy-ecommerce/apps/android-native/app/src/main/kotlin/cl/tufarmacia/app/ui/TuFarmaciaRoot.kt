@@ -54,6 +54,7 @@ import cl.tufarmacia.app.ui.erp.ErpDashboardScreen
 import cl.tufarmacia.app.ui.erp.ErpDescuentosScreen
 import cl.tufarmacia.app.ui.erp.ErpDevolucionesScreen
 import cl.tufarmacia.app.ui.erp.ErpFaltasScreen
+import cl.tufarmacia.app.ui.erp.ErpFarmaciaScreen
 import cl.tufarmacia.app.ui.erp.ErpFinanceScreen
 import cl.tufarmacia.app.ui.erp.ErpHubScreen
 import cl.tufarmacia.app.ui.erp.ErpInventoryScreen
@@ -103,6 +104,7 @@ private object Routes {
     const val ErpOrders = "erp_orders"
     const val ErpPos = "erp_pos"
     const val ErpPrescriptions = "erp_prescriptions"
+    const val ErpFarmacia = "erp_farmacia"
     const val ErpDescuentos = "erp_descuentos"
     const val ErpReportes = "erp_reportes"
     const val ErpInventory = "erp_inventory"
@@ -580,6 +582,10 @@ fun TuFarmaciaRoot(container: AppContainer) {
                                 erpVm.loadPrescriptions()
                                 navController.navigate(Routes.ErpPrescriptions)
                             }
+                            Routes.ErpFarmacia -> {
+                                erpVm.loadFarmaciaModule()
+                                navController.navigate(Routes.ErpFarmacia)
+                            }
                             Routes.ErpDescuentos -> {
                                 erpVm.loadDescuentos()
                                 navController.navigate(Routes.ErpDescuentos)
@@ -751,6 +757,19 @@ fun TuFarmaciaRoot(container: AppContainer) {
                             dispensedBy = by,
                         )
                     },
+                )
+            }
+            composable(Routes.ErpFarmacia) {
+                ErpFarmaciaScreen(
+                    state = erp,
+                    onBack = { navController.popBackStack() },
+                    onRefresh = erpVm::loadFarmaciaModule,
+                    onTab = erpVm::setFarmaciaTab,
+                    onToggleItem = erpVm::toggleLiquidacionItem,
+                    onSetDiscount = erpVm::setLiquidacionDiscount,
+                    onSelectAllSuggested = erpVm::selectAllLiquidacionSuggested,
+                    onClearSelection = erpVm::clearLiquidacionSelection,
+                    onApply = erpVm::applyLiquidacion,
                 )
             }
             composable(Routes.ErpDescuentos) {

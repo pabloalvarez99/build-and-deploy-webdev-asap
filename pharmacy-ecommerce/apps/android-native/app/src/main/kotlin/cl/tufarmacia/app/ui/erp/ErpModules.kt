@@ -72,6 +72,7 @@ val ERP_MODULES = listOf(
     ErpModule("erp_orders", "Órdenes", "Online · reservas · staff actions"),
     ErpModule("erp_pos", "POS", "Venta · barcode · retiro · descuento"),
     ErpModule("erp_prescriptions", "Libro de recetas", "Listar · controladas · registro manual"),
+    ErpModule("erp_farmacia", "Panel farmacia", "Recetas · sin registro · liquidación"),
     ErpModule("erp_descuentos", "Descuentos", "Activos · bulk apply/quitar · puntos"),
     ErpModule("erp_reportes", "Reportes", "Ventas · flujo caja · PyL", ownerOnly = true),
     ErpModule("erp_inventory", "Inventario", "Stock · ajustes · editar"),
