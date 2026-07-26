@@ -24,6 +24,7 @@ import cl.tufarmacia.app.data.model.CreatePurchaseOrderItem
 import cl.tufarmacia.app.data.model.CreatePurchaseOrderRequest
 import cl.tufarmacia.app.data.model.CreateTaskRequest
 import cl.tufarmacia.app.data.model.DashboardExtras
+import cl.tufarmacia.app.data.model.DescuentosResponse
 import cl.tufarmacia.app.data.model.DevolucionDto
 import cl.tufarmacia.app.data.model.ExpressReorderItem
 import cl.tufarmacia.app.data.model.ExpressReorderRequest
@@ -173,6 +174,12 @@ data class ErpUiState(
     val prescriptionsControlled: Boolean? = null,
     val prescriptionsLoading: Boolean = false,
     val prescriptionsBusy: Boolean = false,
+
+    val descuentos: DescuentosResponse? = null,
+    val descuentosLoading: Boolean = false,
+    val descuentosBusy: Boolean = false,
+    /** "list" | "apply" | "remove" | "loyalty" */
+    val descuentosTab: String = "list",
 )
 
 class ErpViewModel(private val container: AppContainer) : ViewModel() {
@@ -914,6 +921,155 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
                     it.copy(
                         prescriptionsBusy = false,
                         snackbar = (e as? ApiException)?.message ?: e.message ?: "Error al registrar",
+                    )
+                }
+            }
+        }
+    }
+
+    fun setDescuentosTab(tab: String) {
+        _state.update { it.copy(descuentosTab = tab) }
+    }
+
+    fun loadDescuentos() {
+        viewModelScope.launch {
+            _state.update { it.copy(descuentosLoading = true) }
+            try {
+                val res = container.api.adminDescuentos()
+                _state.update {
+                    it.copy(
+                        descuentosLoading = false,
+                        descuentos = res,
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        descuentosLoading = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message ?: "Error descuentos",
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Bulk apply discount.
+     * @param scope "all" | "category"
+     */
+    fun applyBulkDiscount(
+        scope: String,
+        categoryId: String?,
+        percent: Int,
+        notify: Boolean,
+    ) {
+        viewModelScope.launch {
+            if (percent < 0 || percent > 99) {
+                _state.update { it.copy(snackbar = "% descuento debe ser 0–99") }
+                return@launch
+            }
+            if (scope == "category" && categoryId.isNullOrBlank()) {
+                _state.update { it.copy(snackbar = "Elige una categoría") }
+                return@launch
+            }
+            _state.update { it.copy(descuentosBusy = true) }
+            try {
+                val body = buildJsonObject {
+                    put("action", "apply_bulk")
+                    put("scope", scope)
+                    put("discount_percent", percent)
+                    put("notify", notify)
+                    if (!categoryId.isNullOrBlank()) put("category_id", categoryId)
+                }
+                val res = container.api.adminDescuentosAction(body)
+                val pushNote = res.push?.let { " · push ${it.sent}/${it.total}" }.orEmpty()
+                _state.update {
+                    it.copy(
+                        descuentosBusy = false,
+                        snackbar = "Descuento aplicado a ${res.updated} productos$pushNote",
+                        descuentosTab = "list",
+                    )
+                }
+                loadDescuentos()
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        descuentosBusy = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message ?: "Error al aplicar",
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Bulk remove discounts.
+     * @param scope "all" | "category"
+     */
+    fun removeBulkDiscount(scope: String, categoryId: String?) {
+        viewModelScope.launch {
+            if (scope == "category" && categoryId.isNullOrBlank()) {
+                _state.update { it.copy(snackbar = "Elige una categoría") }
+                return@launch
+            }
+            _state.update { it.copy(descuentosBusy = true) }
+            try {
+                val body = buildJsonObject {
+                    put("action", "remove_bulk")
+                    put("scope", scope)
+                    if (!categoryId.isNullOrBlank()) put("category_id", categoryId)
+                }
+                val res = container.api.adminDescuentosAction(body)
+                _state.update {
+                    it.copy(
+                        descuentosBusy = false,
+                        snackbar = "Quitados ${res.updated} descuentos",
+                        descuentosTab = "list",
+                    )
+                }
+                loadDescuentos()
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        descuentosBusy = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message ?: "Error al quitar",
+                    )
+                }
+            }
+        }
+    }
+
+    fun updateLoyaltySettings(
+        pointsPerClp: Int,
+        clpPerPoint: Int,
+        enabled: Boolean,
+    ) {
+        viewModelScope.launch {
+            if (pointsPerClp < 1 || clpPerPoint < 1) {
+                _state.update { it.copy(snackbar = "Valores de puntos inválidos") }
+                return@launch
+            }
+            _state.update { it.copy(descuentosBusy = true) }
+            try {
+                val body = buildJsonObject {
+                    put("action", "update_loyalty")
+                    put("points_per_clp", pointsPerClp)
+                    put("clp_per_point", clpPerPoint)
+                    put("loyalty_enabled", enabled)
+                }
+                container.api.adminDescuentosAction(body)
+                _state.update {
+                    it.copy(
+                        descuentosBusy = false,
+                        snackbar = "Programa de puntos actualizado",
+                    )
+                }
+                loadDescuentos()
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        descuentosBusy = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message ?: "Error al guardar",
                     )
                 }
             }

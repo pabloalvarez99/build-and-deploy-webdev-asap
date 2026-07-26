@@ -57,6 +57,8 @@ import cl.tufarmacia.app.data.model.CreateAvisoRequest
 import cl.tufarmacia.app.data.model.CreateAvisoResponse
 import cl.tufarmacia.app.data.model.CreatePrescriptionRequest
 import cl.tufarmacia.app.data.model.CreateTaskRequest
+import cl.tufarmacia.app.data.model.DescuentosActionResponse
+import cl.tufarmacia.app.data.model.DescuentosResponse
 import cl.tufarmacia.app.data.model.ExpressReorderRequest
 import cl.tufarmacia.app.data.model.ExpressReorderResponse
 import cl.tufarmacia.app.data.model.FaltaDto
@@ -476,6 +478,16 @@ class TuFarmaciaApi(
 
     suspend fun adminCreatePrescription(body: CreatePrescriptionRequest): PrescriptionRecordDto =
         post("/api/admin/prescriptions", body = body, auth = true)
+
+    suspend fun adminDescuentos(): DescuentosResponse =
+        get("/api/admin/descuentos", auth = true)
+
+    /**
+     * Bulk discount actions.
+     * @param action `apply_bulk` | `remove_bulk` | `update_loyalty`
+     */
+    suspend fun adminDescuentosAction(body: kotlinx.serialization.json.JsonObject): DescuentosActionResponse =
+        post("/api/admin/descuentos", body = body, auth = true)
 
     private suspend inline fun <reified T> patchJson(path: String, body: Any): T {
         val token = tokenProvider.currentIdToken()

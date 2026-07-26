@@ -51,6 +51,7 @@ import cl.tufarmacia.app.ui.erp.ErpCierreDiaScreen
 import cl.tufarmacia.app.ui.erp.ErpClienteDetailScreen
 import cl.tufarmacia.app.ui.erp.ErpClientsScreen
 import cl.tufarmacia.app.ui.erp.ErpDashboardScreen
+import cl.tufarmacia.app.ui.erp.ErpDescuentosScreen
 import cl.tufarmacia.app.ui.erp.ErpDevolucionesScreen
 import cl.tufarmacia.app.ui.erp.ErpFaltasScreen
 import cl.tufarmacia.app.ui.erp.ErpFinanceScreen
@@ -101,6 +102,7 @@ private object Routes {
     const val ErpOrders = "erp_orders"
     const val ErpPos = "erp_pos"
     const val ErpPrescriptions = "erp_prescriptions"
+    const val ErpDescuentos = "erp_descuentos"
     const val ErpInventory = "erp_inventory"
     const val ErpMovements = "erp_movements"
     const val ErpClients = "erp_clients"
@@ -576,6 +578,10 @@ fun TuFarmaciaRoot(container: AppContainer) {
                                 erpVm.loadPrescriptions()
                                 navController.navigate(Routes.ErpPrescriptions)
                             }
+                            Routes.ErpDescuentos -> {
+                                erpVm.loadDescuentos()
+                                navController.navigate(Routes.ErpDescuentos)
+                            }
                             Routes.ErpInventory -> {
                                 erpVm.loadInventory()
                                 navController.navigate(Routes.ErpInventory)
@@ -738,6 +744,24 @@ fun TuFarmaciaRoot(container: AppContainer) {
                             isControlled = controlled,
                             dispensedBy = by,
                         )
+                    },
+                )
+            }
+            composable(Routes.ErpDescuentos) {
+                ErpDescuentosScreen(
+                    state = erp,
+                    isOwner = state.user?.role in setOf("owner", "admin"),
+                    onBack = { navController.popBackStack() },
+                    onRefresh = erpVm::loadDescuentos,
+                    onTab = erpVm::setDescuentosTab,
+                    onApply = { scope, catId, pct, notify ->
+                        erpVm.applyBulkDiscount(scope, catId, pct, notify)
+                    },
+                    onRemove = { scope, catId ->
+                        erpVm.removeBulkDiscount(scope, catId)
+                    },
+                    onSaveLoyalty = { ppc, cpp, enabled ->
+                        erpVm.updateLoyaltySettings(ppc, cpp, enabled)
                     },
                 )
             }

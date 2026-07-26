@@ -3597,3 +3597,15 @@ Build local OK. Push → Vercel.
 - Contract: docs/mobile/api-contract.md
 - Build: :app:assembleDebug OK
 
+
+## 2026-07-26 - Android v1.11.0 Descuentos bulk + puntos (staff)
+
+- **App** cl.tufarmacia.native versionCode 20 / versionName 1.11.0
+- **Modulo ERP Descuentos**: GET /api/admin/descuentos (activos, por categoria, loyalty summary)
+- **Bulk apply** POST apply_bulk (scope all|category, %, notify push)
+- **Bulk remove** POST remove_bulk (scope all|category) con confirmacion
+- **Puntos**: KPIs + edicion loyalty (owner/admin) update_loyalty
+- UI: ErpDiscountScreens.kt · hub card erp_descuentos · tabs Activos/Aplicar/Quitar/Puntos
+- Contract: docs/mobile/api-contract.md
+- Build: :app:assembleDebug OK
+

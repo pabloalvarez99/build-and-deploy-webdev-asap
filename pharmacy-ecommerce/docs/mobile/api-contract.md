@@ -71,6 +71,8 @@ Custom claim `role` on the token: `user` \| `owner` \| `admin` \| `pharmacist` \
 | GET | `/api/admin/stock-movements` | admin | stock movement history |
 | GET | `/api/admin/prescriptions` | admin | libro recetas (`controlled`, `from`, `to`, `page`) |
 | POST | `/api/admin/prescriptions` | admin | registrar receta manual |
+| GET | `/api/admin/descuentos` | admin | descuentos activos + loyalty summary |
+| POST | `/api/admin/descuentos` | admin | `apply_bulk` / `remove_bulk` / `update_loyalty` |
 | POST | `/api/admin/avisos` | owner | create announcement |
 | GET/POST | `/api/admin/devoluciones` | admin | returns |
 | GET/PUT | `/api/admin/products/{id}` | admin | product quick edit |

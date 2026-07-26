@@ -936,3 +936,83 @@ data class CreatePrescriptionRequest(
     @SerialName("product_id") val productId: String? = null,
     @SerialName("order_id") val orderId: String? = null,
 )
+
+// ── Descuentos bulk + fidelización ──────────────────────────────
+
+@Serializable
+data class DiscountCategorySummary(
+    val name: String? = null,
+    val count: Int = 0,
+    @SerialName("avg_discount") val avgDiscount: Int = 0,
+)
+
+@Serializable
+data class DiscountSummary(
+    @SerialName("total_discounted") val totalDiscounted: Int = 0,
+    @SerialName("by_category") val byCategory: List<DiscountCategorySummary> = emptyList(),
+)
+
+@Serializable
+data class DiscountProductDto(
+    val id: String,
+    val name: String? = null,
+    /** API sends Decimal as string */
+    val price: String? = null,
+    @SerialName("discount_percent") val discountPercent: Int = 0,
+    @SerialName("category_id") val categoryId: String? = null,
+    @SerialName("category_name") val categoryName: String? = null,
+    val stock: Int = 0,
+    @SerialName("image_url") val imageUrl: String? = null,
+) {
+    val priceValue: Double
+        get() = price?.toDoubleOrNull() ?: 0.0
+}
+
+@Serializable
+data class DiscountCategoryDto(
+    val id: String,
+    val name: String? = null,
+)
+
+@Serializable
+data class LoyaltyTransactionDto(
+    val id: String,
+    val points: Int = 0,
+    val reason: String? = null,
+    @SerialName("user_id") val userId: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
+)
+
+@Serializable
+data class LoyaltyProgramDto(
+    val enabled: Boolean = true,
+    @SerialName("points_per_clp") val pointsPerClp: Int = 1000,
+    @SerialName("clp_per_point") val clpPerPoint: Int = 100,
+    @SerialName("total_users_with_points") val totalUsersWithPoints: Int = 0,
+    @SerialName("total_points_in_circulation") val totalPointsInCirculation: Int = 0,
+    @SerialName("total_clp_equivalent") val totalClpEquivalent: Double = 0.0,
+    @SerialName("recent_transactions") val recentTransactions: List<LoyaltyTransactionDto> = emptyList(),
+)
+
+@Serializable
+data class DescuentosResponse(
+    val summary: DiscountSummary = DiscountSummary(),
+    val products: List<DiscountProductDto> = emptyList(),
+    val categories: List<DiscountCategoryDto> = emptyList(),
+    val loyalty: LoyaltyProgramDto = LoyaltyProgramDto(),
+)
+
+@Serializable
+data class DescuentosActionResponse(
+    val success: Boolean = false,
+    val updated: Int = 0,
+    val push: DescuentosPushResult? = null,
+    val error: String? = null,
+)
+
+@Serializable
+data class DescuentosPushResult(
+    val sent: Int = 0,
+    val failed: Int = 0,
+    val total: Int = 0,
+)
