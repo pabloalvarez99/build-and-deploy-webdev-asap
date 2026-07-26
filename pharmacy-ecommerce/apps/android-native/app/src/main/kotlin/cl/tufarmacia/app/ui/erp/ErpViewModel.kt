@@ -19,6 +19,7 @@ import cl.tufarmacia.app.data.model.CreateDevolucionItem
 import cl.tufarmacia.app.data.model.CreateDevolucionRequest
 import cl.tufarmacia.app.data.model.CreateFaltaRequest
 import cl.tufarmacia.app.data.model.CreateGastoRequest
+import cl.tufarmacia.app.data.model.CreatePrescriptionRequest
 import cl.tufarmacia.app.data.model.CreatePurchaseOrderItem
 import cl.tufarmacia.app.data.model.CreatePurchaseOrderRequest
 import cl.tufarmacia.app.data.model.CreateTaskRequest
@@ -36,6 +37,8 @@ import cl.tufarmacia.app.data.model.PosCustomerHistory
 import cl.tufarmacia.app.data.model.PosPickupOrder
 import cl.tufarmacia.app.data.model.PosSaleItem
 import cl.tufarmacia.app.data.model.PosSaleRequest
+import cl.tufarmacia.app.data.model.PrescriptionKpis
+import cl.tufarmacia.app.data.model.PrescriptionRecordDto
 import cl.tufarmacia.app.data.model.Product
 import cl.tufarmacia.app.data.model.ProductBatchDto
 import cl.tufarmacia.app.data.model.PurchaseOrderDto
@@ -162,6 +165,14 @@ data class ErpUiState(
     val stockMovementsTotal: Int = 0,
     val stockMovementsReason: String? = null,
     val stockMovementsLoading: Boolean = false,
+
+    val prescriptions: List<PrescriptionRecordDto> = emptyList(),
+    val prescriptionsTotal: Int = 0,
+    val prescriptionsKpis: PrescriptionKpis = PrescriptionKpis(),
+    /** null = todas, true = solo controladas, false = no controladas */
+    val prescriptionsControlled: Boolean? = null,
+    val prescriptionsLoading: Boolean = false,
+    val prescriptionsBusy: Boolean = false,
 )
 
 class ErpViewModel(private val container: AppContainer) : ViewModel() {
@@ -828,6 +839,85 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
     fun setStockMovementsReason(reason: String?) {
         _state.update { it.copy(stockMovementsReason = reason) }
         loadStockMovements(reason)
+    }
+
+    fun loadPrescriptions() {
+        viewModelScope.launch {
+            val controlledParam = _state.value.prescriptionsControlled
+            _state.update { it.copy(prescriptionsLoading = true) }
+            try {
+                val res = container.api.adminPrescriptions(page = 1, controlled = controlledParam)
+                _state.update {
+                    it.copy(
+                        prescriptionsLoading = false,
+                        prescriptions = res.records,
+                        prescriptionsTotal = res.total,
+                        prescriptionsKpis = res.kpis,
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        prescriptionsLoading = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message ?: "Error recetas",
+                    )
+                }
+            }
+        }
+    }
+
+    fun setPrescriptionsControlled(controlled: Boolean?) {
+        _state.update { it.copy(prescriptionsControlled = controlled) }
+        loadPrescriptions()
+    }
+
+    fun createPrescription(
+        productName: String,
+        quantity: Int,
+        patientName: String,
+        patientRut: String? = null,
+        prescriptionNumber: String? = null,
+        doctorName: String? = null,
+        medicalCenter: String? = null,
+        isControlled: Boolean = false,
+        dispensedBy: String? = null,
+    ) {
+        viewModelScope.launch {
+            if (productName.isBlank() || patientName.isBlank() || quantity < 1) {
+                _state.update { it.copy(snackbar = "Producto, paciente y cantidad son obligatorios") }
+                return@launch
+            }
+            _state.update { it.copy(prescriptionsBusy = true) }
+            try {
+                container.api.adminCreatePrescription(
+                    CreatePrescriptionRequest(
+                        productName = productName.trim(),
+                        quantity = quantity,
+                        patientName = patientName.trim(),
+                        patientRut = patientRut?.trim()?.ifBlank { null },
+                        prescriptionNumber = prescriptionNumber?.trim()?.ifBlank { null },
+                        doctorName = doctorName?.trim()?.ifBlank { null },
+                        medicalCenter = medicalCenter?.trim()?.ifBlank { null },
+                        isControlled = isControlled,
+                        dispensedBy = dispensedBy?.trim()?.ifBlank { null },
+                    ),
+                )
+                _state.update {
+                    it.copy(
+                        prescriptionsBusy = false,
+                        snackbar = "Receta registrada",
+                    )
+                }
+                loadPrescriptions()
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        prescriptionsBusy = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message ?: "Error al registrar",
+                    )
+                }
+            }
+        }
     }
 
     fun loadClienteDetail(id: String, guestEmail: String? = null) {

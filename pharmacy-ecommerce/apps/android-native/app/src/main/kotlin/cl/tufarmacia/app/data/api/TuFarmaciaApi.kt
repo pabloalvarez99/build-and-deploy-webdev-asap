@@ -55,11 +55,14 @@ import cl.tufarmacia.app.data.model.CierreDiaResponse
 import cl.tufarmacia.app.data.model.ClienteDetailResponse
 import cl.tufarmacia.app.data.model.CreateAvisoRequest
 import cl.tufarmacia.app.data.model.CreateAvisoResponse
+import cl.tufarmacia.app.data.model.CreatePrescriptionRequest
 import cl.tufarmacia.app.data.model.CreateTaskRequest
 import cl.tufarmacia.app.data.model.ExpressReorderRequest
 import cl.tufarmacia.app.data.model.ExpressReorderResponse
 import cl.tufarmacia.app.data.model.FaltaDto
 import cl.tufarmacia.app.data.model.FaltasResponse
+import cl.tufarmacia.app.data.model.PrescriptionRecordDto
+import cl.tufarmacia.app.data.model.PrescriptionsResponse
 import cl.tufarmacia.app.data.model.StockMovementsResponse
 import cl.tufarmacia.app.data.model.TaskActionResponse
 import cl.tufarmacia.app.data.model.TaskDto
@@ -457,6 +460,22 @@ class TuFarmaciaApi(
 
     suspend fun adminReposicionExpress(body: ExpressReorderRequest): ExpressReorderResponse =
         post("/api/admin/reposicion/express", body = body, auth = true)
+
+    suspend fun adminPrescriptions(
+        page: Int = 1,
+        controlled: Boolean? = null,
+        from: String? = null,
+        to: String? = null,
+    ): PrescriptionsResponse =
+        get("/api/admin/prescriptions", auth = true) {
+            parameter("page", page)
+            if (controlled != null) parameter("controlled", controlled.toString())
+            if (!from.isNullOrBlank()) parameter("from", from)
+            if (!to.isNullOrBlank()) parameter("to", to)
+        }
+
+    suspend fun adminCreatePrescription(body: CreatePrescriptionRequest): PrescriptionRecordDto =
+        post("/api/admin/prescriptions", body = body, auth = true)
 
     private suspend inline fun <reified T> patchJson(path: String, body: Any): T {
         val token = tokenProvider.currentIdToken()

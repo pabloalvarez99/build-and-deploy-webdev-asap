@@ -69,6 +69,8 @@ Custom claim `role` on the token: `user` \| `owner` \| `admin` \| `pharmacist` \
 | GET | `/api/admin/cierre-dia` | admin | day close report |
 | POST | `/api/admin/cierre-dia/email` | owner | email day summary |
 | GET | `/api/admin/stock-movements` | admin | stock movement history |
+| GET | `/api/admin/prescriptions` | admin | libro recetas (`controlled`, `from`, `to`, `page`) |
+| POST | `/api/admin/prescriptions` | admin | registrar receta manual |
 | POST | `/api/admin/avisos` | owner | create announcement |
 | GET/POST | `/api/admin/devoluciones` | admin | returns |
 | GET/PUT | `/api/admin/products/{id}` | admin | product quick edit |

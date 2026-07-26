@@ -57,6 +57,7 @@ import cl.tufarmacia.app.ui.erp.ErpFinanceScreen
 import cl.tufarmacia.app.ui.erp.ErpHubScreen
 import cl.tufarmacia.app.ui.erp.ErpInventoryScreen
 import cl.tufarmacia.app.ui.erp.ErpPosScreen
+import cl.tufarmacia.app.ui.erp.ErpPrescriptionsScreen
 import cl.tufarmacia.app.ui.erp.ErpProductEditScreen
 import cl.tufarmacia.app.ui.erp.ErpPurchaseDetailScreen
 import cl.tufarmacia.app.ui.erp.ErpPurchasesScreen
@@ -99,6 +100,7 @@ private object Routes {
     const val ErpCierre = "erp_cierre"
     const val ErpOrders = "erp_orders"
     const val ErpPos = "erp_pos"
+    const val ErpPrescriptions = "erp_prescriptions"
     const val ErpInventory = "erp_inventory"
     const val ErpMovements = "erp_movements"
     const val ErpClients = "erp_clients"
@@ -570,6 +572,10 @@ fun TuFarmaciaRoot(container: AppContainer) {
                                 navController.navigate(Routes.ErpOrders)
                             }
                             Routes.ErpPos -> navController.navigate(Routes.ErpPos)
+                            Routes.ErpPrescriptions -> {
+                                erpVm.loadPrescriptions()
+                                navController.navigate(Routes.ErpPrescriptions)
+                            }
                             Routes.ErpInventory -> {
                                 erpVm.loadInventory()
                                 navController.navigate(Routes.ErpInventory)
@@ -712,6 +718,27 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onBack = { navController.popBackStack() },
                     onRefresh = { erpVm.loadStockMovements() },
                     onReason = erpVm::setStockMovementsReason,
+                )
+            }
+            composable(Routes.ErpPrescriptions) {
+                ErpPrescriptionsScreen(
+                    state = erp,
+                    onBack = { navController.popBackStack() },
+                    onRefresh = erpVm::loadPrescriptions,
+                    onFilter = erpVm::setPrescriptionsControlled,
+                    onCreate = { product, qty, patient, rut, num, doctor, center, controlled, by ->
+                        erpVm.createPrescription(
+                            productName = product,
+                            quantity = qty,
+                            patientName = patient,
+                            patientRut = rut,
+                            prescriptionNumber = num,
+                            doctorName = doctor,
+                            medicalCenter = center,
+                            isControlled = controlled,
+                            dispensedBy = by,
+                        )
+                    },
                 )
             }
             composable(Routes.ErpOrders) {

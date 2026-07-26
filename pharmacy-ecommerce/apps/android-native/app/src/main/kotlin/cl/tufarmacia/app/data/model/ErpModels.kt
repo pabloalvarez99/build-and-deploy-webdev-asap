@@ -887,3 +887,52 @@ data class CreatePurchaseOrderRequest(
     @SerialName("po_reference") val poReference: String? = null,
     val items: List<CreatePurchaseOrderItem>,
 )
+
+@Serializable
+data class PrescriptionKpis(
+    val hoy: Int = 0,
+    val mes: Int = 0,
+)
+
+@Serializable
+data class PrescriptionRecordDto(
+    val id: String,
+    @SerialName("order_id") val orderId: String? = null,
+    @SerialName("product_id") val productId: String? = null,
+    @SerialName("product_name") val productName: String? = null,
+    val quantity: Int = 1,
+    @SerialName("prescription_number") val prescriptionNumber: String? = null,
+    @SerialName("patient_name") val patientName: String? = null,
+    @SerialName("patient_rut") val patientRut: String? = null,
+    @SerialName("doctor_name") val doctorName: String? = null,
+    @SerialName("medical_center") val medicalCenter: String? = null,
+    @SerialName("prescription_date") val prescriptionDate: String? = null,
+    @SerialName("is_controlled") val isControlled: Boolean = false,
+    @SerialName("dispensed_by") val dispensedBy: String? = null,
+    @SerialName("dispensed_at") val dispensedAt: String? = null,
+)
+
+@Serializable
+data class PrescriptionsResponse(
+    val records: List<PrescriptionRecordDto> = emptyList(),
+    val total: Int = 0,
+    val page: Int = 1,
+    val limit: Int = 50,
+    val kpis: PrescriptionKpis = PrescriptionKpis(),
+)
+
+@Serializable
+data class CreatePrescriptionRequest(
+    @SerialName("product_name") val productName: String,
+    val quantity: Int,
+    @SerialName("patient_name") val patientName: String,
+    @SerialName("patient_rut") val patientRut: String? = null,
+    @SerialName("prescription_number") val prescriptionNumber: String? = null,
+    @SerialName("doctor_name") val doctorName: String? = null,
+    @SerialName("medical_center") val medicalCenter: String? = null,
+    @SerialName("prescription_date") val prescriptionDate: String? = null,
+    @SerialName("is_controlled") val isControlled: Boolean = false,
+    @SerialName("dispensed_by") val dispensedBy: String? = null,
+    @SerialName("product_id") val productId: String? = null,
+    @SerialName("order_id") val orderId: String? = null,
+)

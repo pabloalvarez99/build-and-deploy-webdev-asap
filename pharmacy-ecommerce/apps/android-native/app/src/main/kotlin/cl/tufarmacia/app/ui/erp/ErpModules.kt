@@ -71,6 +71,7 @@ val ERP_MODULES = listOf(
     ErpModule("erp_cierre", "Cierre de día", "Ventas · caja · top · email"),
     ErpModule("erp_orders", "Órdenes", "Online · reservas · staff actions"),
     ErpModule("erp_pos", "POS", "Venta · barcode · retiro · descuento"),
+    ErpModule("erp_prescriptions", "Libro de recetas", "Listar · controladas · registro manual"),
     ErpModule("erp_inventory", "Inventario", "Stock · ajustes · editar"),
     ErpModule("erp_movements", "Mov. stock", "Historial de ajustes"),
     ErpModule("erp_batches", "Lotes / Vencimientos", "soon30 · vencidos"),

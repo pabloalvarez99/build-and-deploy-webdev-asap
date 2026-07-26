@@ -3587,3 +3587,13 @@ Build local OK. Push → Vercel.
 - Movimientos stock: GET /api/admin/stock-movements + filtros motivo
 - Hub: crear avisos (owner) title/body/severity/pin
 - versionCode 18 / 1.9.0; assembleDebug green
+
+## 2026-07-26 04:41 — Android v1.10.0 Libro de recetas (staff)
+
+- **App** cl.tufarmacia.native versionCode 19 / versionName 1.10.0
+- **Módulo ERP** Libro de recetas: listado desde GET /api/admin/prescriptions (KPIs hoy/mes, filtro todas/controladas/no controladas)
+- **Registro manual** POST /api/admin/prescriptions (paciente, RUT, producto, qty, Nº receta, médico, centro, controlada, dispensado por)
+- UI: ErpPharmacyScreens.kt, hub card, nav rp_prescriptions
+- Contract: docs/mobile/api-contract.md
+- Build: :app:assembleDebug OK
+
