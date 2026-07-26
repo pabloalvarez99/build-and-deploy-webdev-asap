@@ -3540,3 +3540,7 @@ Build local OK. Push → Vercel.
 ## 2026-07-25 - Android v1.4.0 Wave C (storefront polish)
 - Search suggest, en stock / descuento / sort filters
 - Cart revalidate stock+price; empty CTA; PDP retry + stock badge
+
+## 2026-07-26 - Android v1.5.0 Wave D (returns + owner pocket)
+- Devoluciones list/create; product quick edit from inventory
+- Unknown barcodes triage; AP pay + quick gastos in Finanzas

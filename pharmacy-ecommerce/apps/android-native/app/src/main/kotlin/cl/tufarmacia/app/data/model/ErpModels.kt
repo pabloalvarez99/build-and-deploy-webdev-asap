@@ -322,6 +322,153 @@ data class CreateFaltaRequest(
 )
 
 @Serializable
+data class DevolucionItemDto(
+    val id: String? = null,
+    @SerialName("product_id") val productId: String? = null,
+    @SerialName("product_name") val productName: String? = null,
+    val quantity: Int = 0,
+    @SerialName("unit_price") val unitPrice: Double = 0.0,
+    val restock: Boolean = false,
+)
+
+@Serializable
+data class DevolucionDto(
+    val id: String,
+    @SerialName("order_id") val orderId: String? = null,
+    val tipo: String? = null,
+    val motivo: String? = null,
+    val notas: String? = null,
+    @SerialName("total_devuelto") val totalDevuelto: Double = 0.0,
+    @SerialName("metodo_reembolso") val metodoReembolso: String? = null,
+    @SerialName("procesado_por") val procesadoPor: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
+    val items: List<DevolucionItemDto> = emptyList(),
+)
+
+@Serializable
+data class DevolucionesResponse(
+    val devoluciones: List<DevolucionDto> = emptyList(),
+    val total: Int = 0,
+    val pages: Int = 1,
+)
+
+@Serializable
+data class CreateDevolucionItem(
+    @SerialName("product_id") val productId: String? = null,
+    @SerialName("product_name") val productName: String,
+    val quantity: Int,
+    @SerialName("unit_price") val unitPrice: Double,
+    val restock: Boolean = true,
+)
+
+@Serializable
+data class CreateDevolucionRequest(
+    @SerialName("order_id") val orderId: String? = null,
+    val tipo: String = "venta",
+    val motivo: String,
+    val notas: String? = null,
+    @SerialName("metodo_reembolso") val metodoReembolso: String? = null,
+    val items: List<CreateDevolucionItem>,
+)
+
+@Serializable
+data class AdminProductDto(
+    val id: String,
+    val name: String,
+    val slug: String? = null,
+    val price: String? = null,
+    val stock: Int = 0,
+    @SerialName("cost_price") val costPrice: String? = null,
+    @SerialName("discount_percent") val discountPercent: Int? = null,
+    val active: Boolean = true,
+    val barcodes: List<String> = emptyList(),
+)
+
+@Serializable
+data class AdminProductUpdate(
+    val price: Double? = null,
+    val stock: Int? = null,
+    @SerialName("discount_percent") val discountPercent: Int? = null,
+    val active: Boolean? = null,
+)
+
+@Serializable
+data class UnknownBarcodeDto(
+    val barcode: String,
+    @SerialName("scan_count") val scanCount: Int = 0,
+    @SerialName("last_scanned_at") val lastScannedAt: String? = null,
+    @SerialName("last_user_id") val lastUserId: String? = null,
+    @SerialName("resolved_at") val resolvedAt: String? = null,
+)
+
+@Serializable
+data class UnknownBarcodesResponse(
+    val items: List<UnknownBarcodeDto> = emptyList(),
+)
+
+@Serializable
+data class ApOrderDto(
+    val id: String,
+    val status: String? = null,
+    val paid: Boolean = false,
+    @SerialName("total_cost") val totalCost: Double? = null,
+    @SerialName("invoice_number") val invoiceNumber: String? = null,
+    @SerialName("due_date") val dueDate: String? = null,
+    val suppliers: SupplierName? = null,
+)
+
+@Serializable
+data class ApListResponse(
+    val orders: List<ApOrderDto> = emptyList(),
+    val total: Int = 0,
+)
+
+@Serializable
+data class ApPayRequest(
+    val amount: Double,
+    @SerialName("payment_method") val paymentMethod: String,
+    @SerialName("mark_fully_paid") val markFullyPaid: Boolean = true,
+    val notes: String? = null,
+)
+
+@Serializable
+data class ApPayResponse(
+    val success: Boolean = false,
+)
+
+@Serializable
+data class GastoCategoryDto(
+    val id: String,
+    val name: String? = null,
+)
+
+@Serializable
+data class GastoDto(
+    val id: String,
+    val description: String? = null,
+    val amount: Double? = null,
+    @SerialName("expense_date") val expenseDate: String? = null,
+    @SerialName("payment_method") val paymentMethod: String? = null,
+    @SerialName("gasto_categories") val category: GastoCategoryDto? = null,
+)
+
+@Serializable
+data class GastosResponse(
+    val gastos: List<GastoDto> = emptyList(),
+    val total: Int = 0,
+    val categories: List<GastoCategoryDto> = emptyList(),
+)
+
+@Serializable
+data class CreateGastoRequest(
+    @SerialName("category_id") val categoryId: String,
+    val description: String,
+    val amount: Double,
+    @SerialName("expense_date") val expenseDate: String,
+    @SerialName("payment_method") val paymentMethod: String? = null,
+)
+
+@Serializable
 data class FinanzasDashboard(
     @SerialName("pending_ap_count") val pendingApCount: Int = 0,
     @SerialName("pending_ap_amount") val pendingApAmount: Double = 0.0,

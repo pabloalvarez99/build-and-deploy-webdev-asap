@@ -64,7 +64,19 @@ Custom claim `role` on the token: `user` \| `owner` \| `admin` \| `pharmacist` \
 | GET | `/api/admin/turnos` | admin | cash shifts |
 | GET | `/api/admin/faltas` | admin | stockouts |
 | PATCH | `/api/admin/faltas/{id}` | admin | mark notified |
+| POST | `/api/admin/faltas` | admin | create falta |
 | GET | `/api/admin/arqueo` | admin | shift cash snapshot |
+| GET/POST | `/api/admin/devoluciones` | admin | returns |
+| GET/PUT | `/api/admin/products/{id}` | admin | product quick edit |
+| GET | `/api/admin/barcodes/unknown` | admin | unknown scans |
+| DELETE | `/api/admin/barcodes/unknown` | admin | dismiss barcode |
+| GET | `/api/admin/finanzas/ap` | owner | accounts payable |
+| POST | `/api/admin/finanzas/ap/{id}/pay` | owner | pay AP |
+| GET/POST | `/api/admin/finanzas/gastos` | owner | expenses |
+| GET | `/api/admin/purchase-orders/{id}` | owner | PO detail |
+| POST | `/api/admin/purchase-orders/{id}/receive` | owner | receive stock |
+| GET | `/api/admin/batches` | admin | expiry lots |
+| GET | `/api/admin/inventory/reorder-suggestions` | admin | reorder |
 
 \* Bearer optional on store-pickup server; app requires login for checkout.
 

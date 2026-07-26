@@ -38,6 +38,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,15 +64,17 @@ val ERP_MODULES = listOf(
     ErpModule("erp_dashboard", "Dashboard", "KPIs del día · operaciones"),
     ErpModule("erp_orders", "Órdenes", "Online · reservas · staff actions"),
     ErpModule("erp_pos", "POS", "Venta · barcode · retiro · descuento"),
-    ErpModule("erp_inventory", "Inventario", "Stock · ajustes · barcode"),
+    ErpModule("erp_inventory", "Inventario", "Stock · ajustes · editar"),
     ErpModule("erp_batches", "Lotes / Vencimientos", "soon30 · vencidos"),
     ErpModule("erp_reorder", "Reposición", "Sugerencias por proveedor"),
+    ErpModule("erp_devoluciones", "Devoluciones", "Registrar · listar"),
+    ErpModule("erp_barcodes", "Barcodes desconocidos", "Triage de scans"),
     ErpModule("erp_arqueo", "Arqueo", "Turno actual · efectivo esperado"),
     ErpModule("erp_faltas", "Faltas", "Pedidos sin stock · notificar"),
     ErpModule("erp_clients", "Clientes", "Registrados y guests"),
     ErpModule("erp_purchases", "Compras", "OC · recepción stock", ownerOnly = true),
     ErpModule("erp_suppliers", "Proveedores", "Catálogo proveedores", ownerOnly = true),
-    ErpModule("erp_finance", "Finanzas", "AP · gastos · ingresos", ownerOnly = true),
+    ErpModule("erp_finance", "Finanzas", "AP · pagar · gastos", ownerOnly = true),
     ErpModule("erp_tasks", "Tareas", "Tareas internas abiertas"),
     ErpModule("erp_shifts", "Turnos / Caja", "Cierres de turno"),
 )
@@ -218,6 +221,7 @@ fun ErpInventoryScreen(
     onAdjustBarcode: () -> Unit,
     onAdjust: (productId: String, delta: Int) -> Unit,
     onCreateFalta: (productId: String?, productName: String) -> Unit,
+    onEditProduct: (String) -> Unit = {},
 ) {
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -286,7 +290,7 @@ fun ErpInventoryScreen(
         } else {
             LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(state.inventory, key = { it.id }) { item ->
-                    Card(Modifier.fillMaxWidth()) {
+                    Card(Modifier.fillMaxWidth().clickable { onEditProduct(item.id) }) {
                         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(item.name, fontWeight = FontWeight.Medium)
                             Text(
@@ -294,6 +298,7 @@ fun ErpInventoryScreen(
                                 style = MaterialTheme.typography.bodySmall,
                             )
                             if (item.lowStock) Text("STOCK BAJO", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                            Text("Toca para editar precio/stock", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 OutlinedButton(onClick = { onAdjust(item.id, -1) }) { Text("-1") }
                                 OutlinedButton(onClick = { onAdjust(item.id, 1) }) { Text("+1") }
@@ -853,7 +858,19 @@ fun ErpSuppliersScreen(state: ErpUiState, onBack: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ErpFinanceScreen(state: ErpUiState, onBack: () -> Unit) {
+fun ErpFinanceScreen(
+    state: ErpUiState,
+    onBack: () -> Unit,
+    onPayAp: (id: String, amount: Double) -> Unit,
+    onCreateGasto: (categoryId: String, description: String, amount: Double) -> Unit,
+    onRefresh: () -> Unit,
+) {
+    var gastoDesc by remember { mutableStateOf("") }
+    var gastoAmount by remember { mutableStateOf("") }
+    var gastoCat by remember { mutableStateOf(state.gastoCategories.firstOrNull()?.id.orEmpty()) }
+    LaunchedEffect(state.gastoCategories) {
+        if (gastoCat.isBlank()) gastoCat = state.gastoCategories.firstOrNull()?.id.orEmpty()
+    }
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             title = { Text("Finanzas") },
@@ -862,21 +879,291 @@ fun ErpFinanceScreen(state: ErpUiState, onBack: () -> Unit) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                 }
             },
+            actions = {
+                Text("Actualizar", Modifier.clickable(onClick = onRefresh).padding(16.dp), color = MaterialTheme.colorScheme.primary)
+            },
         )
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             val f = state.finanzas
             if (f == null) {
-                Text("Cargando o sin permiso owner…")
+                item { Text("Cargando o sin permiso owner…") }
             } else {
-                KpiCard("Cuentas por pagar", formatClp(f.pendingApAmount), "${f.pendingApCount} pendientes")
-                KpiCard("AP vencidas", "${f.overdueApCount}", "facturas overdue")
-                KpiCard("Ingresos mes", formatClp(f.ingresosMes), "órdenes paid/completed")
-                KpiCard("Gastos mes", formatClp(f.gastosMes), "")
-                KpiCard(
-                    "Resultado estimado",
-                    formatClp(f.ingresosMes - f.gastosMes),
-                    "ingresos − gastos (simplificado)",
+                item { KpiCard("Cuentas por pagar", formatClp(f.pendingApAmount), "${f.pendingApCount} pendientes") }
+                item { KpiCard("AP vencidas", "${f.overdueApCount}", "facturas overdue") }
+                item { KpiCard("Ingresos mes", formatClp(f.ingresosMes), "órdenes paid/completed") }
+                item { KpiCard("Gastos mes", formatClp(f.gastosMes), "") }
+            }
+            item { Text("Por pagar (AP)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium) }
+            items(state.apOrders, key = { it.id }) { po ->
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(po.suppliers?.name ?: "Proveedor", fontWeight = FontWeight.Medium)
+                        Text("Factura ${po.invoiceNumber ?: "—"} · ${formatClp(po.totalCost ?: 0.0)}")
+                        po.dueDate?.let { Text("Vence ${it.take(10)}", style = MaterialTheme.typography.labelSmall) }
+                        val amt = po.totalCost ?: 0.0
+                        if (amt > 0 && !po.paid) {
+                            Button(
+                                onClick = { onPayAp(po.id, amt) },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) { Text("Marcar pagada (${formatClp(amt)})") }
+                        }
+                    }
+                }
+            }
+            if (state.apOrders.isEmpty()) item { Text("Sin AP pendientes", style = MaterialTheme.typography.bodySmall) }
+            item { Text("Nuevo gasto", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium) }
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (state.gastoCategories.isNotEmpty()) {
+                        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            state.gastoCategories.forEach { cat ->
+                                FilterChip(
+                                    selected = gastoCat == cat.id,
+                                    onClick = { gastoCat = cat.id },
+                                    label = { Text(cat.name ?: cat.id.take(6)) },
+                                )
+                            }
+                        }
+                    }
+                    OutlinedTextField(
+                        value = gastoDesc,
+                        onValueChange = { gastoDesc = it },
+                        label = { Text("Descripción") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                    )
+                    OutlinedTextField(
+                        value = gastoAmount,
+                        onValueChange = { gastoAmount = it.filter { ch -> ch.isDigit() || ch == '.' } },
+                        label = { Text("Monto") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    )
+                    Button(
+                        onClick = {
+                            val amt = gastoAmount.toDoubleOrNull()
+                            if (gastoCat.isBlank() || gastoDesc.isBlank() || amt == null || amt <= 0) return@Button
+                            onCreateGasto(gastoCat, gastoDesc.trim(), amt)
+                            gastoDesc = ""
+                            gastoAmount = ""
+                        },
+                        enabled = gastoCat.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Registrar gasto") }
+                }
+            }
+            item { Text("Gastos recientes", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium) }
+            items(state.gastos, key = { it.id }) { g ->
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text(g.description ?: "Gasto", fontWeight = FontWeight.Medium)
+                        Text(
+                            "${formatClp(g.amount ?: 0.0)} · ${g.expenseDate ?: ""} · ${g.category?.name ?: ""}",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ErpDevolucionesScreen(
+    state: ErpUiState,
+    onBack: () -> Unit,
+    onRefresh: () -> Unit,
+    onCreate: (name: String, qty: Int, price: Double, motivo: String) -> Unit,
+) {
+    var name by remember { mutableStateOf("") }
+    var qty by remember { mutableStateOf("1") }
+    var price by remember { mutableStateOf("") }
+    var motivo by remember { mutableStateOf("cliente") }
+    Column(Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("Devoluciones") },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                }
+            },
+            actions = {
+                Text("Actualizar", Modifier.clickable(onClick = onRefresh).padding(16.dp), color = MaterialTheme.colorScheme.primary)
+            },
+        )
+        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            item {
+                Text("Registrar devolución", fontWeight = FontWeight.Bold)
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Producto") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(
+                    value = qty,
+                    onValueChange = { qty = it.filter { ch -> ch.isDigit() } },
+                    label = { Text("Cantidad") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 )
+                OutlinedTextField(
+                    value = price,
+                    onValueChange = { price = it.filter { ch -> ch.isDigit() || ch == '.' } },
+                    label = { Text("Precio unitario") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                )
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("cliente", "vencido", "daño", "error_venta").forEach { m ->
+                        FilterChip(selected = motivo == m, onClick = { motivo = m }, label = { Text(m) })
+                    }
+                }
+                Button(
+                    onClick = {
+                        val q = qty.toIntOrNull() ?: return@Button
+                        val p = price.toDoubleOrNull() ?: return@Button
+                        if (name.isBlank() || q <= 0) return@Button
+                        onCreate(name.trim(), q, p, motivo)
+                        name = ""
+                        qty = "1"
+                        price = ""
+                    },
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                ) { Text("Guardar devolución") }
+            }
+            item { Text("Historial", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium) }
+            items(state.devoluciones, key = { it.id }) { d ->
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text(d.motivo ?: "—", fontWeight = FontWeight.Medium)
+                        Text(
+                            "${formatClp(d.totalDevuelto)} · ${d.createdAt?.take(16)?.replace('T', ' ') ?: ""}",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        d.items.forEach { i ->
+                            Text("· ${i.productName} x${i.quantity}", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+            if (state.devoluciones.isEmpty()) item { Text("Sin devoluciones recientes") }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ErpUnknownBarcodesScreen(
+    state: ErpUiState,
+    onBack: () -> Unit,
+    onRefresh: () -> Unit,
+    onDismiss: (String) -> Unit,
+) {
+    Column(Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("Barcodes desconocidos") },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                }
+            },
+            actions = {
+                Text("Actualizar", Modifier.clickable(onClick = onRefresh).padding(16.dp), color = MaterialTheme.colorScheme.primary)
+            },
+        )
+        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(state.unknownBarcodes, key = { it.barcode }) { b ->
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(b.barcode, fontWeight = FontWeight.Bold)
+                        Text("Scans: ${b.scanCount} · última ${b.lastScannedAt?.take(16)?.replace('T', ' ') ?: "—"}", style = MaterialTheme.typography.bodySmall)
+                        OutlinedButton(onClick = { onDismiss(b.barcode) }, modifier = Modifier.fillMaxWidth()) {
+                            Text("Descartar / falso positivo")
+                        }
+                    }
+                }
+            }
+            if (state.unknownBarcodes.isEmpty()) item { Text("Sin barcodes pendientes") }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ErpProductEditScreen(
+    state: ErpUiState,
+    onBack: () -> Unit,
+    onSave: (price: Double?, stock: Int?, discount: Int?) -> Unit,
+) {
+    val p = state.editProduct
+    var price by remember(p?.id) { mutableStateOf(p?.price.orEmpty()) }
+    var stock by remember(p?.id) { mutableStateOf(p?.stock?.toString().orEmpty()) }
+    var discount by remember(p?.id) { mutableStateOf(p?.discountPercent?.toString().orEmpty()) }
+    Column(Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("Editar producto") },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                }
+            },
+        )
+        if (state.editProductBusy && p == null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            return
+        }
+        if (p == null) {
+            Text("Sin producto", Modifier.padding(24.dp))
+            return
+        }
+        Column(
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(p.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+            if (p.barcodes.isNotEmpty()) {
+                Text("Barcodes: ${p.barcodes.joinToString()}", style = MaterialTheme.typography.bodySmall)
+            }
+            OutlinedTextField(
+                value = price,
+                onValueChange = { price = it.filter { ch -> ch.isDigit() || ch == '.' } },
+                label = { Text("Precio") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            )
+            OutlinedTextField(
+                value = stock,
+                onValueChange = { stock = it.filter { ch -> ch.isDigit() } },
+                label = { Text("Stock") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            )
+            OutlinedTextField(
+                value = discount,
+                onValueChange = { discount = it.filter { ch -> ch.isDigit() } },
+                label = { Text("% Descuento") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            )
+            Button(
+                onClick = {
+                    onSave(
+                        price.toDoubleOrNull(),
+                        stock.toIntOrNull(),
+                        discount.toIntOrNull(),
+                    )
+                },
+                enabled = !state.editProductBusy,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+            ) {
+                if (state.editProductBusy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
+                else Text("Guardar")
             }
         }
     }

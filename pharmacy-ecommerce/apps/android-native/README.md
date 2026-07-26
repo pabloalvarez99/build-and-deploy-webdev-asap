@@ -1,6 +1,6 @@
 # Tu Farmacia — Android nativo Kotlin (Full ERP)
 
-**Application ID:** `cl.tufarmacia.native` · **Version:** 1.4.0  
+**Application ID:** `cl.tufarmacia.native` · **Version:** 1.5.0  
 Pure Kotlin + Jetpack Compose. Separate natives (iOS later = Swift).
 
 ## Storefront
@@ -8,30 +8,28 @@ Pure Kotlin + Jetpack Compose. Separate natives (iOS later = Swift).
 - Product detail (qty picker), cart (DataStore), store pickup + Webpay
 - Login/register, loyalty, orders, public tracking
 - Auto refresh Firebase ID token before expiry
-- **v1.2:** Spanish order statuses, larger senior typography, Webpay keeps cart until payment success, CL phone/email validation
+- Search suggest, en stock / descuento / sort, cart stock revalidate
+- Spanish order statuses, senior typography, Webpay cart-safe, CL validation
 
 ## ERP (staff tab)
 | Module | API | Notes |
 |--------|-----|--------|
 | Dashboard | `/api/admin/operaciones`, `dashboard-extras` | KPIs, margen, reservas |
-| Órdenes | `/api/admin/orders` | filter, approve/reject, mark paid, **refund/cancel**, open detail |
-| POS | `/api/admin/pos/sale` | cash/debit/credit/**mixed** · barcode · discount · customer history · **pickup 6-digit** |
-| Inventario | `/api/admin/inventory` + stock adjust | ±1/+5 · reason chips · barcode Δ · crear falta |
+| Órdenes | `/api/admin/orders` | filter, approve/reject, mark paid, refund/cancel |
+| POS | `/api/admin/pos/sale` | mixed · barcode · discount · pickup · history |
+| Inventario | inventory + stock adjust + products | adjust · reason · **edit price/stock** |
 | Lotes | `/api/admin/batches` | expired / soon30 / soon90 |
-| Reposición | `/api/admin/inventory/reorder-suggestions` | por proveedor |
-| Arqueo | `/api/admin/arqueo` | turno actual, efectivo esperado |
-| Faltas | `/api/admin/faltas` | pending · mark notified · create |
+| Reposición | reorder-suggestions | por proveedor |
+| Devoluciones | `/api/admin/devoluciones` | list + create |
+| Barcodes | `/api/admin/barcodes/unknown` | triage / dismiss |
+| Arqueo | `/api/admin/arqueo` | turno actual |
+| Faltas | `/api/admin/faltas` | pending · notify · create |
 | Clientes | `/api/admin/clientes` | registered + guests |
-| Compras | `/api/admin/purchase-orders` | owner · **detail + receive** |
+| Compras | purchase-orders | detail + **receive** |
 | Proveedores | `/api/admin/suppliers` | owner |
-| Finanzas | `/api/admin/finanzas/dashboard` | owner |
-| Tareas | `/api/admin/tareas` | complete open tasks |
+| Finanzas | dashboard + AP + gastos | **pay AP** · quick gasto |
+| Tareas | `/api/admin/tareas` | complete |
 | Turnos/Caja | `/api/admin/turnos` | cierres |
-
-### Counter + stock (v1.2–1.3)
-- Barcode field → `GET /api/products?barcode=`
-- Discount $ + mixed cash/card · pickup 6-digit · customer history
-- PO receive → `POST …/purchase-orders/{id}/receive`
 
 ## Build
 ```bash

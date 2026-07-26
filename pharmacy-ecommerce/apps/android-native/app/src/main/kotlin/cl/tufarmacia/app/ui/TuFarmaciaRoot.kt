@@ -44,17 +44,20 @@ import cl.tufarmacia.app.ui.erp.ErpArqueoScreen
 import cl.tufarmacia.app.ui.erp.ErpBatchesScreen
 import cl.tufarmacia.app.ui.erp.ErpClientsScreen
 import cl.tufarmacia.app.ui.erp.ErpDashboardScreen
+import cl.tufarmacia.app.ui.erp.ErpDevolucionesScreen
 import cl.tufarmacia.app.ui.erp.ErpFaltasScreen
 import cl.tufarmacia.app.ui.erp.ErpFinanceScreen
 import cl.tufarmacia.app.ui.erp.ErpHubScreen
 import cl.tufarmacia.app.ui.erp.ErpInventoryScreen
 import cl.tufarmacia.app.ui.erp.ErpPosScreen
+import cl.tufarmacia.app.ui.erp.ErpProductEditScreen
 import cl.tufarmacia.app.ui.erp.ErpPurchaseDetailScreen
 import cl.tufarmacia.app.ui.erp.ErpPurchasesScreen
 import cl.tufarmacia.app.ui.erp.ErpReorderScreen
 import cl.tufarmacia.app.ui.erp.ErpShiftsScreen
 import cl.tufarmacia.app.ui.erp.ErpSuppliersScreen
 import cl.tufarmacia.app.ui.erp.ErpTasksScreen
+import cl.tufarmacia.app.ui.erp.ErpUnknownBarcodesScreen
 import cl.tufarmacia.app.ui.erp.ErpViewModel
 import cl.tufarmacia.app.ui.screens.CartScreen
 import cl.tufarmacia.app.ui.screens.CatalogScreen
@@ -92,6 +95,9 @@ private object Routes {
     const val ErpArqueo = "erp_arqueo"
     const val ErpBatches = "erp_batches"
     const val ErpReorder = "erp_reorder"
+    const val ErpDevoluciones = "erp_devoluciones"
+    const val ErpBarcodes = "erp_barcodes"
+    const val ErpProductEdit = "erp_product_edit"
     const val ErpPurchaseDetail = "erp_purchase/{id}"
     const val Cart = "cart"
 
@@ -412,6 +418,14 @@ fun TuFarmaciaRoot(container: AppContainer) {
                                 erpVm.loadReorderSuggestions()
                                 navController.navigate(Routes.ErpReorder)
                             }
+                            Routes.ErpDevoluciones -> {
+                                erpVm.loadDevoluciones()
+                                navController.navigate(Routes.ErpDevoluciones)
+                            }
+                            Routes.ErpBarcodes -> {
+                                erpVm.loadUnknownBarcodes()
+                                navController.navigate(Routes.ErpBarcodes)
+                            }
                             Routes.ErpSuppliers -> {
                                 erpVm.loadSuppliers()
                                 navController.navigate(Routes.ErpSuppliers)
@@ -511,6 +525,38 @@ fun TuFarmaciaRoot(container: AppContainer) {
                     onAdjustBarcode = erpVm::adjustStockByBarcode,
                     onAdjust = { id, d -> erpVm.adjustStock(id, d, null) },
                     onCreateFalta = { id, name -> erpVm.createFalta(id, name) },
+                    onEditProduct = { id ->
+                        erpVm.openProductEdit(id)
+                        navController.navigate(Routes.ErpProductEdit)
+                    },
+                )
+            }
+            composable(Routes.ErpProductEdit) {
+                ErpProductEditScreen(
+                    state = erp,
+                    onBack = {
+                        erpVm.clearProductEdit()
+                        navController.popBackStack()
+                    },
+                    onSave = { price, stock, disc -> erpVm.saveProductEdit(price, stock, disc) },
+                )
+            }
+            composable(Routes.ErpDevoluciones) {
+                ErpDevolucionesScreen(
+                    state = erp,
+                    onBack = { navController.popBackStack() },
+                    onRefresh = erpVm::loadDevoluciones,
+                    onCreate = { name, qty, price, motivo ->
+                        erpVm.createDevolucion(name, qty, price, motivo)
+                    },
+                )
+            }
+            composable(Routes.ErpBarcodes) {
+                ErpUnknownBarcodesScreen(
+                    state = erp,
+                    onBack = { navController.popBackStack() },
+                    onRefresh = erpVm::loadUnknownBarcodes,
+                    onDismiss = erpVm::dismissUnknownBarcode,
                 )
             }
             composable(Routes.ErpClients) {
@@ -560,7 +606,13 @@ fun TuFarmaciaRoot(container: AppContainer) {
                 ErpSuppliersScreen(state = erp, onBack = { navController.popBackStack() })
             }
             composable(Routes.ErpFinance) {
-                ErpFinanceScreen(state = erp, onBack = { navController.popBackStack() })
+                ErpFinanceScreen(
+                    state = erp,
+                    onBack = { navController.popBackStack() },
+                    onPayAp = { id, amount -> erpVm.payAp(id, amount) },
+                    onCreateGasto = { cat, desc, amt -> erpVm.createGasto(cat, desc, amt, null) },
+                    onRefresh = erpVm::loadFinanzas,
+                )
             }
             composable(Routes.ErpTasks) {
                 ErpTasksScreen(

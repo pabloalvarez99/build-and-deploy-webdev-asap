@@ -5,12 +5,22 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import cl.tufarmacia.app.data.AppContainer
 import cl.tufarmacia.app.data.api.ApiException
+import cl.tufarmacia.app.data.model.AdminProductDto
+import cl.tufarmacia.app.data.model.AdminProductUpdate
+import cl.tufarmacia.app.data.model.ApOrderDto
+import cl.tufarmacia.app.data.model.ApPayRequest
 import cl.tufarmacia.app.data.model.ArqueoResponse
 import cl.tufarmacia.app.data.model.ClienteDto
+import cl.tufarmacia.app.data.model.CreateDevolucionItem
+import cl.tufarmacia.app.data.model.CreateDevolucionRequest
 import cl.tufarmacia.app.data.model.CreateFaltaRequest
+import cl.tufarmacia.app.data.model.CreateGastoRequest
 import cl.tufarmacia.app.data.model.DashboardExtras
+import cl.tufarmacia.app.data.model.DevolucionDto
 import cl.tufarmacia.app.data.model.FaltaDto
 import cl.tufarmacia.app.data.model.FinanzasDashboard
+import cl.tufarmacia.app.data.model.GastoCategoryDto
+import cl.tufarmacia.app.data.model.GastoDto
 import cl.tufarmacia.app.data.model.InventoryItem
 import cl.tufarmacia.app.data.model.OperacionesResponse
 import cl.tufarmacia.app.data.model.PosCustomerHistory
@@ -25,6 +35,8 @@ import cl.tufarmacia.app.data.model.StockAdjustRequest
 import cl.tufarmacia.app.data.model.SupplierDto
 import cl.tufarmacia.app.data.model.TaskDto
 import cl.tufarmacia.app.data.model.TurnoCierre
+import cl.tufarmacia.app.data.model.UnknownBarcodeDto
+import java.time.LocalDate
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -87,6 +99,13 @@ data class ErpUiState(
     val reorderGroups: List<ReorderGroup> = emptyList(),
     val reorderThreshold: Int = 10,
     val finanzas: FinanzasDashboard? = null,
+    val apOrders: List<ApOrderDto> = emptyList(),
+    val gastos: List<GastoDto> = emptyList(),
+    val gastoCategories: List<GastoCategoryDto> = emptyList(),
+    val devoluciones: List<DevolucionDto> = emptyList(),
+    val unknownBarcodes: List<UnknownBarcodeDto> = emptyList(),
+    val editProduct: AdminProductDto? = null,
+    val editProductBusy: Boolean = false,
     val tasks: List<TaskDto> = emptyList(),
     val turnos: List<TurnoCierre> = emptyList(),
     val faltas: List<FaltaDto> = emptyList(),
@@ -637,9 +656,172 @@ class ErpViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             try {
                 val f = container.api.adminFinanzasDashboard()
-                _state.update { it.copy(finanzas = f) }
+                val ap = runCatching { container.api.adminApList(paid = false, limit = 40) }.getOrNull()
+                val g = runCatching { container.api.adminGastos(limit = 30) }.getOrNull()
+                _state.update {
+                    it.copy(
+                        finanzas = f,
+                        apOrders = ap?.orders.orEmpty(),
+                        gastos = g?.gastos.orEmpty(),
+                        gastoCategories = g?.categories.orEmpty(),
+                    )
+                }
             } catch (e: Exception) {
                 _state.update { it.copy(snackbar = e.message ?: "Solo owner ve finanzas") }
+            }
+        }
+    }
+
+    fun payAp(id: String, amount: Double, method: String = "transfer") {
+        viewModelScope.launch {
+            try {
+                container.api.adminApPay(
+                    id,
+                    ApPayRequest(amount = amount, paymentMethod = method, markFullyPaid = true),
+                )
+                _state.update { it.copy(snackbar = "Pago AP registrado") }
+                loadFinanzas()
+            } catch (e: Exception) {
+                _state.update { it.copy(snackbar = (e as? ApiException)?.message ?: e.message) }
+            }
+        }
+    }
+
+    fun createGasto(categoryId: String, description: String, amount: Double, method: String?) {
+        viewModelScope.launch {
+            try {
+                container.api.adminCreateGasto(
+                    CreateGastoRequest(
+                        categoryId = categoryId,
+                        description = description,
+                        amount = amount,
+                        expenseDate = LocalDate.now().toString(),
+                        paymentMethod = method,
+                    ),
+                )
+                _state.update { it.copy(snackbar = "Gasto registrado") }
+                loadFinanzas()
+            } catch (e: Exception) {
+                _state.update { it.copy(snackbar = (e as? ApiException)?.message ?: e.message) }
+            }
+        }
+    }
+
+    fun loadDevoluciones() {
+        viewModelScope.launch {
+            _state.update { it.copy(loading = true) }
+            try {
+                val res = container.api.adminDevoluciones()
+                _state.update { it.copy(loading = false, devoluciones = res.devoluciones) }
+            } catch (e: Exception) {
+                _state.update { it.copy(loading = false, snackbar = e.message) }
+            }
+        }
+    }
+
+    fun createDevolucion(
+        productName: String,
+        quantity: Int,
+        unitPrice: Double,
+        motivo: String,
+        productId: String? = null,
+        restock: Boolean = true,
+    ) {
+        viewModelScope.launch {
+            try {
+                container.api.adminCreateDevolucion(
+                    CreateDevolucionRequest(
+                        motivo = motivo,
+                        metodoReembolso = "efectivo",
+                        items = listOf(
+                            CreateDevolucionItem(
+                                productId = productId,
+                                productName = productName,
+                                quantity = quantity,
+                                unitPrice = unitPrice,
+                                restock = restock,
+                            ),
+                        ),
+                    ),
+                )
+                _state.update { it.copy(snackbar = "Devolución registrada") }
+                loadDevoluciones()
+            } catch (e: Exception) {
+                _state.update { it.copy(snackbar = (e as? ApiException)?.message ?: e.message) }
+            }
+        }
+    }
+
+    fun loadUnknownBarcodes() {
+        viewModelScope.launch {
+            _state.update { it.copy(loading = true) }
+            try {
+                val res = container.api.adminUnknownBarcodes()
+                _state.update { it.copy(loading = false, unknownBarcodes = res.items) }
+            } catch (e: Exception) {
+                _state.update { it.copy(loading = false, snackbar = e.message) }
+            }
+        }
+    }
+
+    fun dismissUnknownBarcode(barcode: String) {
+        viewModelScope.launch {
+            try {
+                container.api.adminDismissUnknownBarcode(barcode)
+                _state.update { it.copy(snackbar = "Barcode descartado") }
+                loadUnknownBarcodes()
+            } catch (e: Exception) {
+                _state.update { it.copy(snackbar = e.message) }
+            }
+        }
+    }
+
+    fun openProductEdit(productId: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(editProductBusy = true, editProduct = null) }
+            try {
+                val p = container.api.adminGetProduct(productId)
+                _state.update { it.copy(editProductBusy = false, editProduct = p) }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(editProductBusy = false, snackbar = e.message ?: "No se pudo cargar producto")
+                }
+            }
+        }
+    }
+
+    fun clearProductEdit() {
+        _state.update { it.copy(editProduct = null) }
+    }
+
+    fun saveProductEdit(price: Double?, stock: Int?, discountPercent: Int?) {
+        viewModelScope.launch {
+            val id = _state.value.editProduct?.id ?: return@launch
+            _state.update { it.copy(editProductBusy = true) }
+            try {
+                val updated = container.api.adminUpdateProduct(
+                    id,
+                    AdminProductUpdate(
+                        price = price,
+                        stock = stock,
+                        discountPercent = discountPercent,
+                    ),
+                )
+                _state.update {
+                    it.copy(
+                        editProductBusy = false,
+                        editProduct = updated,
+                        snackbar = "Producto actualizado",
+                    )
+                }
+                loadInventory()
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        editProductBusy = false,
+                        snackbar = (e as? ApiException)?.message ?: e.message,
+                    )
+                }
             }
         }
     }

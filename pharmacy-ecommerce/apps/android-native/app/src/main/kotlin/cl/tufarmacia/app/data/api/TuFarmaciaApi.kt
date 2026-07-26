@@ -21,8 +21,19 @@ import cl.tufarmacia.app.data.model.DashboardExtras
 import cl.tufarmacia.app.data.model.FinanzasDashboard
 import cl.tufarmacia.app.data.model.InventoryResponse
 import cl.tufarmacia.app.data.model.OperacionesResponse
+import cl.tufarmacia.app.data.model.AdminProductDto
+import cl.tufarmacia.app.data.model.AdminProductUpdate
+import cl.tufarmacia.app.data.model.ApListResponse
+import cl.tufarmacia.app.data.model.ApPayRequest
+import cl.tufarmacia.app.data.model.ApPayResponse
 import cl.tufarmacia.app.data.model.BatchesResponse
+import cl.tufarmacia.app.data.model.CreateDevolucionRequest
 import cl.tufarmacia.app.data.model.CreateFaltaRequest
+import cl.tufarmacia.app.data.model.CreateGastoRequest
+import cl.tufarmacia.app.data.model.DevolucionDto
+import cl.tufarmacia.app.data.model.DevolucionesResponse
+import cl.tufarmacia.app.data.model.GastoDto
+import cl.tufarmacia.app.data.model.GastosResponse
 import cl.tufarmacia.app.data.model.PosCustomerHistory
 import cl.tufarmacia.app.data.model.PosPickupOrder
 import cl.tufarmacia.app.data.model.PosSaleRequest
@@ -40,6 +51,7 @@ import cl.tufarmacia.app.data.model.FaltasResponse
 import cl.tufarmacia.app.data.model.TaskActionResponse
 import cl.tufarmacia.app.data.model.TasksResponse
 import cl.tufarmacia.app.data.model.TurnosResponse
+import cl.tufarmacia.app.data.model.UnknownBarcodesResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
@@ -50,6 +62,7 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
@@ -260,6 +273,65 @@ class TuFarmaciaApi(
 
     suspend fun adminFinanzasDashboard(): FinanzasDashboard =
         get("/api/admin/finanzas/dashboard", auth = true)
+
+    suspend fun adminDevoluciones(page: Int = 1, limit: Int = 30): DevolucionesResponse =
+        get("/api/admin/devoluciones", auth = true) {
+            parameter("page", page)
+            parameter("limit", limit)
+        }
+
+    suspend fun adminCreateDevolucion(body: CreateDevolucionRequest): DevolucionDto =
+        post("/api/admin/devoluciones", body = body, auth = true)
+
+    suspend fun adminGetProduct(id: String): AdminProductDto =
+        get("/api/admin/products/$id", auth = true)
+
+    suspend fun adminUpdateProduct(id: String, body: AdminProductUpdate): AdminProductDto =
+        putJson("/api/admin/products/$id", body)
+
+    suspend fun adminUnknownBarcodes(): UnknownBarcodesResponse =
+        get("/api/admin/barcodes/unknown", auth = true)
+
+    suspend fun adminDismissUnknownBarcode(barcode: String) {
+        val token = tokenProvider.currentIdToken()
+            ?: throw ApiException("Not authenticated", statusCode = 401)
+        val response = httpClient.delete("/api/admin/barcodes/unknown") {
+            contentType(ContentType.Application.Json)
+            bearerAuth(token)
+            setBody(buildJsonObject { put("barcode", barcode) })
+        }
+        if (!response.status.isSuccess()) {
+            val text = response.bodyAsText()
+            throw ApiException(text.ifBlank { "HTTP ${response.status.value}" }, response.status.value)
+        }
+    }
+
+    suspend fun adminApList(paid: Boolean = false, page: Int = 1, limit: Int = 30): ApListResponse =
+        get("/api/admin/finanzas/ap", auth = true) {
+            parameter("paid", paid)
+            parameter("page", page)
+            parameter("limit", limit)
+        }
+
+    suspend fun adminApPay(id: String, body: ApPayRequest): ApPayResponse {
+        val token = tokenProvider.currentIdToken()
+            ?: throw ApiException("Not authenticated", statusCode = 401)
+        val response = httpClient.post("/api/admin/finanzas/ap/$id/pay") {
+            contentType(ContentType.Application.Json)
+            bearerAuth(token)
+            setBody(body)
+        }
+        return parse(response)
+    }
+
+    suspend fun adminGastos(page: Int = 1, limit: Int = 30): GastosResponse =
+        get("/api/admin/finanzas/gastos", auth = true) {
+            parameter("page", page)
+            parameter("limit", limit)
+        }
+
+    suspend fun adminCreateGasto(body: CreateGastoRequest): GastoDto =
+        post("/api/admin/finanzas/gastos", body = body, auth = true)
 
     suspend fun adminTareas(scope: String = "mine", status: String? = null): TasksResponse =
         get("/api/admin/tareas", auth = true) {
