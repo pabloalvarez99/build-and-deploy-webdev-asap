@@ -40,13 +40,18 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -243,9 +248,24 @@ fun CatalogScreen(
             .collect { onLoadMore() }
     }
 
-    Column(Modifier.fillMaxSize()) {
+    val hasFilters = state.inStockOnly || state.hasDiscountOnly ||
+        state.sortBy != null || state.selectedCategorySlug != null || state.searchQuery.isNotBlank()
+    val chipColors = FilterChipDefaults.filterChipColors(
+        selectedContainerColor = MaterialTheme.colorScheme.primary,
+        selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+        containerColor = MaterialTheme.colorScheme.surface,
+        labelColor = MaterialTheme.colorScheme.onSurface,
+    )
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         TopAppBar(
-            title = { Text("Catálogo") },
+            title = {
+                Text("Catálogo", fontWeight = FontWeight.SemiBold)
+            },
             actions = {
                 IconButton(onClick = onOpenCart) {
                     BadgedBox(badge = {
@@ -255,32 +275,57 @@ fun CatalogScreen(
                     }
                 }
             },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background,
+            ),
         )
         OutlinedTextField(
             value = state.searchQuery,
             onValueChange = onSearchChange,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 4.dp),
             placeholder = { Text("Buscar medicamento…") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            },
+            shape = RoundedCornerShape(14.dp),
             singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = Color(0xFFD1D5DB),
+            ),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { onSearch() }),
         )
         if (state.suggestions.isNotEmpty()) {
-            Column(Modifier.padding(horizontal = 16.dp)) {
-                state.suggestions.forEach { s ->
-                    Text(
-                        s.name,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSuggestion(s) }
-                            .padding(vertical = 8.dp),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+            Card(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(2.dp),
+            ) {
+                Column(Modifier.padding(vertical = 4.dp)) {
+                    state.suggestions.take(6).forEach { s ->
+                        Text(
+                            s.name,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onSuggestion(s) }
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
                 }
             }
         }
@@ -288,56 +333,86 @@ fun CatalogScreen(
             Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             FilterChip(
                 selected = state.inStockOnly,
                 onClick = { onToggleInStock(!state.inStockOnly) },
                 label = { Text("En stock") },
+                colors = chipColors,
             )
             FilterChip(
                 selected = state.hasDiscountOnly,
                 onClick = { onToggleDiscount(!state.hasDiscountOnly) },
-                label = { Text("Descuento") },
+                label = { Text("Oferta") },
+                colors = chipColors,
             )
             FilterChip(
                 selected = state.sortBy == "price_asc",
                 onClick = { onSort(if (state.sortBy == "price_asc") null else "price_asc") },
-                label = { Text("Precio ↑") },
+                label = { Text("Más barato") },
+                colors = chipColors,
             )
             FilterChip(
                 selected = state.sortBy == "price_desc",
                 onClick = { onSort(if (state.sortBy == "price_desc") null else "price_desc") },
-                label = { Text("Precio ↓") },
+                label = { Text("Más caro") },
+                colors = chipColors,
             )
             FilterChip(
                 selected = state.sortBy == "name",
                 onClick = { onSort(if (state.sortBy == "name") null else "name") },
-                label = { Text("Nombre") },
+                label = { Text("A–Z") },
+                colors = chipColors,
             )
+            if (hasFilters) {
+                TextButton(onClick = onClearFilters) {
+                    Text("Limpiar", color = MaterialTheme.colorScheme.primary)
+                }
+            }
         }
         Row(
             Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 12.dp, vertical = 4.dp),
+                .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             FilterChip(
                 selected = state.selectedCategorySlug == null,
                 onClick = { onSelectCategory(null) },
                 label = { Text("Todas") },
+                colors = chipColors,
             )
             state.categories.take(30).forEach { cat ->
                 FilterChip(
                     selected = state.selectedCategorySlug == cat.slug,
                     onClick = { onSelectCategory(cat.slug) },
-                    label = { Text(cat.name, maxLines = 1) },
+                    label = {
+                        Text(
+                            cat.name,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
+                    colors = chipColors,
                 )
             }
         }
-        Spacer(Modifier.height(8.dp))
+        if (!state.productsLoading && state.products.isNotEmpty()) {
+            Text(
+                if (state.productsTotal > 0) {
+                    "${state.products.size} de ${state.productsTotal} productos"
+                } else {
+                    "${state.products.size} productos"
+                },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+                style = MaterialTheme.typography.labelMedium,
+                color = Color(0xFF64748B),
+            )
+        }
         when {
             state.productsLoading && state.products.isEmpty() -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -360,8 +435,8 @@ fun CatalogScreen(
             else -> {
                 LazyColumn(
                     state = listState,
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     items(state.products, key = { it.id }) { product ->
                         ProductRow(product, onClick = { onOpenProduct(product.slug) })
@@ -376,20 +451,22 @@ fun CatalogScreen(
                     if (state.products.isEmpty()) {
                         item {
                             Column(
-                                Modifier.fillMaxWidth().padding(24.dp),
+                                Modifier.fillMaxWidth().padding(32.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
-                                Text("Sin resultados", fontWeight = FontWeight.SemiBold)
+                                Text("Sin resultados", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                                Spacer(Modifier.height(6.dp))
                                 Text(
                                     "Prueba otra búsqueda o limpia filtros.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color(0xFF64748B),
                                 )
-                                Spacer(Modifier.height(12.dp))
+                                Spacer(Modifier.height(16.dp))
                                 OutlinedButton(onClick = onClearFilters) { Text("Limpiar filtros") }
                             }
                         }
                     }
+                    item { Spacer(Modifier.height(8.dp)) }
                 }
             }
         }
@@ -398,54 +475,92 @@ fun CatalogScreen(
 
 @Composable
 fun ProductRow(product: Product, onClick: () -> Unit) {
+    val stockLabel = when {
+        product.stock <= 0 -> "Agotado"
+        product.stock <= 5 -> "Pocas unidades (${product.stock})"
+        else -> "Disponible"
+    }
+    val stockBg = when {
+        product.stock <= 0 -> Color(0xFFFEE2E2)
+        product.stock <= 5 -> Color(0xFFFEF3C7)
+        else -> Color(0xFFDCFCE7)
+    }
+    val stockFg = when {
+        product.stock <= 0 -> Color(0xFFB91C1C)
+        product.stock <= 5 -> Color(0xFFB45309)
+        else -> Color(0xFF15803D)
+    }
+    val disc = product.discountPercent ?: 0
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(
-            Modifier.padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            Modifier.padding(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             ProductThumb(product.imageUrl, product.name)
-            Column(Modifier.weight(1f)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     product.name,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF0F172A),
                 )
-                product.activeIngredient?.let {
-                    Text(it, style = MaterialTheme.typography.bodySmall, color = Color.Gray, maxLines = 1)
+                product.activeIngredient?.takeIf { it.isNotBlank() }?.let {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF64748B),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     Text(
                         formatClp(product.unitPrice()),
+                        style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Bold,
                     )
-                    if ((product.discountPercent ?: 0) > 0) {
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            "-${product.discountPercent}%",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.labelMedium,
-                        )
+                    if (disc > 0) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color(0xFFFEE2E2),
+                        ) {
+                            Text(
+                                "-$disc%",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color(0xFFB91C1C),
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                     }
                 }
-                val stockLabel = when {
-                    product.stock <= 0 -> "Agotado"
-                    product.stock <= 5 -> "Bajo stock (${product.stock})"
-                    else -> "Disponible"
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = stockBg,
+                ) {
+                    Text(
+                        stockLabel,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = stockFg,
+                        fontWeight = FontWeight.Medium,
+                    )
                 }
-                val stockColor = when {
-                    product.stock <= 0 -> MaterialTheme.colorScheme.error
-                    product.stock <= 5 -> Color(0xFFD97706)
-                    else -> Color(0xFF16A34A)
-                }
-                Text(stockLabel, style = MaterialTheme.typography.labelSmall, color = stockColor)
             }
         }
     }
@@ -453,24 +568,33 @@ fun ProductRow(product: Product, onClick: () -> Unit) {
 
 @Composable
 private fun ProductThumb(url: String?, name: String) {
-    if (url != null) {
+    val shape = RoundedCornerShape(12.dp)
+    if (!url.isNullOrBlank()) {
         AsyncImage(
             model = url,
             contentDescription = name,
             modifier = Modifier
-                .size(64.dp)
-                .clip(RoundedCornerShape(8.dp)),
+                .size(72.dp)
+                .clip(shape)
+                .background(Color(0xFFF1F5F9)),
             contentScale = ContentScale.Crop,
         )
     } else {
         Box(
             Modifier
-                .size(64.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.primaryContainer),
+                .size(72.dp)
+                .clip(shape)
+                .background(Color(0xFFE0F2FE)),
             contentAlignment = Alignment.Center,
         ) {
-            Text("Rx", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    "Rx",
+                    color = Color(0xFF0369A1),
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
         }
     }
 }
